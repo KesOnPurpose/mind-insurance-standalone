@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,8 +13,14 @@ import {
   Flame
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
 
 const DashboardPage = () => {
+  const queryClient = useQueryClient();
+  
   // Mock data
   const currentWeek = 1;
   const totalWeeks = 12;
@@ -24,6 +31,32 @@ const DashboardPage = () => {
     { id: 2, name: "Identify 3 potential neighborhoods", completed: false },
     { id: 3, name: "Create initial budget estimate", completed: false },
   ];
+
+  // Real-time subscription for progress updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard-progress-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gh_user_tactic_progress',
+          filter: `user_id=eq.${MOCK_USER_ID}`
+        },
+        (payload) => {
+          console.log('Real-time progress update on dashboard:', payload);
+          // Invalidate queries to refetch with new data
+          queryClient.invalidateQueries({ queryKey: ['userProgress'] });
+          queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return (
     <div className="min-h-screen bg-muted/30">

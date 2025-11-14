@@ -12,11 +12,14 @@ import { WeekProgressCard } from '@/components/roadmap/WeekProgressCard';
 import { TacticCard } from '@/components/roadmap/TacticCard';
 import { TacticWithProgress, WeekSummary } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -34,6 +37,32 @@ export default function RoadmapPage() {
   const { data: progressData } = useUserProgress(MOCK_USER_ID);
   const startTactic = useStartTactic();
   const completeTactic = useCompleteTactic();
+  
+  // Real-time subscription for progress updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('tactic-progress-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gh_user_tactic_progress',
+          filter: `user_id=eq.${MOCK_USER_ID}`
+        },
+        (payload) => {
+          console.log('Real-time progress update:', payload);
+          // Invalidate queries to refetch with new data
+          queryClient.invalidateQueries({ queryKey: ['userProgress'] });
+          queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
   
   // Redirect to assessment if not completed
   useEffect(() => {
