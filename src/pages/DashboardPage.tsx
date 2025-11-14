@@ -15,6 +15,8 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { JourneyMap } from "@/components/roadmap/JourneyMap";
+import { JourneyPhase } from "@/types/tactic";
 
 const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
 
@@ -30,6 +32,21 @@ const DashboardPage = () => {
     { id: 1, name: "Research group home regulations in your state", completed: true },
     { id: 2, name: "Identify 3 potential neighborhoods", completed: false },
     { id: 3, name: "Create initial budget estimate", completed: false },
+  ];
+
+  // Journey map data
+  const currentPhase: JourneyPhase = 'foundation';
+  const phaseProgress: Record<JourneyPhase, number> = {
+    foundation: 35,
+    market_entry: 0,
+    acquisition: 0,
+    operations: 0,
+    growth: 0,
+  };
+  const completedMilestones = [
+    "Completed Financial Assessment",
+    "Set Primary Goal",
+    "Created Vision Board"
   ];
 
   // Real-time subscription for progress updates
@@ -87,6 +104,15 @@ const DashboardPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Journey Map - Full Width */}
+        <div className="mb-6">
+          <JourneyMap 
+            currentPhase={currentPhase}
+            phaseProgress={phaseProgress}
+            completedMilestones={completedMilestones}
+          />
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-6">

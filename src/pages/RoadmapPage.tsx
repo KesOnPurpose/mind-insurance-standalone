@@ -10,10 +10,11 @@ import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { WeekProgressCard } from '@/components/roadmap/WeekProgressCard';
 import { TacticCard } from '@/components/roadmap/TacticCard';
-import { TacticWithProgress, WeekSummary } from '@/types/tactic';
+import { TacticWithProgress, WeekSummary, JourneyPhase } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { JourneyMap } from '@/components/roadmap/JourneyMap';
 
 const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
 
@@ -107,6 +108,67 @@ export default function RoadmapPage() {
     }
     return summary;
   });
+
+  // Calculate journey map data
+  const calculatePhaseProgress = (): Record<JourneyPhase, number> => {
+    const progress: Record<JourneyPhase, number> = {
+      foundation: 0,
+      market_entry: 0,
+      acquisition: 0,
+      operations: 0,
+      growth: 0,
+    };
+
+    JOURNEY_PHASES.forEach(phase => {
+      const phaseTactics = tacticsWithProgress.filter(t => {
+        const tacticWeek = t.week_assignment || 0;
+        return phase.weeks.includes(tacticWeek);
+      });
+      
+      const completedTactics = phaseTactics.filter(t => t.status === 'completed').length;
+      progress[phase.phase] = phaseTactics.length > 0 
+        ? (completedTactics / phaseTactics.length) * 100 
+        : 0;
+    });
+
+    return progress;
+  };
+
+  const getCurrentPhase = (): JourneyPhase => {
+    for (const phase of JOURNEY_PHASES) {
+      if (phase.weeks.includes(selectedWeek)) {
+        return phase.phase;
+      }
+    }
+    return 'foundation';
+  };
+
+  const getCompletedMilestones = (): string[] => {
+    const milestones: string[] = [];
+    const completedTactics = tacticsWithProgress.filter(t => t.status === 'completed');
+    
+    if (completedTactics.length >= 5) milestones.push('First 5 Tactics Completed');
+    if (completedTactics.length >= 10) milestones.push('10 Tactics Milestone');
+    if (completedTactics.length >= 20) milestones.push('20 Tactics Achievement');
+    
+    JOURNEY_PHASES.forEach(phase => {
+      const phaseTactics = tacticsWithProgress.filter(t => {
+        const tacticWeek = t.week_assignment || 0;
+        return phase.weeks.includes(tacticWeek);
+      });
+      const completedInPhase = phaseTactics.filter(t => t.status === 'completed').length;
+      
+      if (completedInPhase === phaseTactics.length && phaseTactics.length > 0) {
+        milestones.push(`${phase.name} Completed`);
+      }
+    });
+
+    return milestones;
+  };
+
+  const phaseProgress = calculatePhaseProgress();
+  const currentPhaseType = getCurrentPhase();
+  const completedMilestones = getCompletedMilestones();
   
   // Filter tactics
   const filteredTactics = tacticsWithProgress.filter(tactic => {
@@ -179,6 +241,15 @@ export default function RoadmapPage() {
       </div>
       
       <div className="container mx-auto px-4 py-8">
+        {/* Journey Map */}
+        <div className="mb-8">
+          <JourneyMap 
+            currentPhase={currentPhaseType}
+            phaseProgress={phaseProgress}
+            completedMilestones={completedMilestones}
+          />
+        </div>
+
         {/* Week Navigation */}
         <div className="mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {weekSummaries.map(week => (
