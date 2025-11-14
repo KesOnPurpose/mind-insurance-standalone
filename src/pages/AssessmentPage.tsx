@@ -7,16 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssessmentAnswers } from "@/types/assessment";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useAssessment } from "@/hooks/useAssessment";
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
+  const { submitAssessment, isSubmitting } = useAssessment();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<AssessmentAnswers>>({
     targetPopulations: [],
     supportTeam: [],
     propertyManagement: 5,
     commitmentLevel: 5,
+    primaryMotivation: "",
   });
 
   const categories = [
@@ -38,12 +41,30 @@ const AssessmentPage = () => {
     },
   ];
 
+  const isStepComplete = () => {
+    if (currentStep === 0) {
+      return !!(answers.capital && answers.creditScore && answers.incomeStability && answers.creativeFinancing);
+    }
+    if (currentStep === 1) {
+      return !!(answers.licensingFamiliarity && answers.targetPopulations && answers.targetPopulations.length > 0 && answers.marketResearch && answers.reimbursementRate);
+    }
+    if (currentStep === 2) {
+      return !!(answers.caregivingExperience && answers.timeCommitment && answers.supportTeam && answers.supportTeam.length > 0);
+    }
+    if (currentStep === 3) {
+      return !!(answers.primaryMotivation && answers.timeline);
+    }
+    return false;
+  };
+
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Calculate results and navigate to dashboard
-      navigate("/dashboard");
+      // Submit assessment to database
+      submitAssessment(answers as AssessmentAnswers);
+      // Navigate after short delay to allow toast to show
+      setTimeout(() => navigate("/dashboard"), 1500);
     }
   };
 
@@ -782,14 +803,29 @@ const AssessmentPage = () => {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 0}
+                disabled={currentStep === 0 || isSubmitting}
               >
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
-              <Button onClick={handleNext} className="min-w-[120px]">
-                {currentStep === 3 ? "Complete" : "Next"}
-                {currentStep !== 3 && <ChevronRight className="ml-2 h-4 w-4" />}
+              <Button 
+                onClick={handleNext} 
+                className="min-w-[120px]"
+                disabled={!isStepComplete() || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : currentStep === 3 ? (
+                  "Complete Assessment"
+                ) : (
+                  <>
+                    Next
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
