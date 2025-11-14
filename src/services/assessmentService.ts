@@ -66,6 +66,90 @@ function mapSupportTeamToDB(values: string[]): string {
 }
 
 /**
+ * Map income stability values to database enums
+ */
+function mapIncomeStabilityToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'no-stable': 'unstable',
+    'part-time': 'somewhat-stable',
+    'full-time-w2': 'stable',
+    'self-employed': 'stable',
+    'multiple-streams': 'very-stable'
+  };
+  return mapping[value] || 'unstable';
+}
+
+/**
+ * Map licensing familiarity values to database enums
+ */
+function mapLicensingFamiliarityToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'not-familiar': 'not-familiar',
+    'know-exist': 'not-familiar',
+    'some-research': 'somewhat-familiar',
+    'very-familiar': 'very-familiar',
+    'licensed': 'very-familiar'
+  };
+  return mapping[value] || 'not-familiar';
+}
+
+/**
+ * Map market research values to database enums
+ */
+function mapMarketResearchToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'not-researched': 'none',
+    'basic-google': 'some',
+    'talked-providers': 'some',
+    'extensive': 'extensive',
+    'connected': 'extensive'
+  };
+  return mapping[value] || 'none';
+}
+
+/**
+ * Map revenue understanding values to database enums
+ */
+function mapRevenueUnderstandingToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'no-idea': 'none',
+    '1k-2k': 'basic',
+    '2k-4k': 'basic',
+    '4k-6k': 'good',
+    'more-6k': 'excellent'
+  };
+  return mapping[value] || 'none';
+}
+
+/**
+ * Map time commitment values to database enums
+ */
+function mapTimeCommitmentToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'less-10': 'part-time',
+    '10-20': 'part-time',
+    '20-30': 'flexible',
+    '30-40': 'flexible',
+    '40+': 'full-time'
+  };
+  return mapping[value] || 'flexible';
+}
+
+/**
+ * Map timeline values to database enums
+ */
+function mapTimelineToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'no-timeline': 'exploring',
+    '12-months': 'within-year',
+    '6-months': 'within-6-months',
+    '3-months': 'within-3-months',
+    'now': 'within-3-months'
+  };
+  return mapping[value] || 'exploring';
+}
+
+/**
  * Calculate assessment scores based on PRD formula:
  * weighted_scores = {
  *   financial * 1.3,
@@ -135,14 +219,15 @@ function calculateFinancialScore(answers: AssessmentAnswers): number {
   };
   score += creditScores[mappedCredit] || 0;
   
-  // Income stability (0-20 points)
+  // Income stability (0-20 points) - use mapped value
+  const mappedIncome = mapIncomeStabilityToDB(answers.incomeStability);
   const incomeScores: Record<string, number> = {
     'unstable': 5,
     'somewhat-stable': 10,
     'stable': 15,
     'very-stable': 20
   };
-  score += incomeScores[answers.incomeStability] || 0;
+  score += incomeScores[mappedIncome] || 0;
   
   // Creative financing knowledge (0-10 points) - use mapped value
   const mappedFinancing = mapCreativeFinancingToDB(answers.creativeFinancing);
@@ -160,33 +245,36 @@ function calculateFinancialScore(answers: AssessmentAnswers): number {
 function calculateMarketScore(answers: AssessmentAnswers): number {
   let score = 0;
   
-  // Licensing familiarity (0-30 points)
+  // Licensing familiarity (0-30 points) - use mapped value
+  const mappedLicensing = mapLicensingFamiliarityToDB(answers.licensingFamiliarity);
   const licensingScores: Record<string, number> = {
     'not-familiar': 5,
     'somewhat-familiar': 15,
     'very-familiar': 30
   };
-  score += licensingScores[answers.licensingFamiliarity] || 0;
+  score += licensingScores[mappedLicensing] || 0;
   
   // Target populations (0-25 points) - more selections = better understanding
   score += Math.min(answers.targetPopulations.length * 8, 25);
   
-  // Market research (0-30 points)
+  // Market research (0-30 points) - use mapped value
+  const mappedResearch = mapMarketResearchToDB(answers.marketResearch);
   const researchScores: Record<string, number> = {
     'none': 5,
     'some': 15,
     'extensive': 30
   };
-  score += researchScores[answers.marketResearch] || 0;
+  score += researchScores[mappedResearch] || 0;
   
-  // Revenue understanding (0-15 points)
+  // Revenue understanding (0-15 points) - use mapped value
+  const mappedRevenue = mapRevenueUnderstandingToDB(answers.reimbursementRate);
   const revenueScores: Record<string, number> = {
     'none': 0,
     'basic': 5,
     'good': 10,
     'excellent': 15
   };
-  score += revenueScores[answers.reimbursementRate] || 0;
+  score += revenueScores[mappedRevenue] || 0;
   
   return score; // Max 100
 }
@@ -203,13 +291,14 @@ function calculateOperationalScore(answers: AssessmentAnswers): number {
   };
   score += experienceScores[answers.caregivingExperience] || 0;
   
-  // Time commitment (0-25 points)
+  // Time commitment (0-25 points) - use mapped value
+  const mappedTime = mapTimeCommitmentToDB(answers.timeCommitment);
   const timeScores: Record<string, number> = {
     'part-time': 10,
-    'full-time': 25,
-    'flexible': 20
+    'flexible': 20,
+    'full-time': 25
   };
-  score += timeScores[answers.timeCommitment] || 0;
+  score += timeScores[mappedTime] || 0;
   
   // Support team (0-25 points) - use mapped value
   const mappedSupport = mapSupportTeamToDB(answers.supportTeam);
@@ -245,14 +334,15 @@ function calculateMindsetScore(answers: AssessmentAnswers): number {
   // Commitment level (0-50 points) - direct mapping from 1-10 scale
   score += (answers.commitmentLevel / 10) * 50;
   
-  // Timeline (0-20 points) - faster timeline = higher urgency/commitment
+  // Timeline (0-20 points) - use mapped value
+  const mappedTimeline = mapTimelineToDB(answers.timeline);
   const timelineScores: Record<string, number> = {
     'within-3-months': 20,
     'within-6-months': 15,
     'within-year': 10,
     'exploring': 5
   };
-  score += timelineScores[answers.timeline] || 0;
+  score += timelineScores[mappedTimeline] || 0;
   
   return score; // Max 100
 }
@@ -285,25 +375,25 @@ export async function saveAssessmentResults(
       overall_score: scores.overall_score,
       readiness_level: scores.readiness_level,
       
-      // Raw answers - WITH TRANSFORMATIONS
+      // Raw answers - WITH ALL TRANSFORMATIONS
       capital_available: answers.capital,
       credit_score_range: mapCreditScoreToDB(answers.creditScore),
-      income_stability: answers.incomeStability,
+      income_stability: mapIncomeStabilityToDB(answers.incomeStability),
       creative_financing_knowledge: mapCreativeFinancingToDB(answers.creativeFinancing),
       
-      licensing_familiarity: answers.licensingFamiliarity,
+      licensing_familiarity: mapLicensingFamiliarityToDB(answers.licensingFamiliarity),
       target_populations: answers.targetPopulations,
-      market_demand_research: answers.marketResearch,
-      revenue_understanding: answers.reimbursementRate,
+      market_demand_research: mapMarketResearchToDB(answers.marketResearch),
+      revenue_understanding: mapRevenueUnderstandingToDB(answers.reimbursementRate),
       
       caregiving_experience: answers.caregivingExperience,
-      time_commitment: answers.timeCommitment,
+      time_commitment: mapTimeCommitmentToDB(answers.timeCommitment),
       support_team: mapSupportTeamToDB(answers.supportTeam),
       property_management_comfort: mapPropertyManagementToDB(answers.propertyManagement),
       
       primary_motivation: answers.primaryMotivation,
       commitment_level: answers.commitmentLevel,
-      timeline: answers.timeline,
+      timeline: mapTimelineToDB(answers.timeline),
       
       assessment_completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
