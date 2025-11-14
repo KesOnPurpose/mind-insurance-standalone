@@ -5,7 +5,9 @@ import { Send, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import CoachSelector from "@/components/chat/CoachSelector";
 import ChatMessage from "@/components/chat/ChatMessage";
+import HandoffSuggestion from "@/components/chat/HandoffSuggestion";
 import { CoachType, COACHES } from "@/types/coach";
+import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,6 +32,8 @@ const ChatPage = () => {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -55,19 +59,39 @@ const ChatPage = () => {
     }
   };
 
-  const handleCoachChange = (coach: CoachType) => {
+  const handleCoachChange = (coach: CoachType, isHandoff: boolean = false) => {
+    const previousCoach = selectedCoach;
     setSelectedCoach(coach);
     
-    // Add a greeting message from the new coach
+    // Build warm introduction with context
+    let greetingContent = `Hi! I'm ${COACHES[coach].name}, your ${COACHES[coach].title}.`;
+    
+    if (isHandoff && previousCoach !== coach) {
+      greetingContent += ` I've reviewed your conversation with ${COACHES[previousCoach].name}. `;
+    }
+    
+    greetingContent += ` ${COACHES[coach].description} How can I help you today?`;
+    
     const greetingMessage: Message = {
       id: Date.now().toString(),
       role: "assistant",
-      content: `Hi! I'm ${COACHES[coach].name}, your ${COACHES[coach].title}. ${COACHES[coach].description} How can I help you today?`,
+      content: greetingContent,
       timestamp: new Date(),
       coachType: coach
     };
     
     setMessages((prev) => [...prev, greetingMessage]);
+    setHandoffSuggestion(null);
+  };
+
+  const handleAcceptHandoff = () => {
+    if (handoffSuggestion) {
+      handleCoachChange(handoffSuggestion.suggestedAgent, true);
+    }
+  };
+
+  const handleDismissHandoff = () => {
+    setHandoffSuggestion(null);
   };
 
   const handleSend = async () => {
@@ -98,6 +122,8 @@ const ChatPage = () => {
         body: JSON.stringify({
           user_id: user.id,
           message: messageText,
+          current_agent: selectedCoach,
+          conversation_id: conversationId,
         }),
       });
 
@@ -142,6 +168,7 @@ const ChatPage = () => {
       if (reader) {
         let textBuffer = '';
         let streamDone = false;
+        let metadataReceived = false;
 
         while (!streamDone) {
           const { done, value } = await reader.read();
@@ -167,6 +194,15 @@ const ChatPage = () => {
 
             try {
               const parsed = JSON.parse(jsonStr);
+              
+              // Check for handoff suggestion metadata
+              if (!metadataReceived && parsed.handoff_suggestion) {
+                setHandoffSuggestion(parsed.handoff_suggestion);
+                setConversationId(parsed.conversation_id);
+                metadataReceived = true;
+                continue;
+              }
+              
               const content = parsed.choices?.[0]?.delta?.content as string | undefined;
               if (content) {
                 aiContent += content;
