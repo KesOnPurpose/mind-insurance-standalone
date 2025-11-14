@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,17 +34,37 @@ const AuthPage = () => {
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
-    // Simulate magic link send
-    setTimeout(() => {
-      setEmailSent(true);
-      setLoading(false);
+    const { error } = await signIn(email);
+
+    setLoading(false);
+
+    if (error) {
       toast({
-        title: "Check your email!",
-        description: "We've sent you a magic link to sign in.",
+        title: "Error sending magic link",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
       });
-    }, 1000);
+      return;
+    }
+
+    setEmailSent(true);
+    toast({
+      title: "Check your email!",
+      description: "We've sent you a magic link to sign in.",
+    });
   };
 
   return (

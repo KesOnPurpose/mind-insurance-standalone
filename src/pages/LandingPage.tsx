@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Brain, TrendingUp, Target, Shield, Zap, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroBackground from "@/assets/hero-background.jpg";
 
 const LandingPage = () => {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -38,15 +40,20 @@ const LandingPage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
-                <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary-light shadow-xl text-lg px-8">
-                  Start Your Journey
-                  <ArrowRight className="ml-2 w-5 h-5" />
+              {user ? (
+                <Button asChild size="lg" className="text-lg px-8 py-6">
+                  <Link to="/dashboard">Go to Dashboard</Link>
                 </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg px-8">
-                Learn More
-              </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg" className="text-lg px-8 py-6">
+                    <Link to="/auth">Get Started Free</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20">
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </>
+              )}
             </div>
 
             <div className="mt-12 flex items-center justify-center gap-8 text-sm text-white/80">

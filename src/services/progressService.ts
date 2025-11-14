@@ -3,9 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { TacticWithProgress, WeekSummary, JourneyPhase } from '@/types/tactic';
 
-const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
-
-export function useUserProgress(userId: string = MOCK_USER_ID) {
+export function useUserProgress(userId: string) {
   return useQuery({
     queryKey: ['userProgress', userId],
     queryFn: async () => {

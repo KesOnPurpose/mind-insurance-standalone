@@ -15,12 +15,12 @@ import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { JourneyMap } from '@/components/roadmap/JourneyMap';
-
-const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -35,12 +35,14 @@ export default function RoadmapPage() {
     hasAssessment 
   } = usePersonalizedTactics();
 
-  const { data: progressData } = useUserProgress(MOCK_USER_ID);
+  const { data: progressData } = useUserProgress(user?.id || '');
   const startTactic = useStartTactic();
   const completeTactic = useCompleteTactic();
   
   // Real-time subscription for progress updates
   useEffect(() => {
+    if (!user?.id) return;
+
     const channel = supabase
       .channel('tactic-progress-changes')
       .on(
@@ -49,7 +51,7 @@ export default function RoadmapPage() {
           event: '*',
           schema: 'public',
           table: 'gh_user_tactic_progress',
-          filter: `user_id=eq.${MOCK_USER_ID}`
+          filter: `user_id=eq.${user.id}`
         },
         (payload) => {
           console.log('Real-time progress update:', payload);
@@ -63,7 +65,7 @@ export default function RoadmapPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, user?.id]);
   
   // Redirect to assessment if not completed
   useEffect(() => {
@@ -347,15 +349,21 @@ export default function RoadmapPage() {
                       <TacticCard
                         key={tactic.tactic_id}
                         tactic={tactic}
-                        onStart={(id) => startTactic.mutate({ 
-                          userId: MOCK_USER_ID, 
-                          tacticId: id 
-                        })}
-                        onComplete={(id, notes) => completeTactic.mutate({ 
-                          userId: MOCK_USER_ID, 
-                          tacticId: id,
-                          notes
-                        })}
+                        onStart={(id) => {
+                          if (!user?.id) return;
+                          startTactic.mutate({ 
+                            userId: user.id, 
+                            tacticId: id 
+                          });
+                        }}
+                        onComplete={(id, notes) => {
+                          if (!user?.id) return;
+                          completeTactic.mutate({ 
+                            userId: user.id, 
+                            tacticId: id,
+                            notes
+                          });
+                        }}
                       />
                     ))}
                   </div>
