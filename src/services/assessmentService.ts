@@ -11,6 +11,61 @@ interface AssessmentScores {
 }
 
 /**
+ * Map frontend creative financing values to database enums
+ */
+function mapCreativeFinancingToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'never-heard': 'none',
+    'heard-not-understand': 'none',
+    'basic': 'basic',
+    'good': 'intermediate',
+    'very-familiar': 'advanced'
+  };
+  return mapping[value] || 'none';
+}
+
+/**
+ * Map frontend credit score values to database enums
+ */
+function mapCreditScoreToDB(value: string): string {
+  const mapping: Record<string, string> = {
+    'below-580': 'below-580',
+    '580-669': '580-650',
+    '670-739': '650-700',
+    '740-799': '700-750',
+    '800+': 'above-750',
+    'not-sure': 'below-580'
+  };
+  return mapping[value] || 'below-580';
+}
+
+/**
+ * Map property management comfort (1-10 scale) to database enums
+ */
+function mapPropertyManagementToDB(value: number): string {
+  if (value <= 3) return 'uncomfortable';
+  if (value <= 5) return 'somewhat-comfortable';
+  if (value <= 8) return 'comfortable';
+  return 'experienced';
+}
+
+/**
+ * Map support team array to single best value for database
+ */
+function mapSupportTeamToDB(values: string[]): string {
+  if (values.includes('business-partner') || values.includes('hire-manager')) {
+    return 'already-have-team';
+  }
+  if (values.includes('hire-caregivers')) {
+    return 'planning-to-hire';
+  }
+  if (values.includes('family-help')) {
+    return 'family';
+  }
+  return 'none';
+}
+
+/**
  * Calculate assessment scores based on PRD formula:
  * weighted_scores = {
  *   financial * 1.3,
@@ -69,7 +124,8 @@ function calculateFinancialScore(answers: AssessmentAnswers): number {
   };
   score += capitalScores[answers.capital] || 0;
   
-  // Credit score (0-30 points)
+  // Credit score (0-30 points) - use mapped value
+  const mappedCredit = mapCreditScoreToDB(answers.creditScore);
   const creditScores: Record<string, number> = {
     'below-580': 5,
     '580-650': 15,
@@ -77,7 +133,7 @@ function calculateFinancialScore(answers: AssessmentAnswers): number {
     '700-750': 25,
     'above-750': 30
   };
-  score += creditScores[answers.creditScore] || 0;
+  score += creditScores[mappedCredit] || 0;
   
   // Income stability (0-20 points)
   const incomeScores: Record<string, number> = {
@@ -88,14 +144,15 @@ function calculateFinancialScore(answers: AssessmentAnswers): number {
   };
   score += incomeScores[answers.incomeStability] || 0;
   
-  // Creative financing knowledge (0-10 points)
+  // Creative financing knowledge (0-10 points) - use mapped value
+  const mappedFinancing = mapCreativeFinancingToDB(answers.creativeFinancing);
   const financingScores: Record<string, number> = {
     'none': 0,
     'basic': 3,
     'intermediate': 7,
     'advanced': 10
   };
-  score += financingScores[answers.creativeFinancing] || 0;
+  score += financingScores[mappedFinancing] || 0;
   
   return score; // Max 100
 }
@@ -154,11 +211,25 @@ function calculateOperationalScore(answers: AssessmentAnswers): number {
   };
   score += timeScores[answers.timeCommitment] || 0;
   
-  // Support team (0-25 points) - more support = better
-  score += Math.min(answers.supportTeam.length * 8, 25);
+  // Support team (0-25 points) - use mapped value
+  const mappedSupport = mapSupportTeamToDB(answers.supportTeam);
+  const supportScores: Record<string, number> = {
+    'none': 3,
+    'family': 7,
+    'planning-to-hire': 12,
+    'already-have-team': 25
+  };
+  score += supportScores[mappedSupport] || 0;
   
-  // Property management comfort (0-15 points) - scale 1-10
-  score += (answers.propertyManagement / 10) * 15;
+  // Property management comfort (0-15 points) - use mapped value
+  const mappedPropertyMgmt = mapPropertyManagementToDB(answers.propertyManagement);
+  const propertyScores: Record<string, number> = {
+    'uncomfortable': 3,
+    'somewhat-comfortable': 7,
+    'comfortable': 12,
+    'experienced': 15
+  };
+  score += propertyScores[mappedPropertyMgmt] || 0;
   
   return score; // Max 100
 }
@@ -214,11 +285,11 @@ export async function saveAssessmentResults(
       overall_score: scores.overall_score,
       readiness_level: scores.readiness_level,
       
-      // Raw answers
+      // Raw answers - WITH TRANSFORMATIONS
       capital_available: answers.capital,
-      credit_score_range: answers.creditScore,
+      credit_score_range: mapCreditScoreToDB(answers.creditScore),
       income_stability: answers.incomeStability,
-      creative_financing_knowledge: answers.creativeFinancing,
+      creative_financing_knowledge: mapCreativeFinancingToDB(answers.creativeFinancing),
       
       licensing_familiarity: answers.licensingFamiliarity,
       target_populations: answers.targetPopulations,
@@ -227,8 +298,8 @@ export async function saveAssessmentResults(
       
       caregiving_experience: answers.caregivingExperience,
       time_commitment: answers.timeCommitment,
-      support_team: answers.supportTeam.join(','),
-      property_management_comfort: answers.propertyManagement.toString(),
+      support_team: mapSupportTeamToDB(answers.supportTeam),
+      property_management_comfort: mapPropertyManagementToDB(answers.propertyManagement),
       
       primary_motivation: answers.primaryMotivation,
       commitment_level: answers.commitmentLevel,
