@@ -18,7 +18,39 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { user_id, message, conversation_id, practice_id } = await req.json();
+    const { user_id, message, conversation_id, practice_id, current_agent } = await req.json();
+
+    // Detect handoff needs based on keywords
+    const AGENT_KEYWORDS = {
+      nette: ['getting started', 'requirements', 'license', 'licensing', 'assessment', 'regulations', 'compliance', 'state rules', 'population', 'demographics', 'who to serve', 'roadmap', 'onboarding'],
+      mio: ['accountability', 'stuck', 'pattern', 'mindset', 'procrastination', 'fear', 'doubt', 'sabotage', 'breakthrough', 'transformation', 'identity', 'collision', 'practice', 'protect'],
+      me: ['financing', 'funding', 'money', 'investment', 'roi', 'cash flow', 'revenue', 'profit', 'creative financing', 'seller finance', 'subject-to', 'capital', 'budget', 'cost', 'financial']
+    };
+
+    const messageLower = message.toLowerCase();
+    let handoffSuggestion = null;
+    
+    for (const [agent, keywords] of Object.entries(AGENT_KEYWORDS)) {
+      if (agent === current_agent) continue;
+      
+      const matchedKeywords = keywords.filter(kw => messageLower.includes(kw));
+      
+      if (matchedKeywords.length >= 2) {
+        const reasons = {
+          nette: `I notice you're asking about ${matchedKeywords[0]}. Nette specializes in onboarding and licensing guidance. Would you like to connect with them?`,
+          mio: `I'm picking up on ${matchedKeywords[0]} patterns. MIO specializes in accountability and mindset coaching. Would you like their insight?`,
+          me: `You mentioned ${matchedKeywords[0]}. ME is our financial strategist who can help with creative financing strategies. Want to chat with them?`
+        };
+        
+        handoffSuggestion = {
+          suggestedAgent: agent,
+          reason: reasons[agent as keyof typeof reasons],
+          confidence: matchedKeywords.length / keywords.length,
+          detectedKeywords: matchedKeywords
+        };
+        break;
+      }
+    }
 
     // Load conversation history
     const { data: conversationHistory } = await supabaseClient
@@ -113,15 +145,38 @@ Continue the conversation naturally. Be direct, insightful, and actionable.
 
 Return ONLY plain text - your conversational response.`;
 
-    // Save user message
-    await supabaseClient
+    // Save user message with context
+    const { data: savedMessage } = await supabaseClient
       .from('gh_nette_conversations')
       .insert({
         user_id,
         role: 'user',
         message,
         created_at: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
+
+    // Log to agent_conversations with handoff detection
+    await supabaseClient.from('agent_conversations').insert({
+      user_id,
+      agent_type: current_agent || 'mio',
+      user_message: message,
+      agent_response: '', // Will be updated after streaming
+      is_handoff: handoffSuggestion !== null,
+      handoff_context: handoffSuggestion ? {
+        suggested_agent: handoffSuggestion.suggestedAgent,
+        detected_keywords: handoffSuggestion.detectedKeywords,
+        confidence: handoffSuggestion.confidence
+      } : null,
+      session_id: conversation_id || crypto.randomUUID(),
+      user_context: {
+        avatar_type: avatar?.avatar_type,
+        current_streak: userProfile?.current_streak,
+        total_points: userProfile?.total_points
+      },
+      conversation_turn: conversationHistory?.length || 0
+    });
 
     // Call Lovable AI with streaming
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -149,8 +204,33 @@ Return ONLY plain text - your conversational response.`;
       throw new Error(`AI API error: ${response.status}`);
     }
 
-    // Return streaming response
-    return new Response(response.body, {
+    // If we have a handoff suggestion, prepend it to the stream
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Send handoff suggestion first if exists
+        if (handoffSuggestion) {
+          const metadata = JSON.stringify({
+            handoff_suggestion: handoffSuggestion,
+            conversation_id: savedMessage?.id
+          });
+          controller.enqueue(encoder.encode(`data: ${metadata}\n\n`));
+        }
+
+        // Then pipe the AI response
+        const reader = response.body?.getReader();
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            controller.enqueue(value);
+          }
+        }
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
