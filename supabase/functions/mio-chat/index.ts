@@ -1,10 +1,62 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Agent expertise definitions for semantic matching
+const AGENT_EXPERTISE = {
+  nette: "Onboarding, assessments, licensing requirements, state regulations, compliance, population demographics, getting started with group homes, regulatory guidance",
+  mio: "Accountability, mindset coaching, identity collision, breakthrough patterns, mental blocks, procrastination, fear, self-sabotage, PROTECT practices, behavioral psychology",
+  me: "Creative financing, funding strategies, ROI calculations, cash flow optimization, investment structuring, seller financing, subject-to deals, capital raising, financial planning"
+};
+
+// Generate embedding using OpenAI
+async function generateEmbedding(text: string): Promise<number[]> {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) throw new Error('OPENAI_API_KEY not configured');
+
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAIApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'text-embedding-3-small',
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('OpenAI embedding error:', error);
+    throw new Error('Failed to generate embedding');
+  }
+
+  const data = await response.json();
+  return data.data[0].embedding;
+}
+
+// Calculate cosine similarity between two vectors
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,35 +72,85 @@ serve(async (req) => {
 
     const { user_id, message, conversation_id, practice_id, current_agent } = await req.json();
 
-    // Detect handoff needs based on keywords
+    // Generate embedding for semantic similarity matching
+    let messageEmbedding: number[] | null = null;
+    let semanticHandoffSuggestion = null;
+    
+    try {
+      messageEmbedding = await generateEmbedding(message);
+      
+      // Generate embeddings for each agent's expertise (cache these in production)
+      const agentEmbeddings: Record<string, number[]> = {};
+      for (const [agent, expertise] of Object.entries(AGENT_EXPERTISE)) {
+        if (agent === current_agent) continue;
+        agentEmbeddings[agent] = await generateEmbedding(expertise);
+      }
+      
+      // Calculate similarity scores
+      const similarities: Array<{ agent: string; score: number }> = [];
+      for (const [agent, embedding] of Object.entries(agentEmbeddings)) {
+        const score = cosineSimilarity(messageEmbedding, embedding);
+        similarities.push({ agent, score });
+      }
+      
+      // Sort by similarity
+      similarities.sort((a, b) => b.score - a.score);
+      
+      // Suggest handoff if similarity > 0.75 threshold
+      if (similarities[0]?.score > 0.75) {
+        const reasons: Record<string, string> = {
+          nette: `Based on the semantic analysis of your message, Nette (our Onboarding Specialist) would be ideal for this conversation. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`,
+          mio: `Your message resonates strongly with MIO's expertise in accountability and mindset coaching. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`,
+          me: `This conversation aligns perfectly with ME's financial strategy expertise. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`
+        };
+        
+        semanticHandoffSuggestion = {
+          suggestedAgent: similarities[0].agent,
+          reason: reasons[similarities[0].agent as keyof typeof reasons],
+          confidence: similarities[0].score,
+          detectedKeywords: ['semantic_match'],
+          method: 'semantic_similarity'
+        };
+      }
+    } catch (error) {
+      console.error('Semantic matching error:', error);
+      // Continue with keyword-based detection as fallback
+    }
+
+    // Detect handoff needs based on keywords (fallback method)
     const AGENT_KEYWORDS = {
       nette: ['getting started', 'requirements', 'license', 'licensing', 'assessment', 'regulations', 'compliance', 'state rules', 'population', 'demographics', 'who to serve', 'roadmap', 'onboarding'],
       mio: ['accountability', 'stuck', 'pattern', 'mindset', 'procrastination', 'fear', 'doubt', 'sabotage', 'breakthrough', 'transformation', 'identity', 'collision', 'practice', 'protect'],
       me: ['financing', 'funding', 'money', 'investment', 'roi', 'cash flow', 'revenue', 'profit', 'creative financing', 'seller finance', 'subject-to', 'capital', 'budget', 'cost', 'financial']
     };
 
-    const messageLower = message.toLowerCase();
-    let handoffSuggestion = null;
+    // Keyword-based detection (fallback if semantic didn't trigger)
+    let handoffSuggestion = semanticHandoffSuggestion;
     
-    for (const [agent, keywords] of Object.entries(AGENT_KEYWORDS)) {
-      if (agent === current_agent) continue;
+    if (!handoffSuggestion) {
+      const messageLower = message.toLowerCase();
       
-      const matchedKeywords = keywords.filter(kw => messageLower.includes(kw));
-      
-      if (matchedKeywords.length >= 2) {
-        const reasons = {
-          nette: `I notice you're asking about ${matchedKeywords[0]}. Nette specializes in onboarding and licensing guidance. Would you like to connect with them?`,
-          mio: `I'm picking up on ${matchedKeywords[0]} patterns. MIO specializes in accountability and mindset coaching. Would you like their insight?`,
-          me: `You mentioned ${matchedKeywords[0]}. ME is our financial strategist who can help with creative financing strategies. Want to chat with them?`
-        };
+      for (const [agent, keywords] of Object.entries(AGENT_KEYWORDS)) {
+        if (agent === current_agent) continue;
         
-        handoffSuggestion = {
-          suggestedAgent: agent,
-          reason: reasons[agent as keyof typeof reasons],
-          confidence: matchedKeywords.length / keywords.length,
-          detectedKeywords: matchedKeywords
-        };
-        break;
+        const matchedKeywords = keywords.filter(kw => messageLower.includes(kw));
+        
+        if (matchedKeywords.length >= 2) {
+          const reasons = {
+            nette: `I notice you're asking about ${matchedKeywords[0]}. Nette specializes in onboarding and licensing guidance. Would you like to connect with them?`,
+            mio: `I'm picking up on ${matchedKeywords[0]} patterns. MIO specializes in accountability and mindset coaching. Would you like their insight?`,
+            me: `You mentioned ${matchedKeywords[0]}. ME is our financial strategist who can help with creative financing strategies. Want to chat with them?`
+          };
+          
+          handoffSuggestion = {
+            suggestedAgent: agent,
+            reason: reasons[agent as keyof typeof reasons],
+            confidence: matchedKeywords.length / keywords.length,
+            detectedKeywords: matchedKeywords,
+            method: 'keyword_match'
+          };
+          break;
+        }
       }
     }
 
@@ -157,17 +259,19 @@ Return ONLY plain text - your conversational response.`;
       .select()
       .single();
 
-    // Log to agent_conversations with handoff detection
+    // Log to agent_conversations with handoff detection and embedding
     await supabaseClient.from('agent_conversations').insert({
       user_id,
       agent_type: current_agent || 'mio',
       user_message: message,
       agent_response: '', // Will be updated after streaming
+      message_embedding: messageEmbedding ? `[${messageEmbedding.join(',')}]` : null,
       is_handoff: handoffSuggestion !== null,
       handoff_context: handoffSuggestion ? {
         suggested_agent: handoffSuggestion.suggestedAgent,
         detected_keywords: handoffSuggestion.detectedKeywords,
-        confidence: handoffSuggestion.confidence
+        confidence: handoffSuggestion.confidence,
+        method: handoffSuggestion.method || 'unknown'
       } : null,
       session_id: conversation_id || crypto.randomUUID(),
       user_context: {
@@ -175,6 +279,8 @@ Return ONLY plain text - your conversational response.`;
         current_streak: userProfile?.current_streak,
         total_points: userProfile?.total_points
       },
+      detected_intent: handoffSuggestion?.suggestedAgent || null,
+      confidence_score: handoffSuggestion?.confidence || null,
       conversation_turn: conversationHistory?.length || 0
     });
 

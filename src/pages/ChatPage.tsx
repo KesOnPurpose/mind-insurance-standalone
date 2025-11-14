@@ -306,6 +306,17 @@ const ChatPage = () => {
               />
             ))}
 
+            {handoffSuggestion && (
+              <HandoffSuggestion
+                suggestedAgent={handoffSuggestion.suggestedAgent}
+                reason={handoffSuggestion.reason}
+                confidence={handoffSuggestion.confidence}
+                method={handoffSuggestion.method}
+                onAccept={handleAcceptHandoff}
+                onDismiss={handleDismissHandoff}
+              />
+            )}
+
             {isTyping && (
               <ChatMessage
                 role="assistant"
