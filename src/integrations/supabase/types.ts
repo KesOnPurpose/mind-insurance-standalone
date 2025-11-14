@@ -3113,6 +3113,10 @@ export type Database = {
           topic_tags: string[]
         }[]
       }
+      increment_user_points: {
+        Args: { points_param: number; user_id_param: string }
+        Returns: undefined
+      }
       match_knowledge_chunks: {
         Args: {
           filter?: Json
@@ -3129,6 +3133,10 @@ export type Database = {
       }
       soft_delete_user_account: {
         Args: { target_user_id: string }
+        Returns: undefined
+      }
+      update_practice_streak: {
+        Args: { practice_date_param: string; user_id_param: string }
         Returns: undefined
       }
     }

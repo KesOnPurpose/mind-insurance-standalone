@@ -9,6 +9,7 @@ import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
 import AssessmentPage from "./pages/AssessmentPage";
+import AvatarAssessmentPage from "./pages/AvatarAssessmentPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectPage from "./pages/ProtectPage";
 import ChatPage from "./pages/ChatPage";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
+            <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/protect" element={<ProtectedRoute><ProtectPage /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

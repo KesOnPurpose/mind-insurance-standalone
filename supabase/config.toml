@@ -1,1 +1,10 @@
 project_id = "hpyodaugrkctagkrfofj"
+
+[functions.save-practice]
+verify_jwt = true
+
+[functions.mio-section-feedback]
+verify_jwt = true
+
+[functions.mio-chat]
+verify_jwt = true
