@@ -474,27 +474,21 @@ const AssessmentPage = () => {
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="volunteer" id="exp2" />
+            <RadioGroupItem value="some-experience" id="exp2" />
             <Label htmlFor="exp2" className="font-normal cursor-pointer">
-              Some volunteer experience
+              Some experience (volunteer or 1-3 years)
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="1-3-years" id="exp3" />
+            <RadioGroupItem value="extensive-experience" id="exp3" />
             <Label htmlFor="exp3" className="font-normal cursor-pointer">
-              1-3 years professional experience
+              Extensive experience (3+ years professional)
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="3-5-years" id="exp4" />
+            <RadioGroupItem value="licensed-professional" id="exp4" />
             <Label htmlFor="exp4" className="font-normal cursor-pointer">
-              3-5 years professional experience
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="5+-years" id="exp5" />
-            <Label htmlFor="exp5" className="font-normal cursor-pointer">
-              More than 5 years professional experience
+              Licensed professional
             </Label>
           </div>
         </RadioGroup>
