@@ -35,12 +35,20 @@ const DashboardPage = () => {
               <h1 className="text-3xl font-bold mb-2">Welcome back, Future Owner! 🎯</h1>
               <p className="text-white/80">Week {currentWeek} of {totalWeeks} • Keep the momentum going</p>
             </div>
-            <Link to="/protect">
-              <Button className="bg-secondary text-secondary-foreground hover:bg-secondary-light">
-                <Brain className="w-4 h-4 mr-2" />
-                PROTECT Practice
-              </Button>
-            </Link>
+            <div className="flex gap-3">
+              <Link to="/roadmap">
+                <Button className="bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20">
+                  <Target className="w-4 h-4 mr-2" />
+                  View Roadmap
+                </Button>
+              </Link>
+              <Link to="/protect">
+                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary-light">
+                  <Brain className="w-4 h-4 mr-2" />
+                  PROTECT Practice
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -130,9 +138,12 @@ const DashboardPage = () => {
                 ))}
               </div>
 
-              <Button variant="outline" className="w-full mt-4">
-                Ask Nette for Guidance
-              </Button>
+              <Link to="/roadmap">
+                <Button variant="outline" className="w-full mt-4">
+                  View Full Roadmap
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
             </Card>
 
             {/* Weekly Progress */}
