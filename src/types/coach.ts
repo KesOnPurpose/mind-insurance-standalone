@@ -16,18 +16,18 @@ export const COACHES: Record<CoachType, Coach> = {
   nette: {
     id: 'nette',
     name: 'Nette',
-    title: 'Strategy Coach',
-    description: 'Your group home business strategist. I help you navigate licensing, location, and tactics to build your first $100K.',
+    title: 'Onboarding Specialist',
+    description: 'Your educational guide and assessment expert. I conduct your readiness assessment, generate personalized roadmaps, and provide state-specific licensing guidance to get you started.',
     avatar: 'N',
     color: 'hsl(187 85% 35%)', // Primary teal
     gradient: 'linear-gradient(135deg, hsl(187 85% 35%), hsl(187 75% 45%))',
-    personality: 'Strategic, data-driven, and practical. Focuses on actionable tactics and proven strategies.',
+    personality: 'Warm and encouraging, patient educator, detail-oriented, and compliance-focused.',
     expertise: [
-      'Business strategy',
-      'State licensing',
-      'Market analysis',
-      'Tactic selection',
-      'Revenue planning'
+      'Comprehensive assessments',
+      'Personalized roadmaps',
+      'State licensing guidance',
+      'Population-specific expertise',
+      'Initial user onboarding'
     ]
   },
   mio: {
@@ -50,18 +50,18 @@ export const COACHES: Record<CoachType, Coach> = {
   me: {
     id: 'me',
     name: 'ME',
-    title: 'Operations Coach',
-    description: 'Your operations expert. I help with day-to-day execution, time management, and completing your model week.',
+    title: 'Money Evolution Expert',
+    description: 'Your financial strategist and funding specialist. I provide creative financing strategies, ROI calculations, funding source identification, and cash flow optimization to fund your group home.',
     avatar: 'E',
     color: 'hsl(142 70% 45%)', // Success green
     gradient: 'linear-gradient(135deg, hsl(142 70% 45%), hsl(142 60% 55%))',
-    personality: 'Practical, detail-oriented, and systematic. Focuses on execution and operations.',
+    personality: 'Numbers-driven, strategic thinker, opportunity-focused, and ROI-oriented.',
     expertise: [
-      'Time management',
-      'Model week planning',
-      'Task execution',
-      'Operations setup',
-      'Daily scheduling'
+      'Creative financing strategies',
+      'ROI calculations & projections',
+      'Funding source identification',
+      'Cash flow optimization',
+      'Investment structuring'
     ]
   }
 };
