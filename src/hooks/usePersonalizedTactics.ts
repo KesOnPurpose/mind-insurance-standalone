@@ -6,23 +6,27 @@ import {
   getNextRecommendedTactic
 } from "@/services/tacticFilterService";
 import { getUserAssessment } from "@/services/assessmentService";
-
-// Mock user ID for now - will be replaced with real auth later
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { useAuth } from "@/contexts/AuthContext";
 
 export function usePersonalizedTactics() {
+  const { user } = useAuth();
+  
   // First, fetch user's assessment
   const { data: assessment, isLoading: isLoadingAssessment } = useQuery({
-    queryKey: ['assessment', MOCK_USER_ID],
-    queryFn: () => getUserAssessment(MOCK_USER_ID),
+    queryKey: ['assessment', user?.id],
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return getUserAssessment(user.id);
+    },
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
   });
   
   // Then, fetch personalized tactics based on assessment
   const { data: tactics, isLoading: isLoadingTactics } = useQuery({
-    queryKey: ['personalizedTactics', MOCK_USER_ID, assessment?.overall_score],
+    queryKey: ['personalizedTactics', user?.id, assessment?.overall_score],
     queryFn: async () => {
-      if (!assessment) return [];
+      if (!assessment || !user?.id) return [];
       
       return getPersonalizedTactics({
         capital_available: assessment.capital_available,
@@ -40,11 +44,11 @@ export function usePersonalizedTactics() {
   
   // Get next recommended tactic
   const { data: nextTactic } = useQuery({
-    queryKey: ['nextTactic', MOCK_USER_ID],
+    queryKey: ['nextTactic', user?.id],
     queryFn: async () => {
-      if (!assessment) return null;
+      if (!assessment || !user?.id) return null;
       
-      return getNextRecommendedTactic(MOCK_USER_ID, {
+      return getNextRecommendedTactic(user.id, {
         capital_available: assessment.capital_available,
         target_populations: assessment.target_populations || [],
         timeline: assessment.timeline,

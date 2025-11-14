@@ -6,35 +6,40 @@ import {
   getUserAssessment 
 } from "@/services/assessmentService";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock user ID for now - will be replaced with real auth later
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useAssessment() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   // Query to fetch user's assessment
   const { data: assessment, isLoading } = useQuery({
-    queryKey: ['assessment', MOCK_USER_ID],
-    queryFn: () => getUserAssessment(MOCK_USER_ID),
+    queryKey: ['assessment', user?.id],
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return getUserAssessment(user.id);
+    },
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   // Mutation to submit assessment
   const submitAssessment = useMutation({
     mutationFn: async (answers: AssessmentAnswers) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
       // Calculate scores
       const scores = calculateScores(answers);
       
       // Save to database
-      await saveAssessmentResults(MOCK_USER_ID, answers, scores);
+      await saveAssessmentResults(user.id, answers, scores);
       
       return { answers, scores };
     },
     onSuccess: ({ scores }) => {
       // Invalidate queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: ['assessment'] });
+      queryClient.invalidateQueries({ queryKey: ['assessment', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
       
       // Show success message with readiness level

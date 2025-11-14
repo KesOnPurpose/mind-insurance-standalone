@@ -10,18 +10,21 @@ import {
   Calendar,
   CheckCircle2,
   ArrowRight,
-  Flame
+  Flame,
+  LogOut
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { JourneyMap } from "@/components/roadmap/JourneyMap";
 import { JourneyPhase } from "@/types/tactic";
-
-const MOCK_USER_ID = 'a57520b3-95c8-413d-bffe-6f1b46c9e58c';
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProgress } from "@/services/progressService";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
+  const { user, signOut } = useAuth();
+  const { data: userProgress } = useUserProgress(user?.id || '');
   
   // Mock data
   const currentWeek = 1;
@@ -51,6 +54,8 @@ const DashboardPage = () => {
 
   // Real-time subscription for progress updates
   useEffect(() => {
+    if (!user?.id) return;
+
     const channel = supabase
       .channel('dashboard-progress-changes')
       .on(
@@ -59,7 +64,7 @@ const DashboardPage = () => {
           event: '*',
           schema: 'public',
           table: 'gh_user_tactic_progress',
-          filter: `user_id=eq.${MOCK_USER_ID}`
+          filter: `user_id=eq.${user.id}`
         },
         (payload) => {
           console.log('Real-time progress update on dashboard:', payload);
@@ -73,7 +78,7 @@ const DashboardPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, user?.id]);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -85,7 +90,8 @@ const DashboardPage = () => {
               <h1 className="text-3xl font-bold mb-2">Welcome back, Future Owner! 🎯</h1>
               <p className="text-white/80">Week {currentWeek} of {totalWeeks} • Keep the momentum going</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <span className="text-sm text-white/80">{user?.email}</span>
               <Link to="/roadmap">
                 <Button className="bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20">
                   <Target className="w-4 h-4 mr-2" />
@@ -98,6 +104,9 @@ const DashboardPage = () => {
                   PROTECT Practice
                 </Button>
               </Link>
+              <Button onClick={signOut} variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
