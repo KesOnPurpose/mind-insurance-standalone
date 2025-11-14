@@ -88,12 +88,12 @@ const ChatPage = () => {
 
     try {
       // Call MIO chat edge function with streaming
-      const CHAT_URL = `https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/mio-chat`;
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mio-chat`;
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs`,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
           user_id: user.id,
@@ -102,6 +102,24 @@ const ChatPage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          toast({
+            title: "Rate Limit Exceeded",
+            description: "Too many requests. Please wait a moment and try again.",
+            variant: "destructive",
+          });
+          setIsTyping(false);
+          return;
+        }
+        if (response.status === 402) {
+          toast({
+            title: "Credits Required",
+            description: "Please add credits to your Lovable AI workspace to continue.",
+            variant: "destructive",
+          });
+          setIsTyping(false);
+          return;
+        }
         throw new Error('Failed to get response from MIO');
       }
 
@@ -120,39 +138,77 @@ const ChatPage = () => {
       };
       setMessages((prev) => [...prev, initialAiMessage]);
 
-      // Stream response
+      // Stream response with proper SSE parsing
       if (reader) {
-        let buffer = '';
-        while (true) {
+        let textBuffer = '';
+        let streamDone = false;
+
+        while (!streamDone) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
+          textBuffer += decoder.decode(value, { stream: true });
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') continue;
-              
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  aiContent += content;
-                  setMessages((prev) => 
-                    prev.map((msg) =>
-                      msg.id === aiMessageId
-                        ? { ...msg, content: aiContent }
-                        : msg
-                    )
-                  );
-                }
-              } catch (e) {
-                // Ignore parse errors for incomplete JSON
-              }
+          // Process line-by-line as data arrives
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+
+            if (line.endsWith("\r")) line = line.slice(0, -1); // handle CRLF
+            if (line.startsWith(":") || line.trim() === "") continue; // SSE comments/keepalive
+            if (!line.startsWith("data: ")) continue;
+
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") {
+              streamDone = true;
+              break;
             }
+
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (content) {
+                aiContent += content;
+                setMessages((prev) => 
+                  prev.map((msg) =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: aiContent }
+                      : msg
+                  )
+                );
+              }
+            } catch {
+              // Incomplete JSON split across chunks: put it back and wait for more data
+              textBuffer = line + "\n" + textBuffer;
+              break;
+            }
+          }
+        }
+
+        // Final flush in case remaining buffered lines arrived without trailing newline
+        if (textBuffer.trim()) {
+          for (let raw of textBuffer.split("\n")) {
+            if (!raw) continue;
+            if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+            if (raw.startsWith(":") || raw.trim() === "") continue;
+            if (!raw.startsWith("data: ")) continue;
+            const jsonStr = raw.slice(6).trim();
+            if (jsonStr === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (content) {
+                aiContent += content;
+                setMessages((prev) => 
+                  prev.map((msg) =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: aiContent }
+                      : msg
+                  )
+                );
+              }
+            } catch { /* ignore partial leftovers */ }
           }
         }
       }
