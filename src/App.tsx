@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProtectPage from "./pages/ProtectPage";
 import ChatPage from "./pages/ChatPage";
 import ModelWeekPage from "./pages/ModelWeekPage";
+import RoadmapPage from "./pages/RoadmapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/protect" element={<ProtectPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/model-week" element={<ModelWeekPage />} />
+          <Route path="/roadmap" element={<RoadmapPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
