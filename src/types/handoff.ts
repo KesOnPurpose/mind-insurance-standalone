@@ -5,6 +5,7 @@ export interface HandoffSuggestion {
   reason: string;
   confidence: number;
   detectedKeywords: string[];
+  method?: 'semantic_similarity' | 'keyword_match';
 }
 
 export interface HandoffContext {
