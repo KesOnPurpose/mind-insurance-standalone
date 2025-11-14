@@ -2,9 +2,13 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Circle, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 const protectSteps = [
   {
@@ -61,14 +65,84 @@ const protectSteps = [
 const ProtectPage = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const progress = (completedSteps.length / protectSteps.length) * 100;
   const currentStepData = protectSteps[currentStep];
 
-  const handleNext = () => {
+  const handleResponseChange = (value: any) => {
+    setResponses((prev) => ({
+      ...prev,
+      [currentStepData.id]: value,
+    }));
+  };
+
+  const savePractice = async (practiceType: string, data: any) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.functions.invoke('save-practice', {
+        body: {
+          user_id: user.id,
+          practice_type: practiceType,
+          practice_date: new Date().toISOString().split('T')[0],
+          data: data,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving practice:', error);
+      throw error;
+    }
+  };
+
+  const handleNext = async () => {
     if (!completedSteps.includes(currentStepData.id)) {
       setCompletedSteps([...completedSteps, currentStepData.id]);
+    }
+
+    // Save practice when completing PRO, TE, or CT sections
+    const sectionMap: Record<string, string[]> = {
+      PRO: ['pattern', 'reinforce', 'outcome'],
+      TE: ['trigger', 'energy'],
+      CT: ['celebrate', 'tomorrow'],
+    };
+
+    const completedSection = Object.entries(sectionMap).find(([_, steps]) =>
+      steps.includes(currentStepData.id) && steps.every(s => completedSteps.includes(s) || s === currentStepData.id)
+    );
+
+    if (completedSection) {
+      setIsSaving(true);
+      try {
+        await savePractice(currentStepData.letter, responses[currentStepData.id]);
+        
+        // Request section feedback
+        await supabase.functions.invoke('mio-section-feedback', {
+          body: {
+            user_id: user?.id,
+            section: completedSection[0],
+            practice_date: new Date().toISOString().split('T')[0],
+          },
+        });
+
+        toast({
+          title: `${completedSection[0]} Section Complete! 🎉`,
+          description: "MIO will send you feedback shortly.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save practice. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
 
     if (currentStep < protectSteps.length - 1) {
@@ -168,17 +242,26 @@ const ProtectPage = () => {
                 <label className="block text-lg font-medium mb-4">
                   {currentStepData.question}
                 </label>
-                <textarea
-                  className="w-full min-h-[200px] p-4 rounded-lg border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Write your response here..."
-                />
+                {currentStepData.id === 'reinforce' ? (
+                  <VoiceRecorder
+                    onComplete={(url) => handleResponseChange({ recording_url: url })}
+                    minDuration={30}
+                  />
+                ) : (
+                  <Textarea
+                    className="w-full min-h-[200px] p-4 rounded-lg border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Write your response here..."
+                    value={responses[currentStepData.id] || ''}
+                    onChange={(e) => handleResponseChange(e.target.value)}
+                  />
+                )}
               </div>
 
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={handleBack}
-                  disabled={currentStep === 0}
+                  disabled={currentStep === 0 || isSaving}
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -186,10 +269,11 @@ const ProtectPage = () => {
                 </Button>
                 <Button
                   onClick={handleNext}
+                  disabled={!responses[currentStepData.id] || isSaving}
                   className="flex-1 bg-gradient-hero hover:opacity-90 transition-opacity"
                 >
-                  {currentStep === protectSteps.length - 1 ? 'Complete Practice' : 'Next Step'}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {isSaving ? 'Saving...' : currentStep === protectSteps.length - 1 ? 'Complete Practice' : 'Next Step'}
+                  {!isSaving && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               </div>
             </Card>

@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import CoachSelector from "@/components/chat/CoachSelector";
 import ChatMessage from "@/components/chat/ChatMessage";
 import { CoachType, COACHES } from "@/types/coach";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -16,19 +18,21 @@ interface Message {
 }
 
 const ChatPage = () => {
-  const [selectedCoach, setSelectedCoach] = useState<CoachType>('nette');
+  const [selectedCoach, setSelectedCoach] = useState<CoachType>('mio');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hi! I'm Nette, your Strategy Coach. I have access to 403 proven tactics to help you achieve your first $100K. I can help you with business strategy, state licensing, and selecting the right tactics for your situation. What would you like to know?",
+      content: "Hi! I'm MIO - Mind Insurance Oracle. I'm your forensic behavioral psychologist here to help you see patterns you can't see yourself. I notice everything in your PROTECT practices and can help you break through mental blocks. What's on your mind?",
       timestamp: new Date(),
-      coachType: 'nette'
+      coachType: 'mio'
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,8 +70,8 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, greetingMessage]);
   };
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || !user) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -78,21 +82,91 @@ const ChatPage = () => {
     };
 
     setMessages([...messages, userMessage]);
+    const messageText = input;
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+    try {
+      // Call MIO chat edge function with streaming
+      const CHAT_URL = `https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/mio-chat`;
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          message: messageText,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from MIO');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let aiContent = '';
+      const aiMessageId = (Date.now() + 1).toString();
+
+      // Create initial AI message
+      const initialAiMessage: Message = {
+        id: aiMessageId,
         role: "assistant",
-        content: getCoachResponse(selectedCoach, input),
+        content: '',
         timestamp: new Date(),
-        coachType: selectedCoach
+        coachType: 'mio'
       };
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, initialAiMessage]);
+
+      // Stream response
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  aiContent += content;
+                  setMessages((prev) => 
+                    prev.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, content: aiContent }
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                // Ignore parse errors for incomplete JSON
+              }
+            }
+          }
+        }
+      }
+
       setIsTyping(false);
-    }, 1500);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+      setIsTyping(false);
+    }
   };
 
   return (

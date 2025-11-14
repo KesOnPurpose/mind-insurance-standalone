@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { 
   Brain, 
   Target, 
@@ -11,7 +12,9 @@ import {
   CheckCircle2,
   ArrowRight,
   Flame,
-  LogOut
+  LogOut,
+  Trophy,
+  Award
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,12 +28,31 @@ const DashboardPage = () => {
   const queryClient = useQueryClient();
   const { user, signOut } = useAuth();
   const { data: userProgress } = useUserProgress(user?.id || '');
+  const [userProfile, setUserProfile] = useState<any>(null);
+  
+  // Fetch user profile for gamification data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      setUserProfile(data);
+    };
+    
+    fetchProfile();
+  }, [user?.id]);
   
   // Mock data
   const currentWeek = 1;
   const totalWeeks = 12;
   const weekProgress = (currentWeek / totalWeeks) * 100;
-  const protectStreak = 3;
+  const protectStreak = userProfile?.current_streak || 0;
+  const totalPoints = userProfile?.total_points || 0;
   const todaysTactics = [
     { id: 1, name: "Research group home regulations in your state", completed: true },
     { id: 2, name: "Identify 3 potential neighborhoods", completed: false },
@@ -113,13 +135,61 @@ const DashboardPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Journey Map - Full Width */}
-        <div className="mb-6">
-          <JourneyMap 
-            currentPhase={currentPhase}
-            phaseProgress={phaseProgress}
-            completedMilestones={completedMilestones}
-          />
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Week Progress</p>
+                <p className="text-2xl font-bold">{currentWeek}/{totalWeeks}</p>
+              </div>
+            </div>
+            <Progress value={weekProgress} className="h-2" />
+          </Card>
+
+          <Card className="p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+                <Flame className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">PROTECT Streak</p>
+                <p className="text-2xl font-bold text-secondary">{protectStreak} days 🔥</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Points</p>
+                <p className="text-2xl font-bold text-primary">{totalPoints}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                <Award className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Level</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold">{Math.floor(totalPoints / 100)}</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {totalPoints % 100}/100 XP
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
