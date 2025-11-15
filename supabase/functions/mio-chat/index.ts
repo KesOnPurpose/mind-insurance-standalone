@@ -175,9 +175,39 @@ serve(async (req) => {
     
     console.log(`[Chat] User: ${user_id}, Agent: ${current_agent}, ConversationID: ${conversation_id || 'new'}`);
 
+    // Generate cache key and check cache first
+    const msgHash = hashMessage(message);
+    const cache = getCache();
+    const userContext = await getUserContext(user_id, current_agent as any);
+    
+    let cacheKey: string;
+    let cacheHit = false;
+    
+    if (current_agent === 'nette') {
+      const week = userContext.current_week || 1;
+      cacheKey = CacheKeys.netteResponse(user_id, week, msgHash);
+    } else if (current_agent === 'mio') {
+      const practiceDate = userContext.last_practice_date || 'general';
+      cacheKey = CacheKeys.mioResponse(user_id, practiceDate);
+    } else {
+      const financingType = userContext.property_acquisition_type || 'general';
+      cacheKey = CacheKeys.meResponse(user_id, financingType, msgHash);
+    }
+    
+    // Check cache first
+    const cachedResponse = await cache.get(cacheKey);
+    if (cachedResponse) {
+      cacheHit = true;
+      console.log('[Cache] HIT - Returning cached response');
+      
+      return new Response(cachedResponse, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      });
+    }
+    console.log('[Cache] MISS - Fetching from AI');
+
     const messageEmbedding = await generateEmbedding(message);
     const handoffSuggestion = await detectHandoff(message, current_agent, messageEmbedding);
-    const userContext = await getUserContext(user_id, current_agent as any);
 
     // Load conversation history for context (last 20 messages)
     const { data: conversationHistory } = await supabaseClient
@@ -212,6 +242,7 @@ serve(async (req) => {
     });
 
     // Call AI with streaming
+    const requestStartTime = performance.now();
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -286,6 +317,17 @@ serve(async (req) => {
               role: 'assistant',
               message: fullResponse
             });
+            
+            // Cache the full response
+            const requestEndTime = performance.now();
+            const totalResponseTime = Math.round(requestEndTime - requestStartTime);
+            
+            const ttl = current_agent === 'nette' ? CacheTTL.RESPONSE_SHORT :
+                        current_agent === 'mio' ? CacheTTL.RESPONSE_MEDIUM :
+                        CacheTTL.RESPONSE_LONG;
+            
+            await cache.set(cacheKey, fullResponse, ttl);
+            console.log(`[Cache] Stored response (TTL: ${ttl}s, Response Time: ${totalResponseTime}ms)`);
           }
 
           controller.close();
