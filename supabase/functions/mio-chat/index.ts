@@ -211,35 +211,46 @@ serve(async (req) => {
 
     // Load conversation history for context (last 20 messages)
     const { data: conversationHistory } = await supabaseClient
-      .from('gh_nette_conversations')
-      .select('*')
+      .from('agent_conversations')
+      .select('user_message, agent_response')
       .eq('user_id', user_id)
+      .eq('agent_type', current_agent)
       .order('created_at', { ascending: false })
       .limit(20);
     
-    // Reverse to chronological order for AI context
-    const orderedHistory = conversationHistory?.reverse() || [];
+    // Reverse to chronological order and format for AI context
+    const orderedHistory = conversationHistory?.reverse().flatMap(msg => [
+      { role: 'user', content: msg.user_message },
+      { role: 'assistant', content: msg.agent_response }
+    ]) || [];
 
-    // Enable RAG for all agents
+    // Enable RAG for all agents and track metrics
     let ragContext: string | undefined;
+    const ragStartTime = performance.now();
     const ragChunks = await hybridSearch(
       message, 
       current_agent as AgentType, 
       {}, 
       current_agent === 'nette' ? 5 : 3 // Nette gets more context
     );
+    const ragEndTime = performance.now();
+    
+    // Calculate RAG metrics
+    const ragMetrics = {
+      chunks_retrieved: ragChunks.length,
+      avg_similarity: ragChunks.length > 0 
+        ? ragChunks.reduce((sum, c) => sum + (c.similarity_score || 0), 0) / ragChunks.length 
+        : 0,
+      max_similarity: ragChunks.length > 0 
+        ? Math.max(...ragChunks.map(c => c.similarity_score || 0)) 
+        : 0,
+      rag_time_ms: Math.round(ragEndTime - ragStartTime)
+    };
+    
     ragContext = formatContextChunks(ragChunks);
+    console.log('[RAG Metrics]', ragMetrics);
 
     const systemPrompt = getSystemPrompt(current_agent, userContext, ragContext);
-
-    // Store user message
-    await supabaseClient.from('gh_nette_conversations').insert({
-      user_id,
-      role: 'user',
-      message,
-      handoff_suggested: !!handoffSuggestion,
-      handoff_target: handoffSuggestion?.suggestedAgent || null
-    });
 
     // Call AI with streaming
     const requestStartTime = performance.now();
@@ -253,7 +264,7 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...orderedHistory.map((msg: any) => ({ role: msg.role, content: msg.message })),
+          ...orderedHistory,
           { role: 'user', content: message }
         ],
         max_completion_tokens: current_agent === 'nette' ? 200 : current_agent === 'mio' ? 220 : 180,
@@ -310,24 +321,53 @@ serve(async (req) => {
             }
           }
 
-          // Store assistant response
+          // Store complete conversation with metrics
           if (fullResponse) {
-            await supabaseClient.from('gh_nette_conversations').insert({
-              user_id,
-              role: 'assistant',
-              message: fullResponse
-            });
-            
-            // Cache the full response
             const requestEndTime = performance.now();
             const totalResponseTime = Math.round(requestEndTime - requestStartTime);
             
+            // Estimate tokens (rough approximation: 1 token ≈ 4 chars)
+            const estimatedTokens = Math.round((message.length + fullResponse.length) / 4);
+            
+            await supabaseClient.from('agent_conversations').insert({
+              user_id,
+              agent_type: current_agent,
+              session_id: conversation_id || crypto.randomUUID(),
+              user_message: message,
+              agent_response: fullResponse,
+              message_embedding: JSON.stringify(messageEmbedding),
+              
+              // RAG metrics
+              rag_context_used: !!ragContext,
+              chunks_retrieved: ragMetrics.chunks_retrieved,
+              avg_similarity_score: ragMetrics.avg_similarity,
+              max_similarity_score: ragMetrics.max_similarity,
+              rag_time_ms: ragMetrics.rag_time_ms,
+              
+              // Cache metrics
+              cache_hit: cacheHit,
+              
+              // Handoff metrics
+              handoff_suggested: !!handoffSuggestion,
+              handoff_target: handoffSuggestion?.suggestedAgent || null,
+              handoff_confidence: handoffSuggestion?.confidence || null,
+              handoff_reason: handoffSuggestion?.method || null,
+              
+              // Performance metrics
+              response_time_ms: totalResponseTime,
+              tokens_used: estimatedTokens,
+              
+              // Context
+              user_context: userContext
+            });
+            
+            // Cache the full response
             const ttl = current_agent === 'nette' ? CacheTTL.RESPONSE_SHORT :
                         current_agent === 'mio' ? CacheTTL.RESPONSE_MEDIUM :
                         CacheTTL.RESPONSE_LONG;
             
             await cache.set(cacheKey, fullResponse, ttl);
-            console.log(`[Cache] Stored response (TTL: ${ttl}s, Response Time: ${totalResponseTime}ms)`);
+            console.log(`[Metrics] Response: ${totalResponseTime}ms, Tokens: ${estimatedTokens}, Cache: ${cacheHit}, RAG: ${ragMetrics.chunks_retrieved} chunks`);
           }
 
           controller.close();
