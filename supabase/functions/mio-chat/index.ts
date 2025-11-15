@@ -9,7 +9,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 import { generateEmbedding, cosineSimilarity } from '../_shared/embedding-service.ts';
-import { hybridSearch, formatContextChunks } from '../_shared/rag-service.ts';
+import { hybridSearch, formatContextChunks, type AgentType } from '../_shared/rag-service.ts';
 import { getCache, CacheKeys, CacheTTL, hashMessage } from '../_shared/cache-service.ts';
 import { getUserContext, formatUserContextForPrompt } from '../_shared/user-context-service.ts';
 
@@ -121,14 +121,19 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(20);
 
+    // Enable RAG for all agents
     let ragContext: string | undefined;
-    if (current_agent === 'nette') {
-      const ragChunks = await hybridSearch(message, 'nette', {}, 5);
-      ragContext = formatContextChunks(ragChunks);
-    }
+    const ragChunks = await hybridSearch(
+      message, 
+      current_agent as AgentType, 
+      {}, 
+      current_agent === 'nette' ? 5 : 3 // Nette gets more context
+    );
+    ragContext = formatContextChunks(ragChunks);
 
     const systemPrompt = getSystemPrompt(current_agent, userContext, ragContext);
 
+    // Store user message
     await supabaseClient.from('gh_nette_conversations').insert({
       user_id,
       role: 'user',
@@ -137,6 +142,7 @@ serve(async (req) => {
       handoff_target: handoffSuggestion?.suggestedAgent || null
     });
 
+    // Call AI with streaming
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -154,7 +160,73 @@ serve(async (req) => {
       })
     });
 
-    return new Response(response.body, {
+    if (!response.ok) {
+      throw new Error(`AI API error: ${response.status}`);
+    }
+
+    // Create a transform stream to capture the response and send handoff metadata
+    const reader = response.body!.getReader();
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    
+    let fullResponse = '';
+    let handoffSent = false;
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Send handoff suggestion as first event if detected
+        if (handoffSuggestion && !handoffSent) {
+          const handoffEvent = `data: ${JSON.stringify({
+            type: 'handoff',
+            suggestedAgent: handoffSuggestion.suggestedAgent,
+            confidence: handoffSuggestion.confidence,
+            method: handoffSuggestion.method
+          })}\n\n`;
+          controller.enqueue(encoder.encode(handoffEvent));
+          handoffSent = true;
+        }
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            controller.enqueue(value);
+
+            // Parse SSE to extract content
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  const content = data.choices?.[0]?.delta?.content;
+                  if (content) fullResponse += content;
+                } catch (e) {
+                  // Ignore parse errors
+                }
+              }
+            }
+          }
+
+          // Store assistant response
+          if (fullResponse) {
+            await supabaseClient.from('gh_nette_conversations').insert({
+              user_id,
+              role: 'assistant',
+              message: fullResponse
+            });
+          }
+
+          controller.close();
+        } catch (error) {
+          console.error('[Stream] Error:', error);
+          controller.error(error);
+        }
+      }
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' }
     });
 
