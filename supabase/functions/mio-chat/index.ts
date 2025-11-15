@@ -1,61 +1,99 @@
+// ============================================================================
+// MULTI-AGENT CHAT FUNCTION (Nette, MIO, ME)
+// ============================================================================
+// Phase 3 Implementation: RAG-powered with shared services
+// ============================================================================
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+import { generateEmbedding, cosineSimilarity } from '../_shared/embedding-service.ts';
+import { hybridSearch, formatContextChunks } from '../_shared/rag-service.ts';
+import { getCache, CacheKeys, CacheTTL, hashMessage } from '../_shared/cache-service.ts';
+import { getUserContext, formatUserContextForPrompt } from '../_shared/user-context-service.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Agent expertise definitions for semantic matching
 const AGENT_EXPERTISE = {
-  nette: "Onboarding, assessments, licensing requirements, state regulations, compliance, population demographics, getting started with group homes, regulatory guidance",
-  mio: "Accountability, mindset coaching, identity collision, breakthrough patterns, mental blocks, procrastination, fear, self-sabotage, PROTECT practices, behavioral psychology",
-  me: "Creative financing, funding strategies, ROI calculations, cash flow optimization, investment structuring, seller financing, subject-to deals, capital raising, financial planning"
+  nette: "Onboarding, licensing, state regulations, compliance, tactics library, model weeks",
+  mio: "Accountability, mindset coaching, identity collision, breakthrough patterns, PROTECT practices",
+  me: "Creative financing, ROI calculations, seller financing, capital raising, deal structuring"
 };
 
-// Generate embedding using OpenAI
-async function generateEmbedding(text: string): Promise<number[]> {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) throw new Error('OPENAI_API_KEY not configured');
+const AGENT_KEYWORDS = {
+  nette: ['license', 'regulations', 'compliance', 'tactics', 'model week', 'getting started'],
+  mio: ['stuck', 'fear', 'procrastination', 'breakthrough', 'mindset', 'accountability'],
+  me: ['financing', 'funding', 'roi', 'cash flow', 'seller finance', 'capital']
+};
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'text-embedding-3-small',
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('OpenAI embedding error:', error);
-    throw new Error('Failed to generate embedding');
+async function detectHandoff(message: string, currentAgent: string, messageEmbedding: number[]): Promise<any> {
+  try {
+    const agentEmbeddings: Record<string, number[]> = {};
+    for (const [agent, expertise] of Object.entries(AGENT_EXPERTISE)) {
+      if (agent === currentAgent) continue;
+      agentEmbeddings[agent] = await generateEmbedding(expertise);
+    }
+    
+    const similarities = Object.entries(agentEmbeddings).map(([agent, embedding]) => ({
+      agent,
+      score: cosineSimilarity(messageEmbedding, embedding)
+    })).sort((a, b) => b.score - a.score);
+    
+    if (similarities[0]?.score > 0.75) {
+      return {
+        suggestedAgent: similarities[0].agent,
+        confidence: similarities[0].score,
+        method: 'semantic_similarity'
+      };
+    }
+  } catch (error) {
+    console.error('[Handoff] Error:', error);
   }
 
-  const data = await response.json();
-  return data.data[0].embedding;
+  const messageLower = message.toLowerCase();
+  for (const [agent, keywords] of Object.entries(AGENT_KEYWORDS)) {
+    if (agent === currentAgent) continue;
+    const matched = keywords.filter(kw => messageLower.includes(kw));
+    if (matched.length >= 2) {
+      return { suggestedAgent: agent, confidence: 0.8, method: 'keyword_match' };
+    }
+  }
+  return null;
 }
 
-// Calculate cosine similarity between two vectors
-function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) return 0;
-  
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+function getSystemPrompt(agent: string, userContext: any, ragContext?: string): string {
+  const baseContext = formatUserContextForPrompt(userContext);
+  const ragSection = ragContext ? `\n\nKNOWLEDGE BASE:\n${ragContext}` : '';
+
+  if (agent === 'nette') {
+    return `You are Nette, the Onboarding Specialist for the Group Home Challenge.
+
+${baseContext}
+
+Guide users through licensing, tactics, and getting started. Reference the knowledge base when relevant.${ragSection}`;
   }
-  
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+
+  if (agent === 'mio') {
+    return `You are MIO, the Accountability Coach specializing in mindset and breakthrough patterns.
+
+${baseContext}
+
+Help users overcome procrastination, fear, and self-sabotage. Be direct and insightful.`;
+  }
+
+  if (agent === 'me') {
+    return `You are ME, the Financial Strategist specializing in creative financing.
+
+${baseContext}
+
+Guide users through financing strategies, ROI calculations, and deal structuring.`;
+  }
+
+  return `You are a helpful AI assistant.`;
 }
 
 serve(async (req) => {
@@ -70,91 +108,12 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { user_id, message, conversation_id, practice_id, current_agent } = await req.json();
+    const { user_id, message, current_agent = 'nette' } = await req.json();
 
-    // Generate embedding for semantic similarity matching
-    let messageEmbedding: number[] | null = null;
-    let semanticHandoffSuggestion = null;
-    
-    try {
-      messageEmbedding = await generateEmbedding(message);
-      
-      // Generate embeddings for each agent's expertise (cache these in production)
-      const agentEmbeddings: Record<string, number[]> = {};
-      for (const [agent, expertise] of Object.entries(AGENT_EXPERTISE)) {
-        if (agent === current_agent) continue;
-        agentEmbeddings[agent] = await generateEmbedding(expertise);
-      }
-      
-      // Calculate similarity scores
-      const similarities: Array<{ agent: string; score: number }> = [];
-      for (const [agent, embedding] of Object.entries(agentEmbeddings)) {
-        const score = cosineSimilarity(messageEmbedding, embedding);
-        similarities.push({ agent, score });
-      }
-      
-      // Sort by similarity
-      similarities.sort((a, b) => b.score - a.score);
-      
-      // Suggest handoff if similarity > 0.75 threshold
-      if (similarities[0]?.score > 0.75) {
-        const reasons: Record<string, string> = {
-          nette: `Based on the semantic analysis of your message, Nette (our Onboarding Specialist) would be ideal for this conversation. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`,
-          mio: `Your message resonates strongly with MIO's expertise in accountability and mindset coaching. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`,
-          me: `This conversation aligns perfectly with ME's financial strategy expertise. Similarity score: ${(similarities[0].score * 100).toFixed(1)}%`
-        };
-        
-        semanticHandoffSuggestion = {
-          suggestedAgent: similarities[0].agent,
-          reason: reasons[similarities[0].agent as keyof typeof reasons],
-          confidence: similarities[0].score,
-          detectedKeywords: ['semantic_match'],
-          method: 'semantic_similarity'
-        };
-      }
-    } catch (error) {
-      console.error('Semantic matching error:', error);
-      // Continue with keyword-based detection as fallback
-    }
+    const messageEmbedding = await generateEmbedding(message);
+    const handoffSuggestion = await detectHandoff(message, current_agent, messageEmbedding);
+    const userContext = await getUserContext(user_id, current_agent as any);
 
-    // Detect handoff needs based on keywords (fallback method)
-    const AGENT_KEYWORDS = {
-      nette: ['getting started', 'requirements', 'license', 'licensing', 'assessment', 'regulations', 'compliance', 'state rules', 'population', 'demographics', 'who to serve', 'roadmap', 'onboarding'],
-      mio: ['accountability', 'stuck', 'pattern', 'mindset', 'procrastination', 'fear', 'doubt', 'sabotage', 'breakthrough', 'transformation', 'identity', 'collision', 'practice', 'protect'],
-      me: ['financing', 'funding', 'money', 'investment', 'roi', 'cash flow', 'revenue', 'profit', 'creative financing', 'seller finance', 'subject-to', 'capital', 'budget', 'cost', 'financial']
-    };
-
-    // Keyword-based detection (fallback if semantic didn't trigger)
-    let handoffSuggestion = semanticHandoffSuggestion;
-    
-    if (!handoffSuggestion) {
-      const messageLower = message.toLowerCase();
-      
-      for (const [agent, keywords] of Object.entries(AGENT_KEYWORDS)) {
-        if (agent === current_agent) continue;
-        
-        const matchedKeywords = keywords.filter(kw => messageLower.includes(kw));
-        
-        if (matchedKeywords.length >= 2) {
-          const reasons = {
-            nette: `I notice you're asking about ${matchedKeywords[0]}. Nette specializes in onboarding and licensing guidance. Would you like to connect with them?`,
-            mio: `I'm picking up on ${matchedKeywords[0]} patterns. MIO specializes in accountability and mindset coaching. Would you like their insight?`,
-            me: `You mentioned ${matchedKeywords[0]}. ME is our financial strategist who can help with creative financing strategies. Want to chat with them?`
-          };
-          
-          handoffSuggestion = {
-            suggestedAgent: agent,
-            reason: reasons[agent as keyof typeof reasons],
-            confidence: matchedKeywords.length / keywords.length,
-            detectedKeywords: matchedKeywords,
-            method: 'keyword_match'
-          };
-          break;
-        }
-      }
-    }
-
-    // Load conversation history
     const { data: conversationHistory } = await supabaseClient
       .from('gh_nette_conversations')
       .select('*')
@@ -162,129 +121,22 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(20);
 
-    // Load user context
-    const { data: avatar } = await supabaseClient
-      .from('avatar_assessments')
-      .select('*')
-      .eq('user_id', user_id)
-      .maybeSingle();
-
-    const { data: recentPractices } = await supabaseClient
-      .from('daily_practices')
-      .select('*')
-      .eq('user_id', user_id)
-      .gte('practice_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-      .order('practice_date', { ascending: false });
-
-    const { data: userProfile } = await supabaseClient
-      .from('user_profiles')
-      .select('current_streak, total_points, full_name')
-      .eq('id', user_id)
-      .single();
-
-    const { data: coachIntel } = await supabaseClient
-      .from('mio_coach_intelligence')
-      .select('*')
-      .eq('user_id', user_id)
-      .maybeSingle();
-
-    // Load practice context if specified
-    let practiceContext = null;
-    if (practice_id) {
-      const { data } = await supabaseClient
-        .from('daily_practices')
-        .select(`
-          *,
-          mio_practice_feedback (*)
-        `)
-        .eq('id', practice_id)
-        .single();
-      practiceContext = data;
+    let ragContext: string | undefined;
+    if (current_agent === 'nette') {
+      const ragChunks = await hybridSearch(message, 'nette', {}, 5);
+      ragContext = formatContextChunks(ragChunks);
     }
 
-    // Build system prompt
-    const systemPrompt = `You are MIO - Mind Insurance Oracle. A forensic behavioral psychologist.
+    const systemPrompt = getSystemPrompt(current_agent, userContext, ragContext);
 
-# USER'S MESSAGE:
-${message}
-
-# USER CONTEXT
-User: ${userProfile?.full_name || 'User'}
-${avatar ? `Avatar: ${avatar.avatar_type}
-Primary Pattern: ${avatar.primary_pattern}
-Temperament: ${avatar.temperament}` : 'No avatar assessment yet'}
-Current Streak: ${userProfile?.current_streak || 0} days
-Total Points: ${userProfile?.total_points || 0}
-
-${practiceContext ? `# PRACTICE CONTEXT
-**Type**: ${practiceContext.practice_type}
-**Data**: ${JSON.stringify(practiceContext.data)}
-${practiceContext.mio_practice_feedback?.[0] ? `**Previous Feedback**: ${practiceContext.mio_practice_feedback[0].feedback_text}` : ''}
-` : ''}
-
-${recentPractices && recentPractices.length > 0 ? `# RECENT PRACTICES (Last 7 Days)
-${recentPractices.slice(0, 5).map(p => `- ${p.practice_type}: ${p.practice_date}`).join('\n')}` : ''}
-
-${coachIntel ? `# QUALITY METRICS
-- Pattern Awareness: ${coachIntel.pattern_awareness || 'N/A'}
-- Energy Trend: ${coachIntel.energy_trend || 'N/A'}
-- Dropout Risk: ${coachIntel.dropout_risk_level || 'N/A'}` : ''}
-
-# YOUR TASK
-Continue the conversation naturally. Be direct, insightful, and actionable.
-
-**If user is stuck or mentions a blocker:**
-- Identify the specific blocker
-- Recommend a specific Daily Deductible practice to help
-- Explain WHY this practice will help their pattern
-
-**Response Guidelines:**
-1. **Length**: 150-300 characters MAX
-2. **ONE response**: Don't ask multiple questions
-3. ${avatar ? `**Match tone**: Use ${avatar.temperament} communication style` : '**Be warm but direct**'}
-4. **Be conversational**: This is dialogue, not lecture
-5. **Directness 7+ always**: Be specific and actionable
-
-Return ONLY plain text - your conversational response.`;
-
-    // Save user message with context
-    const { data: savedMessage } = await supabaseClient
-      .from('gh_nette_conversations')
-      .insert({
-        user_id,
-        role: 'user',
-        message,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    // Log to agent_conversations with handoff detection and embedding
-    await supabaseClient.from('agent_conversations').insert({
+    await supabaseClient.from('gh_nette_conversations').insert({
       user_id,
-      agent_type: current_agent || 'mio',
-      user_message: message,
-      agent_response: '', // Will be updated after streaming
-      message_embedding: messageEmbedding ? `[${messageEmbedding.join(',')}]` : null,
-      is_handoff: handoffSuggestion !== null,
-      handoff_context: handoffSuggestion ? {
-        suggested_agent: handoffSuggestion.suggestedAgent,
-        detected_keywords: handoffSuggestion.detectedKeywords,
-        confidence: handoffSuggestion.confidence,
-        method: handoffSuggestion.method || 'unknown'
-      } : null,
-      session_id: conversation_id || crypto.randomUUID(),
-      user_context: {
-        avatar_type: avatar?.avatar_type,
-        current_streak: userProfile?.current_streak,
-        total_points: userProfile?.total_points
-      },
-      detected_intent: handoffSuggestion?.suggestedAgent || null,
-      confidence_score: handoffSuggestion?.confidence || null,
-      conversation_turn: conversationHistory?.length || 0
+      role: 'user',
+      message,
+      handoff_suggested: !!handoffSuggestion,
+      handoff_target: handoffSuggestion?.suggestedAgent || null
     });
 
-    // Call Lovable AI with streaming
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -295,62 +147,22 @@ Return ONLY plain text - your conversational response.`;
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...(conversationHistory || []).map((msg: any) => ({
-            role: msg.role,
-            content: msg.message
-          })),
+          ...(conversationHistory || []).map((msg: any) => ({ role: msg.role, content: msg.message })),
           { role: 'user', content: message }
         ],
-        stream: true,
-        max_tokens: 500
+        stream: true
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`AI API error: ${response.status}`);
-    }
-
-    // If we have a handoff suggestion, prepend it to the stream
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        // Send handoff suggestion first if exists
-        if (handoffSuggestion) {
-          const metadata = JSON.stringify({
-            handoff_suggestion: handoffSuggestion,
-            conversation_id: savedMessage?.id
-          });
-          controller.enqueue(encoder.encode(`data: ${metadata}\n\n`));
-        }
-
-        // Then pipe the AI response
-        const reader = response.body?.getReader();
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            controller.enqueue(value);
-          }
-        }
-        controller.close();
-      }
-    });
-
-    return new Response(stream, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
+    return new Response(response.body, {
+      headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' }
     });
 
   } catch (error) {
-    console.error('Error in mio-chat:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Error:', error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
