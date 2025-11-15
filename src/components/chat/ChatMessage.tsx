@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { COACHES, CoachType } from "@/types/coach";
+import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -37,7 +38,9 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
             <span className="text-xs text-muted-foreground">• {coach.title}</span>
           </div>
         )}
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
         <span
           className={`text-xs mt-2 block ${
             isUser ? "text-primary-foreground/70" : "text-muted-foreground"

@@ -225,6 +225,7 @@ serve(async (req) => {
           ...orderedHistory.map((msg: any) => ({ role: msg.role, content: msg.message })),
           { role: 'user', content: message }
         ],
+        max_completion_tokens: current_agent === 'nette' ? 200 : current_agent === 'mio' ? 220 : 180,
         stream: true
       })
     });
