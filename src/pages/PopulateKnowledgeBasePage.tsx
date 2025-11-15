@@ -3,14 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-
-// Import markdown files as raw text
-import tacticsLibrary from "@/../../user-uploads/GROUP-HOME-TACTICS-LIBRARY.md?raw";
-import newbiesTraining from "@/../../user-uploads/Goup_home_Newbies_training_7_22_25.md?raw";
-import webinar813 from "@/../../user-uploads/Group_Home_Webinar_recording_8_13_25.md?raw";
-import qa520 from "@/../../user-uploads/Group_Home_for_newbies_Q_A_5_20_25.md?raw";
-import qa74 from "@/../../user-uploads/Group_home_for_Newbies_Q_A_7_4_25.md?raw";
-import webinar911 from "@/../../user-uploads/Group_home_webinar_recording_9_11_25.md?raw";
+import { supabase } from "@/integrations/supabase/client";
 
 const PopulateKnowledgeBasePage = () => {
   const [loading, setLoading] = useState(false);
@@ -22,35 +15,17 @@ const PopulateKnowledgeBasePage = () => {
     setResult(null);
 
     try {
-      const files = [
-        { name: "GROUP-HOME-TACTICS-LIBRARY.md", content: tacticsLibrary, agent: "nette" },
-        { name: "Goup_home_Newbies_training_7_22_25.md", content: newbiesTraining, agent: "nette" },
-        { name: "Group_Home_Webinar_recording_8_13_25.md", content: webinar813, agent: "nette" },
-        { name: "Group_Home_for_newbies_Q_A_5_20_25.md", content: qa520, agent: "nette" },
-        { name: "Group_home_for_Newbies_Q_A_7_4_25.md", content: qa74, agent: "nette" },
-        { name: "Group_home_webinar_recording_9_11_25.md", content: webinar911, agent: "me" },
-      ];
+      console.log('[Populate] Calling edge function...');
 
-      console.log('[Populate] Calling edge function with', files.length, 'files');
+      const { data, error } = await supabase.functions.invoke('populate-knowledge-base', {
+        body: {}
+      });
 
-      const response = await fetch(
-        'https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/populate-knowledge-base',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ files }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Populate] Error response:', errorText);
-        throw new Error(`Failed to populate knowledge base: ${response.status}`);
+      if (error) {
+        console.error('[Populate] Error response:', error);
+        throw error;
       }
 
-      const data = await response.json();
       console.log('[Populate] Success:', data);
       
       setResult(data);
@@ -79,7 +54,7 @@ const PopulateKnowledgeBasePage = () => {
         <div>
           <h1 className="text-4xl font-bold mb-2">Populate Knowledge Base</h1>
           <p className="text-muted-foreground">
-            This will process all markdown files and generate embeddings for the RAG system.
+            This will process all embedded markdown content and generate embeddings for the RAG system.
           </p>
         </div>
 
