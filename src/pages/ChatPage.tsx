@@ -111,13 +111,13 @@ const ChatPage = () => {
     setIsTyping(true);
 
     try {
-      // Call MIO chat edge function with streaming
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mio-chat`;
+      // Call multi-agent chat edge function with streaming
+      const CHAT_URL = `https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/mio-chat`;
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs`,
         },
         body: JSON.stringify({
           user_id: user.id,
@@ -154,13 +154,13 @@ const ChatPage = () => {
       let aiContent = '';
       const aiMessageId = (Date.now() + 1).toString();
 
-      // Create initial AI message
+      // Create initial AI message with current selected coach
       const initialAiMessage: Message = {
         id: aiMessageId,
         role: "assistant",
         content: '',
         timestamp: new Date(),
-        coachType: 'mio'
+        coachType: selectedCoach
       };
       setMessages((prev) => [...prev, initialAiMessage]);
 
