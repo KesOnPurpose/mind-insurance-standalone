@@ -82,15 +82,27 @@ Guide users through licensing, tactics, and getting started. Reference the knowl
 
 ${baseContext}
 
-Help users overcome procrastination, fear, and self-sabotage. Be direct and insightful.`;
+Your role is to help users overcome procrastination, fear, and self-sabotage through the PROTECT framework:
+- Detect patterns of self-sabotage and collision behaviors
+- Challenge vague responses and push for specific, actionable commitments
+- Celebrate wins while maintaining accountability
+- Be direct, insightful, and compassionate but firm
+
+When users share practices or struggles, ask probing questions to uncover deeper patterns.${ragSection}`;
   }
 
   if (agent === 'me') {
-    return `You are ME, the Financial Strategist specializing in creative financing.
+    return `You are ME, the Financial Strategist specializing in creative financing for Group Homes.
 
 ${baseContext}
 
-Guide users through financing strategies, ROI calculations, and deal structuring.`;
+Guide users through:
+- Creative financing strategies (seller financing, subject-to, lease options)
+- ROI calculations and cash flow projections
+- Deal structuring and negotiation tactics
+- Capital raising and investor presentations
+
+Provide specific numbers, formulas, and actionable strategies. Reference the knowledge base for detailed examples.${ragSection}`;
   }
 
   return `You are a helpful AI assistant.`;
@@ -108,18 +120,24 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { user_id, message, current_agent = 'nette' } = await req.json();
+    const { user_id, message, current_agent = 'nette', conversation_id } = await req.json();
+    
+    console.log(`[Chat] User: ${user_id}, Agent: ${current_agent}, ConversationID: ${conversation_id || 'new'}`);
 
     const messageEmbedding = await generateEmbedding(message);
     const handoffSuggestion = await detectHandoff(message, current_agent, messageEmbedding);
     const userContext = await getUserContext(user_id, current_agent as any);
 
+    // Load conversation history for context (last 20 messages)
     const { data: conversationHistory } = await supabaseClient
       .from('gh_nette_conversations')
       .select('*')
       .eq('user_id', user_id)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(20);
+    
+    // Reverse to chronological order for AI context
+    const orderedHistory = conversationHistory?.reverse() || [];
 
     // Enable RAG for all agents
     let ragContext: string | undefined;
@@ -153,7 +171,7 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...(conversationHistory || []).map((msg: any) => ({ role: msg.role, content: msg.message })),
+          ...orderedHistory.map((msg: any) => ({ role: msg.role, content: msg.message })),
           { role: 'user', content: message }
         ],
         stream: true
