@@ -74,7 +74,6 @@ serve(async (req) => {
       applicable_states: ['all'], // Default to all states
       priority_level: chunk.topic_tags?.includes('licensing') ? 8 : 5,
       embedding: chunk.embedding,
-      fts: chunk.fts,
       tokens_approx: Math.ceil(chunk.chunk_text.split(/\s+/).length * 1.3),
       chunk_summary: chunk.chunk_text.length > 200 
         ? chunk.chunk_text.substring(0, 200) + '...' 
