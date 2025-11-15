@@ -119,6 +119,28 @@ serve(async (req) => {
         if (completed && completed.length === practices.length) {
           sectionComplete = section;
           
+          // Invalidate MIO cache after practice completion
+          try {
+            await fetch(
+              `${Deno.env.get('SUPABASE_URL')}/functions/v1/invalidate-cache`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': req.headers.get('Authorization')!,
+                },
+                body: JSON.stringify({
+                  user_id,
+                  trigger_type: 'practice_completion'
+                })
+              }
+            );
+            console.log('[Cache] Invalidation triggered for practice completion');
+          } catch (cacheError) {
+            console.error('[Cache] Invalidation failed:', cacheError);
+            // Don't fail the request if cache invalidation fails
+          }
+          
           // Call MIO section feedback
           const feedbackResponse = await fetch(
             `${Deno.env.get('SUPABASE_URL')}/functions/v1/mio-section-feedback`,
