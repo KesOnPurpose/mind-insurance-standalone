@@ -12,6 +12,9 @@ verify_jwt = true
 [functions.invalidate-cache]
 verify_jwt = true
 
+[functions.get-analytics]
+verify_jwt = true
+
 [functions.populate-knowledge-base]
 verify_jwt = false
 

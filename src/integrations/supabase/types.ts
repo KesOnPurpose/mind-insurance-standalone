@@ -18,16 +18,25 @@ export type Database = {
         Row: {
           agent_response: string
           agent_type: string
+          avg_similarity_score: number | null
+          cache_hit: boolean | null
+          chunks_retrieved: number | null
           confidence_score: number | null
           conversation_turn: number | null
           created_at: string | null
           detected_intent: string | null
+          handoff_confidence: number | null
           handoff_context: Json | null
           handoff_from_agent: string | null
           handoff_reason: string | null
+          handoff_suggested: boolean | null
+          handoff_target: string | null
           id: string
           is_handoff: boolean | null
+          max_similarity_score: number | null
           message_embedding: string | null
+          rag_context_used: boolean | null
+          rag_time_ms: number | null
           response_time_ms: number | null
           session_id: string | null
           tokens_used: number | null
@@ -38,16 +47,25 @@ export type Database = {
         Insert: {
           agent_response: string
           agent_type: string
+          avg_similarity_score?: number | null
+          cache_hit?: boolean | null
+          chunks_retrieved?: number | null
           confidence_score?: number | null
           conversation_turn?: number | null
           created_at?: string | null
           detected_intent?: string | null
+          handoff_confidence?: number | null
           handoff_context?: Json | null
           handoff_from_agent?: string | null
           handoff_reason?: string | null
+          handoff_suggested?: boolean | null
+          handoff_target?: string | null
           id?: string
           is_handoff?: boolean | null
+          max_similarity_score?: number | null
           message_embedding?: string | null
+          rag_context_used?: boolean | null
+          rag_time_ms?: number | null
           response_time_ms?: number | null
           session_id?: string | null
           tokens_used?: number | null
@@ -58,16 +76,25 @@ export type Database = {
         Update: {
           agent_response?: string
           agent_type?: string
+          avg_similarity_score?: number | null
+          cache_hit?: boolean | null
+          chunks_retrieved?: number | null
           confidence_score?: number | null
           conversation_turn?: number | null
           created_at?: string | null
           detected_intent?: string | null
+          handoff_confidence?: number | null
           handoff_context?: Json | null
           handoff_from_agent?: string | null
           handoff_reason?: string | null
+          handoff_suggested?: boolean | null
+          handoff_target?: string | null
           id?: string
           is_handoff?: boolean | null
+          max_similarity_score?: number | null
           message_embedding?: string | null
+          rag_context_used?: boolean | null
+          rag_time_ms?: number | null
           response_time_ms?: number | null
           session_id?: string | null
           tokens_used?: number | null
