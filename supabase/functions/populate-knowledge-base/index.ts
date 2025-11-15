@@ -16,11 +16,8 @@ interface Chunk {
   source_file: string;
   week_number?: number;
   tactic_id?: string;
-  tactic_category?: string;
-  financing_type?: string;
 }
 
-// Helper to generate OpenAI embedding
 async function generateEmbedding(text: string): Promise<number[]> {
   const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
   if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
@@ -38,6 +35,8 @@ async function generateEmbedding(text: string): Promise<number[]> {
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Embedding] OpenAI API error:', response.status, errorText);
     throw new Error(`OpenAI API error: ${response.status}`);
   }
 
@@ -45,7 +44,6 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return data.data[0].embedding;
 }
 
-// Process markdown into chunks
 function processMarkdown(content: string, sourceFile: string, fileNumber: number): Chunk[] {
   const chunks: Chunk[] = [];
   const lines = content.split('\n');
@@ -70,7 +68,6 @@ function processMarkdown(content: string, sourceFile: string, fileNumber: number
           source_file: sourceFile,
           week_number: weekNumber,
           tactic_id: tacticId,
-          tactic_category: currentCategory,
         });
         currentChunk = [];
         tacticId = undefined;
@@ -90,7 +87,6 @@ function processMarkdown(content: string, sourceFile: string, fileNumber: number
           source_file: sourceFile,
           week_number: weekNumber,
           tactic_id: tacticId,
-          tactic_category: currentCategory,
         });
         currentChunk = [];
         tacticId = undefined;
@@ -123,7 +119,6 @@ function processMarkdown(content: string, sourceFile: string, fileNumber: number
         source_file: sourceFile,
         week_number: weekNumber,
         tactic_id: tacticId,
-        tactic_category: currentCategory,
       });
       currentChunk = [];
       tacticId = undefined;
@@ -141,11 +136,10 @@ function processMarkdown(content: string, sourceFile: string, fileNumber: number
       source_file: sourceFile,
       week_number: weekNumber,
       tactic_id: tacticId,
-      tactic_category: currentCategory,
     });
   }
 
-  return chunks.filter(chunk => chunk.text.trim().length > 100); // Filter tiny chunks
+  return chunks.filter(chunk => chunk.text.trim().length > 100);
 }
 
 serve(async (req) => {
@@ -161,28 +155,41 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { files } = await req.json();
-    
-    if (!files || !Array.isArray(files)) {
-      throw new Error('files array is required');
-    }
+    // Define files to process
+    const fileConfigs = [
+      { name: "GROUP-HOME-TACTICS-LIBRARY.md", agent: "nette" },
+      { name: "Goup_home_Newbies_training_7_22_25.md", agent: "nette" },
+      { name: "Group_Home_Webinar_recording_8_13_25.md", agent: "nette" },
+      { name: "Group_Home_for_newbies_Q_A_5_20_25.md", agent: "nette" },
+      { name: "Group_home_for_Newbies_Q_A_7_4_25.md", agent: "nette" },
+      { name: "Group_home_webinar_recording_9_11_25.md", agent: "me" },
+    ];
 
     let totalChunks = 0;
     let netteChunks = 0;
     let meChunks = 0;
 
-    for (const file of files) {
-      const { name, content, agent } = file;
-      console.log(`[Populate] Processing ${name} for ${agent}...`);
+    for (let i = 0; i < fileConfigs.length; i++) {
+      const config = fileConfigs[i];
+      console.log(`[Populate] Processing ${config.name} for ${config.agent}...`);
 
-      const fileNumber = files.indexOf(file) + 1;
-      const chunks = processMarkdown(content, name, fileNumber);
+      // Read file from data directory
+      let content: string;
+      try {
+        content = await Deno.readTextFile(`./data/${config.name}`);
+        console.log(`[Populate] Loaded ${config.name} (${content.length} chars)`);
+      } catch (error) {
+        console.error(`[Populate] Error reading file ${config.name}:`, error);
+        throw new Error(`Failed to read ${config.name}: ${error}`);
+      }
 
-      console.log(`[Populate] Generated ${chunks.length} chunks from ${name}`);
+      const fileNumber = i + 1;
+      const chunks = processMarkdown(content, config.name, fileNumber);
+      console.log(`[Populate] Generated ${chunks.length} chunks from ${config.name}`);
 
       // Process chunks in batches of 10 to avoid rate limits
-      for (let i = 0; i < chunks.length; i += 10) {
-        const batch = chunks.slice(i, i + 10);
+      for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 10) {
+        const batch = chunks.slice(chunkIndex, chunkIndex + 10);
         
         for (const chunk of batch) {
           try {
@@ -193,7 +200,9 @@ serve(async (req) => {
                                      chunk.text.toLowerCase().includes('roi') ||
                                      chunk.text.toLowerCase().includes('capital');
 
-            const targetTable = (agent === 'me' || isFinancingContent) ? 'me_knowledge_chunks' : 'nette_knowledge_chunks';
+            const targetTable = (config.agent === 'me' || isFinancingContent) 
+              ? 'me_knowledge_chunks' 
+              : 'nette_knowledge_chunks';
 
             const insertData: any = {
               chunk_text: chunk.text,
@@ -212,10 +221,9 @@ serve(async (req) => {
             if (targetTable === 'nette_knowledge_chunks') {
               insertData.week_number = chunk.week_number;
               insertData.tactic_id = chunk.tactic_id;
-              insertData.tactic_category = chunk.tactic_category;
               netteChunks++;
             } else {
-              insertData.financing_type = chunk.financing_type || 'general';
+              insertData.financing_type = 'general';
               meChunks++;
             }
 
@@ -239,7 +247,7 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      console.log(`[Populate] Completed ${name}`);
+      console.log(`[Populate] Completed ${config.name}`);
     }
 
     console.log(`[Populate] Successfully populated ${totalChunks} chunks (Nette: ${netteChunks}, ME: ${meChunks})`);
@@ -250,7 +258,6 @@ serve(async (req) => {
         total_chunks: totalChunks,
         nette_chunks: netteChunks,
         me_chunks: meChunks,
-        message: 'Knowledge base populated successfully'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -258,11 +265,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[Populate] Error:', error);
+    console.error('[Populate] Fatal error:', error);
+    
     return new Response(
       JSON.stringify({
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        details: error instanceof Error ? error.stack : undefined
       }),
       {
         status: 500,
