@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.populate-knowledge-base]
 verify_jwt = false
+
+[functions.migrate-nette-knowledge]
+verify_jwt = false
