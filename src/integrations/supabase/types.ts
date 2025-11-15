@@ -1250,6 +1250,78 @@ export type Database = {
           },
         ]
       }
+      me_knowledge_chunks: {
+        Row: {
+          applicable_states: string[] | null
+          capital_range: string | null
+          category: string
+          chunk_number: number
+          chunk_summary: string | null
+          chunk_text: string
+          created_at: string | null
+          credit_score_range: string | null
+          embedding: string | null
+          file_number: number
+          financing_type: string | null
+          fts: unknown
+          id: string
+          is_active: boolean | null
+          priority_level: number | null
+          real_estate_experience: string | null
+          source_file: string
+          subcategory: string | null
+          tokens_approx: number
+          updated_at: string | null
+          version: string | null
+        }
+        Insert: {
+          applicable_states?: string[] | null
+          capital_range?: string | null
+          category: string
+          chunk_number: number
+          chunk_summary?: string | null
+          chunk_text: string
+          created_at?: string | null
+          credit_score_range?: string | null
+          embedding?: string | null
+          file_number: number
+          financing_type?: string | null
+          fts?: unknown
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          real_estate_experience?: string | null
+          source_file: string
+          subcategory?: string | null
+          tokens_approx: number
+          updated_at?: string | null
+          version?: string | null
+        }
+        Update: {
+          applicable_states?: string[] | null
+          capital_range?: string | null
+          category?: string
+          chunk_number?: number
+          chunk_summary?: string | null
+          chunk_text?: string
+          created_at?: string | null
+          credit_score_range?: string | null
+          embedding?: string | null
+          file_number?: number
+          financing_type?: string | null
+          fts?: unknown
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          real_estate_experience?: string | null
+          source_file?: string
+          subcategory?: string | null
+          tokens_approx?: number
+          updated_at?: string | null
+          version?: string | null
+        }
+        Relationships: []
+      }
       mio_chat_metrics: {
         Row: {
           ai_response: string | null
@@ -2020,6 +2092,78 @@ export type Database = {
         }
         Relationships: []
       }
+      nette_knowledge_chunks: {
+        Row: {
+          applicable_states: string[] | null
+          category: string
+          chunk_number: number
+          chunk_summary: string | null
+          chunk_text: string
+          created_at: string | null
+          embedding: string | null
+          file_number: number
+          fts: unknown
+          id: string
+          is_active: boolean | null
+          priority_level: number | null
+          source_file: string
+          subcategory: string | null
+          tactic_category: string | null
+          tactic_id: string | null
+          target_demographics: string[] | null
+          tokens_approx: number
+          updated_at: string | null
+          version: string | null
+          week_number: number | null
+        }
+        Insert: {
+          applicable_states?: string[] | null
+          category: string
+          chunk_number: number
+          chunk_summary?: string | null
+          chunk_text: string
+          created_at?: string | null
+          embedding?: string | null
+          file_number: number
+          fts?: unknown
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          source_file: string
+          subcategory?: string | null
+          tactic_category?: string | null
+          tactic_id?: string | null
+          target_demographics?: string[] | null
+          tokens_approx: number
+          updated_at?: string | null
+          version?: string | null
+          week_number?: number | null
+        }
+        Update: {
+          applicable_states?: string[] | null
+          category?: string
+          chunk_number?: number
+          chunk_summary?: string | null
+          chunk_text?: string
+          created_at?: string | null
+          embedding?: string | null
+          file_number?: number
+          fts?: unknown
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          source_file?: string
+          subcategory?: string | null
+          tactic_category?: string | null
+          tactic_id?: string | null
+          target_demographics?: string[] | null
+          tokens_approx?: number
+          updated_at?: string | null
+          version?: string | null
+          week_number?: number | null
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           achievements: boolean | null
@@ -2526,6 +2670,9 @@ export type Database = {
           target_demographics: Json | null
           target_state: string | null
           temperament: string | null
+          tier_expires_at: string | null
+          tier_level: string | null
+          tier_start_date: string | null
           timeline_days: number | null
           timezone: string | null
           total_points: number | null
@@ -2583,6 +2730,9 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          tier_expires_at?: string | null
+          tier_level?: string | null
+          tier_start_date?: string | null
           timeline_days?: number | null
           timezone?: string | null
           total_points?: number | null
@@ -2640,6 +2790,9 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          tier_expires_at?: string | null
+          tier_level?: string | null
+          tier_start_date?: string | null
           timeline_days?: number | null
           timezone?: string | null
           total_points?: number | null
