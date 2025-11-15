@@ -196,9 +196,14 @@ const ChatPage = () => {
               const parsed = JSON.parse(jsonStr);
               
               // Check for handoff suggestion metadata
-              if (!metadataReceived && parsed.handoff_suggestion) {
-                setHandoffSuggestion(parsed.handoff_suggestion);
-                setConversationId(parsed.conversation_id);
+              if (parsed.type === 'handoff') {
+                setHandoffSuggestion({
+                  suggestedAgent: parsed.suggestedAgent,
+                  reason: `This question might be better answered by ${parsed.suggestedAgent === 'nette' ? 'Nette' : parsed.suggestedAgent === 'mio' ? 'MIO' : 'ME'}`,
+                  confidence: parsed.confidence,
+                  detectedKeywords: [],
+                  method: parsed.method
+                });
                 metadataReceived = true;
                 continue;
               }
