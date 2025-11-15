@@ -16,7 +16,7 @@ export const COACHES: Record<CoachType, Coach> = {
   nette: {
     id: 'nette',
     name: 'Nette',
-    title: 'Onboarding Specialist',
+    title: 'Group Home Expert',
     description: 'Your educational guide and assessment expert. I conduct your readiness assessment, generate personalized roadmaps, and provide state-specific licensing guidance to get you started.',
     avatar: 'N',
     color: 'hsl(187 85% 35%)', // Primary teal
