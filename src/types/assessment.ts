@@ -5,6 +5,10 @@ export interface AssessmentAnswers {
   incomeStability: string;
   creativeFinancing: string;
 
+  // Strategy Selection (NEW - for enriched personalization)
+  ownershipModel: string; // 'rental_arbitrage' | 'ownership' | 'creative_financing' | 'house_hack' | 'hybrid'
+  targetState: string;    // State code (CA, TX, FL, etc.)
+
   // Market Knowledge
   licensingFamiliarity: string;
   targetPopulations: string[];

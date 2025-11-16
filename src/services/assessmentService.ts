@@ -362,50 +362,76 @@ export async function saveAssessmentResults(
   answers: AssessmentAnswers,
   scores: AssessmentScores
 ) {
+  // Prepare the base payload
+  const payload: Record<string, unknown> = {
+    user_id: userId,
+
+    // Scores
+    financial_score: scores.financial_score,
+    market_score: scores.market_score,
+    operational_score: scores.operational_score,
+    mindset_score: scores.mindset_score,
+    overall_score: scores.overall_score,
+    readiness_level: scores.readiness_level,
+
+    // Raw answers - WITH ALL TRANSFORMATIONS
+    capital_available: answers.capital,
+    credit_score_range: mapCreditScoreToDB(answers.creditScore),
+    income_stability: mapIncomeStabilityToDB(answers.incomeStability),
+    creative_financing_knowledge: mapCreativeFinancingToDB(answers.creativeFinancing),
+
+    licensing_familiarity: mapLicensingFamiliarityToDB(answers.licensingFamiliarity),
+    target_populations: answers.targetPopulations,
+    market_demand_research: mapMarketResearchToDB(answers.marketResearch),
+    revenue_understanding: mapRevenueUnderstandingToDB(answers.reimbursementRate),
+
+    caregiving_experience: answers.caregivingExperience,
+    time_commitment: mapTimeCommitmentToDB(answers.timeCommitment),
+    support_team: mapSupportTeamToDB(answers.supportTeam),
+    property_management_comfort: mapPropertyManagementToDB(answers.propertyManagement),
+
+    primary_motivation: answers.primaryMotivation,
+    commitment_level: answers.commitmentLevel,
+    timeline: mapTimelineToDB(answers.timeline),
+
+    assessment_completed_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  // NEW: Add enhanced personalization fields if provided
+  // These map directly to the enriched RAG database fields
+  if (answers.ownershipModel) {
+    payload.ownership_model = answers.ownershipModel;
+  }
+  if (answers.targetState) {
+    payload.target_state = answers.targetState;
+  }
+
+  // Calculate budget range from capital selection for enhanced filtering
+  const budgetRanges: Record<string, { min: number; max: number }> = {
+    'less-5k': { min: 0, max: 5000 },
+    '5k-15k': { min: 5000, max: 15000 },
+    '15k-30k': { min: 15000, max: 30000 },
+    '30k-50k': { min: 30000, max: 50000 },
+    'more-50k': { min: 50000, max: 100000 }
+  };
+  const budget = budgetRanges[answers.capital];
+  if (budget) {
+    payload.budget_min_usd = budget.min;
+    payload.budget_max_usd = budget.max;
+  }
+
   const { data, error } = await supabase
     .from('user_onboarding')
-    .upsert({
-      user_id: userId,
-      
-      // Scores
-      financial_score: scores.financial_score,
-      market_score: scores.market_score,
-      operational_score: scores.operational_score,
-      mindset_score: scores.mindset_score,
-      overall_score: scores.overall_score,
-      readiness_level: scores.readiness_level,
-      
-      // Raw answers - WITH ALL TRANSFORMATIONS
-      capital_available: answers.capital,
-      credit_score_range: mapCreditScoreToDB(answers.creditScore),
-      income_stability: mapIncomeStabilityToDB(answers.incomeStability),
-      creative_financing_knowledge: mapCreativeFinancingToDB(answers.creativeFinancing),
-      
-      licensing_familiarity: mapLicensingFamiliarityToDB(answers.licensingFamiliarity),
-      target_populations: answers.targetPopulations,
-      market_demand_research: mapMarketResearchToDB(answers.marketResearch),
-      revenue_understanding: mapRevenueUnderstandingToDB(answers.reimbursementRate),
-      
-      caregiving_experience: answers.caregivingExperience,
-      time_commitment: mapTimeCommitmentToDB(answers.timeCommitment),
-      support_team: mapSupportTeamToDB(answers.supportTeam),
-      property_management_comfort: mapPropertyManagementToDB(answers.propertyManagement),
-      
-      primary_motivation: answers.primaryMotivation,
-      commitment_level: answers.commitmentLevel,
-      timeline: mapTimelineToDB(answers.timeline),
-      
-      assessment_completed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }, {
+    .upsert(payload, {
       onConflict: 'user_id'
     });
-  
+
   if (error) {
     console.error('Error saving assessment:', error);
     throw error;
   }
-  
+
   return data;
 }
 

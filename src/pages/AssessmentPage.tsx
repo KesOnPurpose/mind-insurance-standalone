@@ -20,12 +20,19 @@ const AssessmentPage = () => {
     propertyManagement: 5,
     commitmentLevel: 5,
     primaryMotivation: "",
+    // NEW: Enhanced personalization fields
+    ownershipModel: "",
+    targetState: "",
   });
 
   const categories = [
     {
       name: "Financial Readiness",
       description: "Let's understand your financial situation",
+    },
+    {
+      name: "Strategy Selection",
+      description: "Choose your ownership strategy and target market",
     },
     {
       name: "Market Knowledge",
@@ -46,19 +53,23 @@ const AssessmentPage = () => {
       return !!(answers.capital && answers.creditScore && answers.incomeStability && answers.creativeFinancing);
     }
     if (currentStep === 1) {
-      return !!(answers.licensingFamiliarity && answers.targetPopulations && answers.targetPopulations.length > 0 && answers.marketResearch && answers.reimbursementRate);
+      // NEW: Strategy Selection step
+      return !!(answers.ownershipModel && answers.targetState);
     }
     if (currentStep === 2) {
-      return !!(answers.caregivingExperience && answers.timeCommitment && answers.supportTeam && answers.supportTeam.length > 0);
+      return !!(answers.licensingFamiliarity && answers.targetPopulations && answers.targetPopulations.length > 0 && answers.marketResearch && answers.reimbursementRate);
     }
     if (currentStep === 3) {
+      return !!(answers.caregivingExperience && answers.timeCommitment && answers.supportTeam && answers.supportTeam.length > 0);
+    }
+    if (currentStep === 4) {
       return !!(answers.primaryMotivation && answers.timeline);
     }
     return false;
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
       // Submit assessment to database
@@ -253,6 +264,135 @@ const AssessmentPage = () => {
             <Label htmlFor="finance5" className="font-normal cursor-pointer">
               Very familiar, have used them before
             </Label>
+          </div>
+        </RadioGroup>
+      </div>
+    </div>
+  );
+
+  const renderStrategySelection = () => (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold">
+          What ownership strategy aligns best with your goals?
+        </Label>
+        <p className="text-sm text-muted-foreground">
+          This determines which tactics and costs we'll prioritize for your roadmap
+        </p>
+        <RadioGroup
+          value={answers.ownershipModel}
+          onValueChange={(value) => updateAnswer("ownershipModel", value)}
+        >
+          <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+            <RadioGroupItem value="rental_arbitrage" id="strat1" />
+            <div className="flex-1">
+              <Label htmlFor="strat1" className="font-semibold cursor-pointer">
+                Rental Arbitrage (Recommended for beginners)
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Lease properties from landlords and sublease as group homes. Lower upfront cost ($5K-$10K), faster start, lower risk.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+            <RadioGroupItem value="ownership" id="strat2" />
+            <div className="flex-1">
+              <Label htmlFor="strat2" className="font-semibold cursor-pointer">
+                Property Ownership
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Purchase properties outright. Higher capital needed ($30K+), but maximum control and equity building.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+            <RadioGroupItem value="creative_financing" id="strat3" />
+            <div className="flex-1">
+              <Label htmlFor="strat3" className="font-semibold cursor-pointer">
+                Creative Financing
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Subject-to, seller financing, or DSCR loans. Moderate capital ($2K-$20K), requires negotiation skills.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+            <RadioGroupItem value="house_hack" id="strat4" />
+            <div className="flex-1">
+              <Label htmlFor="strat4" className="font-semibold cursor-pointer">
+                House Hacking
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Live in property while operating group home. Lower expenses, hands-on management.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+            <RadioGroupItem value="hybrid" id="strat5" />
+            <div className="flex-1">
+              <Label htmlFor="strat5" className="font-semibold cursor-pointer">
+                Hybrid Approach
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Start with arbitrage, transition to ownership. Flexible scaling path.
+              </p>
+            </div>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold">
+          Which state will you operate in?
+        </Label>
+        <p className="text-sm text-muted-foreground">
+          Regulations and reimbursement rates vary significantly by state
+        </p>
+        <RadioGroup
+          value={answers.targetState}
+          onValueChange={(value) => updateAnswer("targetState", value)}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="CA" id="state1" />
+              <Label htmlFor="state1" className="font-normal cursor-pointer">California</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="TX" id="state2" />
+              <Label htmlFor="state2" className="font-normal cursor-pointer">Texas</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="FL" id="state3" />
+              <Label htmlFor="state3" className="font-normal cursor-pointer">Florida</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="NY" id="state4" />
+              <Label htmlFor="state4" className="font-normal cursor-pointer">New York</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="GA" id="state5" />
+              <Label htmlFor="state5" className="font-normal cursor-pointer">Georgia</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="AZ" id="state6" />
+              <Label htmlFor="state6" className="font-normal cursor-pointer">Arizona</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="NC" id="state7" />
+              <Label htmlFor="state7" className="font-normal cursor-pointer">North Carolina</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="PA" id="state8" />
+              <Label htmlFor="state8" className="font-normal cursor-pointer">Pennsylvania</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="OH" id="state9" />
+              <Label htmlFor="state9" className="font-normal cursor-pointer">Ohio</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="OTHER" id="state10" />
+              <Label htmlFor="state10" className="font-normal cursor-pointer">Other State</Label>
+            </div>
           </div>
         </RadioGroup>
       </div>
@@ -743,10 +883,12 @@ const AssessmentPage = () => {
       case 0:
         return renderFinancialReadiness();
       case 1:
-        return renderMarketKnowledge();
+        return renderStrategySelection();
       case 2:
-        return renderOperationalReadiness();
+        return renderMarketKnowledge();
       case 3:
+        return renderOperationalReadiness();
+      case 4:
         return renderMindsetCommitment();
       default:
         return null;
@@ -780,7 +922,7 @@ const AssessmentPage = () => {
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / 4) * 100}%` }}
+              style={{ width: `${((currentStep + 1) / 5) * 100}%` }}
             />
           </div>
         </div>
@@ -812,7 +954,7 @@ const AssessmentPage = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
-                ) : currentStep === 3 ? (
+                ) : currentStep === 4 ? (
                   "Complete Assessment"
                 ) : (
                   <>

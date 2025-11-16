@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, TrendingUp } from 'lucide-react';
+import { Loader2, Search, TrendingUp, Star, Lock } from 'lucide-react';
 import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { WeekProgressCard } from '@/components/roadmap/WeekProgressCard';
 import { TacticCard } from '@/components/roadmap/TacticCard';
-import { TacticWithProgress, WeekSummary, JourneyPhase } from '@/types/tactic';
+import { BudgetTracker } from '@/components/roadmap/BudgetTracker';
+import { TacticWithProgress, WeekSummary, JourneyPhase, TacticWithPrerequisites } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,13 +30,16 @@ export default function RoadmapPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
-  const { 
-    tactics, 
-    assessment, 
-    recommendedWeeks, 
+  const {
+    tactics,
+    assessment,
+    recommendedWeeks,
     startingWeek,
     isLoading,
-    hasAssessment 
+    hasAssessment,
+    costBreakdown,
+    blockedTactics,
+    criticalPathTactics
   } = usePersonalizedTactics();
 
   const { data: progressData } = useUserProgress(user?.id || '');
@@ -248,7 +252,7 @@ export default function RoadmapPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Journey Map */}
         <div className="mb-8">
-          <JourneyMap 
+          <JourneyMap
             currentPhase={currentPhaseType}
             phaseProgress={phaseProgress}
             completedMilestones={completedMilestones}
@@ -266,145 +270,229 @@ export default function RoadmapPage() {
             />
           ))}
         </div>
-        
-        {/* Filters */}
-        <Card className="p-4 mb-6">
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tactics..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {allCategories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="not_started">Not Started</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
-        
-        {/* Week Stats */}
-        {currentWeekSummary && (
-          <Card className="p-6 mb-6 bg-gradient-card">
-            <div className="grid md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Week Progress</p>
-                <p className="text-2xl font-bold">
-                  {currentWeekSummary.completedTactics}/{currentWeekSummary.totalTactics}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Completion</p>
-                <p className="text-2xl font-bold">{currentWeekSummary.progressPercentage.toFixed(0)}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Est. Time</p>
-                <p className="text-2xl font-bold">{currentWeekSummary.estimatedHours.toFixed(1)}h</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Categories</p>
-                <p className="text-2xl font-bold">{Object.keys(tacticsByCategory).length}</p>
-              </div>
-            </div>
-          </Card>
-        )}
-        
-        {/* Tactics by Category */}
-        {Object.keys(tacticsByCategory).length > 0 ? (
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(tacticsByCategory).map(([category, categoryTactics]) => (
-              <AccordionItem key={category} value={category}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center justify-between w-full pr-4">
-                    <span className="font-semibold">{category}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {categoryTactics.filter(t => t.status === 'completed').length}/
-                      {categoryTactics.length} completed
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3 pt-3">
-                    {categoryTactics.map(tactic => (
-                      <TacticCard
-                        key={tactic.tactic_id}
-                        tactic={tactic}
-                        onStart={(id) => {
-                          if (!user?.id) return;
-                          startTactic.mutate({ 
-                            userId: user.id, 
-                            tacticId: id 
-                          });
-                        }}
-                        onComplete={async (id, notes, profileUpdates) => {
-                          if (!user?.id) return;
 
-                          // Update business profile first if there are updates
-                          if (profileUpdates && Object.keys(profileUpdates).length > 0) {
-                            try {
-                              await updateBusinessProfile(user.id, profileUpdates, id);
-                              toast.success('Business profile updated!', { duration: 2000 });
-                            } catch (error) {
-                              console.error('Failed to update business profile:', error);
-                              toast.error('Failed to update profile, but tactic will be marked complete');
-                            }
-                          }
+        {/* Main Content with Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content - 3 columns */}
+          <div className="lg:col-span-3">
+            {/* Filters */}
+            <Card className="p-4 mb-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search tactics..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
 
-                          // Then mark tactic as complete
-                          completeTactic.mutate({
-                            userId: user.id,
-                            tacticId: id,
-                            notes
-                          });
-                        }}
-                      />
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {allCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </Card>
+
+            {/* Week Stats */}
+            {currentWeekSummary && (
+              <Card className="p-6 mb-6 bg-gradient-card">
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Week Progress</p>
+                    <p className="text-2xl font-bold">
+                      {currentWeekSummary.completedTactics}/{currentWeekSummary.totalTactics}
+                    </p>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">
-              No tactics found matching your filters.
-            </p>
-            <Button
-              variant="link"
-              onClick={() => {
-                setSearchQuery('');
-                setCategoryFilter('all');
-                setStatusFilter('all');
-              }}
-            >
-              Clear filters
-            </Button>
-          </Card>
-        )}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Completion</p>
+                    <p className="text-2xl font-bold">{currentWeekSummary.progressPercentage.toFixed(0)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Est. Time</p>
+                    <p className="text-2xl font-bold">{currentWeekSummary.estimatedHours.toFixed(1)}h</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Categories</p>
+                    <p className="text-2xl font-bold">{Object.keys(tacticsByCategory).length}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+                {/* Tactics by Category */}
+            {Object.keys(tacticsByCategory).length > 0 ? (
+              <Accordion type="multiple" className="space-y-4">
+                {Object.entries(tacticsByCategory).map(([category, categoryTactics]) => (
+                  <AccordionItem key={category} value={category}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{category}</span>
+                          {categoryTactics.some(t => t.is_critical_path) && (
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-200" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {categoryTactics.some(t => 'can_start' in t && !(t as TacticWithPrerequisites).can_start) && (
+                            <span className="flex items-center gap-1 text-xs text-amber-600">
+                              <Lock className="w-3 h-3" />
+                              {categoryTactics.filter(t => 'can_start' in t && !(t as TacticWithPrerequisites).can_start).length} locked
+                            </span>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {categoryTactics.filter(t => t.status === 'completed').length}/
+                            {categoryTactics.length} completed
+                          </span>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 pt-3">
+                        {categoryTactics.map(tactic => (
+                          <TacticCard
+                            key={tactic.tactic_id}
+                            tactic={tactic}
+                            onStart={(id) => {
+                              if (!user?.id) return;
+                              startTactic.mutate({
+                                userId: user.id,
+                                tacticId: id
+                              });
+                            }}
+                            onComplete={async (id, notes, profileUpdates) => {
+                              if (!user?.id) return;
+
+                              // Update business profile first if there are updates
+                              if (profileUpdates && Object.keys(profileUpdates).length > 0) {
+                                try {
+                                  await updateBusinessProfile(user.id, profileUpdates, id);
+                                  toast.success('Business profile updated!', { duration: 2000 });
+                                } catch (error) {
+                                  console.error('Failed to update business profile:', error);
+                                  toast.error('Failed to update profile, but tactic will be marked complete');
+                                }
+                              }
+
+                              // Then mark tactic as complete
+                              completeTactic.mutate({
+                                userId: user.id,
+                                tacticId: id,
+                                notes
+                              });
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <Card className="p-12 text-center">
+                <p className="text-muted-foreground mb-4">
+                  No tactics found matching your filters.
+                </p>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </Card>
+            )}
+          </div>
+
+          {/* Sidebar - 1 column */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4 space-y-4">
+              <BudgetTracker
+                costBreakdown={costBreakdown}
+                userBudgetMax={assessment?.budget_max_usd || 50000}
+                criticalPathCount={criticalPathTactics}
+                blockedTacticsCount={blockedTactics}
+              />
+
+              {/* Strategy Summary */}
+              {assessment?.ownership_model && (
+                <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-3">Your Strategy</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Model:</span>
+                      <span className="font-medium text-blue-900 capitalize">
+                        {assessment.ownership_model.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    {assessment.target_state && (
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">State:</span>
+                        <span className="font-medium text-blue-900">{assessment.target_state}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Timeline:</span>
+                      <span className="font-medium text-blue-900">{recommendedWeeks} weeks</span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Quick Actions */}
+              <Card className="p-4">
+                <h4 className="font-semibold mb-3">Quick Actions</h4>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setStatusFilter('in_progress')}
+                  >
+                    View In Progress ({tacticsWithProgress.filter(t => t.status === 'in_progress').length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setCategoryFilter('all');
+                      setSearchQuery('');
+                    }}
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+

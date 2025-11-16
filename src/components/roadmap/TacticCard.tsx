@@ -11,49 +11,93 @@ import {
   DollarSign,
   Users,
   Lightbulb,
-  AlertTriangle
+  AlertTriangle,
+  Star,
+  Lock,
+  Unlock,
+  Quote,
+  Link2
 } from 'lucide-react';
-import { TacticWithProgress } from '@/types/tactic';
+import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
 import { TacticCompletionForm } from './TacticCompletionForm';
 import { BusinessProfile } from '@/types/assessment';
+import { formatCostRange } from '@/services/tacticFilterService';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TacticCardProps {
-  tactic: TacticWithProgress;
+  tactic: TacticWithProgress | TacticWithPrerequisites;
   onStart: (tacticId: string) => void;
   onComplete: (tacticId: string, notes?: string, profileUpdates?: Partial<BusinessProfile>) => void;
+  showEnrichedFields?: boolean; // Toggle for new enriched field display
 }
 
-export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
+export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = true }: TacticCardProps) {
   const [notes, setNotes] = useState(tactic.notes || '');
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
 
   const StatusIcon = tactic.status === 'completed' ? CheckCircle :
                      tactic.status === 'in_progress' ? Play : Circle;
-  
+
   const statusColors = {
     completed: 'text-success',
     in_progress: 'text-primary',
     not_started: 'text-muted-foreground',
     skipped: 'text-muted-foreground'
   };
-  
+
+  // Check if tactic has prerequisite information (TacticWithPrerequisites)
+  const hasPrerequisiteInfo = 'can_start' in tactic;
+  const canStart = hasPrerequisiteInfo ? (tactic as TacticWithPrerequisites).can_start : true;
+  const blockingPrereqs = hasPrerequisiteInfo ? (tactic as TacticWithPrerequisites).blocking_prerequisites : [];
+
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
+    <Card className={`p-4 hover:shadow-md transition-shadow ${!canStart ? 'opacity-75 border-muted' : ''}`}>
       <div className="flex items-start gap-3">
-        <StatusIcon className={`w-5 h-5 mt-1 ${statusColors[tactic.status]}`} />
-        
+        <div className="flex flex-col items-center gap-1">
+          <StatusIcon className={`w-5 h-5 ${statusColors[tactic.status]}`} />
+          {!canStart && blockingPrereqs.length > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Complete first: {blockingPrereqs.join(', ')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+
         <div className="flex-1">
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="font-semibold text-base leading-tight">
-              {tactic.tactic_name}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-base leading-tight">
+                {tactic.tactic_name}
+              </h3>
+              {showEnrichedFields && tactic.is_critical_path && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-xs">
+                        <Star className="w-3 h-3 mr-1 fill-amber-400" />
+                        Critical
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">This is a critical path tactic - essential for your strategy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <Badge className={getCategoryColor(tactic.category)}>
               {tactic.category}
             </Badge>
           </div>
-          
+
           <div className="flex flex-wrap gap-2 mb-3 text-xs text-muted-foreground">
             {tactic.estimated_time && (
               <span className="flex items-center gap-1">
@@ -61,7 +105,13 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
                 {tactic.estimated_time}
               </span>
             )}
-            {tactic.capital_required && (
+            {/* Show enriched cost range if available, fallback to legacy */}
+            {showEnrichedFields && (tactic.cost_min_usd !== null || tactic.cost_max_usd !== null) ? (
+              <span className="flex items-center gap-1 font-medium text-emerald-600">
+                <DollarSign className="w-3 h-3" />
+                {formatCostRange(tactic.cost_min_usd ?? null, tactic.cost_max_usd ?? null)}
+              </span>
+            ) : tactic.capital_required && (
               <span className="flex items-center gap-1">
                 <DollarSign className="w-3 h-3" />
                 {tactic.capital_required} capital
@@ -73,7 +123,30 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
                 {tactic.target_populations.join(', ')}
               </span>
             )}
+            {showEnrichedFields && tactic.ownership_model && tactic.ownership_model.length > 0 && (
+              <span className="flex items-center gap-1">
+                <Link2 className="w-3 h-3" />
+                {tactic.ownership_model.slice(0, 2).join(', ')}
+                {tactic.ownership_model.length > 2 && ` +${tactic.ownership_model.length - 2}`}
+              </span>
+            )}
           </div>
+
+          {/* Official Lynette Quote - NEW ENRICHED FIELD */}
+          {showEnrichedFields && tactic.official_lynette_quote && (
+            <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+              <div className="flex items-start gap-2">
+                <Quote className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-purple-700 mb-1">Lynette's Official Guidance</p>
+                  <p className="text-xs text-purple-900 italic">"{tactic.official_lynette_quote}"</p>
+                  {tactic.course_lesson_reference && (
+                    <p className="text-xs text-purple-600 mt-1">- {tactic.course_lesson_reference}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           
           {tactic.why_it_matters && (
             <div className="mb-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
@@ -117,14 +190,39 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
           
           <div className="flex gap-2 mt-3">
             {tactic.status === 'not_started' && (
-              <Button 
-                size="sm" 
-                onClick={() => onStart(tactic.tactic_id)}
-                className="flex items-center gap-1"
-              >
-                <Play className="w-3 h-3" />
-                Start
-              </Button>
+              <>
+                {canStart ? (
+                  <Button
+                    size="sm"
+                    onClick={() => onStart(tactic.tactic_id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Unlock className="w-3 h-3" />
+                    Start
+                  </Button>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled
+                          className="flex items-center gap-1 opacity-50"
+                        >
+                          <Lock className="w-3 h-3" />
+                          Locked
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-xs">
+                          Complete these prerequisites first: {blockingPrereqs.join(', ')}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </>
             )}
             
             {tactic.status === 'in_progress' && (
