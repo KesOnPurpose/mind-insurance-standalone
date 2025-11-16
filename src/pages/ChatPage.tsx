@@ -9,6 +9,7 @@ import HandoffSuggestion from "@/components/chat/HandoffSuggestion";
 import { CoachType, COACHES } from "@/types/coach";
 import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -19,15 +20,42 @@ interface Message {
   coachType: CoachType;
 }
 
+// Map product type to default coach
+const getDefaultCoachForProduct = (product: ProductType): CoachType => {
+  const coachMap: Record<ProductType, CoachType> = {
+    'grouphome': 'nette',
+    'mind-insurance': 'mio',
+    'me-wealth': 'me'
+  };
+  return coachMap[product];
+};
+
+// Get initial greeting based on coach type
+const getInitialGreeting = (coach: CoachType): string => {
+  const greetings: Record<CoachType, string> = {
+    'nette': "Hey there! I'm Nette, your Group Home Expert. I have access to 403 proven tactics and state-specific insights to help you launch your group home business. Whether you need help with licensing, property selection, or operational strategies, I'm here to guide you. What would you like to work on today?",
+    'mio': "Hi! I'm MIO - Mind Insurance Oracle. I'm your forensic behavioral psychologist here to help you see patterns you can't see yourself. I notice everything in your PROTECT practices and can help you break through mental blocks. What's on your mind?",
+    'me': "Hello! I'm ME, your Money Evolution Expert. I specialize in business credit, funding strategies, and financial planning for your group home venture. Let's build your financial foundation together. What financial goals are you working towards?"
+  };
+  return greetings[coach];
+};
+
 const ChatPage = () => {
-  const [selectedCoach, setSelectedCoach] = useState<CoachType>('mio');
+  const { currentProduct } = useProduct();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Initialize coach based on current product context
+  const defaultCoach = getDefaultCoachForProduct(currentProduct);
+
+  const [selectedCoach, setSelectedCoach] = useState<CoachType>(defaultCoach);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hi! I'm MIO - Mind Insurance Oracle. I'm your forensic behavioral psychologist here to help you see patterns you can't see yourself. I notice everything in your PROTECT practices and can help you break through mental blocks. What's on your mind?",
+      content: getInitialGreeting(defaultCoach),
       timestamp: new Date(),
-      coachType: 'mio'
+      coachType: defaultCoach
     },
   ]);
   const [input, setInput] = useState("");
@@ -35,8 +63,6 @@ const ChatPage = () => {
   const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
-  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

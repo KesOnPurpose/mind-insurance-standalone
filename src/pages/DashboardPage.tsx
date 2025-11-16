@@ -3,76 +3,68 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Brain, 
-  Target, 
-  TrendingUp, 
-  Zap, 
-  Calendar,
+import {
+  Target,
+  Zap,
   CheckCircle2,
   ArrowRight,
   Flame,
-  LogOut,
   Trophy,
-  Award
+  Clipboard,
+  Shield,
+  MessageSquare
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { JourneyMap } from "@/components/roadmap/JourneyMap";
-import { JourneyPhase } from "@/types/tactic";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/services/progressService";
 import { BusinessProfileSnapshot } from "@/components/dashboard/BusinessProfileSnapshot";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { data: userProgress } = useUserProgress(user?.id || '');
   const [userProfile, setUserProfile] = useState<any>(null);
-  
+
   // Fetch user profile for gamification data
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
-      
+
       const { data } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       setUserProfile(data);
     };
-    
+
     fetchProfile();
   }, [user?.id]);
-  
-  // Mock data
-  const currentWeek = 1;
+
+  const currentWeek = userProfile?.current_week || 1;
   const totalWeeks = 12;
-  const weekProgress = (currentWeek / totalWeeks) * 100;
   const protectStreak = userProfile?.current_streak || 0;
   const totalPoints = userProfile?.total_points || 0;
-  const todaysTactics = [
-    { id: 1, name: "Research group home regulations in your state", completed: true },
-    { id: 2, name: "Identify 3 potential neighborhoods", completed: false },
-    { id: 3, name: "Create initial budget estimate", completed: false },
-  ];
+  const completedTactics = userProfile?.completed_tactics_count || 0;
 
-  // Journey map data
-  const currentPhase: JourneyPhase = 'foundation';
-  const phaseProgress: Record<JourneyPhase, number> = {
-    foundation: 35,
-    market_entry: 0,
-    acquisition: 0,
-    operations: 0,
-    growth: 0,
+  // Mock next tactic (in production this would come from the roadmap service)
+  const nextTactic = {
+    id: 'W1-BP-003',
+    name: 'Define Your Target Demographics',
+    category: 'BUSINESS PLANNING',
+    description: 'Identify the specific population you\'ll serve in your group home. This decision affects licensing, staffing, and revenue potential.',
+    estimatedTime: '30 min',
   };
-  const completedMilestones = [
-    "Completed Financial Assessment",
-    "Set Primary Goal",
-    "Created Vision Board"
+
+  // Week categories progress (mock data - would come from actual tactic progress)
+  const weekCategories = [
+    { name: 'Business Planning', completed: 1, total: 8, color: 'bg-blue-500' },
+    { name: 'Legal & Compliance', completed: 0, total: 6, color: 'bg-purple-500' },
+    { name: 'Financial', completed: 1, total: 7, color: 'bg-green-500' },
+    { name: 'Operations', completed: 0, total: 6, color: 'bg-orange-500' },
   ];
 
   // Real-time subscription for progress updates
@@ -89,9 +81,7 @@ const DashboardPage = () => {
           table: 'gh_user_tactic_progress',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('Real-time progress update on dashboard:', payload);
-          // Invalidate queries to refetch with new data
+        () => {
           queryClient.invalidateQueries({ queryKey: ['userProgress'] });
           queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
         }
@@ -104,279 +94,204 @@ const DashboardPage = () => {
   }, [queryClient, user?.id]);
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <div className="bg-gradient-hero text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Welcome back, Future Owner! 🎯</h1>
-              <p className="text-white/80">Week {currentWeek} of {totalWeeks} • Keep the momentum going</p>
+    <div className="space-y-6">
+      {/* Hero: Your Next Move */}
+      <Card className="p-8 bg-white shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+              WEEK {currentWeek} OF {totalWeeks}
+            </p>
+            <h1 className="text-2xl font-bold text-gray-900 mt-1">Your Next Move</h1>
+          </div>
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Flame className="w-4 h-4 text-orange-500" />
+              {protectStreak} day streak
+            </span>
+            <span>{completedTactics}/403 tactics</span>
+            <span className="flex items-center gap-1">
+              <Trophy className="w-4 h-4 text-primary" />
+              {totalPoints} pts
+            </span>
+          </div>
+        </div>
+
+        {/* Single Focus Card */}
+        <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+              <Clipboard className="w-6 h-6 text-white" />
             </div>
-            <div className="flex gap-3 items-center">
-              <span className="text-sm text-white/80">{user?.email}</span>
+            <div className="flex-1">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mb-2">
+                {nextTactic.category}
+              </Badge>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{nextTactic.name}</h2>
+              <p className="text-gray-600 text-sm mb-4">{nextTactic.description}</p>
+              <div className="flex items-center gap-4">
+                <Link to="/roadmap">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    Start This Tactic
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <span className="text-xs text-muted-foreground">~{nextTactic.estimatedTime}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Week Progress */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900">Week {currentWeek}: Foundation & Vision</h3>
+              <span className="text-sm text-muted-foreground">
+                {weekCategories.reduce((acc, c) => acc + c.completed, 0)}/
+                {weekCategories.reduce((acc, c) => acc + c.total, 0)} tactics
+              </span>
+            </div>
+
+            {/* Overall Week Progress */}
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+              <div
+                className="bg-primary h-3 rounded-full transition-all"
+                style={{
+                  width: `${(weekCategories.reduce((acc, c) => acc + c.completed, 0) / weekCategories.reduce((acc, c) => acc + c.total, 0)) * 100}%`
+                }}
+              />
+            </div>
+
+            {/* Category Breakdown */}
+            <div className="grid grid-cols-2 gap-4">
+              {weekCategories.map((category) => (
+                <div key={category.name} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">{category.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {category.completed}/{category.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`${category.color} h-2 rounded-full transition-all`}
+                      style={{ width: `${(category.completed / category.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t">
               <Link to="/roadmap">
-                <Button className="bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20">
+                <Button variant="link" className="text-primary p-0 h-auto font-medium">
+                  View Full Roadmap →
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* Nette AI Quick Access */}
+          <Card className="p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Need Help? Ask Nette</h3>
+                  <p className="text-white/80 text-sm">Your AI group home coach is ready to answer questions</p>
+                </div>
+              </div>
+              <Link to="/chat">
+                <Button className="bg-white text-primary hover:bg-gray-100">
+                  Chat with Nette
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* Cross-Product Link: Mind Insurance */}
+          <Card className="p-4 bg-purple-50 border border-purple-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Protect Your Mindset Today</p>
+                  <p className="text-xs text-gray-600">
+                    {protectStreak === 0
+                      ? "You haven't started your PROTECT streak yet"
+                      : `${protectStreak} day streak - Keep it going!`}
+                  </p>
+                </div>
+              </div>
+              <Link to="/protect">
+                <Button variant="link" className="text-purple-600 font-medium p-0 h-auto">
+                  Start Practice →
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right: Business Snapshot */}
+        <div className="space-y-6">
+          <BusinessProfileSnapshot />
+
+          {/* Quick Stats */}
+          <Card className="p-6">
+            <h3 className="font-bold mb-4">Your Journey</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Total Progress</span>
+                  <span className="font-semibold">{completedTactics}/403</span>
+                </div>
+                <Progress value={(completedTactics / 403) * 100} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Current Level</span>
+                  <span className="font-semibold">{Math.floor(totalPoints / 100)}</span>
+                </div>
+                <Progress value={totalPoints % 100} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {100 - (totalPoints % 100)} XP to next level
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="p-6">
+            <h3 className="font-bold mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              <Link to="/roadmap" className="block">
+                <Button variant="outline" className="w-full justify-start" size="sm">
                   <Target className="w-4 h-4 mr-2" />
                   View Roadmap
                 </Button>
               </Link>
-              <Link to="/protect">
-                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary-light">
-                  <Brain className="w-4 h-4 mr-2" />
-                  PROTECT Practice
+              <Link to="/model-week" className="block">
+                <Button variant="outline" className="w-full justify-start" size="sm">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Model Week
                 </Button>
               </Link>
-              <Button onClick={signOut} variant="ghost" size="icon" className="text-white hover:bg-white/10">
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Week Progress</p>
-                <p className="text-2xl font-bold">{currentWeek}/{totalWeeks}</p>
-              </div>
-            </div>
-            <Progress value={weekProgress} className="h-2" />
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                <Flame className="w-5 h-5 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">PROTECT Streak</p>
-                <p className="text-2xl font-bold text-secondary">{protectStreak} days 🔥</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Points</p>
-                <p className="text-2xl font-bold text-primary">{totalPoints}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                <Award className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Level</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold">{Math.floor(totalPoints / 100)}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {totalPoints % 100}/100 XP
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* PROTECT Status */}
-            <Card className="p-6 bg-gradient-card">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold mb-1">Today's PROTECT Practice</h2>
-                  <p className="text-muted-foreground">Your daily mental insurance policy</p>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-success/10 rounded-full">
-                  <Flame className="w-5 h-5 text-success" />
-                  <span className="font-bold text-success">{protectStreak} day streak</span>
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-4 mb-6">
-                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="text-sm text-muted-foreground mb-1">Morning</div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                    <span className="font-semibold">Complete</span>
-                  </div>
-                </div>
-                <div className="p-4 bg-muted rounded-lg border border-border">
-                  <div className="text-sm text-muted-foreground mb-1">Midday</div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                    <span className="font-semibold">Pending</span>
-                  </div>
-                </div>
-                <div className="p-4 bg-muted rounded-lg border border-border">
-                  <div className="text-sm text-muted-foreground mb-1">Evening</div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                    <span className="font-semibold">Pending</span>
-                  </div>
-                </div>
-              </div>
-
-              <Link to="/protect">
-                <Button className="w-full bg-gradient-hero hover:opacity-90 transition-opacity">
-                  Complete Midday Practice
-                  <ArrowRight className="ml-2 w-4 h-4" />
+              <Link to="/chat" className="block">
+                <Button variant="outline" className="w-full justify-start" size="sm">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Ask Nette AI
                 </Button>
               </Link>
-            </Card>
-
-            {/* Today's Focus */}
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gradient-breakthrough flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Today's Focus</h2>
-                  <p className="text-sm text-muted-foreground">Maximum 3 tactics per day</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {todaysTactics.map((tactic) => (
-                  <div 
-                    key={tactic.id}
-                    className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                  >
-                    <button
-                      className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 transition-colors ${
-                        tactic.completed 
-                          ? 'bg-success border-success' 
-                          : 'border-muted-foreground hover:border-primary'
-                      }`}
-                    >
-                      {tactic.completed && <CheckCircle2 className="w-4 h-4 text-white" />}
-                    </button>
-                    <div className="flex-1">
-                      <p className={`font-medium ${tactic.completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {tactic.name}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link to="/roadmap">
-                <Button variant="outline" className="w-full mt-4">
-                  View Full Roadmap
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-            </Card>
-
-            {/* Weekly Progress */}
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gradient-success flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Weekly Progress</h2>
-                  <p className="text-sm text-muted-foreground">Week {currentWeek} of {totalWeeks}</p>
-                </div>
-              </div>
-
-              <Progress value={weekProgress} className="h-3 mb-2" />
-              <p className="text-sm text-muted-foreground">
-                {currentWeek} weeks completed • {totalWeeks - currentWeek} weeks remaining
-              </p>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card className="p-6">
-              <h3 className="font-bold mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Link to="/chat" className="block">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Zap className="w-4 h-4 mr-2" />
-                    Ask Nette AI
-                  </Button>
-                </Link>
-                <Link to="/model-week" className="block">
-                  <Button variant="outline" className="w-full justify-start">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Model Week
-                  </Button>
-                </Link>
-                <Link to="/roadmap" className="block">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Target className="w-4 h-4 mr-2" />
-                    View Roadmap
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-
-            {/* Business Profile Snapshot */}
-            <BusinessProfileSnapshot />
-
-            {/* MIO Message */}
-            <Card className="p-6 bg-gradient-breakthrough">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                  <Brain className="w-5 h-5 text-secondary" />
-                </div>
-                <div>
-                  <div className="font-semibold mb-2 text-white">Message from MIO</div>
-                  <p className="text-sm text-white/90">
-                    Great job maintaining your streak! I noticed you're moving fast through the tactics. Let's make sure we're building solid foundations. 💪
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Stats */}
-            <Card className="p-6">
-              <h3 className="font-bold mb-4">Your Progress</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Tactics Completed</span>
-                    <span className="font-semibold">8/403</span>
-                  </div>
-                  <Progress value={2} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">PROTECT Completion</span>
-                    <span className="font-semibold">43%</span>
-                  </div>
-                  <Progress value={43} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Weekly Goal</span>
-                    <span className="font-semibold">3/5 days</span>
-                  </div>
-                  <Progress value={60} className="h-2" />
-                </div>
-              </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

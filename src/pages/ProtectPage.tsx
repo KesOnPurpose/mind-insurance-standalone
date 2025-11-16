@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Circle, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, ArrowRight, ArrowLeft, Sparkles, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -165,21 +165,14 @@ const ProtectPage = () => {
   const isComplete = completedSteps.length === protectSteps.length;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <div className="bg-gradient-hero text-white">
-        <div className="container mx-auto px-4 py-8">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back to Dashboard</span>
-          </Link>
-          <h1 className="text-3xl font-bold mb-2">PROTECT Practice</h1>
-          <p className="text-white/80">Your daily 10-minute mental insurance policy</p>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl p-6">
+        <h1 className="text-2xl font-bold mb-1">PROTECT Practice</h1>
+        <p className="text-white/80">Your daily 10-minute mental insurance policy</p>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto">
           {/* Progress Bar */}
           <Card className="p-6 mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -313,8 +306,27 @@ const ProtectPage = () => {
               </div>
             </div>
           </Card>
+
+          {/* Cross-Product Link: Back to Grouphome */}
+          <Card className="p-4 mt-6 bg-primary/5 border border-primary/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Home className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Continue Your Business Journey</p>
+                  <p className="text-xs text-gray-600">Get back to your group home roadmap</p>
+                </div>
+              </div>
+              <Link to="/dashboard">
+                <Button variant="link" className="text-primary font-medium p-0 h-auto">
+                  Back to Roadmap →
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </div>
-      </div>
     </div>
   );
 };
