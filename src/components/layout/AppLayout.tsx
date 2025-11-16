@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, MessageSquare } from 'lucide-react';
+import { LogOut, MessageSquare, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,14 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Quick Action: My Journey */}
+            <Link to="/my-journey">
+              <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-2">
+                <Map className="w-4 h-4" />
+                <span>My Journey</span>
+              </Button>
+            </Link>
+
             {/* Quick Action: Chat */}
             <Link to="/chat">
               <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-2">

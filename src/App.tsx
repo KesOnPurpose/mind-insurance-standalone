@@ -17,6 +17,7 @@ import ProtectPage from "./pages/ProtectPage";
 import ChatPage from "./pages/ChatPage";
 import ModelWeekPage from "./pages/ModelWeekPage";
 import RoadmapPage from "./pages/RoadmapPage";
+import MyJourneyPage from "./pages/MyJourneyPage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/chat" element={<ProtectedRoute><AppLayout><ChatPage /></AppLayout></ProtectedRoute>} />
               <Route path="/model-week" element={<ProtectedRoute><AppLayout><ModelWeekPage /></AppLayout></ProtectedRoute>} />
               <Route path="/roadmap" element={<ProtectedRoute><AppLayout><RoadmapPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/my-journey" element={<ProtectedRoute><AppLayout><MyJourneyPage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
