@@ -3,11 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  CheckCircle, 
-  Circle, 
-  Play, 
-  Clock, 
+import {
+  CheckCircle,
+  Circle,
+  Play,
+  Clock,
   DollarSign,
   Users,
   Lightbulb,
@@ -15,18 +15,21 @@ import {
 } from 'lucide-react';
 import { TacticWithProgress } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
+import { TacticCompletionForm } from './TacticCompletionForm';
+import { BusinessProfile } from '@/types/assessment';
 
 interface TacticCardProps {
   tactic: TacticWithProgress;
   onStart: (tacticId: string) => void;
-  onComplete: (tacticId: string, notes?: string) => void;
+  onComplete: (tacticId: string, notes?: string, profileUpdates?: Partial<BusinessProfile>) => void;
 }
 
 export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
   const [notes, setNotes] = useState(tactic.notes || '');
   const [showNotes, setShowNotes] = useState(false);
-  
-  const StatusIcon = tactic.status === 'completed' ? CheckCircle : 
+  const [showCompletionForm, setShowCompletionForm] = useState(false);
+
+  const StatusIcon = tactic.status === 'completed' ? CheckCircle :
                      tactic.status === 'in_progress' ? Play : Circle;
   
   const statusColors = {
@@ -126,16 +129,16 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
             
             {tactic.status === 'in_progress' && (
               <>
-                <Button 
-                  size="sm" 
-                  onClick={() => onComplete(tactic.tactic_id, notes)}
+                <Button
+                  size="sm"
+                  onClick={() => setShowCompletionForm(true)}
                   className="flex items-center gap-1"
                 >
                   <CheckCircle className="w-3 h-3" />
                   Complete
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => setShowNotes(!showNotes)}
                 >
@@ -143,14 +146,14 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
                 </Button>
               </>
             )}
-            
+
             {tactic.status === 'completed' && tactic.completedAt && (
               <span className="text-xs text-muted-foreground">
                 Completed {new Date(tactic.completedAt).toLocaleDateString()}
               </span>
             )}
           </div>
-          
+
           {showNotes && tactic.status === 'in_progress' && (
             <Textarea
               value={notes}
@@ -162,6 +165,17 @@ export function TacticCard({ tactic, onStart, onComplete }: TacticCardProps) {
           )}
         </div>
       </div>
+
+      <TacticCompletionForm
+        isOpen={showCompletionForm}
+        onClose={() => setShowCompletionForm(false)}
+        tacticName={tactic.tactic_name}
+        tacticCategory={tactic.category}
+        onComplete={(profileUpdates, formNotes) => {
+          onComplete(tactic.tactic_id, formNotes || notes, profileUpdates);
+          setShowCompletionForm(false);
+        }}
+      />
     </Card>
   );
 }

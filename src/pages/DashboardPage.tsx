@@ -23,6 +23,7 @@ import { JourneyMap } from "@/components/roadmap/JourneyMap";
 import { JourneyPhase } from "@/types/tactic";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/services/progressService";
+import { BusinessProfileSnapshot } from "@/components/dashboard/BusinessProfileSnapshot";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
@@ -329,6 +330,9 @@ const DashboardPage = () => {
                 </Link>
               </div>
             </Card>
+
+            {/* Business Profile Snapshot */}
+            <BusinessProfileSnapshot />
 
             {/* MIO Message */}
             <Card className="p-6 bg-gradient-breakthrough">

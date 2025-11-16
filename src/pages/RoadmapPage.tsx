@@ -16,6 +16,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { JourneyMap } from '@/components/roadmap/JourneyMap';
 import { useAuth } from '@/contexts/AuthContext';
+import { updateBusinessProfile } from '@/services/businessProfileService';
+import { BusinessProfile } from '@/types/assessment';
+import { toast } from 'sonner';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
@@ -356,10 +359,23 @@ export default function RoadmapPage() {
                             tacticId: id 
                           });
                         }}
-                        onComplete={(id, notes) => {
+                        onComplete={async (id, notes, profileUpdates) => {
                           if (!user?.id) return;
-                          completeTactic.mutate({ 
-                            userId: user.id, 
+
+                          // Update business profile first if there are updates
+                          if (profileUpdates && Object.keys(profileUpdates).length > 0) {
+                            try {
+                              await updateBusinessProfile(user.id, profileUpdates, id);
+                              toast.success('Business profile updated!', { duration: 2000 });
+                            } catch (error) {
+                              console.error('Failed to update business profile:', error);
+                              toast.error('Failed to update profile, but tactic will be marked complete');
+                            }
+                          }
+
+                          // Then mark tactic as complete
+                          completeTactic.mutate({
+                            userId: user.id,
                             tacticId: id,
                             notes
                           });
