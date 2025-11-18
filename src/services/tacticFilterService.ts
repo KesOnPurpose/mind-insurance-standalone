@@ -57,20 +57,32 @@ export async function getPersonalizedTactics(assessment: UserAssessment): Promis
   
   if (!tactics) return [];
   
+  // MIND INSURANCE CATEGORIES - These belong to MIO product, NOT Group Home roadmap
+  const MIND_INSURANCE_CATEGORIES = [
+    'Vision & Goal Setting',
+    'Mindset & Personal Development',
+    'Education & Continuous Learning',
+  ];
+
   // Apply additional filters in-memory for more complex logic
   let filteredTactics = tactics.filter(tactic => {
+    // EXCLUDE Mind Insurance categories (these are handled by MIO product)
+    if (MIND_INSURANCE_CATEGORIES.includes(tactic.category)) {
+      return false;
+    }
+
     // Filter by target populations (if tactic has specific populations)
     if (tactic.target_populations && tactic.target_populations.length > 0) {
       // 'all' means applicable to everyone
       if (tactic.target_populations.includes('all')) {
         return true;
       }
-      
+
       // Check if user's target populations overlap with tactic's populations
-      const hasMatch = tactic.target_populations.some(pop => 
+      const hasMatch = tactic.target_populations.some(pop =>
         assessment.target_populations.includes(pop)
       );
-      
+
       if (!hasMatch) return false;
     }
     
@@ -259,7 +271,8 @@ export async function getNextRecommendedTactic(
  */
 export async function getEnhancedPersonalizedTactics(
   assessment: EnhancedUserAssessment,
-  userId?: string
+  userId?: string,
+  immediatePriority?: 'property_acquisition' | 'operations' | 'comprehensive' | 'scaling'
 ): Promise<TacticWithPrerequisites[]> {
   // 1. Fetch all tactics with enriched fields
   const { data: allTactics, error } = await supabase
@@ -304,78 +317,185 @@ export async function getEnhancedPersonalizedTactics(
     }
   });
 
-  // 5. Apply multi-criteria filtering
-  const filteredTactics: TacticWithPrerequisites[] = allTactics
-    .filter(tactic => {
-      // A. OWNERSHIP MODEL FILTER (if user has specified)
-      if (assessment.ownership_model && assessment.ownership_model !== 'undecided') {
-        if (tactic.ownership_model && Array.isArray(tactic.ownership_model)) {
-          const matchesOwnership = tactic.ownership_model.includes(assessment.ownership_model);
-          if (!matchesOwnership) return false;
-        }
-      }
+  // MIND INSURANCE CATEGORIES - These belong to MIO product, NOT Group Home roadmap
+  const MIND_INSURANCE_CATEGORIES = [
+    'Vision & Goal Setting',
+    'Mindset & Personal Development',
+    'Education & Continuous Learning',
+  ];
 
-      // B. BUDGET FILTER (exact USD matching)
-      if (tactic.cost_max_usd && tactic.cost_max_usd > userBudget) {
-        return false; // Tactic exceeds user's budget
-      }
+  // PROMOTIONAL-ONLY TACTICS - These are community/promotional items, not actionable tactics
+  const PROMOTIONAL_ONLY_TACTICS = [
+    'T372', // Join Group Homes for Newbies Skool platform
+    'T373', // Attend monthly Group Homes for Newbies Zoom calls
+  ];
 
-      // C. POPULATION FILTER (overlap check)
-      if (tactic.applicable_populations && Array.isArray(tactic.applicable_populations)) {
-        const hasPopulationMatch = tactic.applicable_populations.some(pop =>
-          normalizedPopulations.has(pop) || pop === 'mixed'
-        );
-        if (!hasPopulationMatch && tactic.applicable_populations.length > 0) {
-          return false;
-        }
-      }
+  // 5. Apply multi-criteria filtering (INITIAL PASS)
+  let initialFilteredTactics = allTactics.filter(tactic => {
+    // 0. EXCLUDE Mind Insurance categories (these are handled by MIO product)
+    if (MIND_INSURANCE_CATEGORIES.includes(tactic.category)) {
+      return false;
+    }
 
-      // D. EXPERIENCE FILTER (keep original logic)
-      if (tactic.experience_level === 'advanced') {
-        if (assessment.caregiving_experience === 'no-experience') {
-          return false;
-        }
-      }
+    // 0.5 EXCLUDE promotional-only tactics (community/promotional items)
+    if (PROMOTIONAL_ONLY_TACTICS.includes(tactic.tactic_id)) {
+      return false;
+    }
 
-      // E. TIMELINE FILTER (priority tier based)
-      if (assessment.timeline === 'within-3-months') {
-        if (tactic.priority_tier && tactic.priority_tier > 2) return false;
-      } else if (assessment.timeline === 'within-6-months') {
-        if (tactic.priority_tier && tactic.priority_tier > 3) return false;
+    // A. OWNERSHIP MODEL FILTER (if user has specified)
+    if (assessment.ownership_model && assessment.ownership_model !== 'undecided') {
+      if (tactic.ownership_model && Array.isArray(tactic.ownership_model)) {
+        const matchesOwnership = tactic.ownership_model.includes(assessment.ownership_model);
+        if (!matchesOwnership) return false;
       }
+    }
 
-      return true;
-    })
-    .map(tactic => {
-      // F. PREREQUISITE VALIDATION
-      const blockingPrerequisites = (tactic.prerequisite_tactics || []).filter(
-        prereqId => !completedTacticIds.has(prereqId)
+    // B. BUDGET FILTER (exact USD matching)
+    if (tactic.cost_max_usd && tactic.cost_max_usd > userBudget) {
+      return false; // Tactic exceeds user's budget
+    }
+
+    // C. POPULATION FILTER (overlap check)
+    if (tactic.applicable_populations && Array.isArray(tactic.applicable_populations)) {
+      const hasPopulationMatch = tactic.applicable_populations.some(pop =>
+        normalizedPopulations.has(pop) || pop === 'mixed'
       );
-
-      const canStart = blockingPrerequisites.length === 0;
-
-      // G. COST STATUS
-      let costStatus: 'within_budget' | 'exceeds_budget' | 'unknown' = 'unknown';
-      if (tactic.cost_max_usd !== null && tactic.cost_max_usd !== undefined) {
-        costStatus = tactic.cost_max_usd <= userBudget ? 'within_budget' : 'exceeds_budget';
+      if (!hasPopulationMatch && tactic.applicable_populations.length > 0) {
+        return false;
       }
+    }
 
-      return {
-        ...tactic,
-        status: 'not_started' as const,
-        can_start: canStart,
-        blocking_prerequisites: blockingPrerequisites,
-        cost_status: costStatus
-      };
-    });
+    // D. EXPERIENCE FILTER (keep original logic)
+    if (tactic.experience_level === 'advanced') {
+      if (assessment.caregiving_experience === 'no-experience') {
+        return false;
+      }
+    }
 
-  // 6. Sort with enhanced prioritization
+    // E. TIMELINE FILTER (priority tier based)
+    if (assessment.timeline === 'within-3-months') {
+      if (tactic.priority_tier && tactic.priority_tier > 2) return false;
+    } else if (assessment.timeline === 'within-6-months') {
+      if (tactic.priority_tier && tactic.priority_tier > 3) return false;
+    }
+
+    return true;
+  });
+
+  // 5.5 CRITICAL FIX: Force-include ALL prerequisite tactics that are referenced
+  // This prevents orphaned prerequisites where a tactic references a prerequisite
+  // that was filtered out due to budget/population/timeline restrictions
+  const allTacticsMap = new Map(allTactics.map(t => [t.tactic_id, t]));
+  const filteredTacticIds = new Set(initialFilteredTactics.map(t => t.tactic_id));
+
+  // Recursively collect all prerequisites
+  function collectAllPrerequisites(tacticIds: Set<string>): Set<string> {
+    const allPrereqs = new Set<string>();
+    const toProcess = Array.from(tacticIds);
+    const processed = new Set<string>();
+
+    while (toProcess.length > 0) {
+      const tacticId = toProcess.pop()!;
+      if (processed.has(tacticId)) continue;
+      processed.add(tacticId);
+
+      const tactic = allTacticsMap.get(tacticId);
+      if (!tactic || !tactic.prerequisite_tactics) continue;
+
+      for (const prereqId of tactic.prerequisite_tactics) {
+        if (!allPrereqs.has(prereqId)) {
+          allPrereqs.add(prereqId);
+          // Also process this prerequisite's prerequisites (chain)
+          if (!processed.has(prereqId)) {
+            toProcess.push(prereqId);
+          }
+        }
+      }
+    }
+
+    return allPrereqs;
+  }
+
+  const requiredPrereqs = collectAllPrerequisites(filteredTacticIds);
+
+  // Add missing prerequisites to the filtered list
+  let addedPrereqCount = 0;
+  for (const prereqId of requiredPrereqs) {
+    if (!filteredTacticIds.has(prereqId)) {
+      const prereqTactic = allTacticsMap.get(prereqId);
+      if (prereqTactic) {
+        // Skip Mind Insurance categories - these should NEVER be forced into roadmap
+        if (MIND_INSURANCE_CATEGORIES.includes(prereqTactic.category)) {
+          console.warn(`[PrerequisiteFix] Skipping Mind Insurance prerequisite ${prereqId} - handled by MIO`);
+          continue;
+        }
+
+        initialFilteredTactics.push(prereqTactic);
+        filteredTacticIds.add(prereqId);
+        addedPrereqCount++;
+        console.log(`[PrerequisiteFix] Force-added prerequisite tactic ${prereqId} (${prereqTactic.tactic_name})`);
+      } else {
+        console.warn(`[PrerequisiteFix] Missing prerequisite tactic ${prereqId} not found in database!`);
+      }
+    }
+  }
+
+  if (addedPrereqCount > 0) {
+    console.log(`[PrerequisiteFix] Total force-added prerequisites: ${addedPrereqCount}`);
+  }
+
+  // 6. Now map to TacticWithPrerequisites with updated filtering
+  const filteredTactics: TacticWithPrerequisites[] = initialFilteredTactics.map(tactic => {
+    // F. PREREQUISITE VALIDATION - now all prerequisites should be in the list
+    const blockingPrerequisites = (tactic.prerequisite_tactics || []).filter(
+      prereqId => !completedTacticIds.has(prereqId) && filteredTacticIds.has(prereqId)
+    );
+
+    const canStart = blockingPrerequisites.length === 0;
+
+    // G. COST STATUS
+    let costStatus: 'within_budget' | 'exceeds_budget' | 'unknown' = 'unknown';
+    if (tactic.cost_max_usd !== null && tactic.cost_max_usd !== undefined) {
+      costStatus = tactic.cost_max_usd <= userBudget ? 'within_budget' : 'exceeds_budget';
+    }
+
+    return {
+      ...tactic,
+      status: 'not_started' as const,
+      can_start: canStart,
+      blocking_prerequisites: blockingPrerequisites,
+      cost_status: costStatus
+    };
+  });
+
+  // 6. Sort with enhanced prioritization including immediate priority
   return filteredTactics.sort((a, b) => {
-    // Critical path tactics first
+    // Critical path tactics ALWAYS first (these are must-do)
     if (a.is_critical_path && !b.is_critical_path) return -1;
     if (!a.is_critical_path && b.is_critical_path) return 1;
 
-    // Then by week assignment
+    // Priority-based sorting (ADDITIVE, not restrictive)
+    // Boost tactics that match user's immediate priority focus
+    if (immediatePriority && immediatePriority !== 'comprehensive') {
+      const priorityWeekRanges: Record<string, number[]> = {
+        'property_acquisition': [7, 8, 9],  // Property acquisition phase
+        'operations': [10, 11, 12],          // Operations setup phase
+        'scaling': [13, 14, 15]              // Growth/scaling phase
+      };
+
+      const priorityWeeks = priorityWeekRanges[immediatePriority] || [];
+      const weekA = a.week_assignment || 99;
+      const weekB = b.week_assignment || 99;
+
+      const aInPriorityPhase = priorityWeeks.includes(weekA);
+      const bInPriorityPhase = priorityWeeks.includes(weekB);
+
+      // Boost priority phase tactics to the top (after critical path)
+      if (aInPriorityPhase && !bInPriorityPhase) return -1;
+      if (!aInPriorityPhase && bInPriorityPhase) return 1;
+    }
+
+    // Then by week assignment (standard progression)
     const weekA = a.week_assignment || 99;
     const weekB = b.week_assignment || 99;
     if (weekA !== weekB) return weekA - weekB;

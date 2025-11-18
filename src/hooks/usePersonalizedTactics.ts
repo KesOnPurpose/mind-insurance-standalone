@@ -32,7 +32,7 @@ export function usePersonalizedTactics() {
   // Then, fetch personalized tactics based on assessment
   // Use enhanced filtering if ownership_model is available (new assessment flow)
   const { data: tactics, isLoading: isLoadingTactics } = useQuery({
-    queryKey: ['personalizedTactics', user?.id, assessment?.overall_score, assessment?.ownership_model, progressData?.length],
+    queryKey: ['personalizedTactics', user?.id, assessment?.overall_score, assessment?.ownership_model, assessment?.immediate_priority, progressData?.length],
     queryFn: async () => {
       if (!assessment || !user?.id) return [];
 
@@ -56,11 +56,11 @@ export function usePersonalizedTactics() {
           prioritized_populations: assessment.prioritized_populations
         };
 
-        const completedTacticIds = progressData
-          ?.filter(p => p.status === 'completed')
-          .map(p => p.tactic_id) || [];
+        // Pass immediate_priority for priority-based sorting (ADDITIVE, not restrictive)
+        const immediatePriority = assessment.immediate_priority as 'property_acquisition' | 'operations' | 'comprehensive' | 'scaling' | undefined;
 
-        return getEnhancedPersonalizedTactics(enhancedAssessment, completedTacticIds);
+        // Pass user.id for prerequisite validation (function fetches completed tactics internally)
+        return getEnhancedPersonalizedTactics(enhancedAssessment, user.id, immediatePriority);
       }
 
       // Fallback to legacy filtering for older assessments

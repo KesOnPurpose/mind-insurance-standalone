@@ -68,14 +68,19 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'select',
       options: US_STATES,
       required: true,
+      requirementLevel: 'required', // Critical for tactic purpose
+      prefillFromAssessment: 'targetState', // Auto-fill from assessment
+      helperText: 'This determines licensing requirements and regulations',
     },
     {
       id: 'target_state_reason',
-      question: 'Why did you choose this state? (helps agents personalize advice)',
+      question: 'Why did you choose this state? (helps personalize advice)',
       fieldName: 'targetStateReason',
       inputType: 'textarea',
       placeholder: 'e.g., I live here, lower regulations, better reimbursement rates...',
       required: false,
+      requirementLevel: 'recommended',
+      helperText: 'Optional but helps us provide better guidance',
     },
   ],
 
@@ -88,6 +93,12 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'text',
       placeholder: 'e.g., Sunshine Care Home LLC',
       required: true,
+      requirementLevel: 'required',
+      skipOption: {
+        label: "I haven't decided yet",
+        value: 'pending',
+      },
+      helperText: 'You can change this later if needed',
     },
     {
       id: 'entity_type',
@@ -103,6 +114,9 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'not-formed', label: 'Not formed yet' },
       ],
       required: true,
+      requirementLevel: 'recommended',
+      allowOther: true, // Adds "Other" option
+      helperText: 'Most group home operators choose LLC for liability protection',
     },
   ],
 
@@ -115,11 +129,17 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'number',
       placeholder: '6',
       required: true,
+      requirementLevel: 'recommended',
+      skipOption: {
+        label: "I'll decide after property selection",
+        value: 'pending',
+      },
       validation: {
         min: 1,
         max: 20,
         message: 'Bed count must be between 1 and 20',
       },
+      helperText: 'Common range is 4-8 beds for residential care',
     },
     {
       id: 'property_type',
@@ -134,6 +154,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'not-selected', label: 'Not decided yet' },
       ],
       required: true,
+      requirementLevel: 'recommended',
+      allowOther: true,
     },
     {
       id: 'property_status',
@@ -150,6 +172,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'leasing', label: 'Leasing property' },
       ],
       required: true,
+      requirementLevel: 'required',
+      prefillFromAssessment: 'propertyStatus', // Auto-fill from assessment
     },
   ],
 
@@ -172,6 +196,9 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'not-decided', label: 'Not decided yet' },
       ],
       required: true,
+      requirementLevel: 'recommended',
+      allowOther: true,
+      helperText: 'Understanding your funding helps prioritize property tactics',
     },
     {
       id: 'startup_capital',
@@ -180,6 +207,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'number',
       placeholder: '45000',
       required: false,
+      requirementLevel: 'optional', // Privacy-sensitive
+      helperText: 'Optional - helps estimate timeline and property options',
     },
   ],
 
@@ -192,6 +221,12 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'number',
       placeholder: '15000',
       required: true,
+      requirementLevel: 'recommended',
+      skipOption: {
+        label: "I'll research this first",
+        value: 'pending',
+      },
+      helperText: 'Average per bed is $2,500-$4,000/month depending on state',
     },
     {
       id: 'monthly_expense_estimate',
@@ -200,6 +235,7 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'number',
       placeholder: '8000',
       required: false,
+      requirementLevel: 'optional',
     },
     {
       id: 'service_model',
@@ -214,6 +250,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'not-decided', label: 'Not decided yet' },
       ],
       required: true,
+      requirementLevel: 'recommended',
+      allowOther: true,
     },
   ],
 
@@ -226,6 +264,7 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       inputType: 'textarea',
       placeholder: 'e.g., Partnering with hospitals, social services, online presence...',
       required: false,
+      requirementLevel: 'optional',
     },
     {
       id: 'referral_sources',
@@ -243,6 +282,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'physician-offices', label: 'Physician Offices' },
       ],
       required: false,
+      requirementLevel: 'optional',
+      allowOther: true, // Can add custom referral sources
     },
   ],
 
@@ -263,6 +304,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
         { value: 'operational', label: 'Fully operational' },
       ],
       required: true,
+      requirementLevel: 'required',
+      helperText: 'This helps us track your licensing progress',
     },
     {
       id: 'estimated_license_date',
@@ -270,6 +313,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       fieldName: 'estimatedLicenseDate',
       inputType: 'date',
       required: false,
+      requirementLevel: 'optional',
+      helperText: 'An estimate is fine - helps with timeline planning',
     },
   ],
 
@@ -281,6 +326,11 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       fieldName: 'businessLaunchDate',
       inputType: 'date',
       required: false,
+      requirementLevel: 'recommended',
+      skipOption: {
+        label: 'Timeline not set yet',
+        value: 'pending',
+      },
     },
     {
       id: 'first_resident_date',
@@ -288,6 +338,8 @@ export const TACTIC_QUESTION_MAP: Record<string, TacticQuestion[]> = {
       fieldName: 'firstResidentDate',
       inputType: 'date',
       required: false,
+      requirementLevel: 'optional',
+      helperText: 'Usually 30-60 days after license approval',
     },
   ],
 };

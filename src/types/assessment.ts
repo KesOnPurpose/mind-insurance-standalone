@@ -8,6 +8,8 @@ export interface AssessmentAnswers {
   // Strategy Selection (NEW - for enriched personalization)
   ownershipModel: string; // 'rental_arbitrage' | 'ownership' | 'creative_financing' | 'house_hack' | 'hybrid'
   targetState: string;    // State code (CA, TX, FL, etc.)
+  propertyStatus: string; // 'not-started' | 'researching' | 'searching' | 'offer-pending' | 'under-contract' | 'owned' | 'leasing'
+  immediatePriority: string; // 'property_acquisition' | 'operations' | 'comprehensive' | 'scaling'
 
   // Market Knowledge
   licensingFamiliarity: string;
@@ -104,6 +106,15 @@ export interface TacticQuestion {
   options?: { value: string; label: string }[];
   placeholder?: string;
   required?: boolean;
+  // Enhanced validation system
+  requirementLevel?: 'required' | 'recommended' | 'optional'; // Default: 'optional'
+  allowOther?: boolean; // If true, adds "Other" option to selects
+  skipOption?: {
+    label: string; // e.g., "I'll decide later"
+    value: string; // e.g., "skipped"
+  };
+  prefillFromAssessment?: keyof AssessmentAnswers; // Auto-fill from assessment data
+  helperText?: string; // Additional context for the question
   validation?: {
     min?: number;
     max?: number;

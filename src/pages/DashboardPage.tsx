@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Target,
   Zap,
@@ -12,7 +13,17 @@ import {
   Trophy,
   Clipboard,
   Shield,
-  MessageSquare
+  MessageSquare,
+  Clock,
+  Star,
+  Lock,
+  AlertCircle,
+  DollarSign,
+  Users,
+  Building,
+  FileText,
+  Briefcase,
+  Home
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,25 +31,59 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/services/progressService";
 import { BusinessProfileSnapshot } from "@/components/dashboard/BusinessProfileSnapshot";
+import { usePersonalizedTactics } from "@/hooks/usePersonalizedTactics";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { OnboardingProgressStepper } from "@/components/onboarding/OnboardingProgressStepper";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { data: userProgress } = useUserProgress(user?.id || '');
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [onboardingData, setOnboardingData] = useState<any>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
-  // Fetch user profile for gamification data
+  // Fetch personalized tactics and next recommended tactic
+  const {
+    tactics,
+    nextTactic: dynamicNextTactic,
+    isLoading: isTacticsLoading,
+    criticalPathTactics,
+    blockedTactics
+  } = usePersonalizedTactics();
+
+  // Fetch user profile and onboarding data
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
 
-      const { data } = await supabase
+      // Fetch user profile
+      const { data: profileData } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      setUserProfile(data);
+      setUserProfile(profileData);
+
+      // Fetch onboarding data to check if welcome should be shown
+      const { data: onboardingRecord } = await supabase
+        .from('user_onboarding')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      setOnboardingData(onboardingRecord);
+
+      // Show welcome modal if:
+      // 1. User has completed assessment (assessment_complete step)
+      // 2. User hasn't seen welcome yet
+      // 3. This is their first dashboard visit after assessment
+      if (onboardingRecord &&
+          onboardingRecord.onboarding_step === 'assessment_complete' &&
+          !onboardingRecord.has_seen_welcome) {
+        setShowWelcomeModal(true);
+      }
     };
 
     fetchProfile();
@@ -50,22 +95,123 @@ const DashboardPage = () => {
   const totalPoints = userProfile?.total_points || 0;
   const completedTactics = userProfile?.completed_tactics_count || 0;
 
-  // Mock next tactic (in production this would come from the roadmap service)
-  const nextTactic = {
-    id: 'W1-BP-003',
-    name: 'Define Your Target Demographics',
-    category: 'BUSINESS PLANNING',
-    description: 'Identify the specific population you\'ll serve in your group home. This decision affects licensing, staffing, and revenue potential.',
-    estimatedTime: '30 min',
+  // Smart next tactic selection - prioritize in-progress, critical path, and unblocked tactics
+  const getSmartNextTactic = () => {
+    if (!tactics || tactics.length === 0) return null;
+
+    const completedIds = new Set(userProgress?.filter(p => p.status === 'completed').map(p => p.tactic_id) || []);
+    const inProgressIds = new Set(userProgress?.filter(p => p.status === 'in_progress').map(p => p.tactic_id) || []);
+
+    // Priority 1: Return in-progress tactic (finish what you started)
+    const inProgressTactic = tactics.find(t => inProgressIds.has(t.tactic_id));
+    if (inProgressTactic) {
+      return { tactic: inProgressTactic, isInProgress: true };
+    }
+
+    // Priority 2: Critical path tactics that can be started
+    const availableCriticalPath = tactics.find(t =>
+      !completedIds.has(t.tactic_id) &&
+      t.is_critical_path &&
+      ('can_start' in t ? t.can_start : true)
+    );
+    if (availableCriticalPath) {
+      return { tactic: availableCriticalPath, isInProgress: false };
+    }
+
+    // Priority 3: Any tactic that can be started
+    const nextAvailable = tactics.find(t =>
+      !completedIds.has(t.tactic_id) &&
+      ('can_start' in t ? t.can_start : true)
+    );
+    if (nextAvailable) {
+      return { tactic: nextAvailable, isInProgress: false };
+    }
+
+    // Priority 4: Use the hook's recommendation
+    if (dynamicNextTactic) {
+      return { tactic: dynamicNextTactic, isInProgress: false };
+    }
+
+    return null;
   };
 
-  // Week categories progress (mock data - would come from actual tactic progress)
-  const weekCategories = [
-    { name: 'Business Planning', completed: 1, total: 8, color: 'bg-blue-500' },
-    { name: 'Legal & Compliance', completed: 0, total: 6, color: 'bg-purple-500' },
-    { name: 'Financial', completed: 1, total: 7, color: 'bg-green-500' },
-    { name: 'Operations', completed: 0, total: 6, color: 'bg-orange-500' },
-  ];
+  const smartNextTactic = getSmartNextTactic();
+
+  // Calculate days since tactic was started (urgency indicator)
+  const getDaysSinceStarted = (tacticId: string) => {
+    const progress = userProgress?.find(p => p.tactic_id === tacticId && p.status === 'in_progress');
+    if (progress?.started_at) {
+      const startDate = new Date(progress.started_at);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - startDate.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+    return 0;
+  };
+
+  // Category icon mapping
+  const getCategoryIcon = (category: string) => {
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('business') || categoryLower.includes('planning')) return Briefcase;
+    if (categoryLower.includes('legal') || categoryLower.includes('compliance')) return FileText;
+    if (categoryLower.includes('financial') || categoryLower.includes('finance')) return DollarSign;
+    if (categoryLower.includes('property') || categoryLower.includes('location')) return Home;
+    if (categoryLower.includes('operations') || categoryLower.includes('staffing')) return Users;
+    if (categoryLower.includes('marketing')) return Target;
+    return Clipboard;
+  };
+
+  // Calculate real week progress from actual tactics data
+  const calculateWeekProgress = () => {
+    if (!tactics || tactics.length === 0) {
+      return [];
+    }
+
+    const completedIds = new Set(userProgress?.filter(p => p.status === 'completed').map(p => p.tactic_id) || []);
+
+    // Group tactics by category
+    const categoryMap = new Map<string, { completed: number; total: number }>();
+
+    tactics.forEach(tactic => {
+      const category = tactic.category || 'Other';
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, { completed: 0, total: 0 });
+      }
+      const cat = categoryMap.get(category)!;
+      cat.total++;
+      if (completedIds.has(tactic.tactic_id)) {
+        cat.completed++;
+      }
+    });
+
+    // Color mapping for categories
+    const colorMap: Record<string, string> = {
+      'Business Planning': 'bg-blue-500',
+      'Legal & Compliance': 'bg-purple-500',
+      'Financial': 'bg-green-500',
+      'Operations': 'bg-orange-500',
+      'Marketing': 'bg-pink-500',
+      'Property': 'bg-cyan-500',
+      'Staffing': 'bg-yellow-500',
+      'Licensure': 'bg-indigo-500'
+    };
+
+    // Convert to array and take top 4 categories
+    const categories = Array.from(categoryMap.entries())
+      .map(([name, data]) => ({
+        name,
+        completed: data.completed,
+        total: data.total,
+        color: colorMap[name] || 'bg-gray-500'
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4);
+
+    return categories;
+  };
+
+  const weekCategories = calculateWeekProgress();
 
   // Real-time subscription for progress updates
   useEffect(() => {
@@ -95,6 +241,28 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Onboarding Progress Stepper - show only during assessment→welcome transition */}
+      {onboardingData && onboardingData.onboarding_step === 'assessment_complete' && (
+        <OnboardingProgressStepper currentStep={onboardingData.onboarding_step} />
+      )}
+
+      {/* Welcome Modal - shows on first dashboard visit after assessment */}
+      {onboardingData && user?.id && (
+        <WelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          userProfile={{
+            name: onboardingData.business_name,
+            readiness_level: onboardingData.readiness_level,
+            ownership_model: onboardingData.ownership_model,
+            timeline: onboardingData.timeline,
+            overall_score: onboardingData.overall_score,
+            immediate_priority: onboardingData.immediate_priority,
+          }}
+          userId={user.id}
+        />
+      )}
+
       {/* Hero: Your Next Move */}
       <Card className="p-8 bg-white shadow-lg">
         <div className="flex items-center justify-between mb-6">
@@ -109,7 +277,7 @@ const DashboardPage = () => {
               <Flame className="w-4 h-4 text-orange-500" />
               {protectStreak} day streak
             </span>
-            <span>{completedTactics}/403 tactics</span>
+            <span>{completedTactics}/{tactics.length || 403} tactics</span>
             <span className="flex items-center gap-1">
               <Trophy className="w-4 h-4 text-primary" />
               {totalPoints} pts
@@ -117,30 +285,108 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Single Focus Card */}
-        <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              <Clipboard className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mb-2">
-                {nextTactic.category}
-              </Badge>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{nextTactic.name}</h2>
-              <p className="text-gray-600 text-sm mb-4">{nextTactic.description}</p>
-              <div className="flex items-center gap-4">
-                <Link to="/roadmap">
-                  <Button className="bg-primary hover:bg-primary/90">
-                    Start This Tactic
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <span className="text-xs text-muted-foreground">~{nextTactic.estimatedTime}</span>
+        {/* Dynamic Next Tactic Card */}
+        {isTacticsLoading ? (
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
+            <div className="flex items-start gap-4">
+              <Skeleton className="w-12 h-12 rounded-xl" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-7 w-3/4" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-10 w-40" />
               </div>
             </div>
           </div>
-        </div>
+        ) : smartNextTactic ? (
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                {(() => {
+                  const IconComponent = getCategoryIcon(smartNextTactic.tactic.category || '');
+                  return <IconComponent className="w-6 h-6 text-white" />;
+                })()}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {smartNextTactic.tactic.category}
+                  </Badge>
+                  {smartNextTactic.tactic.is_critical_path && (
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                      <Star className="w-3 h-3 mr-1 fill-amber-400" />
+                      Critical Path
+                    </Badge>
+                  )}
+                  {smartNextTactic.isInProgress && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      In Progress
+                    </Badge>
+                  )}
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  {smartNextTactic.tactic.tactic_name}
+                </h2>
+                <p className="text-gray-600 text-sm mb-4">
+                  {smartNextTactic.tactic.why_it_matters ||
+                    `This tactic is part of your personalized ${smartNextTactic.tactic.category?.toLowerCase() || 'group home'} journey.`}
+                </p>
+
+                {/* Urgency indicator for in-progress tactics */}
+                {smartNextTactic.isInProgress && (
+                  <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                      <span className="text-sm font-medium text-amber-800">
+                        {getDaysSinceStarted(smartNextTactic.tactic.tactic_id) === 0
+                          ? "Started today - Great momentum!"
+                          : getDaysSinceStarted(smartNextTactic.tactic.tactic_id) === 1
+                            ? "Started yesterday - Keep going!"
+                            : `Started ${getDaysSinceStarted(smartNextTactic.tactic.tactic_id)} days ago - Time to finish this!`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4">
+                  <Link to={`/roadmap?tactic=${smartNextTactic.tactic.tactic_id}`}>
+                    <Button className="bg-primary hover:bg-primary/90">
+                      {smartNextTactic.isInProgress ? 'Continue This Tactic' : 'Start This Tactic'}
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                  {smartNextTactic.tactic.estimated_time && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {smartNextTactic.tactic.estimated_time}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">All Tactics Completed!</h2>
+                <p className="text-gray-600 text-sm mb-4">
+                  Congratulations! You've completed all your personalized tactics. You're ready to launch your group home business!
+                </p>
+                <Link to="/roadmap">
+                  <Button variant="outline">
+                    Review Your Roadmap
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Two Column Layout */}

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -17,7 +17,8 @@ import ProtectPage from "./pages/ProtectPage";
 import ChatPage from "./pages/ChatPage";
 import ModelWeekPage from "./pages/ModelWeekPage";
 import RoadmapPage from "./pages/RoadmapPage";
-import MyJourneyPage from "./pages/MyJourneyPage";
+import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import NotFound from "./pages/NotFound";
 
@@ -42,7 +43,10 @@ const App = () => (
               <Route path="/chat" element={<ProtectedRoute><AppLayout><ChatPage /></AppLayout></ProtectedRoute>} />
               <Route path="/model-week" element={<ProtectedRoute><AppLayout><ModelWeekPage /></AppLayout></ProtectedRoute>} />
               <Route path="/roadmap" element={<ProtectedRoute><AppLayout><RoadmapPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/my-journey" element={<ProtectedRoute><AppLayout><MyJourneyPage /></AppLayout></ProtectedRoute>} />
+              {/* Redirect old /my-journey route to consolidated /roadmap */}
+              <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
+              <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

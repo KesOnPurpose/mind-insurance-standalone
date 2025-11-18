@@ -53,15 +53,15 @@ export function useStartTactic() {
 
 export function useCompleteTactic() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      tacticId, 
-      notes 
-    }: { 
-      userId: string; 
-      tacticId: string; 
+    mutationFn: async ({
+      userId,
+      tacticId,
+      notes
+    }: {
+      userId: string;
+      tacticId: string;
       notes?: string;
     }) => {
       const { data, error } = await supabase
@@ -77,7 +77,7 @@ export function useCompleteTactic() {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -90,6 +90,57 @@ export function useCompleteTactic() {
     onError: (error) => {
       console.error('Failed to complete tactic:', error);
       toast.error('Failed to complete tactic');
+    }
+  });
+}
+
+export function useSaveNotes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      tacticId,
+      notes
+    }: {
+      userId: string;
+      tacticId: string;
+      notes: string;
+    }) => {
+      // First check if record exists
+      const { data: existing } = await supabase
+        .from('gh_user_tactic_progress')
+        .select('status, started_at')
+        .eq('user_id', userId)
+        .eq('tactic_id', tacticId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('gh_user_tactic_progress')
+        .upsert({
+          user_id: userId,
+          tactic_id: tacticId,
+          status: existing?.status || 'in_progress',
+          started_at: existing?.started_at || new Date().toISOString(),
+          notes,
+        }, {
+          onConflict: 'user_id,tactic_id'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProgress'] });
+      toast.success('Notes saved!', {
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to save notes:', error);
+      toast.error('Failed to save notes');
     }
   });
 }

@@ -4,16 +4,17 @@ export const JOURNEY_PHASES: CategoryGroup[] = [
   {
     phase: 'foundation',
     name: 'Foundation Building',
-    description: 'Set your vision, build mindset, and plan finances',
+    description: 'Research your market, plan finances, and prepare for launch',
     weeks: [1, 2, 3],
     icon: '🎯',
     color: 'primary',
     categories: [
-      'Vision & Goal Setting',
-      'Mindset & Personal Development',
-      'Education & Continuous Learning',
+      // NOTE: Vision & Goal Setting, Mindset & Personal Development, Education & Continuous Learning
+      // are handled by Mind Insurance (MIO) product - NOT part of Group Home tactical roadmap
       'Financial Planning',
       'Market Research',
+      'Business Planning',
+      'Legal Research',
     ]
   },
   {

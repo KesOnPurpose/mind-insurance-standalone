@@ -362,8 +362,10 @@ export async function saveAssessmentResults(
   answers: AssessmentAnswers,
   scores: AssessmentScores
 ) {
-  // Prepare the base payload
-  const payload: Record<string, unknown> = {
+  // Prepare the base payload with ONLY columns that exist in the database
+  // Note: Enhanced columns (ownership_model, target_state, property_status,
+  // immediate_priority, budget_min_usd, budget_max_usd) require migration to be applied first
+  const basePayload: Record<string, unknown> = {
     user_id: userId,
 
     // Scores
@@ -398,13 +400,43 @@ export async function saveAssessmentResults(
     updated_at: new Date().toISOString()
   };
 
-  // NEW: Add enhanced personalization fields if provided
-  // These map directly to the enriched RAG database fields
+  // First, try to save the base payload (always works with existing schema)
+  const { data, error: baseError } = await supabase
+    .from('user_onboarding')
+    .upsert(basePayload, {
+      onConflict: 'user_id'
+    });
+
+  if (baseError) {
+    console.error('Error saving base assessment:', baseError);
+    throw baseError;
+  }
+
+  // Now try to save enhanced fields separately (may fail if migration not applied)
+  // This allows assessment to work even before migration is applied
+  const enhancedPayload: Record<string, unknown> = {
+    user_id: userId,
+    updated_at: new Date().toISOString()
+  };
+
+  let hasEnhancedFields = false;
+
+  // Add enhanced personalization fields if provided
   if (answers.ownershipModel) {
-    payload.ownership_model = answers.ownershipModel;
+    enhancedPayload.ownership_model = answers.ownershipModel;
+    hasEnhancedFields = true;
   }
   if (answers.targetState) {
-    payload.target_state = answers.targetState;
+    enhancedPayload.target_state = answers.targetState;
+    hasEnhancedFields = true;
+  }
+  if (answers.propertyStatus) {
+    enhancedPayload.property_status = answers.propertyStatus;
+    hasEnhancedFields = true;
+  }
+  if (answers.immediatePriority) {
+    enhancedPayload.immediate_priority = answers.immediatePriority;
+    hasEnhancedFields = true;
   }
 
   // Calculate budget range from capital selection for enhanced filtering
@@ -417,19 +449,23 @@ export async function saveAssessmentResults(
   };
   const budget = budgetRanges[answers.capital];
   if (budget) {
-    payload.budget_min_usd = budget.min;
-    payload.budget_max_usd = budget.max;
+    enhancedPayload.budget_min_usd = budget.min;
+    enhancedPayload.budget_max_usd = budget.max;
+    hasEnhancedFields = true;
   }
 
-  const { data, error } = await supabase
-    .from('user_onboarding')
-    .upsert(payload, {
-      onConflict: 'user_id'
-    });
+  // Try to save enhanced fields (gracefully handle if columns don't exist yet)
+  if (hasEnhancedFields) {
+    const { error: enhancedError } = await supabase
+      .from('user_onboarding')
+      .update(enhancedPayload)
+      .eq('user_id', userId);
 
-  if (error) {
-    console.error('Error saving assessment:', error);
-    throw error;
+    if (enhancedError) {
+      // Log but don't fail - enhanced fields are optional until migration is applied
+      console.warn('Enhanced personalization fields not yet available in database:', enhancedError.message);
+      console.info('To enable enhanced personalization, apply the migration: 20251116160000_add_immediate_priority_personalization.sql');
+    }
   }
 
   return data;

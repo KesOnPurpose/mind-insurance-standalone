@@ -19,7 +19,10 @@ import {
   Building2,
   Users,
   FileCheck,
-  ArrowRight
+  ArrowRight,
+  AlertCircle,
+  Settings,
+  ArrowLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +34,7 @@ import { JOURNEY_PHASES } from '@/config/categories';
 import { JourneyPhase, TacticWithPrerequisites } from '@/types/tactic';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCostRange } from '@/services/tacticFilterService';
+import { UpdateStrategyModal } from '@/components/modals/UpdateStrategyModal';
 
 export function MyJourneyPage() {
   const { user } = useAuth();
@@ -44,23 +48,35 @@ export function MyJourneyPage() {
   } = usePersonalizedTactics();
   const { data: progressData } = useUserProgress(user?.id || '');
   const [businessProfile, setBusinessProfile] = useState<any>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  // Check if strategy profile is incomplete (shows "Not Set")
+  const isStrategyIncomplete = !assessment?.ownership_model || !assessment?.target_state || !assessment?.immediate_priority;
 
   // Fetch business profile data
+  const fetchProfile = async () => {
+    if (!user?.id) return;
+
+    const { data } = await supabase
+      .from('user_onboarding')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    setBusinessProfile(data);
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.id) return;
-
-      const { data } = await supabase
-        .from('user_onboarding')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      setBusinessProfile(data);
-    };
-
     fetchProfile();
   }, [user?.id]);
+
+  // Handle successful strategy update
+  const handleStrategyUpdateSuccess = () => {
+    // Refresh the profile data
+    fetchProfile();
+    // Note: The usePersonalizedTactics hook will need to refetch as well
+    window.location.reload(); // Simple reload to refresh all data
+  };
 
   // Calculate comprehensive progress metrics
   const totalTactics = tactics.length;
@@ -131,8 +147,60 @@ export function MyJourneyPage() {
     { name: 'Foundation Phase Done', achieved: phaseProgress.foundation >= 100, icon: <Building2 className="w-5 h-5" /> },
   ];
 
+  // Helper: Get profile fields that a tactic helps fill
+  const getProfileFieldsForTactic = (category: string): string[] => {
+    const categoryToFields: Record<string, string[]> = {
+      'licensing': ['Target State', 'License Status'],
+      'business_planning': ['Target Demographics', 'Service Model'],
+      'entity': ['Business Name', 'Entity Type'],
+      'property': ['Bed Count', 'Property Status'],
+      'financial': ['Funding Source', 'Startup Capital'],
+      'revenue': ['Monthly Revenue Target', 'Service Model'],
+      'marketing': ['Marketing Strategy'],
+      'launch': ['Business Launch Date'],
+    };
+    return categoryToFields[category?.toLowerCase()] || [];
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header with Back Button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+        <h1 className="text-2xl font-bold">My Journey</h1>
+      </div>
+
+      {/* Incomplete Strategy Profile Banner */}
+      {isStrategyIncomplete && (
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-amber-600" />
+              <div>
+                <h3 className="font-semibold text-amber-900">Complete Your Strategy Profile</h3>
+                <p className="text-sm text-amber-700">
+                  Help us personalize your journey by setting your ownership strategy and immediate priorities.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowUpdateModal(true)}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Update Profile
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5">
@@ -218,7 +286,7 @@ export function MyJourneyPage() {
               </h3>
               {nextCriticalTactic ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700">
                       <Star className="w-3 h-3 mr-1" />
                       Critical Path
@@ -229,6 +297,24 @@ export function MyJourneyPage() {
                   {nextCriticalTactic.why_it_matters && (
                     <p className="text-sm text-muted-foreground">{nextCriticalTactic.why_it_matters}</p>
                   )}
+
+                  {/* Show which profile fields this tactic helps fill */}
+                  {getProfileFieldsForTactic(nextCriticalTactic.category).length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs font-medium text-blue-900 mb-2 flex items-center gap-1">
+                        <FileCheck className="w-3 h-3" />
+                        Completing this tactic helps you define:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {getProfileFieldsForTactic(nextCriticalTactic.category).map(field => (
+                          <Badge key={field} variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                            {field}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-4 text-sm">
                     {nextCriticalTactic.estimated_time && (
                       <span className="flex items-center gap-1">
@@ -244,7 +330,7 @@ export function MyJourneyPage() {
                     )}
                   </div>
                   <Button asChild className="w-full mt-2">
-                    <Link to="/roadmap">
+                    <Link to={`/roadmap?tactic=${nextCriticalTactic.tactic_id}`}>
                       Start This Tactic
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
@@ -303,22 +389,38 @@ export function MyJourneyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Strategy Profile */}
             <Card className="p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                Your Strategy Profile
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary" />
+                  Your Strategy Profile
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUpdateModal(true)}
+                >
+                  <Settings className="w-4 h-4 mr-1" />
+                  Update
+                </Button>
+              </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium">Ownership Model</span>
-                  <Badge className="capitalize">
+                  <Badge className={`capitalize ${!assessment?.ownership_model ? 'bg-amber-100 text-amber-800' : ''}`}>
                     {assessment?.ownership_model?.replace(/_/g, ' ') || 'Not Set'}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium">Target State</span>
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className={!assessment?.target_state ? 'bg-amber-100 text-amber-800' : ''}>
                     <MapPin className="w-3 h-3 mr-1" />
                     {assessment?.target_state || 'Not Set'}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium">Immediate Priority</span>
+                  <Badge variant="outline" className={`capitalize ${!assessment?.immediate_priority ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}`}>
+                    {assessment?.immediate_priority?.replace(/_/g, ' ') || 'Not Set'}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
@@ -454,6 +556,19 @@ export function MyJourneyPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Update Strategy Modal */}
+      <UpdateStrategyModal
+        open={showUpdateModal}
+        onOpenChange={setShowUpdateModal}
+        currentData={{
+          ownershipModel: assessment?.ownership_model,
+          targetState: assessment?.target_state,
+          propertyStatus: businessProfile?.property_status,
+          immediatePriority: assessment?.immediate_priority,
+        }}
+        onSuccess={handleStrategyUpdateSuccess}
+      />
     </div>
   );
 }

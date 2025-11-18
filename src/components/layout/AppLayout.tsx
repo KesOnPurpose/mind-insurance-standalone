@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, MessageSquare, Map } from 'lucide-react';
+import { LogOut, MessageSquare, Map, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,11 +23,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Quick Action: My Journey */}
-            <Link to="/my-journey">
+            {/* Quick Action: Roadmap (consolidated journey view) */}
+            <Link to="/roadmap">
               <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-2">
                 <Map className="w-4 h-4" />
-                <span>My Journey</span>
+                <span>Roadmap</span>
               </Button>
             </Link>
 
@@ -39,19 +39,22 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Button>
             </Link>
 
-            {/* User Info */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 hidden sm:inline">
-                {user?.email?.split('@')[0] || 'User'}
-              </span>
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </div>
+            {/* User Profile & Settings */}
+            <div className="flex items-center gap-2">
+              <Link to="/profile" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <span className="text-sm text-gray-700 hidden sm:inline font-medium">
+                  {user?.email?.split('@')[0] || 'User'}
+                </span>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={signOut}
                 className="text-gray-500 hover:text-gray-700"
+                title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
               </Button>

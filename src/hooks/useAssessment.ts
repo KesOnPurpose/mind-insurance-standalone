@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AssessmentAnswers } from "@/types/assessment";
-import { 
-  calculateScores, 
-  saveAssessmentResults, 
-  getUserAssessment 
+import {
+  calculateScores,
+  saveAssessmentResults,
+  getUserAssessment
 } from "@/services/assessmentService";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAssessment() {
   const { toast } = useToast();
@@ -28,13 +29,19 @@ export function useAssessment() {
   const submitAssessment = useMutation({
     mutationFn: async (answers: AssessmentAnswers) => {
       if (!user?.id) throw new Error('User not authenticated');
-      
+
       // Calculate scores
       const scores = calculateScores(answers);
-      
+
       // Save to database
       await saveAssessmentResults(user.id, answers, scores);
-      
+
+      // Update onboarding step to assessment_complete
+      await supabase
+        .from('user_onboarding')
+        .update({ onboarding_step: 'assessment_complete' })
+        .eq('user_id', user.id);
+
       return { answers, scores };
     },
     onSuccess: ({ scores }) => {
@@ -69,6 +76,7 @@ export function useAssessment() {
     assessment,
     isLoading,
     submitAssessment: submitAssessment.mutate,
+    submitAssessmentAsync: submitAssessment.mutateAsync,
     isSubmitting: submitAssessment.isPending,
     hasAssessment: !!assessment,
   };

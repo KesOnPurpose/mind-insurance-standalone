@@ -16,7 +16,10 @@ import {
   Lock,
   Unlock,
   Quote,
-  Link2
+  Link2,
+  ListChecks,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
@@ -24,18 +27,36 @@ import { TacticCompletionForm } from './TacticCompletionForm';
 import { BusinessProfile } from '@/types/assessment';
 import { formatCostRange } from '@/services/tacticFilterService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Save } from 'lucide-react';
 
 interface TacticCardProps {
   tactic: TacticWithProgress | TacticWithPrerequisites;
   onStart: (tacticId: string) => void;
   onComplete: (tacticId: string, notes?: string, profileUpdates?: Partial<BusinessProfile>) => void;
+  onSaveNotes?: (tacticId: string, notes: string) => void;
   showEnrichedFields?: boolean; // Toggle for new enriched field display
+  tacticNameMap?: Record<string, string>; // Map of tactic IDs to names for prerequisite display
 }
 
-export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = true }: TacticCardProps) {
+export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnrichedFields = true, tacticNameMap = {} }: TacticCardProps) {
   const [notes, setNotes] = useState(tactic.notes || '');
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+  // Track if notes have changed from original
+  const notesChanged = notes !== (tactic.notes || '');
+
+  const handleSaveNotes = async () => {
+    if (!onSaveNotes || !notesChanged) return;
+    setIsSavingNotes(true);
+    try {
+      await onSaveNotes(tactic.tactic_id, notes);
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
 
   const StatusIcon = tactic.status === 'completed' ? CheckCircle :
                      tactic.status === 'in_progress' ? Play : Circle;
@@ -64,7 +85,7 @@ export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = t
                   <Lock className="w-4 h-4 text-amber-500" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">Complete first: {blockingPrereqs.join(', ')}</p>
+                  <p className="text-xs">Complete first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -187,7 +208,46 @@ export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = t
               </div>
             </div>
           )}
-          
+
+          {/* Step-by-Step Instructions - PRACTICAL ACTION STEPS */}
+          {tactic.step_by_step && Array.isArray(tactic.step_by_step) && tactic.step_by_step.length > 0 && (
+            <div className="mb-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSteps(!showSteps)}
+                className="w-full justify-between text-left h-auto py-2 px-3 bg-emerald-50 hover:bg-emerald-100 border-emerald-200"
+              >
+                <span className="flex items-center gap-2 text-emerald-700">
+                  <ListChecks className="w-4 h-4" />
+                  <span className="font-semibold text-xs">Step-by-Step Instructions ({tactic.step_by_step.length} steps)</span>
+                </span>
+                {showSteps ? (
+                  <ChevronUp className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-emerald-600" />
+                )}
+              </Button>
+
+              {showSteps && (
+                <div className="mt-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200 max-h-96 overflow-y-auto">
+                  <ol className="space-y-3">
+                    {tactic.step_by_step.map((step: string, index: number) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-xs text-emerald-900 leading-relaxed">{step}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2 mt-3">
             {tactic.status === 'not_started' && (
               <>
@@ -201,26 +261,37 @@ export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = t
                     Start
                   </Button>
                 ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled
-                          className="flex items-center gap-1 opacity-50"
-                        >
-                          <Lock className="w-3 h-3" />
-                          Locked
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs max-w-xs">
-                          Complete these prerequisites first: {blockingPrereqs.join(', ')}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className="flex gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            className="flex items-center gap-1 opacity-50"
+                          >
+                            <Lock className="w-3 h-3" />
+                            Locked
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Complete these prerequisites first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onStart(tactic.tactic_id)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground"
+                    >
+                      <Unlock className="w-3 h-3" />
+                      Start Anyway
+                    </Button>
+                  </div>
                 )}
               </>
             )}
@@ -253,13 +324,61 @@ export function TacticCard({ tactic, onStart, onComplete, showEnrichedFields = t
           </div>
 
           {showNotes && tactic.status === 'in_progress' && (
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this tactic..."
-              className="mt-3"
-              rows={3}
-            />
+            <div className="mt-3 space-y-2">
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add notes about this tactic..."
+                rows={3}
+              />
+              {onSaveNotes && (
+                <div className="flex items-center justify-between">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSaveNotes}
+                    disabled={!notesChanged || isSavingNotes}
+                    className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                  >
+                    <Save className="w-3 h-3" />
+                    {isSavingNotes ? 'Saving...' : 'Save Notes'}
+                  </Button>
+                  {notesChanged && (
+                    <span className="text-xs text-amber-600">Unsaved changes</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Display saved notes for completed tactics */}
+          {tactic.status === 'completed' && tactic.notes && (
+            <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-xs font-semibold text-green-700 mb-1">Your Notes</p>
+              <p className="text-xs text-green-900">{tactic.notes}</p>
+            </div>
+          )}
+
+          {/* Show blocking prerequisites clearly for locked tactics */}
+          {!canStart && blockingPrereqs.length > 0 && (
+            <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-700 mb-1">
+                    Complete these tactics first:
+                  </p>
+                  <ul className="text-xs text-amber-900 space-y-1">
+                    {blockingPrereqs.map((prereqId: string) => (
+                      <li key={prereqId} className="flex items-center gap-1">
+                        <Circle className="w-2 h-2" />
+                        {tacticNameMap[prereqId] || prereqId}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

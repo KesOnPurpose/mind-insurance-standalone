@@ -2,6 +2,7 @@ export interface Tactic {
   tactic_id: string;
   tactic_name: string;
   category: string;
+  parent_category?: string | null;           // NEW: High-level category grouping (8 parents)
   estimated_time: string | null;
   capital_required: string | null;
   target_populations: string[] | null;
