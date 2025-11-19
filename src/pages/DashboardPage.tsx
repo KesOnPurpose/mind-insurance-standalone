@@ -34,6 +34,7 @@ import { BusinessProfileSnapshot } from "@/components/dashboard/BusinessProfileS
 import { usePersonalizedTactics } from "@/hooks/usePersonalizedTactics";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { OnboardingProgressStepper } from "@/components/onboarding/OnboardingProgressStepper";
+import { PersonalizationBadge } from "@/components/PersonalizationBadge";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
@@ -49,7 +50,9 @@ const DashboardPage = () => {
     nextTactic: dynamicNextTactic,
     isLoading: isTacticsLoading,
     criticalPathTactics,
-    blockedTactics
+    blockedTactics,
+    assessment,
+    totalTacticsCount
   } = usePersonalizedTactics();
 
   // Fetch user profile and onboarding data
@@ -385,6 +388,20 @@ const DashboardPage = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Personalization Badge - Show transparency about how tactics are filtered */}
+        {assessment && totalTacticsCount > 0 && (
+          <div className="mt-6">
+            <PersonalizationBadge
+              totalTactics={343}
+              filteredTactics={totalTacticsCount}
+              strategy={assessment.ownership_model}
+              populations={assessment.target_populations}
+              budget={assessment.capital_available}
+              immediatePriority={assessment.immediate_priority}
+            />
           </div>
         )}
       </Card>

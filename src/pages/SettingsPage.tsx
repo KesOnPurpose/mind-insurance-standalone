@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -16,16 +16,84 @@ import {
   MapPin,
   Building2,
   Target,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw,
+  DollarSign,
+  Handshake
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
+
+// Helper functions for formatting assessment data
+const formatStrategy = (strategy?: string) => {
+  if (!strategy) return 'Not Set';
+  return strategy.split('_').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+};
+
+const formatPopulation = (pop: string) => {
+  const mapping: Record<string, string> = {
+    'seniors': 'Seniors',
+    'developmental-disabilities': 'Developmental Disabilities',
+    'mental-health': 'Mental Health',
+    'at-risk-youth': 'At-Risk Youth',
+    'substance-abuse': 'Substance Abuse',
+    'not-sure': 'Exploring Options'
+  };
+  return mapping[pop] || pop;
+};
+
+const formatBudget = (budget?: string) => {
+  const mapping: Record<string, string> = {
+    'less-5k': '$0 - $5,000',
+    '5k-15k': '$5,000 - $15,000',
+    '15k-30k': '$15,000 - $30,000',
+    '30k-50k': '$30,000 - $50,000',
+    'more-50k': '$50,000+'
+  };
+  return mapping[budget || ''] || 'Not Set';
+};
+
+const formatPriority = (priority?: string) => {
+  const mapping: Record<string, string> = {
+    'property_acquisition': 'Property Acquisition',
+    'operations': 'Operations Setup',
+    'comprehensive': 'Comprehensive Learning',
+    'scaling': 'Scaling & Growth'
+  };
+  return mapping[priority || ''] || 'Not Set';
+};
+
+const getStrategyIcon = (strategy?: string) => {
+  switch(strategy) {
+    case 'rental_arbitrage': return <Handshake className="h-3 w-3" />;
+    case 'ownership': return <Home className="h-3 w-3" />;
+    case 'hybrid': return <Building2 className="h-3 w-3" />;
+    default: return <Target className="h-3 w-3" />;
+  }
+};
+
+const getPopulationIcon = (pop: string) => {
+  switch(pop) {
+    case 'seniors': return '👴';
+    case 'developmental-disabilities': return '❤️';
+    case 'mental-health': return '🧠';
+    case 'at-risk-youth': return '👶';
+    case 'substance-abuse': return '💊';
+    case 'not-sure': return '🤔';
+    default: return '👥';
+  }
+};
 
 export function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { assessment, totalTacticsCount } = usePersonalizedTactics();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -176,6 +244,96 @@ export function SettingsPage() {
           </p>
         </Card>
       )}
+
+      {/* Roadmap Personalization Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Roadmap Personalization
+          </CardTitle>
+          <CardDescription>
+            Your roadmap is tailored based on your assessment answers
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Strategy */}
+          {assessment?.ownership_model && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Strategy</Label>
+              <div className="mt-2">
+                <Badge variant="secondary" className="gap-1.5">
+                  {getStrategyIcon(assessment.ownership_model)}
+                  {formatStrategy(assessment.ownership_model)}
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          {/* Target Populations */}
+          {assessment?.target_populations && assessment.target_populations.length > 0 && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Target Populations</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {assessment.target_populations.map((pop: string) => (
+                  <Badge key={pop} variant="outline" className="gap-1.5">
+                    <span>{getPopulationIcon(pop)}</span>
+                    {formatPopulation(pop)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Budget Range */}
+          {assessment?.capital_available && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Budget Range</Label>
+              <div className="mt-2">
+                <Badge variant="secondary" className="gap-1.5">
+                  <DollarSign className="h-3 w-3" />
+                  {formatBudget(assessment.capital_available)}
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          {/* Immediate Priority */}
+          {assessment?.immediate_priority && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Immediate Priority</Label>
+              <div className="mt-2">
+                <Badge variant="secondary" className="gap-1.5">
+                  <Target className="h-3 w-3" />
+                  {formatPriority(assessment.immediate_priority)}
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          {/* Tactic Count Summary */}
+          <div className="pt-4 border-t">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-600">Tactics in your roadmap:</span>
+              <span className="font-semibold text-teal-600">
+                {totalTacticsCount} of 343
+              </span>
+            </div>
+          </div>
+
+          {/* Retake Assessment Button */}
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/assessment')}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retake Assessment
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Ownership Strategy */}

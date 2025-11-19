@@ -13,11 +13,14 @@ import AuthCallback from "./pages/AuthCallback";
 import AssessmentPage from "./pages/AssessmentPage";
 import AvatarAssessmentPage from "./pages/AvatarAssessmentPage";
 import DashboardPage from "./pages/DashboardPage";
+import DashboardPageDemo from "./pages/DashboardPageDemo";
 import ProtectPage from "./pages/ProtectPage";
 import ChatPage from "./pages/ChatPage";
 import ModelWeekPage from "./pages/ModelWeekPage";
 import RoadmapPage from "./pages/RoadmapPage";
+import RoadmapPageDemo from "./pages/RoadmapPageDemo";
 import SettingsPage from "./pages/SettingsPage";
+import SettingsPageDemo from "./pages/SettingsPageDemo";
 import ProfilePage from "./pages/ProfilePage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import NotFound from "./pages/NotFound";
@@ -46,6 +49,14 @@ const App = () => (
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
               <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+              {/* Development routes for testing without auth */}
+              {import.meta.env.DEV && (
+                <>
+                  <Route path="/dev/dashboard" element={<AppLayout><DashboardPageDemo /></AppLayout>} />
+                  <Route path="/dev/settings" element={<AppLayout><SettingsPageDemo /></AppLayout>} />
+                  <Route path="/dev/roadmap" element={<AppLayout><RoadmapPageDemo /></AppLayout>} />
+                </>
+              )}
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

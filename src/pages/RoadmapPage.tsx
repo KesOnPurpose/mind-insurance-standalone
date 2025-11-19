@@ -32,6 +32,7 @@ import { SkipAssessmentModal } from '@/components/modals/SkipAssessmentModal';
 import { FirstTacticOverlay } from '@/components/onboarding/FirstTacticOverlay';
 import { formatCostRange } from '@/services/tacticFilterService';
 import { CATEGORY_HIERARCHY, getCategoryIcon, isParentCategory, isSubcategory, getParentCategory } from '@/config/categoryHierarchy';
+import { PersonalizationBadge } from '@/components/PersonalizationBadge';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
@@ -425,6 +426,17 @@ export default function RoadmapPage() {
       </div>
       
       <div className="container mx-auto px-4 py-8">
+        {/* Personalization Badge - Shows how roadmap is personalized */}
+        <PersonalizationBadge
+          totalTactics={343}
+          filteredTactics={tactics.length}
+          strategy={assessment?.ownership_model}
+          populations={assessment?.target_populations}
+          budget={assessment?.capital_available}
+          immediatePriority={assessment?.immediate_priority}
+          className="mb-6"
+        />
+
         {/* Incomplete Strategy Profile Banner */}
         {isStrategyIncomplete && (
           <Card className="p-4 mb-6 bg-amber-50 border-amber-200">
