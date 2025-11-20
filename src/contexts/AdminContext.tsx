@@ -41,12 +41,17 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAdminUser = async () => {
+    // Wait for AuthContext to finish loading before making decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
       setAdminUser(null);
       setIsLoading(false);
@@ -98,7 +103,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     fetchAdminUser();
-  }, [user?.id]);
+  }, [user?.id, authLoading]);
 
   const hasPermission = (category: keyof AdminPermissions, action: string): boolean => {
     if (!adminUser) return false;
