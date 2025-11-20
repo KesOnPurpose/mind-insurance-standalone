@@ -1,0 +1,17 @@
+tactic_id,tactic_name,errors,chunk_count,timestamp
+T237,"Pest control treatment","Only 3/10 steps are specific (need 50%+)",3,2025-11-19T12-07-30-969Z
+T298,"Implement three-strike policy (if appropriate)","Only 3/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T236,"Deep clean entire property","Only 3/12 steps are specific (need 50%+)",3,2025-11-19T12-07-30-969Z
+T312,"Maintain relationship with multiple referral sources (diversification)","Only 3/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T234,"Conduct fire drill","Only 2/12 steps are specific (need 50%+)",3,2025-11-19T12-07-30-969Z
+T238,"HVAC filter replacement","Only 4/11 steps are specific (need 50%+)",3,2025-11-19T12-07-30-969Z
+T239,"Review resident files (update medical info)","Only 5/13 steps are specific (need 50%+)",3,2025-11-19T12-07-30-969Z
+T243,"Review and update SOPs","Only 6/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T303,"Maintain boundaries (don't become personal friends)","Only 3/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T329,"Monitor staff performance","Only 2/13 steps are specific (need 50%+)",2,2025-11-19T12-07-30-969Z
+T336,"Create template documents (intake, agreements, etc.)","Only 5/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T301,"Coordinate with crisis intervention (mental health emergencies)","Only 2/13 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T294,"Develop conflict resolution protocols","Only 3/12 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z
+T210,"Conduct morning walk-through (safety check)","Only 2/12 steps are specific (need 50%+)",4,2025-11-19T12-07-30-969Z
+T217,"Review security camera footage (if incidents)","Only 3/13 steps are specific (need 50%+)",4,2025-11-19T12-07-30-969Z
+T227,"Follow up with referral sources","Only 5/12 steps are specific (need 50%+)",1,2025-11-19T12-07-30-969Z

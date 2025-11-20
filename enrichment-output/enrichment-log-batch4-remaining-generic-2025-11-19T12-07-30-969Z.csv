@@ -1,0 +1,71 @@
+tactic_id,tactic_name,step_count,specific_count,chunk_count,retry_count,timestamp
+T220,"Follow up on late payments",12,9,1,0,2025-11-19T12-07-30-969Z
+T259,"Price beds to leave resident with PNA",13,10,1,0,2025-11-19T12-07-30-969Z
+T333,"Automate rent collection (ACH/auto-debit)",13,8,1,0,2025-11-19T12-07-30-969Z
+T266,"Track all income in accounting software",13,8,1,0,2025-11-19T12-07-30-969Z
+T318,"Update contracts with changing regulations",13,10,1,0,2025-11-19T12-07-30-969Z
+T356,"Network with creative real estate investors",11,6,1,0,2025-11-19T12-07-30-969Z
+T261,"Set competitive rates ($650-$850/month Houston benchmark)",11,10,1,0,2025-11-19T12-07-30-969Z
+T306,"Build relationships with contractors (plumbers, HVAC, etc.)",13,9,1,0,2025-11-19T12-07-30-969Z
+T309,"Keep receipts for all maintenance expenses",13,8,1,0,2025-11-19T12-07-30-969Z
+T264,"Aim for max capacity cash flow",11,10,1,0,2025-11-19T12-07-30-969Z
+T269,"Budget utilities ($400-600/month for 6-bed home)",13,11,1,0,2025-11-19T12-07-30-969Z
+T288,"Transition from rental arbitrage to ownership by year 2",11,11,1,0,2025-11-19T12-07-30-969Z
+T310,"Maintain 6 months operating expenses in reserve",13,11,1,0,2025-11-19T12-07-30-969Z
+T326,"Train staff on SOPs",13,7,2,1,2025-11-19T12-07-30-969Z
+T304,"Respond to maintenance requests within 24 hours",12,6,1,0,2025-11-19T12-07-30-969Z
+T316,"Maintain adequate insurance coverage",13,9,1,0,2025-11-19T12-07-30-969Z
+T317,"Review lease agreements annually",13,11,1,0,2025-11-19T12-07-30-969Z
+T330,"Provide feedback and coaching",12,6,2,0,2025-11-19T12-07-30-969Z
+T331,"Document staff issues in writing",12,9,2,2,2025-11-19T12-07-30-969Z
+T332,"Use property management software (if scaling)",13,10,1,0,2025-11-19T12-07-30-969Z
+T337,"Create email templates (referral follow-ups)",13,8,1,0,2025-11-19T12-07-30-969Z
+T355,"Partner with Millionaires Essentials for credit repair",12,11,1,0,2025-11-19T12-07-30-969Z
+T251,"Renew insurance policies",12,9,1,0,2025-11-19T12-07-30-969Z
+T252,"Conduct comprehensive property inspection",12,7,1,0,2025-11-19T12-07-30-969Z
+T360,"Transition all properties to ownership by year 5",13,13,1,0,2025-11-19T12-07-30-969Z
+T281,"Maintain 95%+ occupancy rate",13,11,1,0,2025-11-19T12-07-30-969Z
+T258,"Research personal needs allowance for your state",13,10,1,0,2025-11-19T12-07-30-969Z
+T214,"Check trash collection status",11,7,4,0,2025-11-19T12-07-30-969Z
+T215,"Monitor HVAC function",11,9,4,0,2025-11-19T12-07-30-969Z
+T218,"Document any incidents in log",13,7,4,0,2025-11-19T12-07-30-969Z
+T219,"Collect rent (1st, 3rd, or per resident schedule)",13,11,1,0,2025-11-19T12-07-30-969Z
+T228,"Pay rent to landlord (rental arbitrage model)",11,6,3,0,2025-11-19T12-07-30-969Z
+T230,"Pay utilities",10,5,3,0,2025-11-19T12-07-30-969Z
+T231,"Pay insurance premiums",10,7,3,0,2025-11-19T12-07-30-969Z
+T240,"Send rent receipts to residents",11,6,3,0,2025-11-19T12-07-30-969Z
+T241,"Conduct SWOT analysis",13,12,1,0,2025-11-19T12-07-30-969Z
+T242,"Review and update marketing materials",13,11,1,1,2025-11-19T12-07-30-969Z
+T244,"Meet with accountant (tax planning)",13,8,1,0,2025-11-19T12-07-30-969Z
+T246,"Conduct major property maintenance (if needed)",13,11,1,0,2025-11-19T12-07-30-969Z
+T248,"Evaluate staff performance (if house manager/staff)",13,7,1,0,2025-11-19T12-07-30-969Z
+T249,"File taxes (business and personal)",12,10,1,0,2025-11-19T12-07-30-969Z
+T257,"Set new revenue goals",12,11,1,0,2025-11-19T12-07-30-969Z
+T262,"Offer shared room vs private room pricing tiers",12,12,1,0,2025-11-19T12-07-30-969Z
+T263,"Calculate break-even occupancy (typically 70-75%)",13,13,1,0,2025-11-19T12-07-30-969Z
+T260,"Example: SSI $967 - PNA $60 = $907 maximum rent",13,12,1,0,2025-11-19T12-07-30-969Z
+T267,"Track all expenses by category",13,12,1,0,2025-11-19T12-07-30-969Z
+T268,"Calculate monthly lease cost (rental arbitrage)",12,12,1,0,2025-11-19T12-07-30-969Z
+T273,"Budget supplies ($100/month)",12,10,1,0,2025-11-19T12-07-30-969Z
+T275,"Budget miscellaneous ($100/month buffer)",11,11,1,0,2025-11-19T12-07-30-969Z
+T280,"Fill beds to max capacity ASAP",13,11,1,0,2025-11-19T12-07-30-969Z
+T283,"Offer move-in specials (first month discount)",13,13,1,0,2025-11-19T12-07-30-969Z
+T285,"Use first property profits to fund second property",12,11,1,0,2025-11-19T12-07-30-969Z
+T292,"Calculate ROI: Year 1 rental arbitrage = 274% (Lynette's example)",13,13,1,0,2025-11-19T12-07-30-969Z
+T250,"Renew business licenses/permits",13,13,1,0,2025-11-19T12-07-30-969Z
+T265,"Example: 6 beds x $800 = $4,800 gross/month",12,12,1,0,2025-11-19T12-07-30-969Z
+T315,"Consult accountant for tax planning",13,12,1,0,2025-11-19T12-07-30-969Z
+T324,"Run background checks on all staff",12,6,2,2,2025-11-19T12-07-30-969Z
+T232,"Reconcile bank accounts",13,13,3,0,2025-11-19T12-07-30-969Z
+T354,"Build credit for traditional financing",13,13,1,0,2025-11-19T12-07-30-969Z
+T358,"Analyze equity vs cash flow trade-offs",13,13,1,0,2025-11-19T12-07-30-969Z
+T359,"Avoid paying landlord's mortgage long-term",13,12,1,0,2025-11-19T12-07-30-969Z
+T302,"Have backup placement options (if resident must leave)",12,9,1,2,2025-11-19T12-07-30-969Z
+T351,"Learn seller financing negotiations",13,10,1,0,2025-11-19T12-07-30-969Z
+T352,"Learn subject-to deal structuring",12,10,1,0,2025-11-19T12-07-30-969Z
+T216,"Check for maintenance needs",12,9,4,0,2025-11-19T12-07-30-969Z
+T271,"Budget maintenance ($150/month reserve)",13,11,1,0,2025-11-19T12-07-30-969Z
+T276,"Apply 15% vacancy buffer to projections",11,9,1,0,2025-11-19T12-07-30-969Z
+T284,"Never stop marketing (even at max capacity for referrals)",13,10,1,0,2025-11-19T12-07-30-969Z
+T291,"House hack initial property (live-in, rent extra rooms)",10,8,1,0,2025-11-19T12-07-30-969Z
+T367,"Partner with local nonprofits",12,7,1,1,2025-11-19T12-07-30-969Z
