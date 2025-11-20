@@ -141,6 +141,26 @@ BEGIN
 END;
 $$;
 
+-- Helper function: Check if current user is a super admin
+-- SECURITY DEFINER bypasses RLS to avoid infinite recursion
+-- STABLE because result is consistent within a transaction
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE user_id = auth.uid()
+    AND role = 'super_admin'
+    AND is_active = true
+  );
+END;
+$$;
+
 -- Helper function: Check if current user has specific permission
 -- SECURITY DEFINER bypasses RLS to avoid infinite recursion
 -- STABLE because result is consistent within a transaction
@@ -176,36 +196,15 @@ CREATE POLICY "Admins can view all admin users"
 
 CREATE POLICY "Super admins can insert admin users"
   ON public.admin_users FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE user_id = auth.uid()
-      AND role = 'super_admin'
-      AND is_active = true
-    )
-  );
+  WITH CHECK ((SELECT is_super_admin()));
 
 CREATE POLICY "Super admins can update admin users"
   ON public.admin_users FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE user_id = auth.uid()
-      AND role = 'super_admin'
-      AND is_active = true
-    )
-  );
+  USING ((SELECT is_super_admin()));
 
 CREATE POLICY "Super admins can delete admin users"
   ON public.admin_users FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE user_id = auth.uid()
-      AND role = 'super_admin'
-      AND is_active = true
-    )
-  );
+  USING ((SELECT is_super_admin()));
 
 -- RLS Policies for admin_audit_log
 CREATE POLICY "Admins can view audit logs"
@@ -259,4 +258,5 @@ CREATE TRIGGER trigger_update_cache_access
 -- );
 
 COMMENT ON FUNCTION is_admin() IS 'Security function: Returns true if current user is an active admin';
+COMMENT ON FUNCTION is_super_admin() IS 'Security function: Returns true if current user is an active super_admin (used in RLS policies to avoid circular dependencies)';
 COMMENT ON FUNCTION has_admin_permission(TEXT[]) IS 'Security function: Check if current admin user has specific permission (e.g., has_admin_permission(ARRAY[''users'', ''write'']))';
