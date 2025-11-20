@@ -132,7 +132,7 @@ BEGIN
     AND is_active = true
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
 -- Helper function: Check if current user has specific permission
 CREATE OR REPLACE FUNCTION has_admin_permission(permission_path TEXT[])
@@ -153,7 +153,7 @@ BEGIN
   perm_value := (user_permissions #> permission_path)::BOOLEAN;
   RETURN COALESCE(perm_value, FALSE);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
 -- RLS Policies for admin_users
 CREATE POLICY "Admins can view all admin users"
