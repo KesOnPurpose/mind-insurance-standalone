@@ -172,7 +172,7 @@ $$;
 -- RLS Policies for admin_users
 CREATE POLICY "Admins can view all admin users"
   ON public.admin_users FOR SELECT
-  USING (is_admin());
+  USING ((SELECT is_admin()));
 
 CREATE POLICY "Super admins can insert admin users"
   ON public.admin_users FOR INSERT
@@ -210,7 +210,7 @@ CREATE POLICY "Super admins can delete admin users"
 -- RLS Policies for admin_audit_log
 CREATE POLICY "Admins can view audit logs"
   ON public.admin_audit_log FOR SELECT
-  USING (is_admin());
+  USING ((SELECT is_admin()));
 
 CREATE POLICY "System can insert audit logs"
   ON public.admin_audit_log FOR INSERT
@@ -221,12 +221,12 @@ CREATE POLICY "System can insert audit logs"
 -- RLS Policies for admin_metrics_cache
 CREATE POLICY "Admins can view metrics cache"
   ON public.admin_metrics_cache FOR SELECT
-  USING (is_admin());
+  USING ((SELECT is_admin()));
 
 CREATE POLICY "System can manage metrics cache"
   ON public.admin_metrics_cache FOR ALL
-  USING (is_admin())
-  WITH CHECK (is_admin());
+  USING ((SELECT is_admin()))
+  WITH CHECK ((SELECT is_admin()));
 
 -- ============================================================================
 -- TRIGGER: UPDATE LAST ACCESSED TIMESTAMP ON CACHE READ
