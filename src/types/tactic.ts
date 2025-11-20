@@ -60,6 +60,7 @@ export interface WeekSummary {
   phase: JourneyPhase;
   totalTactics: number;
   completedTactics: number;
+  inProgressTactics: number;
   estimatedHours: number;
   progressPercentage: number;
   isUnlocked: boolean;
