@@ -34,31 +34,39 @@ serve(async (req) => {
     
     let deletedCount = 0;
     
+    const startTime = Date.now();
+
     switch (trigger_type) {
       case 'week_progression':
         // Flush all Nette responses for this user
+        // Pattern match acceptable here (infrequent event: ~1x/week per user)
         deletedCount = await cache.deletePattern(`nette:${user_id}:*`);
-        console.log(`[Cache] Cleared ${deletedCount} Nette cache entries for user ${user_id}`);
+        console.log(`[Cache] Cleared ${deletedCount} Nette cache entries for user ${user_id} in ${Date.now() - startTime}ms`);
         break;
-        
+
       case 'practice_completion':
         // Flush MIO practice-specific cache
+        // Pattern match acceptable here (infrequent event: ~1x/day per user)
         deletedCount = await cache.deletePattern(`mio:${user_id}:practice:*`);
-        console.log(`[Cache] Cleared ${deletedCount} MIO cache entries for user ${user_id}`);
+        console.log(`[Cache] Cleared ${deletedCount} MIO cache entries for user ${user_id} in ${Date.now() - startTime}ms`);
         break;
-        
+
       case 'profile_update':
-        // Flush user context and all agent caches
-        const netteCount = await cache.deletePattern(`nette:${user_id}:*`);
-        const mioCount = await cache.deletePattern(`mio:${user_id}:*`);
-        const meCount = await cache.deletePattern(`me:${user_id}:*`);
-        
-        await cache.delete(CacheKeys.netteUserContext(user_id));
-        await cache.delete(CacheKeys.mioUserContext(user_id));
-        await cache.delete(CacheKeys.meUserContext(user_id));
-        
-        deletedCount = netteCount + mioCount + meCount + 3;
-        console.log(`[Cache] Cleared all caches for user ${user_id} (${deletedCount} entries)`);
+        // OPTIMIZED: Delete specific user context keys only
+        // Rely on TTL expiration for agent response caches (5min-1hr)
+        // This avoids expensive SCAN operations for rare profile updates
+        const contextKeys = [
+          CacheKeys.netteUserContext(user_id),
+          CacheKeys.mioUserContext(user_id),
+          CacheKeys.meUserContext(user_id)
+        ];
+
+        const deletePromises = contextKeys.map(key => cache.delete(key));
+        await Promise.all(deletePromises);
+
+        deletedCount = 3;
+        console.log(`[Cache] Cleared user context caches for ${user_id} in ${Date.now() - startTime}ms`);
+        console.log(`[Cache] Note: Agent response caches will expire via TTL (5min-1hr)`);
         break;
         
       case 'daily_cleanup':
