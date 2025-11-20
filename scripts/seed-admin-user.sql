@@ -24,7 +24,7 @@ INSERT INTO public.admin_users (
   is_active,
   created_at
 ) VALUES (
-  'YOUR-USER-UUID-HERE',  -- ← REPLACE THIS with your user_id from Step 1
+  'ad846530-e02b-4493-b208-28a7528e02cc',  -- ← REPLACE THIS with your user_id from Step 1
   'super_admin',
   '{
     "users": {"read": true, "write": true, "delete": true},
