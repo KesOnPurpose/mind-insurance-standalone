@@ -385,6 +385,51 @@ export type Database = {
           },
         ]
       }
+      gh_course_modules: {
+        Row: {
+          created_at: string | null
+          estimated_completion_minutes: number | null
+          id: string
+          lesson_description: string | null
+          lesson_name: string | null
+          lesson_number: number | null
+          lynette_quotes: string[] | null
+          module_name: string
+          module_number: number
+          official_instructions: string[] | null
+          prerequisite_modules: number[] | null
+          success_metrics: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_completion_minutes?: number | null
+          id?: string
+          lesson_description?: string | null
+          lesson_name?: string | null
+          lesson_number?: number | null
+          lynette_quotes?: string[] | null
+          module_name: string
+          module_number: number
+          official_instructions?: string[] | null
+          prerequisite_modules?: number[] | null
+          success_metrics?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          estimated_completion_minutes?: number | null
+          id?: string
+          lesson_description?: string | null
+          lesson_name?: string | null
+          lesson_number?: number | null
+          lynette_quotes?: string[] | null
+          module_name?: string
+          module_number?: number
+          official_instructions?: string[] | null
+          prerequisite_modules?: number[] | null
+          success_metrics?: string[] | null
+        }
+        Relationships: []
+      }
       gh_model_weeks: {
         Row: {
           active_days_per_week: number | null
@@ -960,102 +1005,179 @@ export type Database = {
       }
       gh_tactic_instructions: {
         Row: {
+          applicable_populations: string[] | null
+          avg_completion_minutes: number | null
           best_time_of_day: string[] | null
+          blocker_tactics: string[] | null
           can_be_interrupted: boolean | null
           capital_required: string | null
           category: string | null
           common_mistakes: Json | null
+          completion_rate: number | null
+          contingency_paths: Json | null
+          cost_category: string | null
+          cost_max_usd: number | null
+          cost_min_usd: number | null
+          course_lesson_reference: string | null
+          course_module_id: string | null
           created_at: string | null
+          dropout_rate: number | null
+          duration_minutes_optimistic: number | null
+          duration_minutes_pessimistic: number | null
+          duration_minutes_realistic: number | null
           estimated_time: string | null
           experience_level: string | null
+          expert_frameworks: Json | null
           id: string
           instructions: string | null
+          is_critical_path: boolean | null
           lynettes_tip: string | null
           max_duration_minutes: number | null
           min_duration_minutes: number | null
           mood_required: string | null
+          official_lynette_quote: string | null
           optimal_energy: string[] | null
+          ownership_model: string[] | null
+          parent_category: string | null
+          prerequisite_tactics: string[] | null
           priority_tier: number | null
           related_tactics: string[] | null
           requires_focus: boolean | null
           requires_tools: Json | null
           resources: Json | null
+          state_variations: Json | null
           step_by_step: Json
           success_criteria: string | null
+          success_criteria_schema: Json | null
           tactic_id: string
           tactic_name: string
           tactic_type: string | null
           target_populations: string[] | null
           template_url: string | null
           transcript_reference: Json | null
+          unlocks_tactics: string[] | null
           week_assignment: number | null
           why_it_matters: string | null
         }
         Insert: {
+          applicable_populations?: string[] | null
+          avg_completion_minutes?: number | null
           best_time_of_day?: string[] | null
+          blocker_tactics?: string[] | null
           can_be_interrupted?: boolean | null
           capital_required?: string | null
           category?: string | null
           common_mistakes?: Json | null
+          completion_rate?: number | null
+          contingency_paths?: Json | null
+          cost_category?: string | null
+          cost_max_usd?: number | null
+          cost_min_usd?: number | null
+          course_lesson_reference?: string | null
+          course_module_id?: string | null
           created_at?: string | null
+          dropout_rate?: number | null
+          duration_minutes_optimistic?: number | null
+          duration_minutes_pessimistic?: number | null
+          duration_minutes_realistic?: number | null
           estimated_time?: string | null
           experience_level?: string | null
+          expert_frameworks?: Json | null
           id?: string
           instructions?: string | null
+          is_critical_path?: boolean | null
           lynettes_tip?: string | null
           max_duration_minutes?: number | null
           min_duration_minutes?: number | null
           mood_required?: string | null
+          official_lynette_quote?: string | null
           optimal_energy?: string[] | null
+          ownership_model?: string[] | null
+          parent_category?: string | null
+          prerequisite_tactics?: string[] | null
           priority_tier?: number | null
           related_tactics?: string[] | null
           requires_focus?: boolean | null
           requires_tools?: Json | null
           resources?: Json | null
+          state_variations?: Json | null
           step_by_step: Json
           success_criteria?: string | null
+          success_criteria_schema?: Json | null
           tactic_id: string
           tactic_name: string
           tactic_type?: string | null
           target_populations?: string[] | null
           template_url?: string | null
           transcript_reference?: Json | null
+          unlocks_tactics?: string[] | null
           week_assignment?: number | null
           why_it_matters?: string | null
         }
         Update: {
+          applicable_populations?: string[] | null
+          avg_completion_minutes?: number | null
           best_time_of_day?: string[] | null
+          blocker_tactics?: string[] | null
           can_be_interrupted?: boolean | null
           capital_required?: string | null
           category?: string | null
           common_mistakes?: Json | null
+          completion_rate?: number | null
+          contingency_paths?: Json | null
+          cost_category?: string | null
+          cost_max_usd?: number | null
+          cost_min_usd?: number | null
+          course_lesson_reference?: string | null
+          course_module_id?: string | null
           created_at?: string | null
+          dropout_rate?: number | null
+          duration_minutes_optimistic?: number | null
+          duration_minutes_pessimistic?: number | null
+          duration_minutes_realistic?: number | null
           estimated_time?: string | null
           experience_level?: string | null
+          expert_frameworks?: Json | null
           id?: string
           instructions?: string | null
+          is_critical_path?: boolean | null
           lynettes_tip?: string | null
           max_duration_minutes?: number | null
           min_duration_minutes?: number | null
           mood_required?: string | null
+          official_lynette_quote?: string | null
           optimal_energy?: string[] | null
+          ownership_model?: string[] | null
+          parent_category?: string | null
+          prerequisite_tactics?: string[] | null
           priority_tier?: number | null
           related_tactics?: string[] | null
           requires_focus?: boolean | null
           requires_tools?: Json | null
           resources?: Json | null
+          state_variations?: Json | null
           step_by_step?: Json
           success_criteria?: string | null
+          success_criteria_schema?: Json | null
           tactic_id?: string
           tactic_name?: string
           tactic_type?: string | null
           target_populations?: string[] | null
           template_url?: string | null
           transcript_reference?: Json | null
+          unlocks_tactics?: string[] | null
           week_assignment?: number | null
           why_it_matters?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gh_tactic_instructions_course_module_id_fkey"
+            columns: ["course_module_id"]
+            isOneToOne: false
+            referencedRelation: "gh_course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gh_training_chunks: {
         Row: {
@@ -2103,16 +2225,19 @@ export type Database = {
       }
       n8n_chat_histories: {
         Row: {
+          created_at: string | null
           id: number
           message: Json
           session_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: number
           message: Json
           session_id: string
         }
         Update: {
+          created_at?: string | null
           id?: number
           message?: Json
           session_id?: string
@@ -2572,27 +2697,56 @@ export type Database = {
       user_onboarding: {
         Row: {
           assessment_completed_at: string | null
+          bed_count: number | null
+          break_even_timeline: string | null
+          budget_max_usd: number | null
+          budget_min_usd: number | null
+          business_launch_date: string | null
+          business_name: string | null
           capital_available: string | null
           caregiving_experience: string | null
           commitment_level: number | null
           created_at: string | null
           creative_financing_knowledge: string | null
           credit_score_range: string | null
+          entity_type: string | null
+          estimated_license_date: string | null
           financial_score: number | null
+          first_resident_date: string | null
+          full_occupancy_date: string | null
+          funding_source: string | null
           id: string
+          immediate_priority: string | null
           income_stability: string | null
+          last_profile_update: string | null
+          last_tactic_completed: string | null
+          license_status: string | null
+          license_type: string | null
           licensing_familiarity: string | null
           market_demand_research: string | null
           market_score: number | null
+          marketing_strategy: string | null
           mindset_score: number | null
+          monthly_expense_estimate: number | null
+          monthly_revenue_target: number | null
           operational_score: number | null
           overall_score: number | null
+          ownership_model: string | null
           primary_motivation: string | null
+          profile_completeness: number | null
+          property_address: string | null
           property_management_comfort: string | null
+          property_status: string | null
+          property_type: string | null
           readiness_level: string | null
+          referral_sources: string[] | null
           revenue_understanding: string | null
+          service_model: string | null
+          startup_capital_actual: number | null
           support_team: string | null
           target_populations: string[] | null
+          target_state: string | null
+          target_state_reason: string | null
           time_commitment: string | null
           timeline: string | null
           updated_at: string | null
@@ -2600,27 +2754,56 @@ export type Database = {
         }
         Insert: {
           assessment_completed_at?: string | null
+          bed_count?: number | null
+          break_even_timeline?: string | null
+          budget_max_usd?: number | null
+          budget_min_usd?: number | null
+          business_launch_date?: string | null
+          business_name?: string | null
           capital_available?: string | null
           caregiving_experience?: string | null
           commitment_level?: number | null
           created_at?: string | null
           creative_financing_knowledge?: string | null
           credit_score_range?: string | null
+          entity_type?: string | null
+          estimated_license_date?: string | null
           financial_score?: number | null
+          first_resident_date?: string | null
+          full_occupancy_date?: string | null
+          funding_source?: string | null
           id?: string
+          immediate_priority?: string | null
           income_stability?: string | null
+          last_profile_update?: string | null
+          last_tactic_completed?: string | null
+          license_status?: string | null
+          license_type?: string | null
           licensing_familiarity?: string | null
           market_demand_research?: string | null
           market_score?: number | null
+          marketing_strategy?: string | null
           mindset_score?: number | null
+          monthly_expense_estimate?: number | null
+          monthly_revenue_target?: number | null
           operational_score?: number | null
           overall_score?: number | null
+          ownership_model?: string | null
           primary_motivation?: string | null
+          profile_completeness?: number | null
+          property_address?: string | null
           property_management_comfort?: string | null
+          property_status?: string | null
+          property_type?: string | null
           readiness_level?: string | null
+          referral_sources?: string[] | null
           revenue_understanding?: string | null
+          service_model?: string | null
+          startup_capital_actual?: number | null
           support_team?: string | null
           target_populations?: string[] | null
+          target_state?: string | null
+          target_state_reason?: string | null
           time_commitment?: string | null
           timeline?: string | null
           updated_at?: string | null
@@ -2628,27 +2811,56 @@ export type Database = {
         }
         Update: {
           assessment_completed_at?: string | null
+          bed_count?: number | null
+          break_even_timeline?: string | null
+          budget_max_usd?: number | null
+          budget_min_usd?: number | null
+          business_launch_date?: string | null
+          business_name?: string | null
           capital_available?: string | null
           caregiving_experience?: string | null
           commitment_level?: number | null
           created_at?: string | null
           creative_financing_knowledge?: string | null
           credit_score_range?: string | null
+          entity_type?: string | null
+          estimated_license_date?: string | null
           financial_score?: number | null
+          first_resident_date?: string | null
+          full_occupancy_date?: string | null
+          funding_source?: string | null
           id?: string
+          immediate_priority?: string | null
           income_stability?: string | null
+          last_profile_update?: string | null
+          last_tactic_completed?: string | null
+          license_status?: string | null
+          license_type?: string | null
           licensing_familiarity?: string | null
           market_demand_research?: string | null
           market_score?: number | null
+          marketing_strategy?: string | null
           mindset_score?: number | null
+          monthly_expense_estimate?: number | null
+          monthly_revenue_target?: number | null
           operational_score?: number | null
           overall_score?: number | null
+          ownership_model?: string | null
           primary_motivation?: string | null
+          profile_completeness?: number | null
+          property_address?: string | null
           property_management_comfort?: string | null
+          property_status?: string | null
+          property_type?: string | null
           readiness_level?: string | null
+          referral_sources?: string[] | null
           revenue_understanding?: string | null
+          service_model?: string | null
+          startup_capital_actual?: number | null
           support_team?: string | null
           target_populations?: string[] | null
+          target_state?: string | null
+          target_state_reason?: string | null
           time_commitment?: string | null
           timeline?: string | null
           updated_at?: string | null
@@ -3144,6 +3356,16 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_category_stats: {
+        Row: {
+          parent_category: string | null
+          subcategories: string[] | null
+          subcategory_count: number | null
+          tactic_count: number | null
+          weeks_covered: number[] | null
+        }
+        Relationships: []
+      }
       weekly_progress_dashboard: {
         Row: {
           assessment_date: string | null
@@ -3186,6 +3408,28 @@ export type Database = {
           total_answers: number
         }[]
       }
+      get_course_module_summary: {
+        Args: never
+        Returns: {
+          key_lynette_quote: string
+          module_name: string
+          module_number: number
+          total_lessons: number
+          total_minutes: number
+        }[]
+      }
+      get_module_lessons: {
+        Args: { p_module_number: number }
+        Returns: {
+          estimated_completion_minutes: number
+          lesson_description: string
+          lesson_name: string
+          lesson_number: number
+          lynette_quotes: string[]
+          official_instructions: string[]
+          success_metrics: string[]
+        }[]
+      }
       get_practice_with_context: {
         Args: { p_practice_id: string; p_user_id: string }
         Returns: Json
@@ -3193,6 +3437,16 @@ export type Database = {
       get_state_intelligence: {
         Args: { p_state: string; p_target_population?: string }
         Returns: Json
+      }
+      get_tactics_for_module: {
+        Args: { p_module_number: number }
+        Returns: {
+          category: string
+          course_lesson_reference: string
+          official_lynette_quote: string
+          tactic_id: string
+          tactic_name: string
+        }[]
       }
       get_today_focus: { Args: { p_user_id: string }; Returns: Json }
       get_user_avatar_assessment: {
@@ -3311,6 +3565,7 @@ export type Database = {
           similarity: number
         }[]
       }
+      refresh_parent_category_stats: { Args: never; Returns: undefined }
       soft_delete_user_account: {
         Args: { target_user_id: string }
         Returns: undefined

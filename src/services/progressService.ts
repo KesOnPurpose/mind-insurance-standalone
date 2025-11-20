@@ -151,6 +151,7 @@ export function calculateWeekProgress(
 ): WeekSummary {
   const weekTactics = tactics.filter(t => t.week_assignment === weekNumber);
   const completed = weekTactics.filter(t => t.status === 'completed').length;
+  const inProgress = weekTactics.filter(t => t.status === 'in_progress').length;
   const estimatedHours = weekTactics.reduce((sum, t) => {
     const hours = parseEstimatedTime(t.estimated_time);
     return sum + hours;
@@ -162,6 +163,7 @@ export function calculateWeekProgress(
     phase: getPhaseForWeek(weekNumber),
     totalTactics: weekTactics.length,
     completedTactics: completed,
+    inProgressTactics: inProgress,
     estimatedHours,
     progressPercentage: weekTactics.length > 0 ? (completed / weekTactics.length) * 100 : 0,
     isUnlocked: true,
