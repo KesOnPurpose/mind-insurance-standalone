@@ -123,26 +123,40 @@ ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_metrics_cache ENABLE ROW LEVEL SECURITY;
 
 -- Helper function: Check if current user is an admin
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
+-- SECURITY DEFINER bypasses RLS to avoid infinite recursion
+-- STABLE because result is consistent within a transaction
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
 BEGIN
   RETURN EXISTS (
-    SELECT 1 FROM admin_users
+    SELECT 1 FROM public.admin_users
     WHERE user_id = auth.uid()
     AND is_active = true
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$;
 
 -- Helper function: Check if current user has specific permission
-CREATE OR REPLACE FUNCTION has_admin_permission(permission_path TEXT[])
-RETURNS BOOLEAN AS $$
+-- SECURITY DEFINER bypasses RLS to avoid infinite recursion
+-- STABLE because result is consistent within a transaction
+CREATE OR REPLACE FUNCTION public.has_admin_permission(permission_path TEXT[])
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
 DECLARE
   user_permissions JSONB;
   perm_value BOOLEAN;
 BEGIN
   SELECT permissions INTO user_permissions
-  FROM admin_users
+  FROM public.admin_users
   WHERE user_id = auth.uid() AND is_active = true;
 
   IF user_permissions IS NULL THEN
@@ -153,7 +167,7 @@ BEGIN
   perm_value := (user_permissions #> permission_path)::BOOLEAN;
   RETURN COALESCE(perm_value, FALSE);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$;
 
 -- RLS Policies for admin_users
 CREATE POLICY "Admins can view all admin users"
