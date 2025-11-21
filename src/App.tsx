@@ -23,6 +23,22 @@ import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import AdminDashboard from "./pages/AdminDashboard";
+import { DocumentManagement } from "./pages/admin/DocumentManagement";
+import TestResourcesPage from "./pages/TestResourcesPage";
+import TestResourcesDemo from "./pages/TestResourcesDemo";
+import ResourcesPage from "./pages/ResourcesPage";
+import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
+import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
+import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
+import InsightsPage from "./pages/mind-insurance/InsightsPage";
+import VaultPage from "./pages/mind-insurance/VaultPage";
+import PatternCheck from "./pages/mind-insurance/practices/PatternCheck";
+import ReinforceIdentity from "./pages/mind-insurance/practices/ReinforceIdentity";
+import OutcomeVisualization from "./pages/mind-insurance/practices/OutcomeVisualization";
+import TriggerReset from "./pages/mind-insurance/practices/TriggerReset";
+import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
+import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
+import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,16 +60,34 @@ const App = () => (
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
               <Route path="/protect" element={<ProtectedRoute><AppLayout><ProtectPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance" element={<ProtectedRoute><AppLayout><MindInsuranceHub /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practice" element={<ProtectedRoute><AppLayout><MindInsurancePracticePage /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/championship" element={<ProtectedRoute><AppLayout><ChampionshipPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/insights" element={<ProtectedRoute><AppLayout><InsightsPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/vault" element={<ProtectedRoute><AppLayout><VaultPage /></AppLayout></ProtectedRoute>} />
+              {/* PROTECT Practice Routes */}
+              <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AppLayout><PatternCheck /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AppLayout><ReinforceIdentity /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AppLayout><OutcomeVisualization /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AppLayout><TriggerReset /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AppLayout><EnergyAudit /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AppLayout><CelebrateWins /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AppLayout><TomorrowSetup /></AppLayout></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><AppLayout><ChatPage /></AppLayout></ProtectedRoute>} />
               <Route path="/model-week" element={<ProtectedRoute><AppLayout><ModelWeekPage /></AppLayout></ProtectedRoute>} />
               <Route path="/roadmap" element={<ProtectedRoute><AppLayout><RoadmapPage /></AppLayout></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
+              <Route path="/resources" element={<ProtectedRoute><AppLayout><ResourcesPage /></AppLayout></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
+              {/* Test pages for Training Materials feature - No auth required for testing */}
+              <Route path="/test-resources" element={<TestResourcesPage />} />
+              <Route path="/test-demo" element={<TestResourcesDemo />} />
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

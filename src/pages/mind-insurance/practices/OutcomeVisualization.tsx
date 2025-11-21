@@ -1,0 +1,401 @@
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, X, Play, Volume2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { PracticeData } from '@/types/practices';
+import { createPractice, updatePractice, getTodayPractices, isWithinTimeWindow, calculatePracticePoints } from '@/services/practiceService';
+import { toast } from 'sonner';
+
+// Background audio options
+const BACKGROUND_AUDIO_OPTIONS = [
+  { value: 'relaxing-meditation-1', label: 'Relaxing Meditation 1', url: '/audio/meditation-1.mp3', icon: '🎵' },
+  { value: 'relaxing-meditation-2', label: 'Relaxing Meditation 2', url: '/audio/meditation-2.mp3', icon: '🎶' },
+  { value: 'relaxing-meditation-3', label: 'Relaxing Meditation 3', url: '/audio/meditation-3.mp3', icon: '🎼' },
+  { value: 'relaxing-meditation-4', label: 'Relaxing Meditation 4', url: '/audio/meditation-4.mp3', icon: '🎹' },
+  { value: 'silence', label: 'Silence', url: null, icon: '🔇' }
+];
+
+const MEDITATION_DURATION = 60; // 60 seconds meditation
+
+export default function OutcomeVisualization() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Form states
+  const [outcomeDescription, setOutcomeDescription] = useState('');
+  const [backgroundAudio, setBackgroundAudio] = useState('');
+  const [meditationStarted, setMeditationStarted] = useState(false);
+  const [meditationComplete, setMeditationComplete] = useState(false);
+  const [countdown, setCountdown] = useState(MEDITATION_DURATION);
+
+  // UI states
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [userTimezone, setUserTimezone] = useState('America/Los_Angeles');
+  const [existingPracticeId, setExistingPracticeId] = useState<string | null>(null);
+
+  // Load user timezone and check for existing practice
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return;
+
+      try {
+        // Get user profile for timezone
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('timezone')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.timezone) {
+          setUserTimezone(profile.timezone);
+        }
+
+        // Check for existing practice today
+        const today = new Date().toLocaleDateString('en-CA', {
+          timeZone: userTimezone
+        });
+
+        const practices = await getTodayPractices(user.id, userTimezone);
+        const existingPractice = practices.find(p => p.practice_type === 'O');
+
+        if (existingPractice) {
+          setExistingPracticeId(existingPractice.id);
+          // Pre-fill form if practice exists but not completed
+          if (!existingPractice.completed && existingPractice.data) {
+            setOutcomeDescription(existingPractice.data.outcome_description || '');
+            setBackgroundAudio(existingPractice.data.background_audio || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, [user, userTimezone]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Countdown timer for meditation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (meditationStarted && !meditationComplete && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            setMeditationComplete(true);
+            if (audioRef.current) {
+              audioRef.current.pause();
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [meditationStarted, meditationComplete, countdown]);
+
+  const startMeditation = async () => {
+    if (!outcomeDescription || !backgroundAudio) {
+      setError('Please describe your outcome and select background audio');
+      return;
+    }
+
+    setMeditationStarted(true);
+    setError('');
+
+    // Play background audio if not silence
+    if (backgroundAudio !== 'silence') {
+      try {
+        const selectedAudio = BACKGROUND_AUDIO_OPTIONS.find(opt => opt.value === backgroundAudio);
+
+        if (selectedAudio?.url) {
+          audioRef.current = new Audio(selectedAudio.url);
+          audioRef.current.loop = true;
+          audioRef.current.volume = 0.5;
+          await audioRef.current.play();
+        }
+      } catch (err) {
+        console.error('Error playing audio:', err);
+        // Don't block meditation if audio fails
+      }
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!meditationComplete) {
+      setError('Please complete the full meditation');
+      return;
+    }
+
+    if (!user) {
+      setError('You must be logged in to save your practice');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const practiceData: Partial<PracticeData> = {
+        outcome_description: outcomeDescription,
+        background_audio: backgroundAudio,
+        meditation_completed: meditationComplete,
+      };
+
+      const today = new Date().toLocaleDateString('en-CA', {
+        timeZone: userTimezone
+      });
+
+      const points = 3;
+
+      if (existingPracticeId) {
+        // Update existing practice
+        await updatePractice(existingPracticeId, {
+          completed: true,
+          completed_at: new Date().toISOString(),
+          points_earned: points,
+          is_late: false,
+          data: practiceData,
+        });
+
+        toast.success(`Practice updated! You earned ${points} points`);
+      } else {
+        // Create new practice
+        await createPractice({
+          user_id: user.id,
+          practice_date: today,
+          practice_type: 'O',
+          data: practiceData,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        });
+
+        toast.success(`Practice completed! You earned ${points} points`);
+      }
+
+      // Navigate back to practice hub
+      navigate('/mind-insurance');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while saving your practice');
+      toast.error('Failed to save practice');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="container max-w-4xl mx-auto p-4 md:p-6">
+      <Card className="w-full">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold">
+                Outcome Visualization
+              </CardTitle>
+              <CardDescription>
+                Visualize your champion future • 3 points
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/mind-insurance')}
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {!meditationStarted ? (
+            <>
+              {/* Outcome Description */}
+              <div className="space-y-2">
+                <Label htmlFor="outcome-description">
+                  Describe your desired outcome in detail
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Be specific and write in present tense as if it has already happened
+                </p>
+                <Textarea
+                  id="outcome-description"
+                  placeholder="I see myself achieving..."
+                  value={outcomeDescription}
+                  onChange={(e) => setOutcomeDescription(e.target.value)}
+                  rows={5}
+                  className="resize-none"
+                />
+              </div>
+
+              {/* Background Audio Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="background-audio">
+                  Choose your background audio
+                </Label>
+                <Select value={backgroundAudio} onValueChange={setBackgroundAudio}>
+                  <SelectTrigger id="background-audio">
+                    <SelectValue placeholder="Select background audio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BACKGROUND_AUDIO_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className="flex items-center gap-2">
+                          <span>{option.icon}</span>
+                          <span>{option.label}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Ready to start card */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2">
+                    Ready for your guided visualization?
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    This {MEDITATION_DURATION}-second guided experience will help you visualize
+                    your desired outcome with clarity and conviction.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Start Button */}
+              <Button
+                onClick={startMeditation}
+                disabled={!outcomeDescription || !backgroundAudio}
+                size="lg"
+                className="w-full"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Begin Visualization
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Meditation Screen */}
+              <div className="text-center py-12 space-y-6">
+                <div className="text-6xl">🧘</div>
+
+                {!meditationComplete ? (
+                  <>
+                    <div className="space-y-4">
+                      <div className="text-4xl font-bold text-primary">
+                        {formatTime(countdown)}
+                      </div>
+                      <Progress value={(1 - countdown / MEDITATION_DURATION) * 100} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xl font-medium">
+                        Close your eyes
+                      </p>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        See yourself in a peaceful place. Visualize your desired outcome as if
+                        it has already happened. Feel the emotions. Notice the details.
+                      </p>
+                    </div>
+
+                    {backgroundAudio !== 'silence' && (
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Volume2 className="h-4 w-4" />
+                        <span className="text-sm">Playing background audio</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      <div className="text-2xl font-bold text-green-600">
+                        Visualization Complete! ✓
+                      </div>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        You've successfully visualized your desired outcome.
+                        Carry this feeling with you throughout your day.
+                      </p>
+                    </div>
+
+                    {/* Meditation completed checkbox (auto-checked) */}
+                    <div className="flex items-center justify-center space-x-2">
+                      <Checkbox
+                        id="meditation-completed"
+                        checked={meditationComplete}
+                        disabled
+                      />
+                      <Label
+                        htmlFor="meditation-completed"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Meditation completed
+                      </Label>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Complete Button */}
+          {meditationComplete && (
+            <Button
+              onClick={handleComplete}
+              disabled={loading}
+              size="lg"
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                '○ Complete Outcome Visualization'
+              )}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
