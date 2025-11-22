@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion'; // Package not installed
 
 // Victory celebration options with animations
 const VICTORY_CELEBRATIONS = [
@@ -388,25 +388,14 @@ export default function CelebrateWins() {
         </div>
       </div>
 
-      {/* Celebration Animation Overlay */}
-      <AnimatePresence>
-        {showCelebration && selectedCelebration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
-          >
-            <motion.div
-              animate={selectedCelebration.animation}
-              transition={{ duration: 0.5 }}
-              className="text-8xl"
-            >
-              {selectedCelebration.emoji}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Celebration Animation Overlay - Disabled (framer-motion not installed) */}
+      {showCelebration && selectedCelebration && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="text-8xl animate-bounce">
+            {selectedCelebration.emoji}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

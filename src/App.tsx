@@ -24,9 +24,7 @@ import ProfilePage from "./pages/ProfilePage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import { DocumentManagement } from "./pages/admin/DocumentManagement";
-import TestResourcesPage from "./pages/TestResourcesPage";
-import TestResourcesDemo from "./pages/TestResourcesDemo";
-import ResourcesPage from "./pages/ResourcesPage";
+// Resources pages removed - components not found
 import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
 import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
 import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
@@ -78,13 +76,9 @@ const App = () => (
               <Route path="/roadmap" element={<ProtectedRoute><AppLayout><RoadmapPage /></AppLayout></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
-              <Route path="/resources" element={<ProtectedRoute><AppLayout><ResourcesPage /></AppLayout></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
-              {/* Test pages for Training Materials feature - No auth required for testing */}
-              <Route path="/test-resources" element={<TestResourcesPage />} />
-              <Route path="/test-demo" element={<TestResourcesDemo />} />
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />

@@ -19,12 +19,13 @@ import {
   getTodayPractices,
   isWithinTimeWindow
 } from '@/services/practiceService';
-import {
-  AudioRecorder,
-  uploadAudioToStorage,
-  saveVoiceRecording,
-  sendAudioForTranscription
-} from '@/services/voiceRecordingService';
+// Voice recording service temporarily disabled - needs to be created
+// import {
+//   AudioRecorder,
+//   uploadAudioToStorage,
+//   saveVoiceRecording,
+//   sendAudioForTranscription
+// } from '@/services/voiceRecordingService';
 import { PRACTICE_TYPES, POINTS_CONFIG, AUDIO_DURATIONS, TIME_WINDOWS } from '@/constants/protect';
 import type { DailyPractice } from '@/types/practices';
 import { useToast } from '@/hooks/use-toast';
@@ -46,13 +47,14 @@ export default function ReinforceIdentity() {
   const [existingPractice, setExistingPractice] = useState<DailyPractice | null>(null);
 
   // Refs
-  const audioRecorderRef = useRef<AudioRecorder | null>(null);
+  // Voice recording temporarily disabled - service needs to be created
+  const audioRecorderRef = useRef<any | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const recordingDataRef = useRef<{ blob: Blob; duration: number } | null>(null);
 
   // Initialize audio recorder on mount
   useEffect(() => {
-    audioRecorderRef.current = new AudioRecorder();
+    // audioRecorderRef.current = new AudioRecorder();
 
     // Load existing practice if any
     loadExistingPractice();
@@ -232,33 +234,17 @@ export default function ReinforceIdentity() {
         throw new Error('User not authenticated');
       }
 
-      // Upload audio to Supabase Storage
-      const { publicUrl, path } = await uploadAudioToStorage(
-        user.id,
-        recordingDataRef.current.blob
-      );
-
-      // Save voice recording metadata
-      const voiceRecording = await saveVoiceRecording(
-        user.id,
-        publicUrl,
-        recordingDataRef.current.duration,
-        existingPractice?.id,
-        'identity'
-      );
-
-      // Send to N8n for transcription (non-blocking)
-      sendAudioForTranscription(
-        recordingDataRef.current.blob,
-        user.id,
-        voiceRecording.id
-      );
+      // Voice recording temporarily disabled - service needs to be created
+      // Upload would happen here
+      // const { publicUrl, path } = await uploadAudioToStorage(user.id, recordingDataRef.current.blob);
+      // const voiceRecording = await saveVoiceRecording(user.id, publicUrl, recordingDataRef.current.duration, existingPractice?.id, 'identity');
+      // sendAudioForTranscription(recordingDataRef.current.blob, user.id, voiceRecording.id);
 
       // Prepare practice data
       const practiceData = {
         identity_statement: identityStatement.trim(),
-        recording_id: voiceRecording.id,
-        recording_duration: recordingDataRef.current.duration
+        recording_id: undefined, // Would be voiceRecording.id
+        recording_duration: recordingDataRef.current?.duration || 0,
       };
 
       // Get today's date in user's timezone

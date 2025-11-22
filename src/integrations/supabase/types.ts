@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_log_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_metrics_cache: {
+        Row: {
+          calculated_at: string | null
+          calculation_time_ms: number | null
+          dependency_tables: string[] | null
+          expires_at: string | null
+          id: string
+          last_accessed_at: string | null
+          metric_key: string
+          metric_value: Json
+          source_query: string | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          calculation_time_ms?: number | null
+          dependency_tables?: string[] | null
+          expires_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          metric_key: string
+          metric_value: Json
+          source_query?: string | null
+        }
+        Update: {
+          calculated_at?: string | null
+          calculation_time_ms?: number | null
+          dependency_tables?: string[] | null
+          expires_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          metric_key?: string
+          metric_value?: Json
+          source_query?: string | null
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean
+          last_login_at: string | null
+          permissions: Json
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_login_at?: string | null
+          permissions?: Json
+          role: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_login_at?: string | null
+          permissions?: Json
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_conversations: {
         Row: {
           agent_response: string
@@ -24,6 +137,9 @@ export type Database = {
           confidence_score: number | null
           conversation_turn: number | null
           created_at: string | null
+          created_date: string | null
+          created_hour: string | null
+          created_week: string | null
           detected_intent: string | null
           handoff_confidence: number | null
           handoff_context: Json | null
@@ -53,6 +169,9 @@ export type Database = {
           confidence_score?: number | null
           conversation_turn?: number | null
           created_at?: string | null
+          created_date?: string | null
+          created_hour?: string | null
+          created_week?: string | null
           detected_intent?: string | null
           handoff_confidence?: number | null
           handoff_context?: Json | null
@@ -82,6 +201,9 @@ export type Database = {
           confidence_score?: number | null
           conversation_turn?: number | null
           created_at?: string | null
+          created_date?: string | null
+          created_hour?: string | null
+          created_week?: string | null
           detected_intent?: string | null
           handoff_confidence?: number | null
           handoff_context?: Json | null
@@ -427,6 +549,164 @@ export type Database = {
           official_instructions?: string[] | null
           prerequisite_modules?: number[] | null
           success_metrics?: string[] | null
+        }
+        Relationships: []
+      }
+      gh_document_tactic_links: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          document_id: number | null
+          id: number
+          link_type: string | null
+          tactic_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          document_id?: number | null
+          id?: number
+          link_type?: string | null
+          tactic_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          document_id?: number | null
+          id?: number
+          link_type?: string | null
+          tactic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gh_document_tactic_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "gh_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gh_document_tactic_links_tactic_id_fkey"
+            columns: ["tactic_id"]
+            isOneToOne: false
+            referencedRelation: "gh_tactic_instructions"
+            referencedColumns: ["tactic_id"]
+          },
+        ]
+      }
+      gh_document_tactic_suggestions: {
+        Row: {
+          confidence: number
+          created_at: string
+          document_id: number
+          id: number
+          match_reasons: string | null
+          suggested_link_type: string
+          tactic_id: string
+          tactic_name: string
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          document_id: number
+          id?: number
+          match_reasons?: string | null
+          suggested_link_type: string
+          tactic_id: string
+          tactic_name: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          document_id?: number
+          id?: number
+          match_reasons?: string | null
+          suggested_link_type?: string
+          tactic_id?: string
+          tactic_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gh_document_tactic_suggestions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "gh_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gh_documents: {
+        Row: {
+          applicable_populations: string[] | null
+          applicable_states: string[] | null
+          avg_rating: number | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          difficulty: string | null
+          document_name: string
+          document_url: string
+          download_count: number | null
+          file_size_bytes: number | null
+          file_size_kb: number | null
+          file_type: string | null
+          id: number
+          is_active: boolean | null
+          last_modified_at: string | null
+          ownership_model: string[] | null
+          tags: string[] | null
+          updated_at: string | null
+          version: number | null
+          view_count: number | null
+        }
+        Insert: {
+          applicable_populations?: string[] | null
+          applicable_states?: string[] | null
+          avg_rating?: number | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          document_name: string
+          document_url: string
+          download_count?: number | null
+          file_size_bytes?: number | null
+          file_size_kb?: number | null
+          file_type?: string | null
+          id?: number
+          is_active?: boolean | null
+          last_modified_at?: string | null
+          ownership_model?: string[] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          version?: number | null
+          view_count?: number | null
+        }
+        Update: {
+          applicable_populations?: string[] | null
+          applicable_states?: string[] | null
+          avg_rating?: number | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          document_name?: string
+          document_url?: string
+          download_count?: number | null
+          file_size_bytes?: number | null
+          file_size_kb?: number | null
+          file_type?: string | null
+          id?: number
+          is_active?: boolean | null
+          last_modified_at?: string | null
+          ownership_model?: string[] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          version?: number | null
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -1181,39 +1461,97 @@ export type Database = {
       }
       gh_training_chunks: {
         Row: {
+          applicable_populations: string[] | null
           chunk_index: number
           chunk_text: string
           created_at: string | null
+          difficulty: string | null
+          document_id: number | null
           embedding: string
           fts: unknown
           id: string
+          ownership_model: string[] | null
           related_tactics: string[] | null
           source_file: string
           topic_tags: string[] | null
         }
         Insert: {
+          applicable_populations?: string[] | null
           chunk_index: number
           chunk_text: string
           created_at?: string | null
+          difficulty?: string | null
+          document_id?: number | null
           embedding: string
           fts?: unknown
           id?: string
+          ownership_model?: string[] | null
           related_tactics?: string[] | null
           source_file: string
           topic_tags?: string[] | null
         }
         Update: {
+          applicable_populations?: string[] | null
           chunk_index?: number
           chunk_text?: string
           created_at?: string | null
+          difficulty?: string | null
+          document_id?: number | null
           embedding?: string
           fts?: unknown
           id?: string
+          ownership_model?: string[] | null
           related_tactics?: string[] | null
           source_file?: string
           topic_tags?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gh_training_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "gh_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gh_user_document_activity: {
+        Row: {
+          activity_type: string | null
+          created_at: string | null
+          document_id: number | null
+          id: number
+          referrer: string | null
+          tactic_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type?: string | null
+          created_at?: string | null
+          document_id?: number | null
+          id?: number
+          referrer?: string | null
+          tactic_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string | null
+          created_at?: string | null
+          document_id?: number | null
+          id?: number
+          referrer?: string | null
+          tactic_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gh_user_document_activity_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "gh_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gh_user_tactic_progress: {
         Row: {
@@ -1979,6 +2317,7 @@ export type Database = {
           created_at: string | null
           embedding: string | null
           file_number: number
+          fts: unknown
           id: string
           is_active: boolean | null
           priority_level: number | null
@@ -2001,6 +2340,7 @@ export type Database = {
           created_at?: string | null
           embedding?: string | null
           file_number: number
+          fts?: unknown
           id?: string
           is_active?: boolean | null
           priority_level?: number | null
@@ -2023,6 +2363,7 @@ export type Database = {
           created_at?: string | null
           embedding?: string | null
           file_number?: number
+          fts?: unknown
           id?: string
           is_active?: boolean | null
           priority_level?: number | null
@@ -3527,6 +3868,10 @@ export type Database = {
           why_it_matters: string
         }[]
       }
+      has_admin_permission: {
+        Args: { permission_path: string[] }
+        Returns: boolean
+      }
       has_completed_identity_collision: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -3551,6 +3896,8 @@ export type Database = {
         Args: { points_param: number; user_id_param: string }
         Returns: undefined
       }
+      is_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       match_knowledge_chunks: {
         Args: {
           filter?: Json
