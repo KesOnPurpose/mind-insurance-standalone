@@ -32,11 +32,10 @@ export const PracticeCard = ({
 }: PracticeCardProps) => {
   const practice = PRACTICE_CONFIG[practiceType];
 
-  // Calculate points display
-  const basePoints = practice.points.onTime;
-  const latePoints = practice.points.late;
+  // Calculate points display (simplified - no late penalties)
+  const basePoints = typeof practice.points === 'number' ? practice.points : 4;
   const displayPoints = pointsEarned !== undefined ? pointsEarned : basePoints;
-  const isLateCompletion = isCompleted && pointsEarned !== undefined && pointsEarned < basePoints;
+  const isLateCompletion = false; // No late penalties in current system
 
   // Determine card state styling
   const cardClassName = cn(
@@ -118,35 +117,21 @@ export const PracticeCard = ({
                 "text-muted-foreground": !isAvailable
               }
             )}>
-              {isCompleted ? `+${displayPoints}` : displayPoints}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              pts
-            </span>
-            {isLateCompletion && (
-              <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">
-                (late: -{basePoints - latePoints})
-              </span>
-            )}
-          </div>
-
-          {/* Duration Estimate */}
-          {!isCompleted && isAvailable && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span>{practice.estimatedDuration} min</span>
-            </div>
-          )}
+            {isCompleted ? `+${displayPoints}` : displayPoints}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            pts
+          </span>
         </div>
 
-        {/* Late Penalty Warning (if not completed and available) */}
-        {!isCompleted && isAvailable && latePoints < basePoints && (
-          <div className="absolute -bottom-1 left-4 right-4">
-            <div className="text-[10px] text-center text-muted-foreground bg-background px-2">
-              Late: {latePoints} pts
-            </div>
+        {/* Duration Estimate */}
+        {!isCompleted && isAvailable && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            <span>{practice.estimatedDuration} min</span>
           </div>
         )}
+      </div>
       </CardContent>
     </Card>
   );
