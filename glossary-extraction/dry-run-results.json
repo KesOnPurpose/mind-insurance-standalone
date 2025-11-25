@@ -1,0 +1,94 @@
+[
+  {
+    "protocol_id": "f86afadd-5224-4d9d-a489-a0615954324a",
+    "chunk_summary": "Sage Performance Crisis - Sage",
+    "original_length": 455,
+    "updated_length": 455,
+    "terms_found": 0,
+    "terms_injected": 0,
+    "validation_status": "valid",
+    "validation_message": "Valid",
+    "reading_level_before": 5.64,
+    "reading_level_after": 5.64,
+    "reading_level_improvement": 0.0,
+    "sample_before": "#### Emergency Protocol: Sage Performance Crisis (3 minutes)\n**When to Use**: When gap between potential and performance feels overwhelming.\n\n**What to Do**:\n1. **PAUSE** all self-judgment\n2. Close ey",
+    "sample_after": "#### Emergency Protocol: Sage Performance Crisis (3 minutes)\n**When to Use**: When gap between potential and performance feels overwhelming.\n\n**What to Do**:\n1. **PAUSE** all self-judgment\n2. Close ey",
+    "terms_used": {}
+  },
+  {
+    "protocol_id": "1489d8b3-52fb-4224-a432-57274ec46bb0",
+    "chunk_summary": "Visualization Practice",
+    "original_length": 777,
+    "updated_length": 1051,
+    "terms_found": 6,
+    "terms_injected": 4,
+    "validation_status": "valid",
+    "validation_message": "Valid",
+    "reading_level_before": 14.14,
+    "reading_level_after": 16.88,
+    "reading_level_improvement": -2.7399999999999984,
+    "sample_before": "#### **3\\. Visualization Practice**\n\n**Time:** 3-10 minutes **The State It Creates:** Clarity, magnetic attraction, embodied future **Instructions:**\n\n1. **Mental Movie Method:**\n * Create a mental mo",
+    "sample_after": "#### **3\\. {{Visualization||Imagining something on purpose to make it more likely}} Practice**\n\n**Time:** 3-10 minutes **The State It Creates:** Clarity, magnetic attraction, embodied future **Instruc",
+    "terms_used": {
+      "Visualization": "Imagining something on purpose to make it more likely",
+      "Outcome Visualization": "Picturing exactly how you want things to turn out",
+      "sensory detail": "Adding all five senses to your mental pictures",
+      "Morning routine": "What you do every morning in the same order"
+    }
+  },
+  {
+    "protocol_id": "d6365ac8-4fe8-418a-9907-b6ac4a91b33a",
+    "chunk_summary": "Meditation (Goal/Vision Focused)",
+    "original_length": 811,
+    "updated_length": 848,
+    "terms_found": 1,
+    "terms_injected": 1,
+    "validation_status": "valid",
+    "validation_message": "Valid",
+    "reading_level_before": 16.51,
+    "reading_level_after": 14.41,
+    "reading_level_improvement": 2.1000000000000014,
+    "sample_before": "#### **2\\. Meditation (Goal/Vision Focused)**\n\n**Time:** 5-20 minutes **The State It Creates:** Mental stillness, future-present alignment, elevated emotion **Instructions:**\n\n1. **Vision Meditation P",
+    "sample_after": "#### **2\\. Meditation (Goal/Vision Focused)**\n\n**Time:** 5-20 minutes **The State It Creates:** Mental stillness, future-present alignment, elevated emotion **Instructions:**\n\n1. **Vision Meditation P",
+    "terms_used": {
+      "neural pathways": "Thought highways in your brain."
+    }
+  },
+  {
+    "protocol_id": "f625e514-cf36-483a-9330-79d4f4aeeec0",
+    "chunk_summary": "Journal Writing",
+    "original_length": 641,
+    "updated_length": 897,
+    "terms_found": 5,
+    "terms_injected": 4,
+    "validation_status": "valid",
+    "validation_message": "Valid",
+    "reading_level_before": 12.58,
+    "reading_level_after": 12.5,
+    "reading_level_improvement": 0.08000000000000007,
+    "sample_before": "#### **5\\. Journal Writing**\n\n**Time:** 5-15 minutes **The State It Creates:** Clarity, emotional processing, pattern recognition, progress tracking **Instructions:**\n\n1. **Three-Part Journal Structur",
+    "sample_after": "#### **5\\. Journal Writing**\n\n**Time:** 5-15 minutes **The State It Creates:** Clarity, emotional processing, {{pattern recognition||Noticing when the same thing keeps happening}}, progress {{tracking",
+    "terms_used": {
+      "pattern recognition": "Noticing when the same thing keeps happening",
+      "rumination": "Replaying the same negative thoughts over and over.",
+      "Gratitude": "Feeling thankful for what you have",
+      "tracking": "Writing down what you do to see patterns and progress"
+    }
+  },
+  {
+    "protocol_id": "52409fd8-7b70-4dd8-8280-9cb9ed23da26",
+    "chunk_summary": "Capability Deployment System - Builder",
+    "original_length": 788,
+    "updated_length": 788,
+    "terms_found": 0,
+    "terms_injected": 0,
+    "validation_status": "valid",
+    "validation_message": "Valid",
+    "reading_level_before": 13.33,
+    "reading_level_after": 13.33,
+    "reading_level_improvement": 0.0,
+    "sample_before": "#### Practice 1: Capability Deployment System (30 minutes, weekly)\n**Why This Rewires the Pattern**: Builders need structured activation. Systematic capability deployment closes potential-performance ",
+    "sample_after": "#### Practice 1: Capability Deployment System (30 minutes, weekly)\n**Why This Rewires the Pattern**: Builders need structured activation. Systematic capability deployment closes potential-performance ",
+    "terms_used": {}
+  }
+]

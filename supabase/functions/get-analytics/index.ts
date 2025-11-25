@@ -215,29 +215,31 @@ serve(async (req) => {
 
       case 'conversation_volume': {
         // Query conversation counts
+        // NOTE: Uses generated column 'created_date' for efficient daily grouping
+        // This leverages idx_agent_conversations_daily_volume index
         let query = supabaseClient
           .from('agent_conversations')
-          .select('agent_type, created_at')
+          .select('agent_type, created_date')
           .gte('created_at', timeFilter);
-        
+
         if (agent_type) query = query.eq('agent_type', agent_type);
-        
+
         const { data, error } = await query;
         if (error) throw error;
-        
+
         // Calculate by agent
         const byAgent: Record<string, number> = {};
         ['nette', 'mio', 'me'].forEach(agent => {
           byAgent[agent] = data.filter(d => d.agent_type === agent).length;
         });
-        
-        // Calculate by day
+
+        // Calculate by day - uses generated column created_date (already a date string)
         const byDay: Record<string, number> = {};
         data.forEach(d => {
-          const day = new Date(d.created_at).toISOString().split('T')[0];
+          const day = d.created_date; // Generated column is already a date
           byDay[day] = (byDay[day] || 0) + 1;
         });
-        
+
         result = {
           total_conversations: data.length,
           by_agent: byAgent,

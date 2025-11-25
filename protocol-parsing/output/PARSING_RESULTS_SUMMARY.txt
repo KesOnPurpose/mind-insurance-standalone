@@ -1,0 +1,109 @@
+================================================================================
+MIO RESEARCH PROTOCOL PARSER - FINAL RESULTS
+Week 2 Day 2-4: Protocol Extraction Complete
+================================================================================
+
+PARSER SCRIPT:
+  /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/
+  Grouphome App LOVABLE/mindhouse-prodigy/protocol-parsing/parsers/
+  parse_research_protocols.py
+
+OUTPUT FILES:
+  Test (5 files):  output/research-protocols-test-parsed.json
+  Full (8 files):  output/research-protocols-parsed.json
+
+================================================================================
+EXTRACTION RESULTS
+================================================================================
+Total protocols extracted: 100
+KB files processed: 8
+Emergency protocols: 33
+
+BY KB FILE CATEGORY:
+  • protocol-library           42 protocols
+  • avatar-index               17 protocols
+  • emergency-tools            10 protocols
+  • communication-frameworks    9 protocols
+  • neural-rewiring             8 protocols
+  • data-coaching               7 protocols
+  • core-framework              5 protocols
+  • forensic-integration        2 protocols
+
+BY PROTOCOL CATEGORY:
+  • research-protocol               51 protocols
+  • emergency-protocol              33 protocols
+  • avatar-definition               13 protocols
+  • communication-framework          3 protocols
+
+BY DIFFICULTY LEVEL:
+  • advanced         42 protocols (42%)
+  • beginner         40 protocols (40%)
+  • intermediate     18 protocols (18%)
+
+BY TEMPERAMENT:
+  • builder          59 protocols
+  • warrior          53 protocols
+  • sage             47 protocols
+  • connector        33 protocols
+  • all               4 protocols
+
+TIME COMMITMENT:
+  • Average min: 11.1 minutes
+  • Average max: 34.6 minutes
+
+================================================================================
+SAMPLE PARSED PROTOCOL (JSON)
+================================================================================
+{
+  "source_file": "mio-kb-03-protocol-library.md",
+  "file_number": 3,
+  "chunk_number": 3,
+  "chunk_summary": "Identity Ceiling - Relationship Erosion",
+  "category": "research-protocol",
+  "applicable_patterns": [
+    "identity_ceiling",
+    "relationship_erosion",
+    "motivation_collapse",
+    "loyalty_conflict"
+  ],
+  "temperament_match": [
+    "connector",
+    "sage",
+    "builder",
+    "warrior"
+  ],
+  "time_commitment_min": 1,
+  "time_commitment_max": 30,
+  "difficulty_level": "intermediate",
+  "is_emergency_protocol": false,
+  "practice_frequency": "daily",
+  "clinical_framing": null,
+  "user_framing": null,
+  "kb_file_category": "protocol-library"
+}
+
+================================================================================
+PARSING ISSUES & NOTES
+================================================================================
+1. Dual Framing: No protocols found with explicit **Internal (Clinical)**
+   and **External (User-facing)** framing in source files.
+   Parser correctly handles this by setting both to null.
+
+2. Pattern Extraction: Successfully extracted 15+ unique patterns
+   from protocol content using keyword matching.
+
+3. Temperament Matching: All 4 temperaments (Warrior, Sage, Connector,
+   Builder) successfully extracted from protocol versions.
+
+4. File Structure: Successfully split by SOURCE FILE markers and
+   extracted individual practices, tools, and avatars.
+
+================================================================================
+NEXT STEPS
+================================================================================
+1. Review parsed protocols in JSON files
+2. Verify pattern extraction accuracy
+3. Add dual framing to source files if needed
+4. Import protocols into Supabase database
+5. Connect to MIO chatbot for protocol recommendations
+================================================================================

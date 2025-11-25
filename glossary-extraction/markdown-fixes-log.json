@@ -1,0 +1,992 @@
+{
+  "diagnosis_results": [
+    {
+      "protocol_id": "d6365ac8-4fe8-418a-9907-b6ac4a91b33a",
+      "chunk_summary": "Meditation (Goal/Vision Focused)",
+      "text_length": 810,
+      "markers": {
+        "asterisks": 39,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 11,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 11,
+          "positions": [
+            212,
+            243,
+            279,
+            321,
+            347,
+            374,
+            416,
+            486,
+            519,
+            548,
+            580
+          ],
+          "message": "Found 11 italic asterisks (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "f111f209-2915-4bc0-a54d-464798c0be25",
+      "chunk_summary": "Learning Practice",
+      "text_length": 685,
+      "markers": {
+        "asterisks": 37,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 9,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 9,
+          "positions": [
+            184,
+            237,
+            272,
+            296,
+            329,
+            393,
+            434,
+            463,
+            491
+          ],
+          "message": "Found 9 italic asterisks (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "f625e514-cf36-483a-9330-79d4f4aeeec0",
+      "chunk_summary": "Journal Writing",
+      "text_length": 640,
+      "markers": {
+        "asterisks": 35,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 7,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 7,
+          "positions": [
+            206,
+            244,
+            275,
+            341,
+            367,
+            395,
+            434
+          ],
+          "message": "Found 7 italic asterisks (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "f71fe16d-a604-49bd-b659-1666d451d909",
+      "chunk_summary": "Neuroplasticity Training",
+      "text_length": 513,
+      "markers": {
+        "asterisks": 23,
+        "asterisks_balanced": false,
+        "bold_markers": 10,
+        "bold_balanced": true,
+        "italic_asterisks": 3,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 3,
+          "positions": [
+            195,
+            210,
+            228
+          ],
+          "message": "Found 3 italic asterisks (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "1ce39af8-4d03-444d-bbac-945c60591696",
+      "chunk_summary": "Gamma Wave Activation",
+      "text_length": 576,
+      "markers": {
+        "asterisks": 29,
+        "asterisks_balanced": false,
+        "bold_markers": 12,
+        "bold_balanced": true,
+        "italic_asterisks": 5,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 5,
+          "positions": [
+            175,
+            196,
+            218,
+            244,
+            272
+          ],
+          "message": "Found 5 italic asterisks (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "6b9d1768-f379-440c-8046-eaa6c8df44cd",
+      "chunk_summary": "All 15 Forensic Capabilities",
+      "text_length": 21890,
+      "markers": {
+        "asterisks": 579,
+        "asterisks_balanced": false,
+        "bold_markers": 284,
+        "bold_balanced": true,
+        "italic_asterisks": 11,
+        "italic_asterisks_balanced": false,
+        "underscores": 113,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_italic_asterisk",
+          "count": 11,
+          "positions": [
+            407,
+            432,
+            462,
+            4109,
+            4159,
+            4207,
+            8030,
+            14329,
+            14385,
+            17455,
+            17532
+          ],
+          "message": "Found 11 italic asterisks (should be even)"
+        },
+        {
+          "type": "unbalanced_underscore",
+          "count": 113,
+          "positions": [
+            398,
+            423,
+            449,
+            453,
+            520,
+            603,
+            702,
+            746,
+            762,
+            796,
+            1155,
+            1161,
+            1199,
+            1205,
+            1245,
+            1251,
+            1288,
+            1294,
+            1371,
+            1377,
+            1444,
+            1450,
+            1546,
+            1552,
+            1912,
+            1996,
+            2005,
+            2023,
+            2030,
+            2044,
+            2074,
+            2091,
+            2118,
+            2134,
+            2140,
+            2165,
+            2169,
+            2216,
+            2223,
+            2310,
+            2371,
+            2412,
+            4075,
+            4086,
+            4100,
+            4122,
+            4136,
+            4150,
+            4171,
+            4184,
+            4198,
+            4240,
+            4251,
+            4330,
+            4408,
+            5316,
+            5477,
+            5552,
+            5556,
+            5911,
+            6117,
+            6158,
+            6367,
+            6390,
+            6578,
+            6601,
+            6615,
+            6626,
+            6647,
+            6655,
+            6675,
+            6696,
+            6745,
+            6887,
+            6900,
+            6986,
+            7099,
+            7104,
+            7119,
+            7133,
+            7141,
+            7157,
+            7163,
+            7168,
+            7180,
+            7186,
+            7200,
+            7205,
+            7211,
+            7230,
+            7236,
+            7252,
+            7324,
+            7913,
+            7934,
+            7950,
+            7959,
+            7976,
+            7988,
+            8007,
+            8017,
+            14301,
+            14315,
+            14357,
+            14371,
+            17440,
+            17451,
+            17517,
+            17528,
+            18539,
+            18579,
+            19358,
+            19436
+          ],
+          "message": "Found 113 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "9093891e-1865-408c-8e18-78c2d3693055",
+      "chunk_summary": "Accountability Pattern Detection & Rewiring Protocols",
+      "text_length": 3307,
+      "markers": {
+        "asterisks": 56,
+        "asterisks_balanced": true,
+        "bold_markers": 28,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 1,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 1,
+          "positions": [
+            1758
+          ],
+          "message": "Found 1 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "ee1d8245-ccc3-456d-a0e4-7f49ad9c28b6",
+      "chunk_summary": "The Protect Method (Daily Practice Framework)",
+      "text_length": 1517,
+      "markers": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 11,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 11,
+          "positions": [
+            241,
+            247,
+            420,
+            614,
+            798,
+            822,
+            1014,
+            1030,
+            1048,
+            1250,
+            1441
+          ],
+          "message": "Found 11 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "ddce8bb9-25b7-4ba7-964c-739cdea4b913",
+      "chunk_summary": "Neuroscience Translation Framework",
+      "text_length": 1560,
+      "markers": {
+        "asterisks": 16,
+        "asterisks_balanced": true,
+        "bold_markers": 8,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 3,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 3,
+          "positions": [
+            320,
+            1009,
+            1279
+          ],
+          "message": "Found 3 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "1146973b-2ada-4f2e-9881-4bb5751591cf",
+      "chunk_summary": "Primary Pattern Forensic Signatures",
+      "text_length": 3874,
+      "markers": {
+        "asterisks": 108,
+        "asterisks_balanced": true,
+        "bold_markers": 54,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 5,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 5,
+          "positions": [
+            313,
+            347,
+            356,
+            2811,
+            2820
+          ],
+          "message": "Found 5 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "9efa48f2-c71a-432b-903a-38a3de6d81b1",
+      "chunk_summary": "Mio Execution Workflow",
+      "text_length": 2525,
+      "markers": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 9,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 9,
+          "positions": [
+            69,
+            83,
+            128,
+            169,
+            180,
+            217,
+            258,
+            267,
+            307
+          ],
+          "message": "Found 9 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    },
+    {
+      "protocol_id": "08dbb74f-d4f2-46a2-aa7b-286dd26ca14b",
+      "chunk_summary": "Integration Map: Forensic Signals \u2192 Protocol Prescription",
+      "text_length": 32506,
+      "markers": {
+        "asterisks": 820,
+        "asterisks_balanced": true,
+        "bold_markers": 410,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 147,
+        "underscores_balanced": false
+      },
+      "issues": [
+        {
+          "type": "unbalanced_underscore",
+          "count": 147,
+          "positions": [
+            313,
+            845,
+            882,
+            925,
+            970,
+            979,
+            982,
+            1006,
+            1015,
+            1034,
+            1040,
+            1065,
+            1075,
+            2593,
+            2602,
+            3242,
+            3251,
+            3304,
+            3356,
+            3367,
+            3394,
+            3403,
+            3421,
+            3430,
+            3460,
+            5562,
+            5864,
+            5876,
+            5904,
+            5911,
+            5916,
+            5940,
+            5961,
+            5967,
+            5988,
+            5997,
+            6016,
+            6038,
+            6061,
+            6073,
+            6097,
+            6142,
+            6151,
+            9078,
+            9084,
+            9089,
+            9112,
+            9117,
+            9142,
+            9151,
+            9162,
+            9179,
+            9186,
+            9210,
+            9219,
+            9237,
+            9247,
+            9267,
+            9273,
+            9293,
+            9296,
+            9304,
+            9326,
+            9336,
+            9361,
+            9406,
+            11769,
+            11779,
+            11796,
+            11804,
+            11829,
+            11839,
+            11862,
+            11874,
+            11900,
+            11910,
+            11929,
+            11935,
+            11940,
+            11971,
+            11981,
+            11999,
+            12007,
+            12035,
+            12045,
+            12067,
+            12073,
+            12089,
+            12095,
+            12117,
+            12127,
+            12157,
+            12167,
+            12193,
+            12201,
+            12216,
+            12678,
+            15003,
+            15517,
+            15520,
+            16788,
+            17133,
+            17525,
+            18364,
+            18880,
+            19112,
+            19466,
+            19474,
+            20053,
+            20137,
+            20167,
+            20246,
+            20531,
+            20539,
+            20550,
+            20553,
+            21303,
+            21322,
+            21329,
+            21334,
+            21974,
+            21998,
+            26123,
+            29830,
+            29837,
+            29849,
+            29853,
+            29871,
+            29884,
+            29905,
+            29914,
+            29938,
+            30005,
+            30012,
+            30023,
+            30027,
+            30043,
+            30051,
+            30073,
+            30144,
+            30151,
+            30162,
+            30166,
+            30179,
+            30184,
+            30192,
+            30218
+          ],
+          "message": "Found 147 underscores (should be even)"
+        }
+      ],
+      "has_issues": true
+    }
+  ],
+  "fix_results": [
+    {
+      "success": true,
+      "protocol_id": "d6365ac8-4fe8-418a-9907-b6ac4a91b33a",
+      "chunk_summary": "Meditation (Goal/Vision Focused)",
+      "fixes_applied": [
+        "Added closing asterisk at end"
+      ],
+      "markers_before": {
+        "asterisks": 39,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 11,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "markers_after": {
+        "asterisks": 40,
+        "asterisks_balanced": true,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 12,
+        "italic_asterisks_balanced": true,
+        "underscores": 0,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "f111f209-2915-4bc0-a54d-464798c0be25",
+      "chunk_summary": "Learning Practice",
+      "fixes_applied": [
+        "Added closing asterisk at end"
+      ],
+      "markers_before": {
+        "asterisks": 37,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 9,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "markers_after": {
+        "asterisks": 38,
+        "asterisks_balanced": true,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 10,
+        "italic_asterisks_balanced": true,
+        "underscores": 0,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "f625e514-cf36-483a-9330-79d4f4aeeec0",
+      "chunk_summary": "Journal Writing",
+      "fixes_applied": [
+        "Added closing asterisk at end"
+      ],
+      "markers_before": {
+        "asterisks": 35,
+        "asterisks_balanced": false,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 7,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "markers_after": {
+        "asterisks": 36,
+        "asterisks_balanced": true,
+        "bold_markers": 14,
+        "bold_balanced": true,
+        "italic_asterisks": 8,
+        "italic_asterisks_balanced": true,
+        "underscores": 0,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "f71fe16d-a604-49bd-b659-1666d451d909",
+      "chunk_summary": "Neuroplasticity Training",
+      "fixes_applied": [
+        "Added closing asterisk at end"
+      ],
+      "markers_before": {
+        "asterisks": 23,
+        "asterisks_balanced": false,
+        "bold_markers": 10,
+        "bold_balanced": true,
+        "italic_asterisks": 3,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "markers_after": {
+        "asterisks": 24,
+        "asterisks_balanced": true,
+        "bold_markers": 10,
+        "bold_balanced": true,
+        "italic_asterisks": 4,
+        "italic_asterisks_balanced": true,
+        "underscores": 0,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "1ce39af8-4d03-444d-bbac-945c60591696",
+      "chunk_summary": "Gamma Wave Activation",
+      "fixes_applied": [
+        "Added closing asterisk at end"
+      ],
+      "markers_before": {
+        "asterisks": 29,
+        "asterisks_balanced": false,
+        "bold_markers": 12,
+        "bold_balanced": true,
+        "italic_asterisks": 5,
+        "italic_asterisks_balanced": false,
+        "underscores": 0,
+        "underscores_balanced": true
+      },
+      "markers_after": {
+        "asterisks": 30,
+        "asterisks_balanced": true,
+        "bold_markers": 12,
+        "bold_balanced": true,
+        "italic_asterisks": 6,
+        "italic_asterisks_balanced": true,
+        "underscores": 0,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "6b9d1768-f379-440c-8046-eaa6c8df44cd",
+      "chunk_summary": "All 15 Forensic Capabilities",
+      "fixes_applied": [
+        "Escaped asterisks in math expressions",
+        "Added closing asterisk at end",
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 579,
+        "asterisks_balanced": false,
+        "bold_markers": 284,
+        "bold_balanced": true,
+        "italic_asterisks": 11,
+        "italic_asterisks_balanced": false,
+        "underscores": 113,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 580,
+        "asterisks_balanced": true,
+        "bold_markers": 284,
+        "bold_balanced": true,
+        "italic_asterisks": 12,
+        "italic_asterisks_balanced": true,
+        "underscores": 114,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "9093891e-1865-408c-8e18-78c2d3693055",
+      "chunk_summary": "Accountability Pattern Detection & Rewiring Protocols",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 56,
+        "asterisks_balanced": true,
+        "bold_markers": 28,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 1,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 56,
+        "asterisks_balanced": true,
+        "bold_markers": 28,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 2,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "ee1d8245-ccc3-456d-a0e4-7f49ad9c28b6",
+      "chunk_summary": "The Protect Method (Daily Practice Framework)",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 11,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 12,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "ddce8bb9-25b7-4ba7-964c-739cdea4b913",
+      "chunk_summary": "Neuroscience Translation Framework",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 16,
+        "asterisks_balanced": true,
+        "bold_markers": 8,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 3,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 16,
+        "asterisks_balanced": true,
+        "bold_markers": 8,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 4,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "1146973b-2ada-4f2e-9881-4bb5751591cf",
+      "chunk_summary": "Primary Pattern Forensic Signatures",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 108,
+        "asterisks_balanced": true,
+        "bold_markers": 54,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 5,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 108,
+        "asterisks_balanced": true,
+        "bold_markers": 54,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 6,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "9efa48f2-c71a-432b-903a-38a3de6d81b1",
+      "chunk_summary": "Mio Execution Workflow",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 9,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 0,
+        "asterisks_balanced": true,
+        "bold_markers": 0,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 10,
+        "underscores_balanced": true
+      }
+    },
+    {
+      "success": true,
+      "protocol_id": "08dbb74f-d4f2-46a2-aa7b-286dd26ca14b",
+      "chunk_summary": "Integration Map: Forensic Signals \u2192 Protocol Prescription",
+      "fixes_applied": [
+        "Added closing underscore at end"
+      ],
+      "markers_before": {
+        "asterisks": 820,
+        "asterisks_balanced": true,
+        "bold_markers": 410,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 147,
+        "underscores_balanced": false
+      },
+      "markers_after": {
+        "asterisks": 820,
+        "asterisks_balanced": true,
+        "bold_markers": 410,
+        "bold_balanced": true,
+        "italic_asterisks": 0,
+        "italic_asterisks_balanced": true,
+        "underscores": 148,
+        "underscores_balanced": true
+      }
+    }
+  ],
+  "summary": {
+    "total_protocols": 12,
+    "protocols_with_issues": 12,
+    "successful_fixes": 12,
+    "failed_fixes": 0
+  }
+}

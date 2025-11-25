@@ -1,0 +1,1169 @@
+{
+  "total_unique_terms": 62,
+  "total_term_occurrences": 554,
+  "top_20_terms": [
+    {
+      "term": "trigger",
+      "count": 67
+    },
+    {
+      "term": "rumination",
+      "count": 49
+    },
+    {
+      "term": "avoidance",
+      "count": 43
+    },
+    {
+      "term": "anxiety",
+      "count": 28
+    },
+    {
+      "term": "impostor syndrome",
+      "count": 26
+    },
+    {
+      "term": "procrastination",
+      "count": 23
+    },
+    {
+      "term": "visualization",
+      "count": 22
+    },
+    {
+      "term": "overwhelm",
+      "count": 20
+    },
+    {
+      "term": "amygdala",
+      "count": 18
+    },
+    {
+      "term": "trauma",
+      "count": 16
+    },
+    {
+      "term": "dopamine",
+      "count": 14
+    },
+    {
+      "term": "identity collision",
+      "count": 13
+    },
+    {
+      "term": "prefrontal cortex",
+      "count": 13
+    },
+    {
+      "term": "cognitive restructuring",
+      "count": 12
+    },
+    {
+      "term": "guilt",
+      "count": 11
+    },
+    {
+      "term": "act",
+      "count": 11
+    },
+    {
+      "term": "neural rewiring",
+      "count": 11
+    },
+    {
+      "term": "reinforcement",
+      "count": 9
+    },
+    {
+      "term": "neural pathway",
+      "count": 9
+    },
+    {
+      "term": "self-compassion",
+      "count": 8
+    }
+  ],
+  "all_terms_ranked": [
+    {
+      "term": "trigger",
+      "count": 67
+    },
+    {
+      "term": "rumination",
+      "count": 49
+    },
+    {
+      "term": "avoidance",
+      "count": 43
+    },
+    {
+      "term": "anxiety",
+      "count": 28
+    },
+    {
+      "term": "impostor syndrome",
+      "count": 26
+    },
+    {
+      "term": "procrastination",
+      "count": 23
+    },
+    {
+      "term": "visualization",
+      "count": 22
+    },
+    {
+      "term": "overwhelm",
+      "count": 20
+    },
+    {
+      "term": "amygdala",
+      "count": 18
+    },
+    {
+      "term": "trauma",
+      "count": 16
+    },
+    {
+      "term": "dopamine",
+      "count": 14
+    },
+    {
+      "term": "identity collision",
+      "count": 13
+    },
+    {
+      "term": "prefrontal cortex",
+      "count": 13
+    },
+    {
+      "term": "cognitive restructuring",
+      "count": 12
+    },
+    {
+      "term": "guilt",
+      "count": 11
+    },
+    {
+      "term": "act",
+      "count": 11
+    },
+    {
+      "term": "neural rewiring",
+      "count": 11
+    },
+    {
+      "term": "reinforcement",
+      "count": 9
+    },
+    {
+      "term": "neural pathway",
+      "count": 9
+    },
+    {
+      "term": "self-compassion",
+      "count": 8
+    },
+    {
+      "term": "neuroplasticity",
+      "count": 8
+    },
+    {
+      "term": "self-sabotage",
+      "count": 7
+    },
+    {
+      "term": "engagement",
+      "count": 7
+    },
+    {
+      "term": "mindfulness",
+      "count": 7
+    },
+    {
+      "term": "cognitive load",
+      "count": 6
+    },
+    {
+      "term": "cbt",
+      "count": 6
+    },
+    {
+      "term": "resilience",
+      "count": 6
+    },
+    {
+      "term": "emdr",
+      "count": 6
+    },
+    {
+      "term": "interoception",
+      "count": 5
+    },
+    {
+      "term": "growth mindset",
+      "count": 5
+    },
+    {
+      "term": "limbic system",
+      "count": 5
+    },
+    {
+      "term": "parasympathetic nervous system",
+      "count": 5
+    },
+    {
+      "term": "executive function",
+      "count": 4
+    },
+    {
+      "term": "catastrophizing",
+      "count": 4
+    },
+    {
+      "term": "exposure therapy",
+      "count": 3
+    },
+    {
+      "term": "ptsd",
+      "count": 3
+    },
+    {
+      "term": "hippocampus",
+      "count": 3
+    },
+    {
+      "term": "anterior cingulate cortex",
+      "count": 3
+    },
+    {
+      "term": "emotional regulation",
+      "count": 3
+    },
+    {
+      "term": "self-efficacy",
+      "count": 3
+    },
+    {
+      "term": "reframing",
+      "count": 3
+    },
+    {
+      "term": "dissociation",
+      "count": 3
+    },
+    {
+      "term": "withdrawal",
+      "count": 2
+    },
+    {
+      "term": "autonomic nervous system",
+      "count": 2
+    },
+    {
+      "term": "insula",
+      "count": 2
+    },
+    {
+      "term": "panic",
+      "count": 2
+    },
+    {
+      "term": "polyvagal theory",
+      "count": 2
+    },
+    {
+      "term": "habituation",
+      "count": 2
+    },
+    {
+      "term": "survival mode",
+      "count": 1
+    },
+    {
+      "term": "learned helplessness",
+      "count": 1
+    },
+    {
+      "term": "adrenaline",
+      "count": 1
+    },
+    {
+      "term": "habit formation",
+      "count": 1
+    },
+    {
+      "term": "sympathetic nervous system",
+      "count": 1
+    },
+    {
+      "term": "emotional flooding",
+      "count": 1
+    },
+    {
+      "term": "locus of control",
+      "count": 1
+    },
+    {
+      "term": "perfectionism",
+      "count": 1
+    },
+    {
+      "term": "working memory",
+      "count": 1
+    },
+    {
+      "term": "projection",
+      "count": 1
+    },
+    {
+      "term": "vagal tone",
+      "count": 1
+    },
+    {
+      "term": "schema",
+      "count": 1
+    },
+    {
+      "term": "cortisol",
+      "count": 1
+    },
+    {
+      "term": "threat detection",
+      "count": 1
+    }
+  ],
+  "terms_by_category": {
+    "brain_structures": [
+      {
+        "term": "amygdala",
+        "count": 18
+      },
+      {
+        "term": "prefrontal cortex",
+        "count": 13
+      },
+      {
+        "term": "limbic system",
+        "count": 5
+      },
+      {
+        "term": "hippocampus",
+        "count": 3
+      },
+      {
+        "term": "anterior cingulate cortex",
+        "count": 3
+      },
+      {
+        "term": "insula",
+        "count": 2
+      }
+    ],
+    "neurochemicals": [
+      {
+        "term": "dopamine",
+        "count": 14
+      },
+      {
+        "term": "adrenaline",
+        "count": 1
+      },
+      {
+        "term": "cortisol",
+        "count": 1
+      }
+    ],
+    "neural_processes": [
+      {
+        "term": "neural rewiring",
+        "count": 11
+      },
+      {
+        "term": "neural pathway",
+        "count": 9
+      },
+      {
+        "term": "neuroplasticity",
+        "count": 8
+      },
+      {
+        "term": "habituation",
+        "count": 2
+      }
+    ],
+    "psychological_concepts": [
+      {
+        "term": "rumination",
+        "count": 49
+      },
+      {
+        "term": "impostor syndrome",
+        "count": 26
+      },
+      {
+        "term": "identity collision",
+        "count": 13
+      },
+      {
+        "term": "self-compassion",
+        "count": 8
+      },
+      {
+        "term": "self-sabotage",
+        "count": 7
+      },
+      {
+        "term": "mindfulness",
+        "count": 7
+      },
+      {
+        "term": "cognitive load",
+        "count": 6
+      },
+      {
+        "term": "cognitive restructuring",
+        "count": 6
+      },
+      {
+        "term": "resilience",
+        "count": 6
+      },
+      {
+        "term": "growth mindset",
+        "count": 5
+      }
+    ],
+    "clinical_techniques": [
+      {
+        "term": "visualization",
+        "count": 22
+      },
+      {
+        "term": "act",
+        "count": 11
+      },
+      {
+        "term": "cognitive restructuring",
+        "count": 6
+      },
+      {
+        "term": "cbt",
+        "count": 6
+      },
+      {
+        "term": "emdr",
+        "count": 6
+      },
+      {
+        "term": "interoception",
+        "count": 5
+      },
+      {
+        "term": "exposure therapy",
+        "count": 3
+      },
+      {
+        "term": "polyvagal theory",
+        "count": 2
+      },
+      {
+        "term": "vagal tone",
+        "count": 1
+      }
+    ],
+    "behavioral_patterns": [
+      {
+        "term": "trigger",
+        "count": 67
+      },
+      {
+        "term": "avoidance",
+        "count": 43
+      },
+      {
+        "term": "procrastination",
+        "count": 23
+      },
+      {
+        "term": "reinforcement",
+        "count": 9
+      },
+      {
+        "term": "engagement",
+        "count": 7
+      },
+      {
+        "term": "withdrawal",
+        "count": 2
+      },
+      {
+        "term": "habit formation",
+        "count": 1
+      },
+      {
+        "term": "perfectionism",
+        "count": 1
+      }
+    ],
+    "emotional_states": [
+      {
+        "term": "anxiety",
+        "count": 28
+      },
+      {
+        "term": "overwhelm",
+        "count": 20
+      },
+      {
+        "term": "guilt",
+        "count": 11
+      },
+      {
+        "term": "dissociation",
+        "count": 3
+      },
+      {
+        "term": "panic",
+        "count": 2
+      },
+      {
+        "term": "emotional flooding",
+        "count": 1
+      }
+    ],
+    "trauma_related": [
+      {
+        "term": "trauma",
+        "count": 16
+      },
+      {
+        "term": "parasympathetic nervous system",
+        "count": 5
+      },
+      {
+        "term": "ptsd",
+        "count": 3
+      },
+      {
+        "term": "autonomic nervous system",
+        "count": 2
+      },
+      {
+        "term": "survival mode",
+        "count": 1
+      },
+      {
+        "term": "sympathetic nervous system",
+        "count": 1
+      },
+      {
+        "term": "threat detection",
+        "count": 1
+      }
+    ]
+  },
+  "category_counts": {
+    "brain_structures": 6,
+    "neurochemicals": 3,
+    "neural_processes": 4,
+    "psychological_concepts": 20,
+    "clinical_techniques": 9,
+    "behavioral_patterns": 8,
+    "emotional_states": 6,
+    "trauma_related": 7
+  },
+  "protocol_density": [
+    {
+      "protocol": "mio-kb-07-neural-rewiring-protocols.md",
+      "total_terms": 181,
+      "unique_terms": 40,
+      "terms": {
+        "rumination": 29,
+        "cbt": 6,
+        "act": 8,
+        "procrastination": 8,
+        "mindfulness": 7,
+        "executive function": 3,
+        "ptsd": 3,
+        "amygdala": 5,
+        "prefrontal cortex": 5,
+        "limbic system": 2,
+        "dopamine": 1,
+        "adrenaline": 1,
+        "neural pathway": 4,
+        "self-efficacy": 3,
+        "reframing": 2,
+        "visualization": 8,
+        "habit formation": 1,
+        "trigger": 9,
+        "reinforcement": 3,
+        "overwhelm": 3,
+        "guilt": 1,
+        "anxiety": 13,
+        "sympathetic nervous system": 1,
+        "impostor syndrome": 9,
+        "cognitive restructuring": 10,
+        "self-compassion": 6,
+        "avoidance": 6,
+        "trauma": 10,
+        "neural rewiring": 2,
+        "resilience": 1,
+        "growth mindset": 1,
+        "self-sabotage": 1,
+        "perfectionism": 1,
+        "parasympathetic nervous system": 2,
+        "working memory": 1,
+        "projection": 1,
+        "exposure therapy": 1,
+        "emdr": 1,
+        "vagal tone": 1,
+        "panic": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-08-forensic-to-protocol-integration.md",
+      "total_terms": 83,
+      "unique_terms": 23,
+      "terms": {
+        "prefrontal cortex": 1,
+        "dopamine": 3,
+        "impostor syndrome": 2,
+        "rumination": 11,
+        "cognitive load": 1,
+        "cognitive restructuring": 2,
+        "self-compassion": 2,
+        "self-sabotage": 1,
+        "exposure therapy": 2,
+        "act": 1,
+        "visualization": 4,
+        "avoidance": 17,
+        "withdrawal": 1,
+        "engagement": 1,
+        "procrastination": 12,
+        "trigger": 8,
+        "reinforcement": 2,
+        "overwhelm": 3,
+        "guilt": 1,
+        "anxiety": 3,
+        "trauma": 2,
+        "survival mode": 1,
+        "neural rewiring": 2
+      }
+    },
+    {
+      "protocol": "mio-kb-06-data-coaching.md",
+      "total_terms": 73,
+      "unique_terms": 21,
+      "terms": {
+        "amygdala": 4,
+        "hippocampus": 1,
+        "anterior cingulate cortex": 1,
+        "learned helplessness": 1,
+        "emotional regulation": 3,
+        "trigger": 25,
+        "avoidance": 18,
+        "withdrawal": 1,
+        "procrastination": 2,
+        "overwhelm": 2,
+        "dissociation": 3,
+        "engagement": 1,
+        "schema": 1,
+        "growth mindset": 1,
+        "prefrontal cortex": 2,
+        "limbic system": 1,
+        "dopamine": 2,
+        "habituation": 1,
+        "executive function": 1,
+        "neural rewiring": 1,
+        "identity collision": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-03-protocol-library.md",
+      "total_terms": 61,
+      "unique_terms": 26,
+      "terms": {
+        "interoception": 3,
+        "overwhelm": 8,
+        "neuroplasticity": 4,
+        "impostor syndrome": 9,
+        "growth mindset": 2,
+        "prefrontal cortex": 1,
+        "catastrophizing": 1,
+        "autonomic nervous system": 1,
+        "dopamine": 3,
+        "cognitive load": 2,
+        "insula": 1,
+        "visualization": 4,
+        "neural rewiring": 1,
+        "anxiety": 5,
+        "amygdala": 1,
+        "trigger": 1,
+        "trauma": 1,
+        "resilience": 2,
+        "neural pathway": 1,
+        "guilt": 1,
+        "polyvagal theory": 1,
+        "rumination": 4,
+        "act": 1,
+        "engagement": 1,
+        "parasympathetic nervous system": 1,
+        "reinforcement": 1
+      }
+    },
+    {
+      "protocol": "daily_deductible_library.md",
+      "total_terms": 42,
+      "unique_terms": 22,
+      "terms": {
+        "anxiety": 3,
+        "visualization": 5,
+        "prefrontal cortex": 1,
+        "rumination": 4,
+        "neuroplasticity": 4,
+        "dopamine": 3,
+        "cognitive load": 2,
+        "overwhelm": 1,
+        "guilt": 1,
+        "neural pathway": 2,
+        "resilience": 3,
+        "autonomic nervous system": 1,
+        "polyvagal theory": 1,
+        "locus of control": 1,
+        "reinforcement": 1,
+        "act": 1,
+        "parasympathetic nervous system": 1,
+        "amygdala": 2,
+        "engagement": 1,
+        "insula": 1,
+        "interoception": 2,
+        "growth mindset": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-05-emergency-tools.md",
+      "total_terms": 39,
+      "unique_terms": 15,
+      "terms": {
+        "catastrophizing": 3,
+        "anxiety": 2,
+        "panic": 1,
+        "emotional flooding": 1,
+        "neural pathway": 1,
+        "trigger": 15,
+        "parasympathetic nervous system": 1,
+        "amygdala": 3,
+        "prefrontal cortex": 1,
+        "reframing": 1,
+        "rumination": 1,
+        "emdr": 5,
+        "trauma": 2,
+        "overwhelm": 1,
+        "cognitive load": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-04-communication-frameworks.md",
+      "total_terms": 26,
+      "unique_terms": 15,
+      "terms": {
+        "identity collision": 4,
+        "procrastination": 1,
+        "trigger": 2,
+        "amygdala": 3,
+        "prefrontal cortex": 2,
+        "hippocampus": 2,
+        "limbic system": 2,
+        "anterior cingulate cortex": 2,
+        "dopamine": 2,
+        "cortisol": 1,
+        "neural pathway": 1,
+        "habituation": 1,
+        "guilt": 1,
+        "threat detection": 1,
+        "avoidance": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-01-core-framework.md",
+      "total_terms": 24,
+      "unique_terms": 10,
+      "terms": {
+        "anxiety": 1,
+        "identity collision": 6,
+        "impostor syndrome": 3,
+        "self-sabotage": 3,
+        "overwhelm": 1,
+        "guilt": 3,
+        "neural rewiring": 3,
+        "trigger": 2,
+        "trauma": 1,
+        "visualization": 1
+      }
+    },
+    {
+      "protocol": "neural_rewiring_protocols.txt",
+      "total_terms": 14,
+      "unique_terms": 7,
+      "terms": {
+        "overwhelm": 1,
+        "engagement": 3,
+        "trigger": 5,
+        "reinforcement": 2,
+        "neural rewiring": 1,
+        "impostor syndrome": 1,
+        "self-sabotage": 1
+      }
+    },
+    {
+      "protocol": "mio-kb-02-avatar-index.md",
+      "total_terms": 11,
+      "unique_terms": 7,
+      "terms": {
+        "guilt": 3,
+        "impostor syndrome": 2,
+        "avoidance": 1,
+        "identity collision": 2,
+        "self-sabotage": 1,
+        "neural rewiring": 1,
+        "anxiety": 1
+      }
+    }
+  ],
+  "top_dense_chunks": [
+    {
+      "chunk_id": "2dcf76bd-94fa-4b0e-9c2c-3e76eafd29e1",
+      "source_file": "mio-kb-07-neural-rewiring-protocols.md",
+      "chunk_number": 8,
+      "chunk_summary": "References (Clinical Evidence Base - For Mio Knowledge Only)",
+      "term_count": 19,
+      "unique_terms": 13,
+      "density": 1.5472312703583062,
+      "terms": {
+        "impostor syndrome": 1,
+        "rumination": 3,
+        "mindfulness": 2,
+        "self-efficacy": 1,
+        "cognitive restructuring": 1,
+        "self-compassion": 1,
+        "cbt": 3,
+        "act": 1,
+        "avoidance": 1,
+        "procrastination": 1,
+        "anxiety": 1,
+        "trauma": 1,
+        "ptsd": 1
+      }
+    },
+    {
+      "chunk_id": "a4ec1458-853c-491f-993e-0e37d000b111",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 28,
+      "chunk_summary": "Motivation Collapse - Comparison",
+      "term_count": 7,
+      "unique_terms": 3,
+      "density": 1.1666666666666667,
+      "terms": {
+        "resilience": 2,
+        "visualization": 2,
+        "anxiety": 3
+      }
+    },
+    {
+      "chunk_id": "83cb34f0-da41-41de-94a6-49b191863c08",
+      "source_file": "daily_deductible_library.md",
+      "chunk_number": 30,
+      "chunk_summary": "Negative Visualization (Premeditatio Malorum)",
+      "term_count": 6,
+      "unique_terms": 3,
+      "density": 1.0563380281690142,
+      "terms": {
+        "resilience": 2,
+        "visualization": 2,
+        "anxiety": 2
+      }
+    },
+    {
+      "chunk_id": "585eb662-8cc3-46b4-adc9-e430d9b2f3f3",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 38,
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "term_count": 5,
+      "unique_terms": 3,
+      "density": 0.8417508417508417,
+      "terms": {
+        "dopamine": 1,
+        "cognitive load": 2,
+        "overwhelm": 2
+      }
+    },
+    {
+      "chunk_id": "4fdc3a6f-1694-49d9-9e79-d726d4b287d3",
+      "source_file": "daily_deductible_library.md",
+      "chunk_number": 41,
+      "chunk_summary": "Cognitive Load Management",
+      "term_count": 4,
+      "unique_terms": 3,
+      "density": 0.7692307692307692,
+      "terms": {
+        "dopamine": 1,
+        "cognitive load": 2,
+        "overwhelm": 1
+      }
+    },
+    {
+      "chunk_id": "ddce8bb9-25b7-4ba7-964c-739cdea4b913",
+      "source_file": "mio-kb-06-data-coaching.md",
+      "chunk_number": 4,
+      "chunk_summary": "Neuroscience Translation Framework",
+      "term_count": 10,
+      "unique_terms": 7,
+      "density": 0.6410256410256411,
+      "terms": {
+        "amygdala": 2,
+        "prefrontal cortex": 2,
+        "limbic system": 1,
+        "dopamine": 2,
+        "habituation": 1,
+        "executive function": 1,
+        "trigger": 1
+      }
+    },
+    {
+      "chunk_id": "b4130c78-688c-4181-95f5-9ac8ddf3149d",
+      "source_file": "mio-kb-01-core-framework.md",
+      "chunk_number": 4,
+      "chunk_summary": "Identity Collision (The Antagonist)",
+      "term_count": 7,
+      "unique_terms": 4,
+      "density": 0.6294964028776979,
+      "terms": {
+        "neural rewiring": 2,
+        "identity collision": 3,
+        "self-sabotage": 1,
+        "trauma": 1
+      }
+    },
+    {
+      "chunk_id": "3532e3e2-bff1-4eb0-95e7-bb451dc0b1f3",
+      "source_file": "mio-kb-07-neural-rewiring-protocols.md",
+      "chunk_number": 1,
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "term_count": 5,
+      "unique_terms": 4,
+      "density": 0.6165228113440198,
+      "terms": {
+        "neural rewiring": 2,
+        "impostor syndrome": 1,
+        "procrastination": 1,
+        "trauma": 1
+      }
+    },
+    {
+      "chunk_id": "ad09f107-6ca0-48b8-8ed1-7820644601c9",
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "chunk_number": 6,
+      "chunk_summary": "Motivation Collapse",
+      "term_count": 15,
+      "unique_terms": 5,
+      "density": 0.5882352941176471,
+      "terms": {
+        "amygdala": 1,
+        "rumination": 1,
+        "emdr": 4,
+        "trigger": 7,
+        "trauma": 2
+      }
+    },
+    {
+      "chunk_id": "f71fe16d-a604-49bd-b659-1666d451d909",
+      "source_file": "daily_deductible_library.md",
+      "chunk_number": 37,
+      "chunk_summary": "Neuroplasticity Training",
+      "term_count": 3,
+      "unique_terms": 3,
+      "density": 0.5847953216374269,
+      "terms": {
+        "neuroplasticity": 1,
+        "neural pathway": 1,
+        "growth mindset": 1
+      }
+    },
+    {
+      "chunk_id": "b90938d1-1a18-458c-b8ca-d073118ec3d5",
+      "source_file": "mio-kb-07-neural-rewiring-protocols.md",
+      "chunk_number": 2,
+      "chunk_summary": "Protocol Category 1: Financial Freedom Rewiring",
+      "term_count": 49,
+      "unique_terms": 21,
+      "density": 0.5704971475142624,
+      "terms": {
+        "amygdala": 3,
+        "prefrontal cortex": 1,
+        "neural pathway": 2,
+        "rumination": 1,
+        "mindfulness": 1,
+        "working memory": 1,
+        "cognitive restructuring": 2,
+        "projection": 1,
+        "exposure therapy": 1,
+        "cbt": 1,
+        "emdr": 1,
+        "visualization": 4,
+        "vagal tone": 1,
+        "avoidance": 3,
+        "trigger": 5,
+        "overwhelm": 2,
+        "anxiety": 7,
+        "panic": 1,
+        "trauma": 7,
+        "ptsd": 1,
+        "parasympathetic nervous system": 1
+      }
+    },
+    {
+      "chunk_id": "f179d8a6-0138-4ac1-8eba-14d8f4f735c4",
+      "source_file": "daily_deductible_library.md",
+      "chunk_number": 40,
+      "chunk_summary": "Interoception Practice",
+      "term_count": 3,
+      "unique_terms": 2,
+      "density": 0.5357142857142857,
+      "terms": {
+        "insula": 1,
+        "interoception": 2
+      }
+    },
+    {
+      "chunk_id": "c5c5660b-6d96-4753-add9-9cd521ffa8ba",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 35,
+      "chunk_summary": "Motivation Collapse",
+      "term_count": 3,
+      "unique_terms": 1,
+      "density": 0.5208333333333334,
+      "terms": {
+        "rumination": 3
+      }
+    },
+    {
+      "chunk_id": "776135ba-cf47-4c30-8aef-cdd046c4b8b3",
+      "source_file": "mio-kb-01-core-framework.md",
+      "chunk_number": 5,
+      "chunk_summary": "Key Terminology",
+      "term_count": 5,
+      "unique_terms": 4,
+      "density": 0.5128205128205128,
+      "terms": {
+        "neural rewiring": 1,
+        "identity collision": 2,
+        "impostor syndrome": 1,
+        "trigger": 1
+      }
+    },
+    {
+      "chunk_id": "b083f19d-506a-4aed-8f84-ace31d72dc64",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 34,
+      "chunk_summary": "Motivation Collapse",
+      "term_count": 3,
+      "unique_terms": 3,
+      "density": 0.5093378607809848,
+      "terms": {
+        "neuroplasticity": 1,
+        "neural pathway": 1,
+        "growth mindset": 1
+      }
+    },
+    {
+      "chunk_id": "9d480c3f-63a2-4074-bdd1-6e966507e1a4",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 32,
+      "chunk_summary": "Motivation Collapse",
+      "term_count": 3,
+      "unique_terms": 3,
+      "density": 0.4769475357710652,
+      "terms": {
+        "amygdala": 1,
+        "trigger": 1,
+        "trauma": 1
+      }
+    },
+    {
+      "chunk_id": "1d78250f-3585-4a34-9974-58d7d36df451",
+      "source_file": "mio-kb-07-neural-rewiring-protocols.md",
+      "chunk_number": 3,
+      "chunk_summary": "Protocol Category 2: Action Activation Rewiring",
+      "term_count": 38,
+      "unique_terms": 20,
+      "density": 0.46500244738130203,
+      "terms": {
+        "amygdala": 1,
+        "prefrontal cortex": 4,
+        "limbic system": 2,
+        "dopamine": 1,
+        "adrenaline": 1,
+        "neural pathway": 1,
+        "rumination": 1,
+        "self-efficacy": 1,
+        "executive function": 2,
+        "reframing": 2,
+        "act": 3,
+        "visualization": 2,
+        "procrastination": 4,
+        "habit formation": 1,
+        "trigger": 4,
+        "reinforcement": 3,
+        "overwhelm": 1,
+        "guilt": 1,
+        "anxiety": 2,
+        "sympathetic nervous system": 1
+      }
+    },
+    {
+      "chunk_id": "84bb9420-d9b1-4ea9-9b75-8509ff75ada1",
+      "source_file": "mio-kb-07-neural-rewiring-protocols.md",
+      "chunk_number": 7,
+      "chunk_summary": "Protocol Delivery Guidelines For Mio",
+      "term_count": 8,
+      "unique_terms": 6,
+      "density": 0.4597701149425288,
+      "terms": {
+        "impostor syndrome": 1,
+        "rumination": 1,
+        "avoidance": 2,
+        "procrastination": 1,
+        "anxiety": 2,
+        "trauma": 1
+      }
+    },
+    {
+      "chunk_id": "5d4a799c-dfdb-4fe0-9ac6-e3a91c70a061",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 37,
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "term_count": 3,
+      "unique_terms": 2,
+      "density": 0.4594180704441041,
+      "terms": {
+        "insula": 1,
+        "interoception": 2
+      }
+    },
+    {
+      "chunk_id": "19527a9c-8f88-4a99-b5b4-b9d76fd77ce2",
+      "source_file": "mio-kb-03-protocol-library.md",
+      "chunk_number": 6,
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "term_count": 3,
+      "unique_terms": 3,
+      "density": 0.40705563093622793,
+      "terms": {
+        "neuroplasticity": 1,
+        "impostor syndrome": 1,
+        "growth mindset": 1
+      }
+    }
+  ]
+}

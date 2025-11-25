@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trophy, Sparkles, Heart, Star, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,11 +61,36 @@ export default function CelebrateWins() {
   const [futureSelfEvidence, setFutureSelfEvidence] = useState('');
   const [championshipGratitude, setChampionshipGratitude] = useState('');
   const [victoryCelebration, setVictoryCelebration] = useState('');
+  const [userTimezone, setUserTimezone] = useState('America/New_York');
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+
+  // Load user timezone on mount
+  useEffect(() => {
+    loadUserTimezone();
+  }, []);
+
+  async function loadUserTimezone() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.timezone) {
+        setUserTimezone(profile.timezone);
+      }
+    } catch (error) {
+      console.error('Error loading user timezone:', error);
+    }
+  }
 
   // Validate form
   const isFormValid = () => {
@@ -103,7 +128,9 @@ export default function CelebrateWins() {
       }
 
       const points = 2;
-      const practiceDate = new Date().toISOString().split('T')[0];
+      const practiceDate = new Date().toLocaleDateString('en-CA', {
+        timeZone: userTimezone
+      });
 
       // Check for existing practice today
       const { data: existingPractices, error: fetchError } = await supabase
@@ -159,7 +186,7 @@ export default function CelebrateWins() {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('total_points')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (profile) {

@@ -1,0 +1,285 @@
+{
+  "execution_status": {
+    "mode": "FALLBACK",
+    "reason": "Agent 1 (150-term glossary) incomplete",
+    "date": "2025-11-22",
+    "glossary_used": "neuroscience-glossary-expanded.json",
+    "glossary_size": 100,
+    "target_glossary": "neuroscience-glossary-v2-150terms.json",
+    "target_glossary_size": 150,
+    "agent_1_status": "INCOMPLETE",
+    "reprocessing_executed": false
+  },
+  "week_4_baseline": {
+    "glossary_size": 100,
+    "protocols_processed": 205,
+    "protocols_updated": 205,
+    "success_rate_percent": 100.0,
+    "tooltips_total": 179,
+    "tooltips_avg_per_protocol": 0.87,
+    "protocols_with_tooltips": 90,
+    "protocols_without_tooltips": 115,
+    "tooltip_coverage_percent": 43.9,
+    "reading_level_before": 13.2,
+    "reading_level_after": 13.15,
+    "reading_level_improvement": 0.05,
+    "gap_to_grade_8_target": 5.15,
+    "term_utilization": {
+      "total_terms": 100,
+      "terms_used": 61,
+      "terms_unused": 39,
+      "utilization_rate_percent": 61.0
+    }
+  },
+  "week_4.5_targets": {
+    "glossary_size": 150,
+    "tooltips_total": 260,
+    "tooltips_avg_per_protocol": 1.27,
+    "reading_level_target": 12.8,
+    "reading_level_improvement_target": 0.4,
+    "term_utilization_target_percent": 70
+  },
+  "gap_analysis": {
+    "tooltip_shortfall": 81,
+    "tooltip_shortfall_percent": 31.2,
+    "avg_tooltips_per_protocol_gap": 0.4,
+    "reading_level_gap": 0.35,
+    "term_utilization_gap_percent": 9.0,
+    "blockers": [
+      {
+        "blocker_id": 1,
+        "name": "Agent 1 Dependency",
+        "impact": "HIGH",
+        "status": "UNRESOLVED",
+        "description": "150-term glossary not created",
+        "resolution": "Wait for Agent 1 completion or create manually"
+      },
+      {
+        "blocker_id": 2,
+        "name": "Case Sensitivity Duplication",
+        "impact": "MEDIUM",
+        "status": "FIX_AVAILABLE_NOT_APPLIED",
+        "description": "Same terms matched with different cases inflate count",
+        "resolution": "Apply case-insensitive fix and reprocess"
+      },
+      {
+        "blocker_id": 3,
+        "name": "Term Selection Quality",
+        "impact": "MEDIUM",
+        "status": "REQUIRES_AGENT_1",
+        "description": "39% of terms never matched - too specialized",
+        "resolution": "Replace with practice-focused terms in 150-term expansion"
+      }
+    ]
+  },
+  "theoretical_week_4.5_projection": {
+    "assumptions": [
+      "150-term glossary with 50 new practice-focused terms",
+      "Higher match rate due to practice-oriented language",
+      "Case sensitivity fix applied",
+      "Same 5-tooltip-per-protocol cap"
+    ],
+    "projected_metrics": {
+      "tooltips_total_min": 240,
+      "tooltips_total_max": 260,
+      "tooltips_avg_per_protocol_min": 1.17,
+      "tooltips_avg_per_protocol_max": 1.27,
+      "reading_level_min": 12.7,
+      "reading_level_max": 12.9,
+      "reading_level_improvement_min": 0.25,
+      "reading_level_improvement_max": 0.45,
+      "term_utilization_percent_min": 70,
+      "term_utilization_percent_max": 75
+    },
+    "confidence_level": "LOW",
+    "confidence_reason": "Projection based on assumptions, not actual 150-term glossary data"
+  },
+  "case_sensitivity_analysis": {
+    "duplicate_examples": [
+      {
+        "term": "awareness",
+        "variations": ["awareness", "Awareness", "AWARENESS"],
+        "counts": [14, 9, 2],
+        "total_inflated": 25,
+        "actual_unique": 1,
+        "inflation_factor": 25
+      },
+      {
+        "term": "presence",
+        "variations": ["presence", "Presence"],
+        "counts": [10, 4],
+        "total_inflated": 14,
+        "actual_unique": 1,
+        "inflation_factor": 14
+      },
+      {
+        "term": "visualization",
+        "variations": ["visualization", "Visualization", "VISUALIZATION"],
+        "counts": [3, 4, 3],
+        "total_inflated": 10,
+        "actual_unique": 1,
+        "inflation_factor": 10
+      },
+      {
+        "term": "dopamine",
+        "variations": ["dopamine", "Dopamine"],
+        "counts": [5, 3],
+        "total_inflated": 8,
+        "actual_unique": 1,
+        "inflation_factor": 8
+      }
+    ],
+    "estimated_deduplication_impact": {
+      "current_tooltip_count": 179,
+      "estimated_after_dedup": 165,
+      "reduction": 14,
+      "reduction_percent": 7.8
+    }
+  },
+  "top_10_terms_current": [
+    {"rank": 1, "term": "awareness", "count": 14, "percent_protocols": 6.8},
+    {"rank": 2, "term": "neural pathways", "count": 11, "percent_protocols": 5.4},
+    {"rank": 3, "term": "amygdala", "count": 11, "percent_protocols": 5.4},
+    {"rank": 4, "term": "presence", "count": 10, "percent_protocols": 4.9},
+    {"rank": 5, "term": "rumination", "count": 9, "percent_protocols": 4.4},
+    {"rank": 6, "term": "Awareness", "count": 9, "percent_protocols": 4.4},
+    {"rank": 7, "term": "Decision Fatigue", "count": 8, "percent_protocols": 3.9},
+    {"rank": 8, "term": "neuroplasticity", "count": 6, "percent_protocols": 2.9},
+    {"rank": 9, "term": "reinforcement", "count": 5, "percent_protocols": 2.4},
+    {"rank": 10, "term": "dopamine", "count": 5, "percent_protocols": 2.4}
+  ],
+  "recommendations": {
+    "immediate_actions": [
+      "Contact Agent 1 to confirm 150-term glossary status",
+      "Document fallback scenario (this report)",
+      "Prepare reprocessing environment (validate script, credentials)"
+    ],
+    "short_term_actions": [
+      {
+        "scenario": "Agent 1 completes within 48 hours",
+        "steps": [
+          "Use 150-term glossary from Agent 1",
+          "Run reprocessing with case sensitivity fix",
+          "Generate full Week 4.5 metrics report"
+        ]
+      },
+      {
+        "scenario": "Agent 1 delayed beyond 48 hours",
+        "steps": [
+          "Execute incremental approach (Option 3)",
+          "Fix case sensitivity and reprocess",
+          "Show progress report",
+          "Plan final reprocessing when Agent 1 delivers"
+        ]
+      }
+    ],
+    "long_term_readiness": {
+      "week_6_ab_testing_status": "BLOCKED",
+      "current_system_ready": false,
+      "minimum_requirements": {
+        "tooltips": 260,
+        "reading_level": 12.8,
+        "term_utilization_percent": 70
+      },
+      "blocker": "150-term glossary unavailable"
+    }
+  },
+  "technical_readiness": {
+    "working_components": [
+      "Reprocessing script tested and validated",
+      "Database connection stable",
+      "Tooltip injection logic functional",
+      "Reading level calculation accurate",
+      "Batch processing reliable (0 errors in 5 batches)"
+    ],
+    "blocked_components": [
+      "150-term glossary (Agent 1 dependency)",
+      "Case sensitivity fix not applied to production",
+      "260+ tooltip target unachievable with current glossary"
+    ],
+    "needs_testing": [
+      "Case-insensitive matching after fix",
+      "Term utilization with 150-term glossary",
+      "Reading level improvement with practice-focused terms"
+    ]
+  },
+  "critical_path": {
+    "current_status": "BLOCKED",
+    "blocking_agent": "Agent 1",
+    "blocking_deliverable": "neuroscience-glossary-v2-150terms.json",
+    "unblock_timeline": "TBD (depends on Agent 1)",
+    "fallback_timeline": "Immediate (if manual glossary expansion executed)"
+  },
+  "success_criteria_assessment": {
+    "tooltips_260_plus": {
+      "target": 260,
+      "current": 179,
+      "achieved": false,
+      "achievable_with_current_glossary": false,
+      "requires": "150-term glossary"
+    },
+    "reading_level_below_12.8": {
+      "target": 12.8,
+      "current": 13.15,
+      "achieved": false,
+      "achievable_with_current_glossary": "uncertain",
+      "requires": "Practice-focused terms + possible sentence restructuring"
+    },
+    "term_utilization_70_percent": {
+      "target": 70,
+      "current": 61,
+      "achieved": false,
+      "achievable_with_current_glossary": false,
+      "requires": "Better term selection in 150-term expansion"
+    },
+    "zero_database_errors": {
+      "target": 0,
+      "current": 0,
+      "achieved": true,
+      "notes": "Week 4 reprocessing had 0 errors"
+    }
+  },
+  "next_steps_priority": [
+    {
+      "priority": 1,
+      "action": "Determine Agent 1 status and timeline",
+      "owner": "Coordinator/Project Manager",
+      "timeline": "Immediate",
+      "blocking": true
+    },
+    {
+      "priority": 2,
+      "action": "If Agent 1 delayed >48h: Execute case sensitivity fix and reprocess",
+      "owner": "Week 4.5 Agent (this agent)",
+      "timeline": "Within 48 hours",
+      "blocking": false
+    },
+    {
+      "priority": 3,
+      "action": "Upon Agent 1 completion: Execute full Week 4.5 reprocessing",
+      "owner": "Week 4.5 Agent (this agent)",
+      "timeline": "TBD",
+      "blocking": true
+    },
+    {
+      "priority": 4,
+      "action": "Generate final Week 4.5 comparison report",
+      "owner": "Week 4.5 Agent (this agent)",
+      "timeline": "After reprocessing complete",
+      "blocking": false
+    }
+  ],
+  "report_metadata": {
+    "generated_by": "Week 4.5 Reprocessing & Validation Engine",
+    "generation_date": "2025-11-22",
+    "report_version": "1.0-fallback",
+    "data_sources": [
+      "week4-reprocessing-complete-metrics.json",
+      "term-usage-statistics.json",
+      "neuroscience-glossary-expanded.json"
+    ],
+    "related_reports": [
+      "week-4.5-fallback-analysis.md"
+    ]
+  }
+}

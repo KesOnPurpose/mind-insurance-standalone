@@ -1,0 +1,29 @@
+[
+  {
+    "id": "test-1",
+    "source_file": "test.md",
+    "chunk_number": 1,
+    "chunk_summary": "Complex Neuroscience Protocol",
+    "chunk_text": "The practice activates the vagus nerve through vocalization, which shifts from fear to faith, creating a neurological state of trust and safety. The vibration of singing literally changes your physiological state by modulating the autonomic nervous system and engaging the parasympathetic response, thereby reducing cortisol levels and promoting homeostasis.",
+    "difficulty_level": "advanced",
+    "category": "neural-rewiring"
+  },
+  {
+    "id": "test-2",
+    "source_file": "test.md",
+    "chunk_number": 2,
+    "chunk_summary": "Moderate Complexity Protocol",
+    "chunk_text": "Meditation on vision creates coherence between mind and body. It generates the emotions of your future in the present. This literally begins to rewire neural pathways toward that reality. The practice leverages neuroplasticity to change your brain's default patterns.",
+    "difficulty_level": "intermediate",
+    "category": "traditional-foundation"
+  },
+  {
+    "id": "test-3",
+    "source_file": "test.md",
+    "chunk_number": 3,
+    "chunk_summary": "Simple Protocol (Minimal Technical Terms)",
+    "chunk_text": "This is a simple breathing practice. Sit comfortably and breathe deeply for 5 minutes. Focus on the sensation of air entering and leaving your body. Let your thoughts come and go without judgment. This practice helps you feel calm and centered.",
+    "difficulty_level": "beginner",
+    "category": "daily-deductible"
+  }
+]

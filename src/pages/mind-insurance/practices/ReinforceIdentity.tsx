@@ -29,6 +29,7 @@ import {
 import { PRACTICE_TYPES, POINTS_CONFIG, AUDIO_DURATIONS, TIME_WINDOWS } from '@/constants/protect';
 import type { DailyPractice } from '@/types/practices';
 import { useToast } from '@/hooks/use-toast';
+import { VoiceActivityIndicator } from '@/components/voice/VoiceActivityIndicator';
 
 export default function ReinforceIdentity() {
   const navigate = useNavigate();
@@ -40,6 +41,8 @@ export default function ReinforceIdentity() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [hasRecording, setHasRecording] = useState(false);
   const [currentRecordingId, setCurrentRecordingId] = useState<string | null>(null);
+  const [currentVolume, setCurrentVolume] = useState(0);
+  const [userTimezone, setUserTimezone] = useState('America/New_York');
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -69,6 +72,33 @@ export default function ReinforceIdentity() {
       }
     };
   }, []);
+
+  // Load user timezone on mount
+  useEffect(() => {
+    loadUserTimezone();
+  }, []);
+
+  /**
+   * Load user's timezone from profile
+   */
+  async function loadUserTimezone() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.timezone) {
+        setUserTimezone(profile.timezone);
+      }
+    } catch (error) {
+      console.error('Error loading user timezone:', error);
+    }
+  }
 
   /**
    * Load existing practice for today if it exists
@@ -100,7 +130,7 @@ export default function ReinforceIdentity() {
    * Check if practice is within time window
    */
   function checkTimeWindow(): boolean {
-    const isInWindow = isWithinTimeWindow(PRACTICE_TYPES.REINFORCE_IDENTITY);
+    const isInWindow = isWithinTimeWindow(PRACTICE_TYPES.REINFORCE_IDENTITY, userTimezone);
 
     if (!isInWindow) {
       const window = TIME_WINDOWS.CHAMPIONSHIP_SETUP;
@@ -137,6 +167,11 @@ export default function ReinforceIdentity() {
       setIsRecording(true);
       setHasRecording(false);
       setRecordingDuration(0);
+
+      // Set up volume monitoring callback
+      audioRecorderRef.current.setVolumeCallback((volume) => {
+        setCurrentVolume(volume);
+      });
 
       // Start duration counter
       recordingIntervalRef.current = setInterval(() => {
@@ -249,7 +284,7 @@ export default function ReinforceIdentity() {
 
       // Get today's date in user's timezone
       const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: 'America/Los_Angeles'
+        timeZone: userTimezone
       });
 
       // Create or update practice
@@ -353,19 +388,21 @@ export default function ReinforceIdentity() {
             <CardContent className="space-y-4">
               {/* Recording Button */}
               <div className="flex flex-col items-center space-y-4">
-                <Button
-                  size="lg"
-                  variant={isRecording ? 'destructive' : 'default'}
-                  className="w-32 h-32 rounded-full"
-                  onClick={isRecording ? stopRecording : startRecording}
-                  disabled={loading}
-                >
-                  {isRecording ? (
-                    <MicOff className="h-12 w-12" />
-                  ) : (
-                    <Mic className="h-12 w-12" />
-                  )}
-                </Button>
+                <VoiceActivityIndicator isRecording={isRecording} volume={currentVolume}>
+                  <Button
+                    size="lg"
+                    variant={isRecording ? 'destructive' : 'default'}
+                    className="w-32 h-32 rounded-full"
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={loading}
+                  >
+                    {isRecording ? (
+                      <MicOff className="h-12 w-12" />
+                    ) : (
+                      <Mic className="h-12 w-12" />
+                    )}
+                  </Button>
+                </VoiceActivityIndicator>
 
                 {/* Recording Status */}
                 {isRecording && (

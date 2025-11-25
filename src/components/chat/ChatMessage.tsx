@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { COACHES, CoachType } from "@/types/coach";
 import ReactMarkdown from "react-markdown";
+import { GlossaryTooltip } from "@/components/protocol/GlossaryTooltip";
+import { useMemo, useCallback } from "react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -13,6 +15,54 @@ interface ChatMessageProps {
 const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMessageProps) => {
   const coach = COACHES[coachType];
   const isUser = role === "user";
+
+  // Extract glossary terms from the content for analytics
+  const extractedTerms = useMemo(() => {
+    if (isUser) return [];
+    const regex = /\{\{([^|]+)\|\|[^}]+\}\}/g;
+    const terms: string[] = [];
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      terms.push(match[1]);
+    }
+    return terms;
+  }, [content, isUser]);
+
+  // Handle tooltip interactions for analytics
+  const handleTooltipInteraction = useCallback((term: string, action: 'hover' | 'click') => {
+    console.log('[Tooltip]', action, term);
+    // Optional: Add analytics tracking here
+    // Example: track('tooltip_interaction', { term, action, coach: coachType });
+  }, [coachType]);
+
+  // Check if content contains glossary markup
+  const hasGlossaryMarkup = useMemo(() => {
+    return /\{\{[^|]+\|\|[^}]+\}\}/.test(content);
+  }, [content]);
+
+  // Render content with or without glossary tooltips
+  const renderContent = () => {
+    // For user messages or assistant messages without glossary markup, use ReactMarkdown
+    if (isUser || !hasGlossaryMarkup) {
+      return (
+        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
+      );
+    }
+
+    // For assistant messages with glossary markup, use GlossaryTooltip
+    // Note: GlossaryTooltip handles the raw text, so we pass the content directly
+    return (
+      <div className="text-sm leading-relaxed">
+        <GlossaryTooltip
+          text={content}
+          glossaryTerms={extractedTerms}
+          onTooltipInteraction={handleTooltipInteraction}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
@@ -38,9 +88,7 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
             <span className="text-xs text-muted-foreground">• {coach.title}</span>
           </div>
         )}
-        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
-          <ReactMarkdown>{content}</ReactMarkdown>
-        </div>
+        {renderContent()}
         <span
           className={`text-xs mt-2 block ${
             isUser ? "text-primary-foreground/70" : "text-muted-foreground"

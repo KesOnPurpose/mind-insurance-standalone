@@ -1,0 +1,54 @@
+[
+  {
+    "id": "test-1",
+    "source_file": "test.md",
+    "chunk_number": 1,
+    "chunk_summary": "Complex Neuroscience Protocol",
+    "chunk_text": "The practice activates the vagus nerve through vocalization, which shifts from fear to faith, creating a neurological state of trust and safety. The vibration of singing literally changes your physiological state by modulating the autonomic nervous system and engaging the parasympathetic response, thereby reducing cortisol levels and promoting homeostasis.",
+    "difficulty_level": "advanced",
+    "category": "neural-rewiring",
+    "simplified_text": "The practice activates the {{vagus nerve||your body's built-in relaxation system}} through vocalization, which shifts from fear to faith, creating a neurological state of trust and safety. The vibration of singing literally changes your physiological state by modulating the {{autonomic nervous system||your automatic body control system}} and engaging the {{parasympathetic response||your body's relaxation mode}}, thereby reducing {{cortisol||stress hormone}} levels and promoting {{homeostasis||your body's natural balance}}.",
+    "glossary_terms": {
+      "homeostasis": "your body's natural balance",
+      "cortisol": "stress hormone",
+      "parasympathetic response": "your body's relaxation mode",
+      "autonomic nervous system": "your automatic body control system",
+      "vagus nerve": "your body's built-in relaxation system"
+    },
+    "reading_level_before": 0.0,
+    "reading_level_after": 0.0,
+    "language_variant": "clinical"
+  },
+  {
+    "id": "test-2",
+    "source_file": "test.md",
+    "chunk_number": 2,
+    "chunk_summary": "Moderate Complexity Protocol",
+    "chunk_text": "Meditation on vision creates coherence between mind and body. It generates the emotions of your future in the present. This literally begins to rewire neural pathways toward that reality. The practice leverages neuroplasticity to change your brain's default patterns.",
+    "difficulty_level": "intermediate",
+    "category": "traditional-foundation",
+    "simplified_text": "Meditation on vision creates {{coherence||alignment between your thoughts and emotions}} between mind and body. It generates the emotions of your future in the present. This literally begins to rewire {{neural pathways||thinking patterns in your brain}} toward that reality. The practice leverages {{neuroplasticity||your brain's ability to change and adapt}} to change your brain's default patterns.",
+    "glossary_terms": {
+      "neuroplasticity": "your brain's ability to change and adapt",
+      "neural pathways": "thinking patterns in your brain",
+      "coherence": "alignment between your thoughts and emotions"
+    },
+    "reading_level_before": 0.0,
+    "reading_level_after": 0.0,
+    "language_variant": "clinical"
+  },
+  {
+    "id": "test-3",
+    "source_file": "test.md",
+    "chunk_number": 3,
+    "chunk_summary": "Simple Protocol (Minimal Technical Terms)",
+    "chunk_text": "This is a simple breathing practice. Sit comfortably and breathe deeply for 5 minutes. Focus on the sensation of air entering and leaving your body. Let your thoughts come and go without judgment. This practice helps you feel calm and centered.",
+    "difficulty_level": "beginner",
+    "category": "daily-deductible",
+    "simplified_text": "This is a simple breathing practice. Sit comfortably and breathe deeply for 5 minutes. Focus on the sensation of air entering and leaving your body. Let your thoughts come and go without judgment. This practice helps you feel calm and centered.",
+    "glossary_terms": {},
+    "reading_level_before": 0.0,
+    "reading_level_after": 0.0,
+    "language_variant": "clinical"
+  }
+]

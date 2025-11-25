@@ -1,0 +1,121 @@
+Traceback (most recent call last):
+  File "/Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Grouphome App LOVABLE/mindhouse-prodigy/glossary-extraction/execute-week-4-agent-2.py", line 455, in main
+    results['task_3'] = task_3_verification()
+  File "/Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Grouphome App LOVABLE/mindhouse-prodigy/glossary-extraction/execute-week-4-agent-2.py", line 360, in task_3_verification
+    response = supabase.table('mio_knowledge_chunks') \
+TypeError: 'SyncSelectRequestBuilder' object is not callable
+Warning: validation_framework.py not found. Readability validation disabled.
+
+================================================================================
+WEEK 4 AGENT 2: PROTOCOL UPDATE EXECUTION
+================================================================================
+
+Mission: Execute tooltip injection and simplified language update
+         for all 205 protocols.
+
+Tasks:
+  1. Dry-Run Update (5 sample protocols)
+  2. Production Update Execution (all 205 protocols)
+  3. Update Verification (completion verification)
+
+================================================================================
+
+================================================================================
+TASK 1: DRY-RUN UPDATE (5 SAMPLE PROTOCOLS)
+================================================================================
+
+Loading glossary...
+✓ Loaded 100 terms from glossary
+
+Fetching 5 sample protocols from database...
+✓ Retrieved 5 sample protocols
+
+Processing sample 1/5: Meditation (Goal/Vision Focused)...
+  ✓ Terms found: 1
+  ✓ Tooltips injected: 1
+  ✓ Validation: valid
+  ✓ Reading level: 16.5 → 14.4
+
+Processing sample 2/5: Journal Writing...
+  ✓ Terms found: 1
+  ✓ Tooltips injected: 1
+  ✓ Validation: valid
+  ✓ Reading level: 12.6 → 11.8
+
+Processing sample 3/5: Visualization Practice...
+  ✓ Terms found: 5
+  ✓ Tooltips injected: 3
+  ✓ Validation: valid
+  ✓ Reading level: 14.1 → 15.1
+
+Processing sample 4/5: Learning Practice...
+  ✓ Terms found: 1
+  ✓ Tooltips injected: 1
+  ✓ Validation: valid
+  ✓ Reading level: 16.2 → 14.9
+
+Processing sample 5/5: Neuroscience Translation Framework...
+  ✓ Terms found: 9
+  ✓ Tooltips injected: 5
+  ✓ Validation: valid
+  ✓ Reading level: 9.5 → 8.5
+
+✓ Dry-run results saved to: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Grouphome App LOVABLE/mindhouse-prodigy/glossary-extraction/dry-run-results.json
+
+DRY-RUN SUMMARY:
+  Total Samples: 5
+  Total Tooltips Injected: 11
+  Avg Tooltips/Protocol: 2.20
+  Valid: 5
+  Errors: 0
+  Avg Reading Level Before: 13.79
+  Avg Reading Level After: 12.94
+  Avg Improvement: 0.85 grade levels
+
+✅ Task 1 COMPLETE: Dry-run validation successful
+
+================================================================================
+TASK 2: PRODUCTION UPDATE EXECUTION (ALL 205 PROTOCOLS)
+================================================================================
+
+Loading glossary...
+✓ Loaded 100 terms from glossary
+
+Fetching all protocols from database...
+✓ Retrieved 205 protocols
+
+Processing batch 1 (50 protocols)...
+  ✓ Batch 1: 50 updated, 0 errors
+
+Processing batch 2 (50 protocols)...
+  ✓ Batch 2: 50 updated, 0 errors
+
+Processing batch 3 (50 protocols)...
+  ✓ Batch 3: 50 updated, 0 errors
+
+Processing batch 4 (50 protocols)...
+  ✓ Batch 4: 50 updated, 0 errors
+
+Processing batch 5 (5 protocols)...
+  ✓ Batch 5: 5 updated, 0 errors
+
+✓ Execution log saved to: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Grouphome App LOVABLE/mindhouse-prodigy/glossary-extraction/update-execution-log.json
+
+PRODUCTION UPDATE SUMMARY:
+  Total Protocols: 205
+  Successfully Updated: 205
+  Errors: 0
+  Success Rate: 100.0%
+  Avg Tooltips/Protocol: 0.87
+  Avg Reading Level Before: 13.20
+  Avg Reading Level After: 13.15
+  Avg Improvement: 0.05 grade levels
+
+✅ Task 2 COMPLETE: Production update executed
+
+================================================================================
+TASK 3: UPDATE VERIFICATION
+================================================================================
+
+Verifying update completion...
+❌ Task 3 FAILED: 'SyncSelectRequestBuilder' object is not callable

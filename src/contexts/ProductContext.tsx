@@ -45,7 +45,7 @@ const productConfig: Record<ProductType, ProductConfig> = {
     bgGradient: 'from-purple-600/10 to-purple-600/5',
     borderColor: 'border-purple-600/30',
     available: true,
-    route: '/protect',
+    route: '/mind-insurance',
   },
   'me-wealth': {
     id: 'me-wealth',

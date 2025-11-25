@@ -1,0 +1,20 @@
+{
+  "original_count": 40,
+  "new_count": 60,
+  "total_count": 100,
+  "expansion_percentage": 150.0,
+  "average_reading_level": 6.09,
+  "categories": {
+    "meditation_mindfulness": 15,
+    "emotional_regulation": 20,
+    "brain_structures": 5,
+    "cognitive_processes": 13,
+    "behavioral_patterns": 10,
+    "neurochemicals": 5,
+    "addiction_reward": 5,
+    "trauma_stress": 5,
+    "behavioral_psychology": 5,
+    "visualization_imagery": 12,
+    "neural_processes": 5
+  }
+}

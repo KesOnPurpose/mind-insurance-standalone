@@ -1,0 +1,452 @@
+{
+  "week_5_status": "READY_AFTER_WEEK_4_MIGRATION",
+  "overall_readiness": "60%",
+  "last_updated": "2025-11-22",
+
+  "prerequisites": {
+    "week_4_completion": {
+      "status": "BLOCKED",
+      "blocker": "Database migration required",
+      "required_before_week_5": true,
+      "items": [
+        {
+          "item": "Database schema migrated (5 new columns)",
+          "status": "PENDING",
+          "blocking": true
+        },
+        {
+          "item": "205 protocols updated with simplified_text",
+          "status": "PENDING",
+          "blocking": true
+        },
+        {
+          "item": "Baseline metrics documented",
+          "status": "COMPLETE",
+          "blocking": false
+        },
+        {
+          "item": "Reading level improvements calculated",
+          "status": "PENDING",
+          "blocking": true
+        }
+      ]
+    }
+  },
+
+  "ab_test_readiness": {
+    "data_infrastructure": {
+      "status": "READY_AFTER_MIGRATION",
+      "items": [
+        {
+          "item": "Simplified variants available",
+          "status": "PENDING",
+          "required_action": "Complete Week 4 migration and updates"
+        },
+        {
+          "item": "Clinical variants available",
+          "status": "COMPLETE",
+          "notes": "Original chunk_text already exists"
+        },
+        {
+          "item": "Baseline metrics documented",
+          "status": "COMPLETE",
+          "file": "baseline-reading-levels.json"
+        },
+        {
+          "item": "Reading level calculations",
+          "status": "PENDING",
+          "required_action": "Run execute-week-4-agent-2.py after migration"
+        },
+        {
+          "item": "Glossary terms mapping",
+          "status": "READY",
+          "file": "neuroscience-glossary.json"
+        }
+      ]
+    },
+
+    "frontend_requirements": {
+      "status": "NOT_STARTED",
+      "priority": "HIGH",
+      "items": [
+        {
+          "item": "Language variant toggle component",
+          "status": "NOT_STARTED",
+          "estimated_time": "4 hours",
+          "description": "User preference toggle: Clinical vs. Simplified",
+          "file_to_create": "src/components/LanguageToggle.tsx"
+        },
+        {
+          "item": "Tooltip parser component",
+          "status": "NOT_STARTED",
+          "estimated_time": "3 hours",
+          "description": "Parse {{term||definition}} format and render tooltips",
+          "file_to_create": "src/components/GlossaryTooltip.tsx"
+        },
+        {
+          "item": "Protocol display component updates",
+          "status": "NOT_STARTED",
+          "estimated_time": "2 hours",
+          "description": "Integrate simplified_text display with tooltips",
+          "files_to_modify": [
+            "src/components/ProtocolDisplay.tsx",
+            "src/components/ProtocolCard.tsx"
+          ]
+        },
+        {
+          "item": "User preference storage",
+          "status": "NOT_STARTED",
+          "estimated_time": "1 hour",
+          "description": "Store language variant preference in user profile",
+          "table": "user_profiles",
+          "column_to_add": "preferred_language_variant VARCHAR(20) DEFAULT 'simplified'"
+        }
+      ]
+    },
+
+    "analytics_tracking": {
+      "status": "NOT_STARTED",
+      "priority": "HIGH",
+      "items": [
+        {
+          "item": "Analytics event schema",
+          "status": "NOT_STARTED",
+          "events_to_track": [
+            "protocol_viewed",
+            "tooltip_hovered",
+            "tooltip_clicked",
+            "language_toggled",
+            "protocol_completed",
+            "protocol_abandoned"
+          ]
+        },
+        {
+          "item": "Comprehension score tracking",
+          "status": "NOT_STARTED",
+          "description": "Track user understanding via post-protocol quiz or feedback",
+          "estimated_time": "6 hours"
+        },
+        {
+          "item": "Time-to-understand metric",
+          "status": "NOT_STARTED",
+          "description": "Measure time from protocol open to completion",
+          "estimated_time": "2 hours"
+        },
+        {
+          "item": "Engagement metrics",
+          "status": "NOT_STARTED",
+          "metrics": [
+            "protocol_completion_rate",
+            "time_on_protocol",
+            "tooltip_interaction_rate",
+            "return_rate"
+          ]
+        }
+      ]
+    },
+
+    "cohort_definition": {
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "items": [
+        {
+          "item": "Cohort size determination",
+          "status": "NOT_STARTED",
+          "recommendation": "50 users per variant (100 total)",
+          "rationale": "Sufficient for statistical significance with 80% power"
+        },
+        {
+          "item": "Randomization logic",
+          "status": "NOT_STARTED",
+          "description": "Assign new users randomly to Variant A or B",
+          "implementation": "Hash user ID modulo 2"
+        },
+        {
+          "item": "Exclusion criteria",
+          "status": "NOT_STARTED",
+          "exclusions": [
+            "Existing users (baseline contamination)",
+            "Users who manually toggle (preference override)",
+            "Test accounts"
+          ]
+        },
+        {
+          "item": "Test duration",
+          "status": "NOT_STARTED",
+          "recommendation": "4-6 weeks",
+          "rationale": "Capture multiple protocol cycles and usage patterns"
+        }
+      ]
+    }
+  },
+
+  "technical_tasks": {
+    "week_5_development": [
+      {
+        "task": "Create GlossaryTooltip React component",
+        "priority": "P0",
+        "estimated_time": "3 hours",
+        "dependencies": [],
+        "acceptance_criteria": [
+          "Parses {{term||definition}} format",
+          "Renders interactive tooltips on hover/click",
+          "Mobile-friendly (tap to show)",
+          "Accessible (keyboard nav, screen reader support)",
+          "Styled with ShadCN UI"
+        ]
+      },
+      {
+        "task": "Create LanguageToggle component",
+        "priority": "P0",
+        "estimated_time": "4 hours",
+        "dependencies": [],
+        "acceptance_criteria": [
+          "Toggle between Clinical and Simplified",
+          "Saves preference to user profile",
+          "Persists across sessions",
+          "Updates protocol display in real-time",
+          "Mobile-responsive"
+        ]
+      },
+      {
+        "task": "Update protocol fetching logic",
+        "priority": "P0",
+        "estimated_time": "2 hours",
+        "dependencies": ["Week 4 migration complete"],
+        "acceptance_criteria": [
+          "Fetch simplified_text when variant = 'simplified'",
+          "Fetch chunk_text when variant = 'clinical'",
+          "Include glossary_terms in response",
+          "Handle missing simplified_text gracefully"
+        ]
+      },
+      {
+        "task": "Implement analytics tracking",
+        "priority": "P1",
+        "estimated_time": "6 hours",
+        "dependencies": ["Analytics schema defined"],
+        "acceptance_criteria": [
+          "Track all A/B test events",
+          "Store in analytics table",
+          "Include user cohort assignment",
+          "Performance impact < 50ms"
+        ]
+      },
+      {
+        "task": "Add user preference column to database",
+        "priority": "P0",
+        "estimated_time": "30 minutes",
+        "sql": "ALTER TABLE user_profiles ADD COLUMN preferred_language_variant VARCHAR(20) DEFAULT 'simplified';",
+        "acceptance_criteria": [
+          "Column added to user_profiles",
+          "Default value set correctly",
+          "RLS policies updated"
+        ]
+      },
+      {
+        "task": "Create A/B test cohort assignment logic",
+        "priority": "P1",
+        "estimated_time": "3 hours",
+        "dependencies": [],
+        "acceptance_criteria": [
+          "New users randomly assigned to Variant A or B",
+          "Assignment persisted in database",
+          "Assignment immutable after creation",
+          "Exclusion criteria enforced"
+        ]
+      }
+    ],
+
+    "testing_requirements": [
+      {
+        "test": "Tooltip rendering cross-browser",
+        "browsers": ["Chrome", "Safari", "Firefox", "Edge"],
+        "devices": ["Desktop", "Tablet", "Mobile"]
+      },
+      {
+        "test": "Language toggle functionality",
+        "scenarios": [
+          "Toggle updates display immediately",
+          "Preference persists across sessions",
+          "Works with browser back/forward",
+          "Handles network errors gracefully"
+        ]
+      },
+      {
+        "test": "Performance testing",
+        "metrics": [
+          "Tooltip render time < 100ms",
+          "Protocol fetch time < 1s",
+          "Analytics event fire time < 50ms",
+          "No memory leaks with tooltip interactions"
+        ]
+      },
+      {
+        "test": "Accessibility testing",
+        "requirements": [
+          "WCAG AA compliant",
+          "Keyboard navigation works",
+          "Screen reader announces tooltips",
+          "Focus management correct"
+        ]
+      }
+    ]
+  },
+
+  "metrics_to_track": {
+    "primary_metrics": [
+      {
+        "metric": "Protocol completion rate",
+        "definition": "Percentage of protocols started that are completed",
+        "hypothesis": "Simplified variant will have higher completion rate",
+        "target_improvement": "+15%"
+      },
+      {
+        "metric": "Comprehension score",
+        "definition": "User-reported understanding or quiz score",
+        "hypothesis": "Simplified variant will have higher comprehension",
+        "target_improvement": "+20%"
+      },
+      {
+        "metric": "Time to understand",
+        "definition": "Time from protocol open to completion",
+        "hypothesis": "Simplified variant will reduce time",
+        "target_improvement": "-25%"
+      }
+    ],
+    "secondary_metrics": [
+      {
+        "metric": "Tooltip interaction rate",
+        "definition": "Percentage of users who interact with tooltips",
+        "target": ">60%"
+      },
+      {
+        "metric": "User satisfaction",
+        "definition": "Post-protocol rating (1-5 scale)",
+        "target_improvement": "+0.5 points"
+      },
+      {
+        "metric": "Return rate",
+        "definition": "Percentage of users who return after first protocol",
+        "target_improvement": "+10%"
+      }
+    ],
+    "guardrail_metrics": [
+      {
+        "metric": "Protocol abandonment rate",
+        "definition": "Percentage who abandon mid-protocol",
+        "acceptable_range": "<20%"
+      },
+      {
+        "metric": "Technical errors",
+        "definition": "Tooltip parsing or rendering errors",
+        "acceptable_range": "<1%"
+      }
+    ]
+  },
+
+  "rollout_strategy": {
+    "phase_1": {
+      "name": "Internal testing",
+      "duration": "1 week",
+      "participants": "Team members only",
+      "goal": "Validate functionality and collect initial feedback"
+    },
+    "phase_2": {
+      "name": "Beta test",
+      "duration": "2 weeks",
+      "participants": "50 beta users (25 per variant)",
+      "goal": "Collect preliminary metrics and identify issues"
+    },
+    "phase_3": {
+      "name": "Full A/B test",
+      "duration": "4-6 weeks",
+      "participants": "All new users (50% per variant)",
+      "goal": "Achieve statistical significance and make decision"
+    },
+    "phase_4": {
+      "name": "Rollout decision",
+      "criteria": [
+        "Primary metrics show ≥15% improvement",
+        "No degradation in guardrail metrics",
+        "User satisfaction positive",
+        "Technical performance acceptable"
+      ],
+      "options": [
+        "Full rollout (if metrics positive)",
+        "Rollback (if metrics negative)",
+        "Hybrid approach (user choice)"
+      ]
+    }
+  },
+
+  "risk_assessment": {
+    "technical_risks": [
+      {
+        "risk": "Tooltip parsing errors",
+        "likelihood": "MEDIUM",
+        "impact": "HIGH",
+        "mitigation": "Comprehensive validation in Week 4, fallback to original text"
+      },
+      {
+        "risk": "Performance degradation",
+        "likelihood": "LOW",
+        "impact": "MEDIUM",
+        "mitigation": "Performance testing, caching, lazy loading"
+      },
+      {
+        "risk": "Database migration issues",
+        "likelihood": "LOW",
+        "impact": "HIGH",
+        "mitigation": "IF NOT EXISTS clauses, rollback plan, testing in staging"
+      }
+    ],
+    "product_risks": [
+      {
+        "risk": "Users prefer clinical language",
+        "likelihood": "MEDIUM",
+        "impact": "HIGH",
+        "mitigation": "Provide toggle, measure preference distribution"
+      },
+      {
+        "risk": "Tooltips are distracting",
+        "likelihood": "LOW",
+        "impact": "MEDIUM",
+        "mitigation": "Limit to 5 per protocol, user testing, toggle option"
+      },
+      {
+        "risk": "Insufficient improvement in metrics",
+        "likelihood": "MEDIUM",
+        "impact": "HIGH",
+        "mitigation": "Multi-phase simplification (Week 6: sentence restructuring)"
+      }
+    ]
+  },
+
+  "success_criteria": {
+    "week_5_complete": [
+      "Frontend components built and tested",
+      "Analytics tracking implemented",
+      "A/B test infrastructure ready",
+      "Internal testing complete",
+      "Beta test launched"
+    ],
+    "ab_test_success": [
+      "≥15% improvement in primary metrics",
+      "Statistical significance achieved (p < 0.05)",
+      "No degradation in guardrails",
+      "Positive user feedback",
+      "Technical performance acceptable"
+    ]
+  },
+
+  "estimated_timeline": {
+    "week_4_completion": "5 min migration + 30 min execution = 35 min",
+    "week_5_development": "20-25 hours (frontend + analytics)",
+    "week_5_testing": "5-8 hours (cross-browser, accessibility)",
+    "beta_test": "2 weeks",
+    "full_ab_test": "4-6 weeks",
+    "analysis_and_decision": "1 week",
+    "total_to_rollout_decision": "8-10 weeks from now"
+  }
+}

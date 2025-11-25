@@ -29,7 +29,6 @@ import { BusinessProfile } from '@/types/assessment';
 import { toast } from 'sonner';
 import { UpdateStrategyModal } from '@/components/modals/UpdateStrategyModal';
 import { SkipAssessmentModal } from '@/components/modals/SkipAssessmentModal';
-import { FirstTacticOverlay } from '@/components/onboarding/FirstTacticOverlay';
 import { formatCostRange } from '@/services/tacticFilterService';
 import { CATEGORY_HIERARCHY, getCategoryIcon, isParentCategory, isSubcategory, getParentCategory } from '@/config/categoryHierarchy';
 import { PersonalizationBadge } from '@/components/PersonalizationBadge';
@@ -48,7 +47,6 @@ export default function RoadmapPage() {
   const [showJourneyMap, setShowJourneyMap] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showSkipAssessmentModal, setShowSkipAssessmentModal] = useState(false);
-  const [showFirstTacticOverlay, setShowFirstTacticOverlay] = useState(false);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const [onboardingData, setOnboardingData] = useState<any>(null);
   const tacticRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -80,11 +78,6 @@ export default function RoadmapPage() {
       .single();
     setBusinessProfile(data);
     setOnboardingData(data);
-
-    // Show first tactic overlay if this is first roadmap visit
-    if (data && !data.roadmap_first_visit && hasAssessment) {
-      setShowFirstTacticOverlay(true);
-    }
   };
 
   useEffect(() => {
@@ -1078,17 +1071,6 @@ export default function RoadmapPage() {
             queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
           }}
           userId={user.id}
-        />
-      )}
-
-      {/* First Tactic Overlay */}
-      {user?.id && assessment && (
-        <FirstTacticOverlay
-          isOpen={showFirstTacticOverlay}
-          onClose={() => setShowFirstTacticOverlay(false)}
-          userId={user.id}
-          startingWeek={startingWeek || 1}
-          readinessLevel={assessment.readiness_level || 'foundation_building'}
         />
       )}
     </div>

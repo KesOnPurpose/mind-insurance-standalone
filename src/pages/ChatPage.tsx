@@ -64,6 +64,23 @@ const ChatPage = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load conversation ID from localStorage on mount
+  useEffect(() => {
+    const storedConversationId = localStorage.getItem('mio_conversation_id');
+    if (storedConversationId) {
+      setConversationId(storedConversationId);
+      console.log('[Conversation] Restored conversation:', storedConversationId);
+    }
+  }, []);
+
+  // Save conversation ID to localStorage when it changes
+  useEffect(() => {
+    if (conversationId) {
+      localStorage.setItem('mio_conversation_id', conversationId);
+      console.log('[Conversation] Saved conversation:', conversationId);
+    }
+  }, [conversationId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -88,16 +105,23 @@ const ChatPage = () => {
   const handleCoachChange = (coach: CoachType, isHandoff: boolean = false) => {
     const previousCoach = selectedCoach;
     setSelectedCoach(coach);
-    
+
+    // Reset conversation when switching coaches
+    if (!isHandoff) {
+      setConversationId(null);
+      localStorage.removeItem('mio_conversation_id');
+      console.log('[Conversation] Reset - coach changed');
+    }
+
     // Build warm introduction with context
     let greetingContent = `Hi! I'm ${COACHES[coach].name}, your ${COACHES[coach].title}.`;
-    
+
     if (isHandoff && previousCoach !== coach) {
       greetingContent += ` I've reviewed your conversation with ${COACHES[previousCoach].name}. `;
     }
-    
+
     greetingContent += ` ${COACHES[coach].description} How can I help you today?`;
-    
+
     const greetingMessage: Message = {
       id: Date.now().toString(),
       role: "assistant",
@@ -105,7 +129,7 @@ const ChatPage = () => {
       timestamp: new Date(),
       coachType: coach
     };
-    
+
     setMessages((prev) => [...prev, greetingMessage]);
     setHandoffSuggestion(null);
   };
@@ -123,6 +147,14 @@ const ChatPage = () => {
   const handleSend = async () => {
     if (!input.trim() || !user) return;
 
+    // Generate conversation ID on first message
+    let currentConversationId = conversationId;
+    if (!currentConversationId) {
+      currentConversationId = crypto.randomUUID();
+      setConversationId(currentConversationId);
+      console.log('[Conversation] Started new conversation:', currentConversationId);
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -137,23 +169,30 @@ const ChatPage = () => {
     setIsTyping(true);
 
     try {
-      // Call multi-agent chat edge function with streaming
-      const CHAT_URL = `https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/mio-chat`;
+      // Call Railway MIO FastAPI backend with streaming
+      const API_URL = import.meta.env.VITE_API_URL || 'https://mio-fastapi-production-production.up.railway.app';
+      const CHAT_URL = `${API_URL}/api/chat`;
+
+      console.log('[MIO Chat] Calling Railway backend:', CHAT_URL);
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs`,
         },
         body: JSON.stringify({
           user_id: user.id,
           message: messageText,
           current_agent: selectedCoach,
-          conversation_id: conversationId,
+          conversation_id: currentConversationId, // Use generated ID
         }),
       });
 
+      console.log('[MIO Chat] Response status:', response.status);
+      console.log('[MIO Chat] Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        console.error('[MIO Chat] Error response:', response.status, response.statusText);
         if (response.status === 429) {
           toast({
             title: "Rate Limit Exceeded",
@@ -190,17 +229,61 @@ const ChatPage = () => {
       };
       setMessages((prev) => [...prev, initialAiMessage]);
 
-      // Stream response with proper SSE parsing
+      // Helper function to check if JSON is complete
+      const isCompleteJson = (str: string): boolean => {
+        let depth = 0;
+        let inString = false;
+        let escape = false;
+
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+
+          if (escape) {
+            escape = false;
+            continue;
+          }
+
+          if (char === '\\') {
+            escape = true;
+            continue;
+          }
+
+          if (char === '"' && !escape) {
+            inString = !inString;
+            continue;
+          }
+
+          if (inString) continue;
+
+          if (char === '{' || char === '[') depth++;
+          if (char === '}' || char === ']') depth--;
+        }
+
+        return depth === 0 && !inString;
+      };
+
+      // Stream response with robust SSE parsing and buffering
       if (reader) {
+        console.log('[MIO Chat] Starting SSE stream read with enhanced buffering...');
         let textBuffer = '';
+        let incompleteDataLine = ''; // Buffer for incomplete data: lines
         let streamDone = false;
         let metadataReceived = false;
+        let chunkCount = 0;
+        let bufferHits = 0;
+        let parseErrors = 0;
 
         while (!streamDone) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log('[MIO Chat] Stream done, total chunks:', chunkCount);
+            break;
+          }
 
-          textBuffer += decoder.decode(value, { stream: true });
+          chunkCount++;
+          const chunk = decoder.decode(value, { stream: true });
+          console.log('[MIO Chat] Chunk #' + chunkCount + ':', chunk.substring(0, 200));
+          textBuffer += chunk;
 
           // Process line-by-line as data arrives
           let newlineIndex: number;
@@ -210,51 +293,148 @@ const ChatPage = () => {
 
             if (line.endsWith("\r")) line = line.slice(0, -1); // handle CRLF
             if (line.startsWith(":") || line.trim() === "") continue; // SSE comments/keepalive
-            if (!line.startsWith("data: ")) continue;
 
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") {
-              streamDone = true;
-              break;
+            // Check if we have a buffered incomplete data line
+            if (incompleteDataLine) {
+              line = incompleteDataLine + line;
+              incompleteDataLine = '';
             }
 
-            try {
-              const parsed = JSON.parse(jsonStr);
-              
-              // Check for handoff suggestion metadata
-              if (parsed.type === 'handoff') {
-                setHandoffSuggestion({
-                  suggestedAgent: parsed.suggestedAgent,
-                  reason: `This question might be better answered by ${parsed.suggestedAgent === 'nette' ? 'Nette' : parsed.suggestedAgent === 'mio' ? 'MIO' : 'ME'}`,
-                  confidence: parsed.confidence,
-                  detectedKeywords: [],
-                  method: parsed.method
-                });
-                metadataReceived = true;
-                continue;
-              }
-              
-              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-              if (content) {
-                aiContent += content;
-                setMessages((prev) => 
+            if (!line.startsWith("data: ")) {
+              // This could be part of multi-line content from the previous data chunk
+              // The backend sometimes sends content with newlines that break SSE format
+              // We should append this as part of the content with a newline
+              if (aiContent.length > 0 && line.trim()) {
+                console.log('[MIO Chat] Multi-line content continuation:', line.substring(0, 50));
+                aiContent += '\n' + line;
+                setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === aiMessageId
                       ? { ...msg, content: aiContent }
                       : msg
                   )
                 );
+              } else {
+                console.log('[MIO Chat] Skipping non-data line:', line.substring(0, 50));
               }
-            } catch {
-              // Incomplete JSON split across chunks: put it back and wait for more data
-              textBuffer = line + "\n" + textBuffer;
+              continue;
+            }
+
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") {
+              console.log('[MIO Chat] Received [DONE] signal');
+              streamDone = true;
               break;
+            }
+
+            // Check if this is JSON or plain text
+            const isJson = jsonStr.startsWith('{') || jsonStr.startsWith('[');
+
+            // Only check JSON completeness for actual JSON data
+            if (isJson && !isCompleteJson(jsonStr)) {
+              bufferHits++;
+              console.log('[MIO Chat] Incomplete JSON detected (buffer hit #' + bufferHits + '), buffering line...');
+              incompleteDataLine = line;
+              continue;
+            }
+
+            if (isJson) {
+              // Handle JSON format (for metadata/handoffs)
+              try {
+                const parsed = JSON.parse(jsonStr);
+                console.log('[MIO Chat] Successfully parsed SSE JSON data:', parsed);
+
+                // Check for handoff suggestion metadata
+                if (parsed.type === 'handoff') {
+                  console.log('[MIO Chat] Handoff suggestion:', parsed);
+                  setHandoffSuggestion({
+                    suggestedAgent: parsed.suggestedAgent,
+                    reason: `This question might be better answered by ${parsed.suggestedAgent === 'nette' ? 'Nette' : parsed.suggestedAgent === 'mio' ? 'MIO' : 'ME'}`,
+                    confidence: parsed.confidence,
+                    detectedKeywords: [],
+                    method: parsed.method
+                  });
+                  metadataReceived = true;
+                  continue;
+                }
+
+                // Check for OpenAI format content
+                const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+                if (content !== undefined) { // Handle empty string content
+                  console.log('[MIO Chat] Got JSON content:', content);
+                  aiContent += content;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, content: aiContent }
+                        : msg
+                    )
+                  );
+                }
+              } catch (err) {
+                parseErrors++;
+                console.error('[MIO Chat] JSON parse error #' + parseErrors + ':', err, 'Line:', jsonStr.substring(0, 100));
+                // Skip this malformed line and continue
+                continue;
+              }
+            } else {
+              // Handle plain text format (current backend format)
+              console.log('[MIO Chat] Got plain text content:', jsonStr);
+              // Add the text chunk (already includes spaces from backend)
+              aiContent += jsonStr;
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === aiMessageId
+                    ? { ...msg, content: aiContent }
+                    : msg
+                )
+              );
             }
           }
         }
 
-        // Final flush in case remaining buffered lines arrived without trailing newline
+        // Handle any incomplete data line that wasn't completed
+        if (incompleteDataLine) {
+          console.log('[MIO Chat] Processing final incomplete data line:', incompleteDataLine.substring(0, 100));
+          const jsonStr = incompleteDataLine.slice(6).trim();
+          if (jsonStr !== "[DONE]") {
+            const isJson = jsonStr.startsWith('{') || jsonStr.startsWith('[');
+
+            if (isJson && isCompleteJson(jsonStr)) {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+                if (content !== undefined) {
+                  aiContent += content;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, content: aiContent }
+                        : msg
+                    )
+                  );
+                }
+              } catch (err) {
+                parseErrors++;
+                console.error('[MIO Chat] Final buffer JSON parse error:', err);
+              }
+            } else if (!isJson) {
+              // Plain text - just append it
+              aiContent += jsonStr;
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === aiMessageId
+                    ? { ...msg, content: aiContent }
+                    : msg
+                )
+              );
+            }
+          }
+        }
+
+        // Final flush in case remaining buffered text arrived without trailing newline
         if (textBuffer.trim()) {
+          console.log('[MIO Chat] Processing remaining buffer:', textBuffer.substring(0, 100));
           for (let raw of textBuffer.split("\n")) {
             if (!raw) continue;
             if (raw.endsWith("\r")) raw = raw.slice(0, -1);
@@ -262,21 +442,72 @@ const ChatPage = () => {
             if (!raw.startsWith("data: ")) continue;
             const jsonStr = raw.slice(6).trim();
             if (jsonStr === "[DONE]") continue;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-              if (content) {
-                aiContent += content;
-                setMessages((prev) => 
-                  prev.map((msg) =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: aiContent }
-                      : msg
-                  )
-                );
+
+            const isJson = jsonStr.startsWith('{') || jsonStr.startsWith('[');
+
+            if (isJson) {
+              if (!isCompleteJson(jsonStr)) {
+                console.log('[MIO Chat] Skipping incomplete JSON in final buffer');
+                continue;
               }
-            } catch { /* ignore partial leftovers */ }
+
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+                if (content !== undefined) {
+                  aiContent += content;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, content: aiContent }
+                        : msg
+                    )
+                  );
+                }
+              } catch (err) {
+                parseErrors++;
+                console.error('[MIO Chat] Final buffer parse error:', err);
+              }
+            } else {
+              // Plain text - just append it
+              aiContent += jsonStr;
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === aiMessageId
+                    ? { ...msg, content: aiContent }
+                    : msg
+                )
+              );
+            }
           }
+        }
+
+        // Log stream statistics
+        console.log('[MIO Chat] Stream statistics:');
+        console.log('  - Total chunks:', chunkCount);
+        console.log('  - Buffer hits:', bufferHits);
+        console.log('  - Parse errors:', parseErrors);
+        console.log('  - Final content length:', aiContent.length);
+
+        // FRONTEND FALLBACK: Detect and flag incomplete responses
+        const trimmedContent = aiContent.trim();
+        const endsWithPunctuation = /[.?!]$/.test(trimmedContent);
+        const isSuspiciouslyShort = trimmedContent.length < 30;
+
+        if (isSuspiciouslyShort && trimmedContent.length > 0) {
+          console.error('[MIO Chat] INCOMPLETE RESPONSE - Very short:', trimmedContent.length, 'chars');
+
+          // Add user-friendly notice
+          aiContent += '\n\n_[Response incomplete - please try sending your message again]_';
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: aiContent }
+                : msg
+            )
+          );
+        } else if (!endsWithPunctuation && trimmedContent.length > 0) {
+          console.warn('[MIO Chat] Response may be incomplete - no ending punctuation. Last 30 chars:', trimmedContent.slice(-30));
         }
       }
 
@@ -365,6 +596,38 @@ const ChatPage = () => {
       <div className="border-t bg-background sticky bottom-0">
         <div className="container mx-auto px-4 py-4">
           <div className="max-w-4xl mx-auto">
+            {/* New Conversation Button */}
+            {conversationId && messages.length > 1 && (
+              <div className="flex justify-center mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setConversationId(null);
+                    localStorage.removeItem('mio_conversation_id');
+                    setMessages([{
+                      id: "1",
+                      role: "assistant",
+                      content: getInitialGreeting(selectedCoach),
+                      timestamp: new Date(),
+                      coachType: selectedCoach
+                    }]);
+                    console.log('[Conversation] Reset - starting fresh');
+                  }}
+                  className="text-xs"
+                >
+                  Start New Conversation
+                </Button>
+              </div>
+            )}
+
+            {/* Active Conversation Indicator */}
+            {conversationId && (
+              <div className="text-xs text-muted-foreground text-center mb-2">
+                Active conversation • {messages.length - 1} {messages.length === 2 ? 'message' : 'messages'}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
                 value={input}

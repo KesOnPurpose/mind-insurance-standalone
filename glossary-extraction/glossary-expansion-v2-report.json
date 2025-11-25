@@ -1,0 +1,136 @@
+{
+  "glossary_version": "v2",
+  "total_terms": 149,
+  "new_terms_added": 51,
+  "category_breakdown": {
+    "behavioral_patterns": 15,
+    "cognitive_processes": 9,
+    "emotional_regulation": 7,
+    "meditation_mindfulness": 10,
+    "physical_practices": 7,
+    "visualization_imagery": 3
+  },
+  "top_20_frequent_terms": [
+    {
+      "term": "accountability",
+      "frequency": 64,
+      "protocols_est": 32
+    },
+    {
+      "term": "focus",
+      "frequency": 63,
+      "protocols_est": 31
+    },
+    {
+      "term": "commitment",
+      "frequency": 32,
+      "protocols_est": 16
+    },
+    {
+      "term": "gratitude",
+      "frequency": 24,
+      "protocols_est": 12
+    },
+    {
+      "term": "tracking",
+      "frequency": 18,
+      "protocols_est": 9
+    },
+    {
+      "term": "calm",
+      "frequency": 11,
+      "protocols_est": 5
+    },
+    {
+      "term": "peace",
+      "frequency": 10,
+      "protocols_est": 5
+    },
+    {
+      "term": "consistency",
+      "frequency": 9,
+      "protocols_est": 4
+    },
+    {
+      "term": "repetition",
+      "frequency": 9,
+      "protocols_est": 4
+    },
+    {
+      "term": "daily practice",
+      "frequency": 7,
+      "protocols_est": 3
+    },
+    {
+      "term": "pattern recognition",
+      "frequency": 7,
+      "protocols_est": 3
+    },
+    {
+      "term": "contemplation",
+      "frequency": 7,
+      "protocols_est": 3
+    },
+    {
+      "term": "exercise",
+      "frequency": 7,
+      "protocols_est": 3
+    },
+    {
+      "term": "running",
+      "frequency": 7,
+      "protocols_est": 3
+    },
+    {
+      "term": "discipline",
+      "frequency": 6,
+      "protocols_est": 3
+    },
+    {
+      "term": "journaling",
+      "frequency": 6,
+      "protocols_est": 3
+    },
+    {
+      "term": "reflection",
+      "frequency": 5,
+      "protocols_est": 2
+    },
+    {
+      "term": "perspective shift",
+      "frequency": 4,
+      "protocols_est": 2
+    },
+    {
+      "term": "self-awareness",
+      "frequency": 4,
+      "protocols_est": 2
+    },
+    {
+      "term": "physical movement",
+      "frequency": 4,
+      "protocols_est": 2
+    }
+  ],
+  "tooltip_projection": {
+    "baseline_tooltips": 179,
+    "baseline_protocols": 205,
+    "baseline_density": 0.87,
+    "projected_new_tooltips": 328,
+    "projected_total_tooltips": 507,
+    "projected_density": 2.47,
+    "improvement": 1.6,
+    "percentage_increase": 183.2
+  },
+  "reading_level_analysis": {
+    "min": 6.0,
+    "max": 8.0,
+    "average": 6.6,
+    "target_range": "6.0-8.0",
+    "compliant": true
+  },
+  "duplicates_removed": [
+    "confirmation bias",
+    "window of tolerance"
+  ]
+}

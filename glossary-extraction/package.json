@@ -1,0 +1,24 @@
+{
+  "name": "neuroscience-glossary-generator",
+  "version": "1.0.0",
+  "description": "Transform clinical neuroscience terms into 8th-grade level explanations",
+  "type": "module",
+  "main": "generate-glossary.js",
+  "scripts": {
+    "generate": "node generate-glossary.js",
+    "test": "node test-reading-level.js"
+  },
+  "keywords": [
+    "neuroscience",
+    "glossary",
+    "education",
+    "reading-level",
+    "accessibility"
+  ],
+  "author": "Purpose Waze",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
+    "dotenv": "^17.2.3"
+  }
+}

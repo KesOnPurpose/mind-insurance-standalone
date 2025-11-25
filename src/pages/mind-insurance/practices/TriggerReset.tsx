@@ -63,8 +63,9 @@ export default function TriggerReset() {
   }
 
   function getTodayDate(): string {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    return new Date().toLocaleDateString('en-CA', {
+      timeZone: userTimezone
+    });
   }
 
   async function handleComplete() {

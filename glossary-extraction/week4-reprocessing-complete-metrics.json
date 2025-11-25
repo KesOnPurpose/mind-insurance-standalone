@@ -1,0 +1,255 @@
+{
+  "reprocessing_metadata": {
+    "execution_date": "2025-11-22T20:00:09.552669",
+    "glossary_version": "expanded-100-terms",
+    "previous_glossary_size": 40,
+    "new_glossary_size": 100,
+    "glossary_expansion": 60,
+    "script_version": "execute-week-4-agent-2.py"
+  },
+  "processing_summary": {
+    "total_protocols_processed": 205,
+    "total_protocols_updated": 205,
+    "total_errors": 0,
+    "success_rate_percent": 100.0,
+    "batch_count": 5,
+    "processing_time_seconds": null
+  },
+  "tooltip_injection_metrics": {
+    "previous_tooltip_count": 66,
+    "new_tooltip_count": 179,
+    "tooltip_increase": 113,
+    "improvement_factor": 2.71,
+    "avg_tooltips_per_protocol": 0.87,
+    "protocols_with_tooltips": 90,
+    "protocols_without_tooltips": 115,
+    "coverage_percent": 43.9
+  },
+  "reading_level_metrics": {
+    "previous_avg_reading_level": 13.2,
+    "new_avg_reading_level": 13.15,
+    "avg_reading_level_before": 13.2,
+    "avg_reading_level_after": 13.15,
+    "avg_improvement_grade_levels": 0.05,
+    "target_reading_level": 8.0,
+    "gap_to_target": 5.15,
+    "percent_progress_to_target": 1.0
+  },
+  "top_10_protocols_by_tooltip_count": [
+    {
+      "rank": 1,
+      "protocol_id": "ddce8bb9-25b7-4ba7-964c-739cdea4b913",
+      "summary": "Neuroscience Translation Framework",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 1.0
+    },
+    {
+      "rank": 2,
+      "protocol_id": "6b9d1768-f379-440c-8046-eaa6c8df44cd",
+      "summary": "All 15 Forensic Capabilities",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 0.11
+    },
+    {
+      "rank": 3,
+      "protocol_id": "585eb662-8cc3-46b4-adc9-e430d9b2f3f3",
+      "summary": "Motivation Collapse - Execution Breakdown",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 1.28
+    },
+    {
+      "rank": 4,
+      "protocol_id": "e51f97ac-4689-4cdc-bd81-d6abd6e1e6ff",
+      "summary": "7-Part Mirror Reveal Storytelling Structure",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 0.11
+    },
+    {
+      "rank": 5,
+      "protocol_id": "ad09f107-6ca0-48b8-8ed1-7820644601c9",
+      "summary": "Motivation Collapse",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 0.12
+    },
+    {
+      "rank": 6,
+      "protocol_id": "b90938d1-1a18-458c-b8ca-d073118ec3d5",
+      "summary": "Protocol Category 1: Financial Freedom Rewiring",
+      "tooltips_injected": 5,
+      "reading_level_improvement": 0.07
+    },
+    {
+      "rank": 7,
+      "protocol_id": "62b0bf3b-6e1c-4875-8225-28309868c10c",
+      "summary": "Motivation Collapse - Impostor Syndrome",
+      "tooltips_injected": 4,
+      "reading_level_improvement": 0.12
+    },
+    {
+      "rank": 8,
+      "protocol_id": "1146973b-2ada-4f2e-9881-4bb5751591cf",
+      "summary": "Primary Pattern Forensic Signatures",
+      "tooltips_injected": 4,
+      "reading_level_improvement": 0.5
+    },
+    {
+      "rank": 9,
+      "protocol_id": "b0813ade-098e-41a1-89a6-03f69c2b839c",
+      "summary": "Protocol Category 3: Competence Confidence Rewiring",
+      "tooltips_injected": 4,
+      "reading_level_improvement": -0.09
+    },
+    {
+      "rank": 10,
+      "protocol_id": "0c83d81d-66aa-4370-8b3f-2abba20b1678",
+      "summary": "Protocol Category 4: Thought Freedom Rewiring",
+      "tooltips_injected": 4,
+      "reading_level_improvement": 0.09
+    }
+  ],
+  "top_10_reading_level_improvements": [
+    {
+      "rank": 1,
+      "protocol_id": "2dcf76bd-94fa-4b0e-9c2c-3e76eafd29e1",
+      "summary": "References (Clinical Evidence Base - For Mio Knowledge Only)",
+      "before": 18.1,
+      "after": 15.65,
+      "improvement": 2.45
+    },
+    {
+      "rank": 2,
+      "protocol_id": "d6365ac8-4fe8-418a-9907-b6ac4a91b33a",
+      "summary": "Meditation (Goal/Vision Focused)",
+      "before": 16.51,
+      "after": 14.41,
+      "improvement": 2.1
+    },
+    {
+      "rank": 3,
+      "protocol_id": "574ac1de-1b13-4f76-921d-4b81d41b62b3",
+      "summary": "Working Out/Movement",
+      "before": 14.4,
+      "after": 12.78,
+      "improvement": 1.62
+    },
+    {
+      "rank": 4,
+      "protocol_id": "19527a9c-8f88-4a99-b5b4-b9d76fd77ce2",
+      "summary": "Motivation Collapse - Impostor Syndrome",
+      "before": 17.66,
+      "after": 16.17,
+      "improvement": 1.49
+    },
+    {
+      "rank": 5,
+      "protocol_id": "efcd64ba-6b8b-4896-b63a-893b49c5784f",
+      "summary": "Motivation Collapse - Relationship Erosion",
+      "before": 10.66,
+      "after": 9.19,
+      "improvement": 1.47
+    },
+    {
+      "rank": 6,
+      "protocol_id": "5d4a799c-dfdb-4fe0-9ac6-e3a91c70a061",
+      "summary": "Motivation Collapse - Relationship Erosion",
+      "before": 13.82,
+      "after": 12.46,
+      "improvement": 1.36
+    },
+    {
+      "rank": 7,
+      "protocol_id": "f111f209-2915-4bc0-a54d-464798c0be25",
+      "summary": "Learning Practice",
+      "before": 16.2,
+      "after": 14.87,
+      "improvement": 1.33
+    },
+    {
+      "rank": 8,
+      "protocol_id": "4fdc3a6f-1694-49d9-9e79-d726d4b287d3",
+      "summary": "Cognitive Load Management",
+      "before": 10.39,
+      "after": 9.08,
+      "improvement": 1.31
+    },
+    {
+      "rank": 9,
+      "protocol_id": "585eb662-8cc3-46b4-adc9-e430d9b2f3f3",
+      "summary": "Motivation Collapse - Execution Breakdown",
+      "before": 12.1,
+      "after": 10.82,
+      "improvement": 1.28
+    },
+    {
+      "rank": 10,
+      "protocol_id": "f179d8a6-0138-4ac1-8eba-14d8f4f735c4",
+      "summary": "Interoception Practice",
+      "before": 12.48,
+      "after": 11.25,
+      "improvement": 1.23
+    }
+  ],
+  "quality_metrics": {
+    "protocols_meeting_target_grade_8": 30,
+    "protocols_improved": 62,
+    "protocols_degraded": 27,
+    "protocols_unchanged": 116
+  },
+  "batch_processing_details": [
+    {
+      "batch_id": 1,
+      "batch_size": 50,
+      "success_count": 50,
+      "error_count": 0,
+      "timestamp": "2025-11-22T19:59:47.500780"
+    },
+    {
+      "batch_id": 2,
+      "batch_size": 50,
+      "success_count": 50,
+      "error_count": 0,
+      "timestamp": "2025-11-22T19:59:53.847228"
+    },
+    {
+      "batch_id": 3,
+      "batch_size": 50,
+      "success_count": 50,
+      "error_count": 0,
+      "timestamp": "2025-11-22T20:00:01.703176"
+    },
+    {
+      "batch_id": 4,
+      "batch_size": 50,
+      "success_count": 50,
+      "error_count": 0,
+      "timestamp": "2025-11-22T20:00:08.977867"
+    },
+    {
+      "batch_id": 5,
+      "batch_size": 5,
+      "success_count": 5,
+      "error_count": 0,
+      "timestamp": "2025-11-22T20:00:09.546378"
+    }
+  ],
+  "recommendations": {
+    "next_steps": [
+      "Expand glossary with behavioral psychology terms (current focus is neuroscience)",
+      "Manually simplify 20 most complex protocols (reading level > 15.0)",
+      "Add inline explanations for sentence structure improvements",
+      "Consider sentence restructuring for protocols still above target",
+      "Frontend integration: Build GlossaryTooltip React component"
+    ],
+    "success_criteria_met": {
+      "100_percent_success_rate": true,
+      "zero_critical_errors": true,
+      "expanded_glossary_used": true,
+      "all_protocols_processed": true
+    },
+    "success_criteria_not_met": {
+      "260_plus_tooltips_target": true,
+      "reading_level_grade_8_target": true,
+      "significant_improvement": true
+    }
+  }
+}

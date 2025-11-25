@@ -57,7 +57,7 @@ export default function PatternCheck() {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('timezone')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (profile?.timezone) {
@@ -77,7 +77,9 @@ export default function PatternCheck() {
     if (!user) return;
 
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = new Date().toLocaleDateString('en-CA', {
+        timeZone: userTimezone
+      });
       const { data: existingPractices } = await supabase
         .from('daily_practices')
         .select('*')
@@ -106,7 +108,9 @@ export default function PatternCheck() {
     setError('');
 
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = new Date().toLocaleDateString('en-CA', {
+        timeZone: userTimezone
+      });
 
       // Check if practice already exists for today
       const { data: existingPractices } = await supabase

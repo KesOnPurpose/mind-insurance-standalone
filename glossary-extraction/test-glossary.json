@@ -1,0 +1,50 @@
+[
+  {
+    "clinical_term": "vagus nerve",
+    "user_friendly_term": "your body's built-in relaxation system",
+    "category": "neuroscience",
+    "explanation": "A key nerve that helps calm your nervous system and promotes relaxation"
+  },
+  {
+    "clinical_term": "coherence",
+    "user_friendly_term": "alignment between your thoughts and emotions",
+    "category": "neuroscience",
+    "explanation": "When your mind and body work together in harmony"
+  },
+  {
+    "clinical_term": "neural pathways",
+    "user_friendly_term": "thinking patterns in your brain",
+    "category": "neuroscience",
+    "explanation": "The connections in your brain that form habits and thought patterns"
+  },
+  {
+    "clinical_term": "autonomic nervous system",
+    "user_friendly_term": "your automatic body control system",
+    "category": "neuroscience",
+    "explanation": "The part of your nervous system that controls things you don't think about, like breathing and heart rate"
+  },
+  {
+    "clinical_term": "parasympathetic response",
+    "user_friendly_term": "your body's relaxation mode",
+    "category": "neuroscience",
+    "explanation": "The calming response that helps you rest and recover"
+  },
+  {
+    "clinical_term": "cortisol",
+    "user_friendly_term": "stress hormone",
+    "category": "neuroscience",
+    "explanation": "A hormone your body releases when you're stressed"
+  },
+  {
+    "clinical_term": "neuroplasticity",
+    "user_friendly_term": "your brain's ability to change and adapt",
+    "category": "neuroscience",
+    "explanation": "The way your brain can form new connections and change throughout your life"
+  },
+  {
+    "clinical_term": "homeostasis",
+    "user_friendly_term": "your body's natural balance",
+    "category": "neuroscience",
+    "explanation": "The state when everything in your body is working in balance"
+  }
+]

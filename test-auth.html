@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Auth</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Auth Test</h1>
+    <button id="googleBtn">Sign in with Google</button>
+    <button id="checkSession">Check Session</button>
+    <div id="status"></div>
+    <pre id="output"></pre>
+
+    <script>
+        const SUPABASE_URL = 'https://hpyodaugrkctagkrfofj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                storage: localStorage,
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+                flowType: 'implicit'
+            }
+        });
+
+        const statusDiv = document.getElementById('status');
+        const outputPre = document.getElementById('output');
+
+        // Check for auth callback
+        async function handleAuthCallback() {
+            const hash = window.location.hash;
+            const search = window.location.search;
+
+            console.log('Current URL:', window.location.href);
+            console.log('Hash:', hash);
+            console.log('Search:', search);
+
+            if (hash || search) {
+                statusDiv.textContent = 'Processing authentication...';
+
+                // Let Supabase handle the URL
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+                if (session) {
+                    statusDiv.textContent = '✅ Authentication successful!';
+                    outputPre.textContent = JSON.stringify(session, null, 2);
+                } else {
+                    statusDiv.textContent = '❌ No session found';
+                    outputPre.textContent = 'Error: ' + (error?.message || 'Unknown error');
+                }
+            }
+        }
+
+        // Check session
+        document.getElementById('checkSession').addEventListener('click', async () => {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+            if (session) {
+                statusDiv.textContent = '✅ Session active';
+                outputPre.textContent = JSON.stringify(session, null, 2);
+            } else {
+                statusDiv.textContent = '❌ No session';
+                outputPre.textContent = error ? error.message : 'No active session';
+            }
+        });
+
+        // Google sign in
+        document.getElementById('googleBtn').addEventListener('click', async () => {
+            statusDiv.textContent = 'Initiating Google sign in...';
+
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname
+                }
+            });
+
+            if (error) {
+                statusDiv.textContent = '❌ Error initiating OAuth';
+                outputPre.textContent = error.message;
+            } else {
+                statusDiv.textContent = 'Redirecting to Google...';
+                outputPre.textContent = JSON.stringify(data, null, 2);
+            }
+        });
+
+        // Listen for auth state changes
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session);
+            if (event === 'SIGNED_IN') {
+                statusDiv.textContent = '✅ Signed in successfully!';
+                outputPre.textContent = JSON.stringify(session, null, 2);
+            }
+        });
+
+        // Check for callback on load
+        handleAuthCallback();
+    </script>
+</body>
+</html>

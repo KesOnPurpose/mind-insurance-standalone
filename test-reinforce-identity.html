@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Reinforce Identity Component</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-links {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .test-links h2 {
+            margin-top: 0;
+        }
+        .test-links a {
+            display: block;
+            padding: 10px 15px;
+            margin: 10px 0;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .test-links a:hover {
+            background: #2563eb;
+        }
+        .viewport-tests {
+            display: grid;
+            gap: 20px;
+        }
+        .viewport-frame {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .viewport-frame h3 {
+            margin: 0 0 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        iframe {
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .mobile-frame {
+            max-width: 375px;
+            margin: 0 auto;
+        }
+        .tablet-frame {
+            max-width: 768px;
+            margin: 0 auto;
+        }
+        .desktop-frame {
+            max-width: 100%;
+        }
+        .info-section {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .info-section h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .info-section ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .success-note {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reinforce Identity Component Test</h1>
+
+        <div class="success-note">
+            <h3>✅ Component Created Successfully!</h3>
+            <p><strong>Location:</strong> /src/pages/mind-insurance/practices/ReinforceIdentity.tsx</p>
+            <p><strong>Route:</strong> /mind-insurance/practices/reinforce-identity</p>
+        </div>
+
+        <div class="info-section">
+            <h3>📋 Component Features</h3>
+            <ul>
+                <li>Text input for "I AM" statement (500 char limit)</li>
+                <li>Web Audio API voice recording (30s minimum)</li>
+                <li>Real-time recording duration display</li>
+                <li>Progress bar for minimum recording time</li>
+                <li>Upload to Supabase Storage bucket: voice-recordings</li>
+                <li>Points: 3 base, 1.5 if late</li>
+                <li>Time window validation (Championship Setup: 3-10 AM)</li>
+            </ul>
+        </div>
+
+        <div class="test-links">
+            <h2>Direct Links</h2>
+            <a href="http://localhost:8081/mind-insurance/practices/reinforce-identity" target="_blank">
+                🎯 Open Reinforce Identity Practice
+            </a>
+            <a href="http://localhost:8081/mind-insurance" target="_blank">
+                🏠 Open Mind Insurance Hub
+            </a>
+            <a href="http://localhost:8081/" target="_blank">
+                🌐 Open Main App
+            </a>
+        </div>
+
+        <div class="viewport-tests">
+            <div class="viewport-frame">
+                <h3>Mobile View (375px width)</h3>
+                <div class="mobile-frame">
+                    <iframe
+                        src="http://localhost:8081/mind-insurance/practices/reinforce-identity"
+                        width="375"
+                        height="667"
+                        title="Mobile View">
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="viewport-frame">
+                <h3>Tablet View (768px width)</h3>
+                <div class="tablet-frame">
+                    <iframe
+                        src="http://localhost:8081/mind-insurance/practices/reinforce-identity"
+                        width="768"
+                        height="1024"
+                        title="Tablet View">
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="viewport-frame">
+                <h3>Desktop View (Full Width)</h3>
+                <div class="desktop-frame">
+                    <iframe
+                        src="http://localhost:8081/mind-insurance/practices/reinforce-identity"
+                        width="100%"
+                        height="800"
+                        title="Desktop View">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section" style="margin-top: 30px;">
+            <h3>🔊 Audio Recording Implementation</h3>
+            <ul>
+                <li><strong>AudioRecorder class:</strong> Uses MediaRecorder API with Web Audio</li>
+                <li><strong>Permissions:</strong> Requests microphone access on first recording</li>
+                <li><strong>Audio settings:</strong> Echo cancellation, noise suppression, auto gain control</li>
+                <li><strong>Format:</strong> WebM (preferred) or MP3 fallback</li>
+                <li><strong>Storage:</strong> Uploads to Supabase Storage in voice-recordings bucket</li>
+                <li><strong>Database:</strong> Saves metadata to voice_recordings table</li>
+                <li><strong>Transcription:</strong> Sends to N8n webhook for processing (non-blocking)</li>
+            </ul>
+        </div>
+
+        <div class="info-section" style="background: #e8f4f8; border-color: #17a2b8;">
+            <h3>📱 Testing Instructions</h3>
+            <ol>
+                <li>Click "Open Reinforce Identity Practice" above</li>
+                <li>You may need to login first (use test credentials)</li>
+                <li>Type your "I AM" statement in the text area</li>
+                <li>Click the microphone button to start recording</li>
+                <li>Allow microphone permissions when prompted</li>
+                <li>Speak for at least 30 seconds</li>
+                <li>Click stop when done</li>
+                <li>Click "Complete Practice" to save</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+{
+  "summary": {
+    "total_protocols": 3,
+    "total_tooltips_added": 8,
+    "avg_tooltips_per_protocol": 2.6666666666666665,
+    "valid_count": 3,
+    "error_count": 0,
+    "avg_reading_level_before": 0.0,
+    "avg_reading_level_after": 0.0,
+    "avg_reading_level_improvement": 0.0
+  },
+  "protocols": [
+    {
+      "protocol_id": "test-1",
+      "source_file": "test.md",
+      "chunk_summary": "Complex Neuroscience Protocol",
+      "original_length": 358,
+      "simplified_length": 528,
+      "tooltips_added": 5,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "homeostasis": "your body's natural balance",
+        "cortisol": "stress hormone",
+        "parasympathetic response": "your body's relaxation mode",
+        "autonomic nervous system": "your automatic body control system",
+        "vagus nerve": "your body's built-in relaxation system"
+      }
+    },
+    {
+      "protocol_id": "test-2",
+      "source_file": "test.md",
+      "chunk_summary": "Moderate Complexity Protocol",
+      "original_length": 267,
+      "simplified_length": 400,
+      "tooltips_added": 3,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "neuroplasticity": "your brain's ability to change and adapt",
+        "neural pathways": "thinking patterns in your brain",
+        "coherence": "alignment between your thoughts and emotions"
+      }
+    },
+    {
+      "protocol_id": "test-3",
+      "source_file": "test.md",
+      "chunk_summary": "Simple Protocol (Minimal Technical Terms)",
+      "original_length": 244,
+      "simplified_length": 244,
+      "tooltips_added": 0,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {}
+    }
+  ],
+  "top_improved": [
+    {
+      "protocol_id": "test-1",
+      "source_file": "test.md",
+      "chunk_summary": "Complex Neuroscience Protocol",
+      "original_length": 358,
+      "simplified_length": 528,
+      "tooltips_added": 5,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "homeostasis": "your body's natural balance",
+        "cortisol": "stress hormone",
+        "parasympathetic response": "your body's relaxation mode",
+        "autonomic nervous system": "your automatic body control system",
+        "vagus nerve": "your body's built-in relaxation system"
+      }
+    },
+    {
+      "protocol_id": "test-2",
+      "source_file": "test.md",
+      "chunk_summary": "Moderate Complexity Protocol",
+      "original_length": 267,
+      "simplified_length": 400,
+      "tooltips_added": 3,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "neuroplasticity": "your brain's ability to change and adapt",
+        "neural pathways": "thinking patterns in your brain",
+        "coherence": "alignment between your thoughts and emotions"
+      }
+    },
+    {
+      "protocol_id": "test-3",
+      "source_file": "test.md",
+      "chunk_summary": "Simple Protocol (Minimal Technical Terms)",
+      "original_length": 244,
+      "simplified_length": 244,
+      "tooltips_added": 0,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {}
+    }
+  ],
+  "most_tooltips": [
+    {
+      "protocol_id": "test-1",
+      "source_file": "test.md",
+      "chunk_summary": "Complex Neuroscience Protocol",
+      "original_length": 358,
+      "simplified_length": 528,
+      "tooltips_added": 5,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "homeostasis": "your body's natural balance",
+        "cortisol": "stress hormone",
+        "parasympathetic response": "your body's relaxation mode",
+        "autonomic nervous system": "your automatic body control system",
+        "vagus nerve": "your body's built-in relaxation system"
+      }
+    },
+    {
+      "protocol_id": "test-2",
+      "source_file": "test.md",
+      "chunk_summary": "Moderate Complexity Protocol",
+      "original_length": 267,
+      "simplified_length": 400,
+      "tooltips_added": 3,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {
+        "neuroplasticity": "your brain's ability to change and adapt",
+        "neural pathways": "thinking patterns in your brain",
+        "coherence": "alignment between your thoughts and emotions"
+      }
+    },
+    {
+      "protocol_id": "test-3",
+      "source_file": "test.md",
+      "chunk_summary": "Simple Protocol (Minimal Technical Terms)",
+      "original_length": 244,
+      "simplified_length": 244,
+      "tooltips_added": 0,
+      "reading_level_before": 0.0,
+      "reading_level_after": 0.0,
+      "reading_level_improvement": 0.0,
+      "validation_status": "valid",
+      "validation_message": "Valid",
+      "glossary_terms": {}
+    }
+  ],
+  "errors": []
+}

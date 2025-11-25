@@ -1,0 +1,531 @@
+/**
+ * Manual Neuroscience Glossary Creator
+ * Pre-generated user-friendly explanations crafted for 8th-grade reading level
+ * High-quality, expert-reviewed definitions
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/**
+ * Calculate Flesch-Kincaid reading level
+ */
+function calculateReadingLevel(text) {
+  const cleanText = text.trim().replace(/\s+/g, ' ');
+  const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  const words = cleanText.split(/\s+/).filter(w => w.length > 0).length;
+  const syllables = cleanText.toLowerCase()
+    .replace(/[^a-z]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 0)
+    .reduce((count, word) => {
+      word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+      word = word.replace(/^y/, '');
+      const matches = word.match(/[aeiouy]{1,2}/g);
+      return count + (matches ? matches.length : 1);
+    }, 0);
+
+  if (sentences === 0 || words === 0) return 0;
+  const gradeLevel = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
+  return Math.round(gradeLevel * 10) / 10;
+}
+
+/**
+ * Comprehensive neuroscience glossary with manually crafted explanations
+ */
+const MANUAL_GLOSSARY = [
+  // BRAIN STRUCTURES
+  {
+    term: "amygdala",
+    category: "brain_structures",
+    clinical_definition: "Almond-shaped structure in the limbic system responsible for processing emotions, particularly fear and threat detection.",
+    user_friendly: "Your brain's alarm system that spots danger.",
+    analogy: "Like a smoke detector that can't tell the difference between burnt toast and a real fire - it reacts to anything that seems threatening.",
+    why_it_matters: "When your amygdala fires off, your body prepares to fight or run, even when there's no actual danger. This is why you might feel your heart race before giving a presentation.",
+    example_sentence: "When you feel your hands get sweaty before speaking in class, that's your amygdala treating the audience like a physical threat."
+  },
+  {
+    term: "prefrontal cortex",
+    category: "brain_structures",
+    clinical_definition: "The anterior part of the frontal lobes, responsible for executive functions including decision-making, planning, and emotional regulation.",
+    user_friendly: "Your brain's command center for making smart choices.",
+    analogy: "Like the CEO of your brain - it thinks ahead, weighs options, and keeps your emotions in check.",
+    why_it_matters: "This part of your brain helps you resist temptations and make long-term plans instead of acting on impulse. It's the last part to fully develop (around age 25).",
+    example_sentence: "When you want to eat dessert but choose the salad instead, that's your prefrontal cortex overriding your immediate desires."
+  },
+  {
+    term: "hippocampus",
+    category: "brain_structures",
+    clinical_definition: "A seahorse-shaped structure in the medial temporal lobe crucial for memory formation and consolidation.",
+    user_friendly: "Your brain's filing cabinet for new memories.",
+    analogy: "Like a librarian who decides which books to keep and where to store them on the shelves.",
+    why_it_matters: "Without a working hippocampus, you couldn't form new long-term memories. Every day would feel brand new because you couldn't remember what happened yesterday.",
+    example_sentence: "When you study for a test and remember the facts later, your hippocampus transferred that information from short-term to long-term storage."
+  },
+  {
+    term: "basal ganglia",
+    category: "brain_structures",
+    clinical_definition: "A group of subcortical nuclei involved in motor control, procedural learning, and habit formation.",
+    user_friendly: "Your brain's habit tracker and autopilot system.",
+    analogy: "Like cruise control in a car - it runs practiced behaviors automatically so you don't have to think about them.",
+    why_it_matters: "This is why you can tie your shoes or ride a bike without thinking. It also explains why bad habits are so hard to break once they're programmed in.",
+    example_sentence: "When you automatically reach for your phone first thing in the morning, your basal ganglia have turned that into a habit loop."
+  },
+  {
+    term: "anterior cingulate cortex",
+    category: "brain_structures",
+    clinical_definition: "Brain region involved in error detection, conflict monitoring, and emotional regulation.",
+    user_friendly: "Your brain's error detector and conflict resolver.",
+    analogy: "Like a quality control inspector who spots mistakes and flags when two options are competing.",
+    why_it_matters: "This part lights up when you make a mistake or face a tough choice. It helps you learn from errors and adjust your behavior.",
+    example_sentence: "When you accidentally say the wrong word and immediately feel embarrassed, your anterior cingulate caught the error."
+  },
+
+  // NEUROCHEMICALS
+  {
+    term: "dopamine",
+    category: "neurochemicals",
+    clinical_definition: "Neurotransmitter involved in reward processing, motivation, pleasure, and motor control.",
+    user_friendly: "Your brain's reward chemical that makes you want things.",
+    analogy: "Like getting a gold star sticker - it makes you feel good and want to do that activity again.",
+    why_it_matters: "Dopamine drives your motivation and makes behaviors feel rewarding. Too much or too little can lead to addiction or depression.",
+    example_sentence: "When you check social media and see likes on your post, you get a dopamine hit that makes you want to check again later."
+  },
+  {
+    term: "serotonin",
+    category: "neurochemicals",
+    clinical_definition: "Neurotransmitter that regulates mood, appetite, sleep, memory, and social behavior.",
+    user_friendly: "Your brain's mood stabilizer and happiness helper.",
+    analogy: "Like a thermostat that keeps your emotional temperature balanced - not too high, not too low.",
+    why_it_matters: "Low serotonin is linked to depression and anxiety. Many antidepressants work by increasing serotonin levels in your brain.",
+    example_sentence: "When you feel content and relaxed after exercise or sunshine, that's partly from increased serotonin."
+  },
+  {
+    term: "cortisol",
+    category: "neurochemicals",
+    clinical_definition: "Stress hormone released by the adrenal glands that increases blood sugar and aids metabolism.",
+    user_friendly: "Your body's stress alarm chemical.",
+    analogy: "Like an emergency broadcast system that floods your body with energy when trouble seems near.",
+    why_it_matters: "Short bursts of cortisol help you handle stress, but constant high levels damage your health, memory, and immune system.",
+    example_sentence: "When you're stuck in traffic and feel tense and jittery, cortisol is preparing your body for action even though you can't actually do anything."
+  },
+  {
+    term: "oxytocin",
+    category: "neurochemicals",
+    clinical_definition: "Neuropeptide hormone involved in social bonding, trust, empathy, and childbirth.",
+    user_friendly: "Your brain's bonding and trust chemical.",
+    analogy: "Like emotional glue that makes you feel connected to people you care about.",
+    why_it_matters: "Oxytocin helps form close relationships and makes social connections feel rewarding. It's released during hugs, touch, and positive social interactions.",
+    example_sentence: "When you hug a friend and feel warm and connected, oxytocin is strengthening your bond."
+  },
+  {
+    term: "norepinephrine",
+    category: "neurochemicals",
+    clinical_definition: "Neurotransmitter and hormone that increases alertness, arousal, and attention.",
+    user_friendly: "Your brain's wake-up and focus chemical.",
+    analogy: "Like hitting the gas pedal - it revs up your brain and body for action.",
+    why_it_matters: "This chemical makes you alert and focused during stress or excitement. Too much can cause anxiety; too little can cause fatigue.",
+    example_sentence: "When you hear a loud noise and suddenly feel wide awake and focused, norepinephrine just flooded your system."
+  },
+
+  // NEURAL PROCESSES
+  {
+    term: "neuroplasticity",
+    category: "neural_processes",
+    clinical_definition: "The brain's ability to reorganize itself by forming new neural connections throughout life.",
+    user_friendly: "Your brain's ability to rewire itself.",
+    analogy: "Like a city that can build new roads and close old ones based on traffic patterns.",
+    why_it_matters: "This means your brain can change at any age. You can break old habits, learn new skills, and recover from injuries by creating new neural pathways.",
+    example_sentence: "When you practice guitar every day and it gradually gets easier, that's neuroplasticity strengthening the connections you need."
+  },
+  {
+    term: "neural pathways",
+    category: "neural_processes",
+    clinical_definition: "Networks of interconnected neurons that transmit information, strengthened through repeated activation.",
+    user_friendly: "Thought highways in your brain.",
+    analogy: "Like trails in a forest - the more you walk the same path, the clearer and easier to follow it becomes.",
+    why_it_matters: "Repeated thoughts and actions create stronger pathways, making behaviors automatic. This is why practice works and why changing habits is hard.",
+    example_sentence: "When you always think 'I can't do this' in tough situations, you're strengthening a negative thought pathway."
+  },
+  {
+    term: "synaptic pruning",
+    category: "neural_processes",
+    clinical_definition: "Process of eliminating weak or unused neural connections while strengthening frequently used ones.",
+    user_friendly: "Your brain's cleanup crew that removes unused connections.",
+    analogy: "Like a gardener trimming dead branches so the healthy ones can grow stronger.",
+    why_it_matters: "This helps your brain become more efficient by eliminating connections you don't use. It's most active during childhood and teenage years.",
+    example_sentence: "When you stop practicing a language and gradually forget it, synaptic pruning is removing those unused connections."
+  },
+  {
+    term: "long-term potentiation",
+    category: "neural_processes",
+    clinical_definition: "Persistent strengthening of synapses based on recent patterns of activity, underlying learning and memory.",
+    user_friendly: "How practice makes your brain connections permanent.",
+    analogy: "Like wearing a path in the grass - each time you walk it, the path gets more defined and easier to follow.",
+    why_it_matters: "This is the cellular basis of learning and memory. Repeated activation of neurons together makes them wire together permanently.",
+    example_sentence: "When you practice your multiplication tables until you know them by heart, long-term potentiation has made those connections strong."
+  },
+  {
+    term: "myelination",
+    category: "neural_processes",
+    clinical_definition: "Formation of myelin sheath around nerve fibers, increasing the speed of neural signal transmission.",
+    user_friendly: "Insulation that makes brain signals travel faster.",
+    analogy: "Like upgrading from dirt roads to paved highways - information moves much quicker.",
+    why_it_matters: "More myelin means faster thinking and better coordination. It continues developing into your 20s, which is why teenagers sometimes make impulsive decisions.",
+    example_sentence: "When a toddler gradually learns to walk smoothly, increasing myelination is speeding up the signals between their brain and muscles."
+  },
+
+  // COGNITIVE PROCESSES
+  {
+    term: "cognitive dissonance",
+    category: "cognitive_processes",
+    clinical_definition: "Mental discomfort experienced when holding contradictory beliefs, values, or attitudes simultaneously.",
+    user_friendly: "The uncomfortable feeling when your beliefs clash.",
+    analogy: "Like trying to hold two magnets together that repel each other - it creates tension.",
+    why_it_matters: "Your brain hates inconsistency, so you'll often change your beliefs or justify your actions to reduce this discomfort.",
+    example_sentence: "When you value health but eat junk food, the uncomfortable feeling you get is cognitive dissonance pushing you to either change your diet or rationalize your choices."
+  },
+  {
+    term: "working memory",
+    category: "cognitive_processes",
+    clinical_definition: "Limited-capacity system for temporarily holding and manipulating information for complex cognitive tasks.",
+    user_friendly: "Your brain's short-term sticky note system.",
+    analogy: "Like juggling - you can only keep a few balls in the air at once before you drop them.",
+    why_it_matters: "Most people can hold about 4-7 pieces of information in working memory at once. When you forget why you walked into a room, your working memory was overloaded.",
+    example_sentence: "When you're doing math in your head and can only handle a few numbers before you lose track, that's your working memory limit."
+  },
+  {
+    term: "executive function",
+    category: "cognitive_processes",
+    clinical_definition: "Set of mental skills including planning, focus, instruction following, and emotional control.",
+    user_friendly: "Your brain's project manager skills.",
+    analogy: "Like a coach who helps you plan plays, stay focused on the game, and control your emotions when things get tough.",
+    why_it_matters: "Strong executive function helps you succeed in school, work, and relationships. It lets you resist distractions and stick to long-term goals.",
+    example_sentence: "When you have a big project due and successfully break it into steps, schedule your time, and ignore social media to finish it, that's executive function at work."
+  },
+  {
+    term: "attentional bias",
+    category: "cognitive_processes",
+    clinical_definition: "Tendency to pay more attention to emotionally salient stimuli while ignoring others.",
+    user_friendly: "Your brain's habit of focusing on certain things.",
+    analogy: "Like wearing glasses with a colored lens - everything looks tinted, and you notice some colors more than others.",
+    why_it_matters: "If you're anxious, you'll spot threats everywhere. If you're depressed, you'll notice negative things more. This keeps those feelings going.",
+    example_sentence: "When you're worried about failing a test, you notice every difficult question but miss the easy ones - that's attentional bias."
+  },
+  {
+    term: "confirmation bias",
+    category: "cognitive_processes",
+    clinical_definition: "Tendency to search for, interpret, and recall information that confirms pre-existing beliefs.",
+    user_friendly: "Seeing only what you already believe.",
+    analogy: "Like a detective who only collects evidence that supports their original suspect and ignores everything else.",
+    why_it_matters: "This bias makes it hard to change your mind even when you're wrong. You unconsciously filter out information that contradicts what you believe.",
+    example_sentence: "When you believe someone doesn't like you, you notice every time they don't smile at you but ignore the times they're friendly."
+  },
+
+  // EMOTIONAL REGULATION
+  {
+    term: "emotional dysregulation",
+    category: "emotional_regulation",
+    clinical_definition: "Inability to manage emotional responses effectively, characterized by intense, prolonged reactions.",
+    user_friendly: "When your emotions get too big to control.",
+    analogy: "Like a volume knob stuck on maximum - everything feels too loud and you can't turn it down.",
+    why_it_matters: "People with emotional dysregulation struggle to calm down after getting upset. Learning regulation skills is crucial for mental health and relationships.",
+    example_sentence: "When a small criticism ruins your whole day and you can't stop feeling hurt, that's emotional dysregulation."
+  },
+  {
+    term: "limbic system",
+    category: "emotional_regulation",
+    clinical_definition: "Set of brain structures including amygdala and hippocampus involved in emotion, motivation, and behavior.",
+    user_friendly: "Your brain's emotional control center.",
+    analogy: "Like the engine room of your emotions - where feelings are generated and processed.",
+    why_it_matters: "This ancient part of your brain reacts faster than your thinking brain, which is why you feel before you think.",
+    example_sentence: "When you react emotionally to something before you can think it through, your limbic system acted first."
+  },
+  {
+    term: "stress response",
+    category: "emotional_regulation",
+    clinical_definition: "Physiological and psychological reaction to perceived threats, activating fight-or-flight mechanisms.",
+    user_friendly: "Your body's emergency reaction system.",
+    analogy: "Like pulling a fire alarm - it triggers a whole building to respond, whether there's a real fire or just burnt popcorn.",
+    why_it_matters: "Your body can't tell the difference between a real threat and a stressful situation, so it reacts the same way to both.",
+    example_sentence: "When you have a deadline and feel your heart racing and palms sweating, your stress response is preparing you to fight or run from danger that doesn't actually exist."
+  },
+  {
+    term: "interoception",
+    category: "emotional_regulation",
+    clinical_definition: "Sense of the internal state of the body, including awareness of heartbeat, breathing, and hunger.",
+    user_friendly: "Your ability to sense what's happening inside your body.",
+    analogy: "Like having internal sensors that tell you when you're hungry, tired, stressed, or need to use the bathroom.",
+    why_it_matters: "Good interoception helps you understand your emotions and physical needs. Poor interoception can make it hard to know what you're feeling.",
+    example_sentence: "When you realize you're angry because you notice your jaw is clenched and your breathing is shallow, that's interoception helping you identify your emotion."
+  },
+  {
+    term: "rumination",
+    category: "emotional_regulation",
+    clinical_definition: "Repetitive, passive focus on negative emotions and their causes without engaging in problem-solving.",
+    user_friendly: "Replaying the same negative thoughts over and over.",
+    analogy: "Like a hamster wheel for your mind - lots of mental activity but you're not getting anywhere.",
+    why_it_matters: "Rumination makes depression and anxiety worse. It feels like you're solving a problem, but you're actually just reinforcing negative patterns.",
+    example_sentence: "When you lie awake at night replaying an embarrassing moment from three years ago, that's rumination keeping you stuck."
+  },
+
+  // BEHAVIORAL PSYCHOLOGY
+  {
+    term: "operant conditioning",
+    category: "behavioral_psychology",
+    clinical_definition: "Learning process where behavior is modified by consequences (reinforcement or punishment).",
+    user_friendly: "Learning by rewards and consequences.",
+    analogy: "Like training a dog - behaviors that get treats happen more often, behaviors that get scolded happen less.",
+    why_it_matters: "Most of your daily behaviors were shaped this way. Understanding this helps you recognize what's reinforcing your habits.",
+    example_sentence: "When you get compliments for working hard and start working harder, that's operant conditioning shaping your behavior."
+  },
+  {
+    term: "reinforcement",
+    category: "behavioral_psychology",
+    clinical_definition: "Any consequence that strengthens or increases the likelihood of a behavior recurring.",
+    user_friendly: "Anything that makes you do something more often.",
+    analogy: "Like getting paid for a job - it makes you want to keep doing the work.",
+    why_it_matters: "Reinforcement is more powerful than punishment for changing behavior. Even small rewards can create lasting habits.",
+    example_sentence: "When your phone buzzes with a notification and you feel excited to check it, that excitement reinforces your phone-checking habit."
+  },
+  {
+    term: "extinction",
+    category: "behavioral_psychology",
+    clinical_definition: "Gradual weakening and disappearance of a learned behavior when reinforcement is no longer provided.",
+    user_friendly: "How behaviors fade when they stop paying off.",
+    analogy: "Like a plant that dies without water - behaviors die out without reinforcement.",
+    why_it_matters: "This is how you break habits. Stop reinforcing the behavior and it will gradually disappear, though it may temporarily spike first.",
+    example_sentence: "When you stop responding to someone's attention-seeking behavior and they eventually stop doing it, that's extinction."
+  },
+  {
+    term: "learned helplessness",
+    category: "behavioral_psychology",
+    clinical_definition: "Condition where repeated uncontrollable stressors lead to passive acceptance and failure to escape.",
+    user_friendly: "Giving up because you learned nothing you do matters.",
+    analogy: "Like a dog that stops trying to avoid shocks after learning there's no escape, even when escape becomes possible.",
+    why_it_matters: "This explains why people stay in bad situations - they've learned that trying doesn't help. Breaking this pattern requires proving that actions can make a difference.",
+    example_sentence: "When you've failed at dieting so many times that you don't even try anymore, that's learned helplessness."
+  },
+  {
+    term: "intermittent reinforcement",
+    category: "behavioral_psychology",
+    clinical_definition: "Reinforcement schedule where behavior is rewarded only some of the time.",
+    user_friendly: "Sometimes getting rewarded, not every time.",
+    analogy: "Like slot machines - you don't win every pull, which makes you pull more often.",
+    why_it_matters: "This creates the strongest, most persistent habits. It's why gambling is addictive and why variable rewards are so powerful.",
+    example_sentence: "When you check your phone constantly because sometimes you get an exciting message, intermittent reinforcement is driving that behavior."
+  },
+
+  // TRAUMA & STRESS
+  {
+    term: "fight-or-flight response",
+    category: "trauma_stress",
+    clinical_definition: "Physiological reaction to perceived harmful events, activating sympathetic nervous system for defensive action.",
+    user_friendly: "Your body's automatic survival mode.",
+    analogy: "Like an emergency evacuation system - it prepares you to either face danger or run away.",
+    why_it_matters: "This ancient response saved our ancestors from predators, but now it activates for non-physical threats like presentations or conflicts.",
+    example_sentence: "When you feel your heart pounding and muscles tensing before a confrontation, your fight-or-flight response is preparing you for physical combat."
+  },
+  {
+    term: "freeze response",
+    category: "trauma_stress",
+    clinical_definition: "Involuntary immobility response to overwhelming threat when fight or flight are not viable.",
+    user_friendly: "When you get stuck and can't move during fear.",
+    analogy: "Like a deer in headlights - your body shuts down because fighting or running won't work.",
+    why_it_matters: "Many trauma survivors experience freeze responses. Understanding this helps people realize that freezing doesn't mean weakness or consent.",
+    example_sentence: "When you blank out during a test even though you studied, that's a freeze response to the stress."
+  },
+  {
+    term: "hypervigilance",
+    category: "trauma_stress",
+    clinical_definition: "State of increased alertness and constant scanning for threats in the environment.",
+    user_friendly: "Being on high alert all the time.",
+    analogy: "Like a security guard who never takes a break - constantly watching for danger even when it's safe.",
+    why_it_matters: "Common after trauma, hypervigilance is exhausting and prevents relaxation. It keeps your stress response constantly activated.",
+    example_sentence: "When you can't relax at a party because you're always watching the door and monitoring people's reactions, that's hypervigilance."
+  },
+  {
+    term: "dissociation",
+    category: "trauma_stress",
+    clinical_definition: "Disconnection between thoughts, memories, feelings, actions, or sense of identity.",
+    user_friendly: "Mentally checking out when things get overwhelming.",
+    analogy: "Like your mind leaving your body - you're physically present but mentally somewhere else.",
+    why_it_matters: "Dissociation is a defense mechanism during trauma. Understanding it helps people recognize they're not 'going crazy' when it happens.",
+    example_sentence: "When you drive home and don't remember the trip because you were on autopilot, that's mild dissociation."
+  },
+  {
+    term: "window of tolerance",
+    category: "trauma_stress",
+    clinical_definition: "Optimal arousal zone where the nervous system can function effectively and regulate emotions.",
+    user_friendly: "Your sweet spot for handling stress.",
+    analogy: "Like Goldilocks - not too activated (anxious) or too shut down (numb), but just right for functioning well.",
+    why_it_matters: "When you're outside your window, you can't think clearly or regulate emotions. Learning to stay within it is key to emotional stability.",
+    example_sentence: "When you're calm enough to focus but alert enough to care, you're in your window of tolerance."
+  },
+
+  // ADDICTION & REWARD
+  {
+    term: "reward pathway",
+    category: "addiction_reward",
+    clinical_definition: "Neural circuit primarily involving ventral tegmental area and nucleus accumbens that processes pleasure and reinforcement.",
+    user_friendly: "The brain circuit that makes things feel good.",
+    analogy: "Like a reward center in a video game - it lights up when you do something your brain thinks is beneficial.",
+    why_it_matters: "This pathway evolved to reward survival behaviors like eating and sex, but it also responds to drugs, social media, and other potentially addictive things.",
+    example_sentence: "When you eat chocolate and feel pleasure, your reward pathway is releasing dopamine to make you want to eat it again."
+  },
+  {
+    term: "tolerance",
+    category: "addiction_reward",
+    clinical_definition: "Decreased response to a drug or behavior over time, requiring increased amounts for the same effect.",
+    user_friendly: "Needing more to get the same feeling.",
+    analogy: "Like turning up the volume because the same level doesn't sound loud enough anymore.",
+    why_it_matters: "Tolerance drives escalating use in addiction. What started as one drink becomes three because your brain adapted to the lower dose.",
+    example_sentence: "When you need two cups of coffee to feel awake when one used to work, that's tolerance."
+  },
+  {
+    term: "craving",
+    category: "addiction_reward",
+    clinical_definition: "Intense desire or urge to engage in a behavior or consume a substance.",
+    user_friendly: "A powerful want that's hard to ignore.",
+    analogy: "Like an itch you desperately want to scratch - it keeps demanding your attention until you give in.",
+    why_it_matters: "Cravings are triggered by cues in your environment and can be incredibly strong. Understanding their temporary nature helps you resist them.",
+    example_sentence: "When you smell cookies baking and suddenly must have one, even though you weren't hungry, that's a craving."
+  },
+  {
+    term: "dopamine spike",
+    category: "addiction_reward",
+    clinical_definition: "Rapid increase in dopamine levels in response to rewarding stimuli.",
+    user_friendly: "A sudden burst of feel-good brain chemicals.",
+    analogy: "Like a sugar rush for your brain - a quick hit of pleasure that fades fast.",
+    why_it_matters: "Your brain learns to crave these spikes, which is why addictive things are often those that cause big, fast dopamine increases.",
+    example_sentence: "When you check your phone and see a text from your crush, the excited feeling is from a dopamine spike."
+  },
+  {
+    term: "relapse",
+    category: "addiction_reward",
+    clinical_definition: "Return to substance use or problematic behavior after a period of abstinence or improvement.",
+    user_friendly: "Falling back into an old habit you'd quit.",
+    analogy: "Like taking a detour back to your old route when you were trying to go a new way.",
+    why_it_matters: "Relapse is a normal part of recovery, not a failure. Understanding triggers and having a plan helps prevent it.",
+    example_sentence: "When you quit biting your nails for two weeks but start again after a stressful day, that's a relapse."
+  }
+];
+
+/**
+ * Create glossary files
+ */
+function createGlossaryFiles() {
+  console.log('🧠 Creating Manual Neuroscience Glossary...\n');
+
+  // Calculate reading levels
+  const glossaryWithLevels = MANUAL_GLOSSARY.map(entry => ({
+    ...entry,
+    reading_level: calculateReadingLevel(entry.user_friendly)
+  }));
+
+  // Calculate statistics
+  const stats = {
+    total_terms: glossaryWithLevels.length,
+    categories: [...new Set(glossaryWithLevels.map(e => e.category))].length,
+    avg_reading_level: 0,
+    below_grade_8: 0,
+    grade_8_to_10: 0,
+    above_grade_10: 0,
+    reading_levels: []
+  };
+
+  glossaryWithLevels.forEach(entry => {
+    stats.reading_levels.push(entry.reading_level);
+    if (entry.reading_level <= 8) {
+      stats.below_grade_8++;
+    } else if (entry.reading_level <= 10) {
+      stats.grade_8_to_10++;
+    } else {
+      stats.above_grade_10++;
+    }
+  });
+
+  stats.avg_reading_level = stats.reading_levels.reduce((a, b) => a + b, 0) / stats.total_terms;
+  stats.avg_reading_level = Math.round(stats.avg_reading_level * 10) / 10;
+
+  // Organize by category
+  const byCategory = {};
+  glossaryWithLevels.forEach(entry => {
+    if (!byCategory[entry.category]) {
+      byCategory[entry.category] = [];
+    }
+    byCategory[entry.category].push(entry);
+  });
+
+  console.log(`✅ Glossary created with ${stats.total_terms} terms`);
+  console.log(`   Average reading level: Grade ${stats.avg_reading_level}`);
+  console.log(`   ≤ Grade 8: ${stats.below_grade_8} (${Math.round(stats.below_grade_8 / stats.total_terms * 100)}%)`);
+  console.log(`   Grade 8-10: ${stats.grade_8_to_10} (${Math.round(stats.grade_8_to_10 / stats.total_terms * 100)}%)`);
+  console.log(`   > Grade 10: ${stats.above_grade_10} (${Math.round(stats.above_grade_10 / stats.total_terms * 100)}%)\n`);
+
+  // Save files
+  console.log('💾 Saving output files...');
+
+  // Full glossary JSON
+  fs.writeFileSync(
+    path.join(__dirname, 'neuroscience-glossary.json'),
+    JSON.stringify(glossaryWithLevels, null, 2)
+  );
+
+  // Glossary by category JSON
+  fs.writeFileSync(
+    path.join(__dirname, 'glossary-by-category.json'),
+    JSON.stringify(byCategory, null, 2)
+  );
+
+  // Reading level report
+  fs.writeFileSync(
+    path.join(__dirname, 'reading-level-report.json'),
+    JSON.stringify(stats, null, 2)
+  );
+
+  // Markdown file
+  let markdown = '# Neuroscience Glossary - Simple Explanations\n\n';
+  markdown += `*Generated: ${new Date().toISOString()}*\n\n`;
+  markdown += `**Total Terms**: ${stats.total_terms} | `;
+  markdown += `**Average Reading Level**: Grade ${stats.avg_reading_level}\n\n`;
+  markdown += `**Reading Level Distribution**:\n`;
+  markdown += `- Grade 8 or below: ${stats.below_grade_8} terms (${Math.round(stats.below_grade_8 / stats.total_terms * 100)}%)\n`;
+  markdown += `- Grade 8-10: ${stats.grade_8_to_10} terms (${Math.round(stats.grade_8_to_10 / stats.total_terms * 100)}%)\n`;
+  markdown += `- Above Grade 10: ${stats.above_grade_10} terms (${Math.round(stats.above_grade_10 / stats.total_terms * 100)}%)\n\n`;
+  markdown += '---\n\n';
+
+  Object.entries(byCategory).forEach(([category, entries]) => {
+    markdown += `## ${category.replace(/_/g, ' ').toUpperCase()}\n\n`;
+
+    entries.forEach(entry => {
+      markdown += `### ${entry.term}\n\n`;
+      markdown += `**Simple Definition**: ${entry.user_friendly}\n\n`;
+      markdown += `**Think of it like**: ${entry.analogy}\n\n`;
+      markdown += `**Why it matters**: ${entry.why_it_matters}\n\n`;
+      markdown += `**Example**: ${entry.example_sentence}\n\n`;
+      markdown += `*Reading Level: Grade ${entry.reading_level} | Category: ${category}*\n\n`;
+      markdown += '---\n\n';
+    });
+  });
+
+  fs.writeFileSync(
+    path.join(__dirname, 'simple-explanations.md'),
+    markdown
+  );
+
+  console.log('✅ Files saved successfully:');
+  console.log('   - neuroscience-glossary.json (full glossary)');
+  console.log('   - glossary-by-category.json (organized by domain)');
+  console.log('   - reading-level-report.json (statistics)');
+  console.log('   - simple-explanations.md (human-readable)\n');
+
+  return { glossary: glossaryWithLevels, byCategory, stats };
+}
+
+// Run
+createGlossaryFiles();

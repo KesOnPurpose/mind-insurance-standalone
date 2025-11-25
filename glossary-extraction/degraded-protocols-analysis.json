@@ -1,0 +1,867 @@
+{
+  "analysis_date": "2025-11-22T20:43:44.994961",
+  "summary": {
+    "total_degraded": 27,
+    "avg_degradation": 0.9848148148148149,
+    "max_degradation": 7.32,
+    "total_long_tooltips": 0,
+    "total_complex_tooltips": 26,
+    "high_density_count": 0,
+    "repair_strategy_counts": {
+      "shorten_definitions": 0,
+      "simplify_language": 17,
+      "remove_tooltips": 0,
+      "manual_review": 10
+    }
+  },
+  "degraded_protocols": [
+    {
+      "protocol_id": "52379179-eeec-4431-af2b-bef9d4fc3403",
+      "chunk_summary": "Emergency Tool Decision Tree",
+      "reading_level_before": 37.02,
+      "reading_level_after": 44.34,
+      "degradation": 7.32,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Bilateral Stimulation",
+          "definition": "Left-right patterns that help your brain process hard memories",
+          "length": 62,
+          "word_count": 10,
+          "reading_level": 4.83
+        },
+        {
+          "term": "Bilateral Stimulation",
+          "definition": "Left-right patterns that help your brain process hard memories",
+          "length": 62,
+          "word_count": 10,
+          "reading_level": 4.83
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "94abefd5-3657-4d9b-a45b-74cb50c097f1",
+      "chunk_summary": "Execution Breakdown - Decision Fatigue",
+      "reading_level_before": 35.09,
+      "reading_level_after": 40.62,
+      "degradation": 5.529999999999994,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Decision Fatigue",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        },
+        {
+          "term": "Analysis paralysis",
+          "definition": "Getting so stuck thinking about choices that you can't choose",
+          "length": 61,
+          "word_count": 11,
+          "reading_level": 4.79
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "08d4eb76-4cca-47a8-b51f-197936d9d578",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "reading_level_before": 36.41,
+      "reading_level_after": 39.63,
+      "degradation": 3.220000000000006,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Decision Fatigue",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "ef50261c-6292-4b3e-afa5-a7cc486d085f",
+      "chunk_summary": "Insight Prioritization Framework",
+      "reading_level_before": 52.42,
+      "reading_level_after": 55.02,
+      "degradation": 2.6000000000000014,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "1489d8b3-52fb-4224-a432-57274ec46bb0",
+      "chunk_summary": "Visualization Practice",
+      "reading_level_before": 14.14,
+      "reading_level_after": 15.08,
+      "degradation": 0.9399999999999995,
+      "tooltip_count": 5,
+      "long_tooltips": 0,
+      "complex_tooltips": 3,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "3 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Visualization",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        },
+        {
+          "term": "sensory detail",
+          "definition": "Adding all five senses to your mental pictures",
+          "length": 46,
+          "word_count": 8,
+          "reading_level": 6.71
+        },
+        {
+          "term": "Visualization",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "6c4ee63d-709e-4e7f-a7bf-9db5e1381266",
+      "chunk_summary": "Quick Prescription Guide",
+      "reading_level_before": 30.43,
+      "reading_level_after": 31.34,
+      "degradation": 0.9100000000000001,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "DECISION FATIGUE",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "80bf90f9-2e14-4078-82c0-0428f30827f4",
+      "chunk_summary": "Motivation Collapse - Decision Fatigue",
+      "reading_level_before": 11.48,
+      "reading_level_after": 12.09,
+      "degradation": 0.6099999999999994,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "GROUNDING",
+          "definition": "Bringing yourself back to right now when you feel overwhelmed",
+          "length": 61,
+          "word_count": 10,
+          "reading_level": 6.01
+        },
+        {
+          "term": "Centering",
+          "definition": "Coming back to yourself when you feel scattered",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 5.23
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "bd00d189-129e-41ce-9918-546fc4f13f7d",
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "reading_level_before": 16.34,
+      "reading_level_after": 16.92,
+      "degradation": 0.5800000000000018,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Decision Fatigue",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "ee1d8245-ccc3-456d-a0e4-7f49ad9c28b6",
+      "chunk_summary": "The Protect Method (Daily Practice Framework)",
+      "reading_level_before": 13.77,
+      "reading_level_after": 14.29,
+      "degradation": 0.5199999999999996,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "VISUALIZATION",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "5d762653-adc3-4011-b8bd-c45a0a94863a",
+      "chunk_summary": "Walking Meditation (Kinhin)",
+      "reading_level_before": 9.67,
+      "reading_level_after": 10.18,
+      "degradation": 0.5099999999999998,
+      "tooltip_count": 4,
+      "long_tooltips": 0,
+      "complex_tooltips": 2,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "2 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        },
+        {
+          "term": "Bilateral stimulation",
+          "definition": "Left-right patterns that help your brain process hard memories",
+          "length": 62,
+          "word_count": 10,
+          "reading_level": 4.83
+        },
+        {
+          "term": "rumination",
+          "definition": "Replaying the same negative thoughts over and over.",
+          "length": 51,
+          "word_count": 8,
+          "reading_level": 6.71
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "9d2e092c-d94c-43f6-813c-9e963c75a0e6",
+      "chunk_summary": "Polyvagal Ladder Exercise",
+      "reading_level_before": 12.39,
+      "reading_level_after": 12.88,
+      "degradation": 0.4900000000000002,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "3dced9e8-8940-45de-a7ec-2f838c129086",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "reading_level_before": 14.05,
+      "reading_level_after": 14.53,
+      "degradation": 0.47999999999999865,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Decision Fatigue",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "9efa48f2-c71a-432b-903a-38a3de6d81b1",
+      "chunk_summary": "Mio Execution Workflow",
+      "reading_level_before": 31.5,
+      "reading_level_after": 31.97,
+      "degradation": 0.46999999999999886,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "be0b17d7-eecd-488b-9caa-524504f138b9",
+      "chunk_summary": "Success Sabotage - Identity Ceiling",
+      "reading_level_before": 32.76,
+      "reading_level_after": 33.19,
+      "degradation": 0.4299999999999997,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "DECISION FATIGUE",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "014158b0-e469-4110-8df3-1e5c8d313f5d",
+      "chunk_summary": "Weekly Video Script Communication Examples",
+      "reading_level_before": 11.14,
+      "reading_level_after": 11.55,
+      "degradation": 0.41000000000000014,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "AWARENESS",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "7eea1f5e-8d62-4663-a78e-3bdb16e57152",
+      "chunk_summary": "Relationship Erosion - Decision Fatigue",
+      "reading_level_before": 5.13,
+      "reading_level_after": 5.48,
+      "degradation": 0.35000000000000053,
+      "tooltip_count": 4,
+      "long_tooltips": 0,
+      "complex_tooltips": 2,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "2 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "emotional flooding",
+          "definition": "When feelings get so big they shut down your thinking brain",
+          "length": 59,
+          "word_count": 11,
+          "reading_level": 2.65
+        },
+        {
+          "term": "grounding",
+          "definition": "Bringing yourself back to right now when you feel overwhelmed",
+          "length": 61,
+          "word_count": 10,
+          "reading_level": 6.01
+        },
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "bae50712-3f25-4653-826c-43fd48fccf2b",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "reading_level_before": 10.42,
+      "reading_level_after": 10.64,
+      "degradation": 0.22000000000000064,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "centering",
+          "definition": "Coming back to yourself when you feel scattered",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 5.23
+        },
+        {
+          "term": "presence",
+          "definition": "Being fully here and now",
+          "length": 24,
+          "word_count": 5,
+          "reading_level": 0.52
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "bd571fc6-3d47-4bbd-82f7-36329fb371de",
+      "chunk_summary": "Database Schema & Forensic Data Sources",
+      "reading_level_before": 13.29,
+      "reading_level_after": 13.48,
+      "degradation": 0.19000000000000128,
+      "tooltip_count": 3,
+      "long_tooltips": 0,
+      "complex_tooltips": 3,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "3 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        },
+        {
+          "term": "AWARENESS",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        },
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "79937745-1813-43e2-8919-b41d5c1a4f1b",
+      "chunk_summary": "Examen Prayer (Evening Review)",
+      "reading_level_before": 8.07,
+      "reading_level_after": 8.24,
+      "degradation": 0.16999999999999993,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "7008970c-1988-4808-a3b9-dcd8995e289f",
+      "chunk_summary": "3 Primary Patterns - 8 Sub-Patterns (Detailed)",
+      "reading_level_before": 26.45,
+      "reading_level_after": 26.61,
+      "degradation": 0.16000000000000014,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "b2c6ce83-e4e0-4804-8491-ae898a19a225",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "reading_level_before": 8.74,
+      "reading_level_after": 8.84,
+      "degradation": 0.09999999999999964,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "b0813ade-098e-41a1-89a6-03f69c2b839c",
+      "chunk_summary": "Protocol Category 3: Competence Confidence Rewiring",
+      "reading_level_before": 10.86,
+      "reading_level_after": 10.95,
+      "degradation": 0.08999999999999986,
+      "tooltip_count": 5,
+      "long_tooltips": 0,
+      "complex_tooltips": 2,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "2 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "mindfulness",
+          "definition": "Paying attention to right now without judging it",
+          "length": 48,
+          "word_count": 8,
+          "reading_level": 5.23
+        },
+        {
+          "term": "Visualization",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        },
+        {
+          "term": "amygdala",
+          "definition": "Your brain's alarm system that spots danger.",
+          "length": 44,
+          "word_count": 8,
+          "reading_level": 3.76
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "9093891e-1865-408c-8e18-78c2d3693055",
+      "chunk_summary": "Accountability Pattern Detection & Rewiring Protocols",
+      "reading_level_before": 15.43,
+      "reading_level_after": 15.51,
+      "degradation": 0.08000000000000007,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 2,
+      "max_tooltips_per_sentence": 2,
+      "primary_causes": [
+        "2 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        },
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "ed15c518-2535-4f72-9724-6216c19d1e53",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "reading_level_before": 11.58,
+      "reading_level_after": 11.66,
+      "degradation": 0.08000000000000007,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        },
+        {
+          "term": "Cognitive Load",
+          "definition": "How much your brain is juggling at once",
+          "length": 39,
+          "word_count": 8,
+          "reading_level": 0.8
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "a4ec1458-853c-491f-993e-0e37d000b111",
+      "chunk_summary": "Motivation Collapse - Comparison",
+      "reading_level_before": 14.13,
+      "reading_level_after": 14.2,
+      "degradation": 0.06999999999999851,
+      "tooltip_count": 2,
+      "long_tooltips": 0,
+      "complex_tooltips": 2,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "2 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "VISUALIZATION",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        },
+        {
+          "term": "visualization",
+          "definition": "Imagining something on purpose to make it more likely",
+          "length": 53,
+          "word_count": 9,
+          "reading_level": 10.21
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "691bf96e-bbc4-4869-ad31-37de6b197b76",
+      "chunk_summary": "Potential Contemplation Journal - Sage",
+      "reading_level_before": 10.0,
+      "reading_level_after": 10.04,
+      "degradation": 0.03999999999999915,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 1,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "1 tooltips exceed Grade 8 reading level"
+      ],
+      "repair_strategies": [
+        "simplify_language"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Awareness",
+          "definition": "Noticing what's happening inside and around you",
+          "length": 47,
+          "word_count": 8,
+          "reading_level": 8.18
+        }
+      ],
+      "high_density_sentences": []
+    },
+    {
+      "protocol_id": "b6d3637f-3c6f-48d0-9e0e-d2b794454860",
+      "chunk_summary": "Builder Performance Crisis - Builder",
+      "reading_level_before": 13.94,
+      "reading_level_after": 13.96,
+      "degradation": 0.02000000000000135,
+      "tooltip_count": 1,
+      "long_tooltips": 0,
+      "complex_tooltips": 0,
+      "max_tooltips_per_sentence": 1,
+      "primary_causes": [
+        "Unknown cause - requires manual review"
+      ],
+      "repair_strategies": [
+        "manual_review"
+      ],
+      "tooltip_details": [
+        {
+          "term": "Decision Fatigue",
+          "definition": "Getting worse at choosing after making too many choices",
+          "length": 55,
+          "word_count": 9,
+          "reading_level": 7.59
+        }
+      ],
+      "high_density_sentences": []
+    }
+  ]
+}

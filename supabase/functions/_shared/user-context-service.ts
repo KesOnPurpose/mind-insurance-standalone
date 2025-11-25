@@ -88,6 +88,101 @@ export interface UserContext {
     started_at?: string;
     completed_at?: string;
   }>;
+
+  // PROTECT practice behavioral data (for MIO handoffs)
+  recent_practices?: Array<{
+    practice_date: string;
+    practice_type: string;
+    completed_at: string;
+    energy_levels?: {
+      morning?: number;
+      afternoon?: number;
+      evening?: number;
+    };
+    trigger_resets?: number;
+    identity_statement?: string;
+  }>;
+  practice_timing_pattern?: 'early' | 'late' | 'inconsistent' | 'normal';
+  energy_trend?: 'declining' | 'stable' | 'improving';
+  days_since_last_practice?: number;
+  dropout_risk_score?: number; // 0-100, higher = higher risk
+  dropout_risk_level?: 'low' | 'medium' | 'high' | 'critical';
+  dropout_risk_factors?: string[];
+}
+
+/**
+ * Phase 4: Calculate dropout risk score based on behavioral signals
+ */
+function calculateDropoutRisk(context: {
+  current_week: number;
+  current_day: number;
+  days_since_last_practice?: number;
+  practice_timing_pattern?: string;
+  energy_trend?: string;
+  recent_practices?: Array<any>;
+  current_streak?: number;
+}): { score: number; level: string; factors: string[] } {
+  let riskScore = 0;
+  const factors: string[] = [];
+
+  // Week 3 danger zone (days 15-21)
+  if (context.current_week === 3) {
+    riskScore += 20;
+    factors.push('Week 3 danger zone (highest dropout period)');
+  }
+
+  // 3-day gap rule
+  if (context.days_since_last_practice && context.days_since_last_practice >= 3) {
+    riskScore += 30;
+    factors.push(`${context.days_since_last_practice}-day practice gap (CRITICAL)`);
+  } else if (context.days_since_last_practice && context.days_since_last_practice === 2) {
+    riskScore += 15;
+    factors.push('2-day practice gap (warning)');
+  }
+
+  // Energy depletion signals
+  if (context.energy_trend === 'declining') {
+    riskScore += 15;
+    factors.push('Declining energy trend (burnout risk)');
+  }
+
+  // Timing pattern risks
+  if (context.practice_timing_pattern === 'early') {
+    riskScore += 10;
+    factors.push('Early morning practice pattern (energy depletion signal)');
+  } else if (context.practice_timing_pattern === 'late') {
+    riskScore += 10;
+    factors.push('Late night practice pattern (procrastination signal)');
+  } else if (context.practice_timing_pattern === 'inconsistent') {
+    riskScore += 15;
+    factors.push('Inconsistent practice timing (stability issue)');
+  }
+
+  // Streak analysis
+  if (context.current_streak === 0) {
+    riskScore += 10;
+    factors.push('No active streak');
+  }
+
+  // Practice frequency analysis (last 5 practices)
+  if (context.recent_practices && context.recent_practices.length < 3) {
+    riskScore += 15;
+    factors.push(`Only ${context.recent_practices.length} practices in recent history`);
+  }
+
+  // Determine risk level
+  let riskLevel: string;
+  if (riskScore >= 70) {
+    riskLevel = 'critical';
+  } else if (riskScore >= 50) {
+    riskLevel = 'high';
+  } else if (riskScore >= 30) {
+    riskLevel = 'medium';
+  } else {
+    riskLevel = 'low';
+  }
+
+  return { score: riskScore, level: riskLevel, factors };
 }
 
 /**
@@ -163,6 +258,98 @@ export async function getUserContext(
     .limit(1)
     .single();
 
+  // Load recent PROTECT practices (for MIO agent only)
+  let recentPractices = null;
+  let practiceTimingPattern = null;
+  let energyTrend = null;
+  let daysSinceLastPractice = null;
+
+  if (agent === 'mio') {
+    const { data: practices } = await supabase
+      .from('daily_practices')
+      .select('*')
+      .eq('user_id', userId)
+      .order('practice_date', { ascending: false })
+      .limit(5);
+
+    if (practices && practices.length > 0) {
+      recentPractices = practices.map((p: any) => ({
+        practice_date: p.practice_date,
+        practice_type: p.practice_type,
+        completed_at: p.completed_at,
+        energy_levels: p.data?.energy_levels,
+        trigger_resets: p.data?.trigger_resets,
+        identity_statement: p.data?.identity_statement
+      }));
+
+      // Analyze practice timing patterns
+      const completionHours = practices
+        .filter((p: any) => p.completed_at)
+        .map((p: any) => new Date(p.completed_at).getHours());
+
+      if (completionHours.length > 0) {
+        const avgHour = completionHours.reduce((a, b) => a + b, 0) / completionHours.length;
+        const hourVariance = Math.max(...completionHours) - Math.min(...completionHours);
+
+        if (hourVariance > 8) {
+          practiceTimingPattern = 'inconsistent';
+        } else if (avgHour < 7) {
+          practiceTimingPattern = 'early';
+        } else if (avgHour > 21) {
+          practiceTimingPattern = 'late';
+        } else {
+          practiceTimingPattern = 'normal';
+        }
+      }
+
+      // Analyze energy trend (from Energy Audit practices)
+      const energyPractices = practices.filter((p: any) =>
+        p.practice_type === 'energy_audit' && p.data?.energy_levels
+      );
+
+      if (energyPractices.length >= 2) {
+        const firstAvg = Object.values(energyPractices[energyPractices.length - 1].data.energy_levels || {})
+          .reduce((a: any, b: any) => a + b, 0) / 3;
+        const lastAvg = Object.values(energyPractices[0].data.energy_levels || {})
+          .reduce((a: any, b: any) => a + b, 0) / 3;
+
+        if (lastAvg < firstAvg - 1) {
+          energyTrend = 'declining';
+        } else if (lastAvg > firstAvg + 1) {
+          energyTrend = 'improving';
+        } else {
+          energyTrend = 'stable';
+        }
+      }
+
+      // Calculate days since last practice
+      const lastPracticeDate = new Date(practices[0].practice_date);
+      const today = new Date();
+      daysSinceLastPractice = Math.floor((today.getTime() - lastPracticeDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
+  }
+
+  // Phase 4: Calculate dropout risk (MIO agent only)
+  let dropoutRiskScore = null;
+  let dropoutRiskLevel = null;
+  let dropoutRiskFactors = null;
+
+  if (agent === 'mio' && recentPractices) {
+    const riskAnalysis = calculateDropoutRisk({
+      current_week: profile.current_week || 1,
+      current_day: profile.current_day || 1,
+      days_since_last_practice: daysSinceLastPractice,
+      practice_timing_pattern: practiceTimingPattern,
+      energy_trend: energyTrend,
+      recent_practices: recentPractices,
+      current_streak: profile.current_streak || 0
+    });
+
+    dropoutRiskScore = riskAnalysis.score;
+    dropoutRiskLevel = riskAnalysis.level;
+    dropoutRiskFactors = riskAnalysis.factors;
+  }
+
   // Build context object
   const context: UserContext = {
     user_id: userId,
@@ -234,6 +421,15 @@ export async function getUserContext(
       started_at: t.started_at,
       completed_at: t.completed_at,
     })) || [],
+
+    // PROTECT practice behavioral data (MIO agent only)
+    recent_practices: recentPractices,
+    practice_timing_pattern: practiceTimingPattern,
+    energy_trend: energyTrend,
+    days_since_last_practice: daysSinceLastPractice,
+    dropout_risk_score: dropoutRiskScore,
+    dropout_risk_level: dropoutRiskLevel,
+    dropout_risk_factors: dropoutRiskFactors,
   };
 
   // Cache the context
@@ -381,6 +577,65 @@ export function formatUserContextForPrompt(context: UserContext): string {
                        : '⏸️';
       prompt += `${i + 1}. ${statusIcon} ${t.tactic_name} (${t.tactic_id})\n`;
     });
+  }
+
+  // PROTECT practice behavioral data (MIO agent only)
+  if (context.recent_practices && context.recent_practices.length > 0) {
+    prompt += `\nRECENT PROTECT PRACTICES:\n`;
+    context.recent_practices.forEach((p, i) => {
+      const practiceType = p.practice_type.replace(/_/g, ' ').toUpperCase();
+      const completedTime = new Date(p.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      prompt += `${i + 1}. ${practiceType} - ${p.practice_date} at ${completedTime}\n`;
+
+      if (p.energy_levels) {
+        const { morning, afternoon, evening } = p.energy_levels;
+        prompt += `   Energy: Morning ${morning}/10, Afternoon ${afternoon}/10, Evening ${evening}/10\n`;
+      }
+
+      if (p.trigger_resets) {
+        prompt += `   Trigger Resets: ${p.trigger_resets} times\n`;
+      }
+    });
+
+    if (context.practice_timing_pattern) {
+      const timingWarning = context.practice_timing_pattern === 'early' ? '⚠️ EARLY morning pattern (pre-7am) - possible energy depletion signal'
+                          : context.practice_timing_pattern === 'late' ? '⚠️ LATE night pattern (post-9pm) - possible avoidance/procrastination'
+                          : context.practice_timing_pattern === 'inconsistent' ? '⚠️ INCONSISTENT timing (8+ hour variance) - stability issue'
+                          : '';
+      if (timingWarning) {
+        prompt += `\n${timingWarning}\n`;
+      }
+    }
+
+    if (context.energy_trend) {
+      const energyWarning = context.energy_trend === 'declining' ? '⚠️ DECLINING energy trend - burnout risk'
+                          : context.energy_trend === 'improving' ? '✅ IMPROVING energy trend'
+                          : '';
+      if (energyWarning) {
+        prompt += `${energyWarning}\n`;
+      }
+    }
+
+    if (context.days_since_last_practice !== null && context.days_since_last_practice > 0) {
+      prompt += `⚠️ ${context.days_since_last_practice} days since last practice\n`;
+    }
+
+    // Phase 4: Dropout risk scoring
+    if (context.dropout_risk_score !== null && context.dropout_risk_level) {
+      prompt += `\nDROPOUT RISK ANALYSIS:\n`;
+      const riskEmoji = context.dropout_risk_level === 'critical' ? '🚨'
+                      : context.dropout_risk_level === 'high' ? '⚠️'
+                      : context.dropout_risk_level === 'medium' ? '⚡'
+                      : '✅';
+      prompt += `${riskEmoji} Risk Level: ${context.dropout_risk_level.toUpperCase()} (Score: ${context.dropout_risk_score}/100)\n`;
+
+      if (context.dropout_risk_factors && context.dropout_risk_factors.length > 0) {
+        prompt += `Risk Factors:\n`;
+        context.dropout_risk_factors.forEach((factor, i) => {
+          prompt += `  ${i + 1}. ${factor}\n`;
+        });
+      }
+    }
   }
 
   return prompt;

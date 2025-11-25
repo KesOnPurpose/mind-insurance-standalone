@@ -1,16 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { ShieldCheck, Users, BarChart3, Settings, Activity } from 'lucide-react';
+import { AnalyticsDashboard } from '@/components/admin/analytics';
+import { Button } from '@/components/ui/button';
 
 // ============================================================================
-// ADMIN DASHBOARD - PLACEHOLDER
+// ADMIN DASHBOARD
 // ============================================================================
-// Temporary admin dashboard showing admin status and permissions
-// Will be replaced with full analytics dashboard in future iterations
+// Full admin dashboard with:
+// - Permission overview
+// - Real-time analytics dashboard
+// - Toggle between permissions and analytics views
 // ============================================================================
+
+type DashboardView = 'analytics' | 'permissions';
 
 export default function AdminDashboard() {
   const { adminUser, isSuperAdmin } = useAdmin();
+  const [view, setView] = useState<DashboardView>('analytics');
 
   if (!adminUser) {
     return null; // Should never happen due to AdminRoute guard
@@ -21,15 +28,35 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <ShieldCheck className="h-12 w-12 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Admin Dashboard
-              </h1>
-              <p className="text-muted-foreground">
-                Welcome back, {adminUser.role === 'super_admin' ? 'Super Admin' : adminUser.role}
-              </p>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <ShieldCheck className="h-12 w-12 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Admin Dashboard
+                </h1>
+                <p className="text-muted-foreground">
+                  Welcome back, {adminUser.role === 'super_admin' ? 'Super Admin' : adminUser.role}
+                </p>
+              </div>
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex gap-2">
+              <Button
+                variant={view === 'analytics' ? 'default' : 'outline'}
+                onClick={() => setView('analytics')}
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
+              <Button
+                variant={view === 'permissions' ? 'default' : 'outline'}
+                onClick={() => setView('permissions')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Permissions
+              </Button>
             </div>
           </div>
 
@@ -45,51 +72,46 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Permissions Grid */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Your Permissions</h2>
+        {/* Content Area */}
+        {view === 'analytics' ? (
+          /* Analytics Dashboard */
+          <AnalyticsDashboard />
+        ) : (
+          /* Permissions Grid */
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold mb-6">Your Permissions</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Users Permissions */}
-            <PermissionCard
-              icon={<Users className="h-6 w-6" />}
-              title="User Management"
-              permissions={adminUser.permissions.users}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Users Permissions */}
+              <PermissionCard
+                icon={<Users className="h-6 w-6" />}
+                title="User Management"
+                permissions={adminUser.permissions.users}
+              />
 
-            {/* Analytics Permissions */}
-            <PermissionCard
-              icon={<BarChart3 className="h-6 w-6" />}
-              title="Analytics"
-              permissions={adminUser.permissions.analytics}
-            />
+              {/* Analytics Permissions */}
+              <PermissionCard
+                icon={<BarChart3 className="h-6 w-6" />}
+                title="Analytics"
+                permissions={adminUser.permissions.analytics}
+              />
 
-            {/* Content Permissions */}
-            <PermissionCard
-              icon={<Activity className="h-6 w-6" />}
-              title="Content Management"
-              permissions={adminUser.permissions.content}
-            />
+              {/* Content Permissions */}
+              <PermissionCard
+                icon={<Activity className="h-6 w-6" />}
+                title="Content Management"
+                permissions={adminUser.permissions.content}
+              />
 
-            {/* System Permissions */}
-            <PermissionCard
-              icon={<Settings className="h-6 w-6" />}
-              title="System Configuration"
-              permissions={adminUser.permissions.system}
-            />
+              {/* System Permissions */}
+              <PermissionCard
+                icon={<Settings className="h-6 w-6" />}
+                title="System Configuration"
+                permissions={adminUser.permissions.system}
+              />
+            </div>
           </div>
-        </div>
-
-        {/* Coming Soon */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8 border-2 border-dashed border-primary/20">
-          <h3 className="text-xl font-bold text-foreground mb-2">
-            Full Dashboard Coming Soon
-          </h3>
-          <p className="text-muted-foreground">
-            The complete admin analytics dashboard with real-time metrics, user management,
-            and system monitoring will be available in the next update.
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );

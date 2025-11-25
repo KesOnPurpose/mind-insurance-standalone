@@ -70,6 +70,27 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
 
   const LevelIcon = levelInfo.icon;
 
+  // Mark welcome as seen whenever modal is closed (any dismissal method)
+  const handleClose = async () => {
+    try {
+      // Update database to mark welcome as seen
+      await supabase
+        .from('user_onboarding')
+        .update({
+          has_seen_welcome: true,
+          welcome_shown_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      // Close the modal even if database update fails
+      onClose();
+    } catch (error) {
+      console.error('Error updating welcome status:', error);
+      // Still close the modal - don't block user
+      onClose();
+    }
+  };
+
   const handleStartJourney = async () => {
     setIsStarting(true);
     try {
@@ -113,7 +134,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
@@ -206,7 +227,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isStarting}
             className="w-full sm:w-auto"
           >

@@ -1,0 +1,2074 @@
+{
+  "metadata": {
+    "source_file": "/Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Grouphome App LOVABLE/mindhouse-prodigy/protocol-parsing/fixtures/test-research-protocols.md",
+    "total_protocols": 83,
+    "kb_files_processed": 5,
+    "statistics": {
+      "total_protocols": 83,
+      "by_kb_file": {
+        "core-framework": 5,
+        "avatar-index": 17,
+        "protocol-library": 42,
+        "communication-frameworks": 9,
+        "emergency-tools": 10
+      },
+      "by_category": {
+        "emergency-protocol": 24,
+        "research-protocol": 43,
+        "avatar-definition": 13,
+        "communication-framework": 3
+      },
+      "by_difficulty": {
+        "intermediate": 15,
+        "beginner": 33,
+        "advanced": 35
+      },
+      "by_temperament": {
+        "connector": 28,
+        "sage": 39,
+        "builder": 44,
+        "warrior": 40,
+        "all": 3
+      },
+      "emergency_protocols": 24,
+      "with_dual_framing": 0,
+      "avg_time_min": 7.7,
+      "avg_time_max": 16.8
+    }
+  },
+  "protocols": [
+    {
+      "source_file": "mio-kb-01-core-framework.md",
+      "file_number": 1,
+      "chunk_number": 1,
+      "chunk_text": "# Research Protocols - Test Fixtures (First 5 Knowledge Base Files)\n\n# SOURCE FILE: mio-kb-01-core-framework.md\n# ORIGINAL PATH: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Purpose Waze Company/Context/30 Day Challenge/MIO-System-PRODUCTION/01-Knowledge-Base/mio-kb-01-core-framework.md\n\nIDENTITY COLLISION CORE FRAMEWORK\n\n=== 3 PRIMARY PATTERNS ===\n\n1. PAST PRISON\n\n- Subconscious belief: \"I'm not allowed to rise above my roots\"\n\n- Manifestation: Success ceiling, guilt when winning, self-sabotage before breakthrough\n\n- Sub-patterns: Identity Ceiling, Loyalty Conflict, Origin Story Anchor\n\n2. SUCCESS SABOTAGE\n\n- Subconscious belief: \"Rest = weakness, depletion = dedication\"\n\n- Manifestation: Burnout, relationship sacrifice, health decline at peak success\n\n- Sub-patterns: Burnout Pattern, Depletion Dedication, Relationship Sacrifice\n\n3. COMPASS CRISIS\n\n- Subconscious belief: \"I don't know who I am without external validation\"\n\n- Manifestation: Comparison paralysis, decision overwhelm, identity fragmentation\n\n- Sub-patterns: Impostor Syndrome, Comparison Collision\n\n=== 8 SUB-PATTERNS (DETAILED) ===\n\nPAST PRISON Sub-Patterns:\n\nIdentity Ceiling\n\n- Core Lie: \"Success beyond my origins is betrayal\"\n\n- Triggers: Reaching income level above family, moving to better neighborhood, achieving education level no one in family has\n\n- Manifestation: Self-sabotage right before breakthrough, guilt after wins, downplaying success\n\n- Quote from pattern: \"Who do you think you are?\"\n\nLoyalty Conflict\n\n- Core Lie: \"Rising means leaving them behind\"\n\n- Triggers: Family criticizing success, friends resenting progress, being called \"different\" or \"changed\"\n\n- Manifestation: Hiding wins, staying small to maintain relationships, apologizing for success\n\n- Quote from pattern: \"You think you're better than us now?\"\n\nOrigin Story Anchor\n\n- Core Lie: \"My past defines my potential\"\n\n- Triggers: Revisiting hometown, talking about background, comparison to others' advantages\n\n- Manifestation: \"This is just who I am\" mindset, using past as excuse, identity locked to origins\n\n- Quote from pattern: \"People like me don't do things like that\"\n\nSUCCESS SABOTAGE Sub-Patterns:\n\nBurnout Pattern\n\n- Core Lie: \"Rest is weakness, exhaustion proves commitment\"\n\n- Triggers: Completing major goal, reaching milestone, others asking \"how do you do it all?\"\n\n- Manifestation: Chronic exhaustion, health decline, inability to celebrate, immediate next goal\n\n- Quote from pattern: \"If you're not exhausted, you're not working hard enough\"\n\nDepletion Dedication\n\n- Core Lie: \"Sacrifice everything or you're not serious\"\n\n- Triggers: Seeing others rest, taking time off, prioritizing health/relationships\n\n- Manifestation: Guilt when resting, measuring worth by hours worked, glorifying hustle\n\n- Quote from pattern: \"Sleep is for people who aren't hungry enough\"\n\nRelationship Sacrifice\n\n- Core Lie: \"Success requires relational collateral damage\"\n\n- Triggers: Missing family events, spouse expressing needs, kids asking for time\n\n- Manifestation: Isolation at the top, broken relationships, \"they'll understand when I make it\" mindset\n\n- Quote from pattern: \"They'll appreciate the sacrifice when I succeed\"\n\nCOMPASS CRISIS Sub-Patterns:\n\nImpostor Syndrome\n\n- Core Lie: \"I'm a fraud waiting to be exposed\"\n\n- Triggers: Receiving praise, being asked to lead, comparison to experts, new opportunities\n\n- Manifestation: Downplaying wins, attributing success to luck, fear of being found out\n\n- Quote from pattern: \"I don't actually know what I'm doing\"\n\nComparison Collision\n\n- Core Lie: \"Their success is my failure\"\n\n- Triggers: Scrolling social media, peer wins, seeing others ahead, highlight reels\n\n- Manifestation: Paralysis, shifting direction based on others, measuring self against external benchmarks\n\n- Quote from pattern: \"Everyone's winning but me\"\n\n=== 4 TEMPERAMENTS ===\n\nWARRIOR\n\n- Core Drive: Achievement and conquest\n\n- Communication Style: Direct, action-oriented, concise\n\n- Motivation: Challenge, competition, tangible results\n\n- Decision Making: Fast, decisive, risk-tolerant\n\n- Recovery Needs: Physical intensity, hard resets\n\n- Celebration Style: Tangible wins, next challenge\n\n- Crisis Response: \"What's the battle plan? Let's fight.\"\n\n- Pattern Vulnerability: Burnout (pushing through exhaustion)\n\n- Coaching Approach: Give clear orders, challenge them, celebrate action\n\nSAGE\n\n- Core Drive: Wisdom and understanding\n\n- Communication Style: Reflective, deep questions, contemplative\n\n- Motivation: Insight, meaning, truth discovery\n\n- Decision Making: Slow, thorough, wisdom-seeking\n\n- Recovery Needs: Contemplation, nature, solitude\n\n- Celebration Style: Awareness breakthroughs, insights gained\n\n- Crisis Response: \"What's beneath this? What am I meant to learn?\"\n\n- Pattern Vulnerability: Origin Story Anchor (overthinking past)\n\n- Coaching Approach: Ask deep questions, create space for processing\n\nCONNECTOR\n\n- Core Drive: Relationships and impact\n\n- Communication Style: Warm, relational, empathetic\n\n- Motivation: Connection, community, serving others\n\n- Decision Making: Collaborative, consensus-seeking, relational\n\n- Recovery Needs: Receiving from others, relational refueling\n\n- Celebration Style: Relational wins, impact on others\n\n- Crisis Response: \"Who can I talk to? I need support.\"\n\n- Pattern Vulnerability: Relationship Sacrifice (pouring out without refilling)\n\n- Coaching Approach: Warmth paramount, emphasize community, celebrate relational wins\n\nBUILDER\n\n- Core Drive: Systems and optimization\n\n- Communication Style: Data-focused, systematic, structured\n\n- Motivation: Efficiency, completion, measurable progress\n\n- Decision Making: Analytical, process-driven, data-based\n\n- Recovery Needs: Structured routines, scheduled rest\n\n- Celebration Style: Metrics, completion percentages, system optimization\n\n- Crisis Response: \"What's the system to fix this?\"\n\n- Pattern Vulnerability: Depletion Dedication (optimizing to exhaustion)\n\n- Coaching Approach: Use data, show metrics, celebrate system improvements",
+      "chunk_summary": "3 Primary Patterns - 8 Sub-Patterns (Detailed)",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "depletion_dedication",
+        "identity_ceiling",
+        "motivation_collapse",
+        "burnout"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "core-framework"
+    },
+    {
+      "source_file": "mio-kb-01-core-framework.md",
+      "file_number": 1,
+      "chunk_number": 2,
+      "chunk_text": "=== THE PROTECT METHOD (Daily Practice Framework) ===\n\nUsers complete this daily in the Mind Insurance app. MIO monitors these entries.\n\nP - PATTERN CHECK\n\n- Question: \"How many times did you catch your pattern today?\"\n\n- Data field: pattern_check_count (integer)\n\n- What MIO watches: Declining counts = pattern gaining strength\n\nR - RESET COUNT\n\n- Question: \"How many trigger resets did you use?\"\n\n- Data field: trigger_resets (integer)\n\n- What MIO watches: Increasing resets = pattern attacking harder\n\nO - OUTCOME VISUALIZATION\n\n- Question: \"Did you visualize your desired outcome today?\"\n\n- Data field: outcome_visualization (boolean)\n\n- What MIO watches: Consistent \"no\" = losing vision\n\nT - TRUTH STATEMENT\n\n- Question: \"Record your identity statement (text or voice)\"\n\n- Data field: identity_statement (text), voice_recordings (table)\n\n- What MIO watches: Generic statements = lack of conviction\n\nE - ENERGY LEVELS\n\n- Question: \"Rate your energy: Morning / Afternoon / Evening (1-10)\"\n\n- Data fields: energy_morning, energy_afternoon, energy_evening (integers)\n\n- What MIO watches: Evening drops = Burnout; Morning decline = Motivation collapse\n\nC - CELEBRATE WINS\n\n- Question: \"What wins are you celebrating today?\"\n\n- Data field: celebration_wins (text array)\n\n- What MIO watches: Generic celebrations or empty = losing momentum\n\nT - TOMORROW SETUP\n\n- Question: \"How are you setting up tomorrow for success?\"\n\n- Data field: tomorrow_setup (text)\n\n- What MIO watches: Vague or missing = lack of intentionality",
+      "chunk_summary": "The Protect Method (Daily Practice Framework)",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "core-framework"
+    },
+    {
+      "source_file": "mio-kb-01-core-framework.md",
+      "file_number": 1,
+      "chunk_number": 3,
+      "chunk_text": "=== FOUR-PILLAR FOUNDATION (Unshakable Foundation Framework) ===\n\nUsed in Emergency Tool 3 (Foundation Strength Check) and Week 4 tools.\n\n1. SPIRITUAL PILLAR\n\n- Components: Purpose, meaning, faith connection, divine alignment\n\n- Strength Indicators: Clear purpose, spiritual practices consistent, peace present\n\n- Weakness Indicators: Existential questions, disconnection from purpose, meaning crisis\n\n- Assessment: \"Rate your Spiritual pillar 1-10 (Purpose, meaning, faith)\"\n\n2. MENTAL PILLAR\n\n- Components: Clarity, mindset, focus, mental health, thought patterns\n\n- Strength Indicators: Clear thinking, positive mindset, strong focus\n\n- Weakness Indicators: Brain fog, negative loops, can't focus, anxiety/depression\n\n- Assessment: \"Rate your Mental pillar 1-10 (Clarity, mindset, focus)\"\n\n3. PHYSICAL PILLAR\n\n- Components: Energy, health, vitality, body care, physical capacity\n\n- Strength Indicators: High energy, healthy body, vitality present, physical strength\n\n- Weakness Indicators: Exhaustion, health issues, declining energy, body neglect\n\n- Assessment: \"Rate your Physical pillar 1-10 (Energy, health, vitality)\"\n\n4. RELATIONAL PILLAR\n\n- Components: Connections, support system, boundaries, community, relationships\n\n- Strength Indicators: Strong support, healthy boundaries, meaningful connections\n\n- Weakness Indicators: Isolation, toxic relationships, boundary violations, loneliness\n\n- Assessment: \"Rate your Relational pillar 1-10 (Connections, support, boundaries)\"",
+      "chunk_summary": "Four-Pillar Foundation (Unshakable Foundation Framework)",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout"
+      ],
+      "temperament_match": [
+        "connector",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "core-framework"
+    },
+    {
+      "source_file": "mio-kb-01-core-framework.md",
+      "file_number": 1,
+      "chunk_number": 4,
+      "chunk_text": "=== IDENTITY COLLISION (THE ANTAGONIST) ===\n\nIdentity Collision is NOT a clinical diagnosis or disorder. It is the ANTAGONIST--the subconscious pattern hijacking the user's success.\n\nCharacteristics:\n\n- Operates subconsciously (user doesn't see it coming)\n\n- Uses past trauma, family narratives, cultural programming\n\n- Triggers at breakthrough moments (right before success)\n\n- Creates self-sabotage that looks logical\n\n- Strengthens when challenged directly (can't fight it with willpower alone)\n\n- Defeated through neural rewiring, identity reconstruction, foundation building\n\nMIO's Role:\n\n- Pattern detective: Help users SEE the collision when it's operating\n\n- Truth-teller: Name the pattern directly without softening\n\n- Protocol prescriber: Give precise neural rewiring practices\n\n- Accountability partner: Track progress, celebrate interruptions\n\n- Foundation architect: Build Unshakable Foundation so pattern loses grip\n\nCRITICAL: MIO is NOT a therapist, counselor, or medical professional. MIO is an Identity Collision coach helping users defeat subconscious patterns and build unshakable foundations.",
+      "chunk_summary": "Identity Collision (The Antagonist)",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "past_prison"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "core-framework"
+    },
+    {
+      "source_file": "mio-kb-01-core-framework.md",
+      "file_number": 1,
+      "chunk_number": 5,
+      "chunk_text": "=== KEY TERMINOLOGY ===\n\n- PATTERN: The specific Identity Collision (Past Prison, Success Sabotage, Compass Crisis)\n\n- SUB-PATTERN: Specific manifestation (Burnout, Impostor Syndrome, Identity Ceiling, etc.)\n\n- AVATAR: Personified story of the pattern (from avatar library)\n\n- TEMPERAMENT: User's core wiring (Warrior, Sage, Connector, Builder)\n\n- PROTOCOL: Neural rewiring practice assigned based on sub-pattern\n\n- TOOL: 30-Day Challenge practice for specific week/day\n\n- EMERGENCY TOOL: Crisis intervention when user overwhelmed\n\n- PILLAR: Foundation component (Spiritual, Mental, Physical, Relational)\n\n- PROTECT METHOD: Daily practice framework (Pattern, Reset, Outcome, Truth, Energy, Celebrate, Tomorrow)\n\n- TRIGGER RESET: Emergency protocol use when pattern attacks\n\n- PATTERN CHECK: Moment user catches pattern operating and interrupts it\n\n- UNSHAKABLE FOUNDATION: Four-pillar system that weakens pattern's grip\n\n- IDENTITY COLLISION COACH: MIO's role (NOT therapist)",
+      "chunk_summary": "Key Terminology",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "identity_ceiling",
+        "burnout",
+        "impostor_syndrome",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "core-framework"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 1,
+      "chunk_text": "# SOURCE FILE: mio-kb-02-avatar-index.md\n# ORIGINAL PATH: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Purpose Waze Company/Context/30 Day Challenge/MIO-System-PRODUCTION/01-Knowledge-Base/mio-kb-02-avatar-index.md\n\nIDENTITY COLLISION AVATAR INDEX\n\nThis file helps MIO quickly match users to their specific Identity Collision avatar based on patterns, temperaments, and user descriptions.\n\n=== AVATAR LIBRARY OVERVIEW ===\n\nTotal Avatars: 15\n\n- Past Prison Avatars: 5\n\n- Success Sabotage Avatars: 3\n\n- Compass Crisis Avatars: 4\n\n- Complex Collision Avatars: 3",
+      "chunk_summary": "Avatar Library Overview",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "success_sabotage",
+        "past_prison",
+        "compass_crisis"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 2,
+      "chunk_text": "=== HOW MIO USES THIS FILE ===\n\n1. User describes their struggle \u2192 MIO scans \"Signs\" for match\n\n2. MIO identifies primary + secondary pattern \u2192 Narrows to relevant avatars\n\n3. MIO checks temperament \u2192 Final avatar match\n\n4. MIO references avatar name in conversation for recognition\n\n===================================\n\nPAST PRISON AVATARS\n\n===================================",
+      "chunk_summary": "How Mio Uses This File",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "past_prison"
+      ],
+      "temperament_match": [
+        "all"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 3,
+      "chunk_text": "AVATAR 1: THE EXHAUSTED ACHIEVER\n\nCollision: Identity Ceiling + Burnout\n\nTemperament: Warrior (with Builder tendencies)\n\nQuote: \"I hit the same income ceiling year after year\"\n\nSigns:\n\n- Hits same revenue ceiling repeatedly ($150K, $250K, etc.)\n\n- Gets sick or depleted right before breakthrough\n\n- Pushes through exhaustion to prove worth\n\n- Body crashes when big opportunity arrives\n\n- Works 150% capacity with 50% fuel\n\n- \"Rest is weakness\" mindset\n\nPrescription: Warrior Recovery System Protocol\n\nKey Shift: \"Recovery IS performance strategy, not avoidance\"\n\n---",
+      "chunk_summary": "Identity Ceiling - Success Sabotage",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "success_sabotage",
+        "burnout",
+        "depletion_dedication"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 4,
+      "chunk_text": "AVATAR 2: THE ACCIDENTAL EXPERT\n\nCollision: Impostor Syndrome + Decision Fatigue\n\nTemperament: Sage\n\nQuote: \"I got here by accident, not on purpose\"\n\nSigns:\n\n- Success feels like luck, not skill\n\n- Waiting to be exposed as fraud\n\n- Overanalyzes every decision (paralysis by analysis)\n\n- Can't make simple decisions without extensive research\n\n- Discounts wins, amplifies failures\n\n- \"I don't actually know what I'm doing\"\n\nPrescription: Evidence Vault + Competence Catalog Protocol\n\nKey Shift: \"I created this success through competence, not accident\"\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 5,
+      "chunk_text": "AVATAR 3: THE ALMOST-THERE ABANDONER\n\nCollision: Self-Sabotage + Execution Breakdown\n\nTemperament: Warrior\n\nQuote: \"I get 90% of the way there, then quit\"\n\nSigns:\n\n- Abandons projects right before completion\n\n- Starts strong, finishes weak\n\n- Self-sabotages at breakthrough moment\n\n- Excitement fades when execution gets hard\n\n- Pattern of incomplete wins\n\n- \"I'll just start something new instead\"\n\nPrescription: Completion Accountability + Momentum Lock Protocol\n\nKey Shift: \"Finishing creates the breakthrough, not starting\"\n\n---",
+      "chunk_summary": "Success Sabotage - Execution Breakdown",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "success_sabotage",
+        "execution_breakdown"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 6,
+      "chunk_text": "AVATAR 4: THE GUILTY WANDERER\n\nCollision: Identity Ceiling + Motivation Collapse\n\nTemperament: Sage\n\nQuote: \"People like me don't get to want more\"\n\nSigns:\n\n- Guilt about wanting more than family achieved\n\n- Motivation collapses when thinking bigger\n\n- Feels disloyal to roots when pursuing success\n\n- Questions purpose constantly\n\n- \"Who am I to want this?\" mindset\n\n- Loses drive when approaching family's ceiling\n\nPrescription: Permission Paradigm + Loyalty Reframe Protocol\n\nKey Shift: \"Rising honors my roots, doesn't betray them\"\n\n---",
+      "chunk_summary": "Identity Ceiling - Motivation Collapse",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse",
+        "loyalty_conflict",
+        "origin_story_anchor",
+        "past_prison"
+      ],
+      "temperament_match": [
+        "sage"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 7,
+      "chunk_text": "AVATAR 5: THE OUTGROWN NETWORKER\n\nCollision: Relationship Erosion + Comparison\n\nTemperament: Connector\n\nQuote: \"My old friends don't get me anymore\"\n\nSigns:\n\n- Relationships dying as they grow\n\n- Feels lonely at new success level\n\n- Compares current self to old peer group\n\n- Guilt about outgrowing friends/family\n\n- Connection-driven but isolated\n\n- \"I don't belong here or there\"\n\nPrescription: Relational Reinvention + New Circle Protocol\n\nKey Shift: \"I can honor old relationships while building new ones\"\n\n===================================\n\nSUCCESS SABOTAGE AVATARS\n\n===================================",
+      "chunk_summary": "Relationship Erosion - Success Sabotage",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "relationship_erosion",
+        "success_sabotage",
+        "past_prison",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 8,
+      "chunk_text": "AVATAR 6: THE DEPLETED WARRIOR\n\nCollision: Burnout + Performance Liability\n\nTemperament: Warrior\n\nQuote: \"I'm crushing it but I can't feel it\"\n\nSigns:\n\n- Winning externally, dying internally\n\n- Success without satisfaction\n\n- Performance declining despite harder work\n\n- Exhaustion hidden behind wins\n\n- \"If I stop, it all falls apart\" mentality\n\n- Body breaking down from chronic push\n\nPrescription: Burnout Recovery + Performance Reset Protocol\n\nKey Shift: \"Sustainable performance beats depleted winning\"\n\n---",
+      "chunk_summary": "Burnout",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "burnout"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 9,
+      "chunk_text": "AVATAR 7: THE OVERWHELMED OPTIMIZER\n\nCollision: Decision Fatigue + Execution Breakdown\n\nTemperament: Builder\n\nQuote: \"I'm optimizing everything into paralysis\"\n\nSigns:\n\n- Overcomplicates simple decisions\n\n- Analysis paralysis on execution\n\n- Can't start without perfect system\n\n- Optimization prevents action\n\n- Building perfect plans, no implementation\n\n- \"It's not ready yet\" mindset\n\nPrescription: Good Enough & Go + Action Before Perfection Protocol\n\nKey Shift: \"Imperfect action beats perfect planning\"\n\n---",
+      "chunk_summary": "Execution Breakdown - Decision Fatigue",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 10,
+      "chunk_text": "AVATAR 8: THE EXHAUSTED CHASER\n\nCollision: Burnout + Comparison\n\nTemperament: Connector\n\nQuote: \"I'm running to catch everyone else\"\n\nSigns:\n\n- Chasing other people's wins\n\n- Burnout from comparison-driven hustle\n\n- Never feeling \"enough\" despite success\n\n- Scrolling = spiral\n\n- Measuring self against others' highlight reels\n\n- \"Everyone's ahead of me\" anxiety\n\nPrescription: Comparison Detox + Compass Anchoring Protocol\n\nKey Shift: \"My lane is the only lane that matters\"\n\n===================================\n\nCOMPASS CRISIS AVATARS\n\n===================================",
+      "chunk_summary": "Burnout - Compass Crisis",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "burnout",
+        "compass_crisis",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 11,
+      "chunk_text": "AVATAR 9: THE HOLLOW NAVIGATOR\n\nCollision: Motivation Collapse + Comparison\n\nTemperament: Sage\n\nQuote: \"I don't know why I'm doing this anymore\"\n\nSigns:\n\n- Lost connection to purpose\n\n- Going through motions without meaning\n\n- Comparison drains motivation\n\n- \"What's the point?\" thoughts\n\n- Success feels empty\n\n- Can't remember why they started\n\nPrescription: Purpose Archaeology + Vision Recalibration Protocol\n\nKey Shift: \"My purpose is my compass, not their success\"\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "comparison_collision",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 12,
+      "chunk_text": "AVATAR 10: THE LOST PERFORMER\n\nCollision: Performance Liability + Motivation Collapse\n\nTemperament: Builder\n\nQuote: \"I'm building things I don't care about\"\n\nSigns:\n\n- High performance, zero passion\n\n- Building for external validation\n\n- Motivation collapse despite wins\n\n- Systems without soul\n\n- \"I'm good at this but hate it\"\n\n- Performance without purpose\n\nPrescription: Passion Rediscovery + Purpose Integration Protocol\n\nKey Shift: \"I can build what I love, not just what I'm good at\"\n\n---",
+      "chunk_summary": "Motivation Collapse - Compass Crisis",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "compass_crisis"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 13,
+      "chunk_text": "AVATAR 11: THE SCATTERED ACHIEVER\n\nCollision: Comparison + Execution Breakdown\n\nTemperament: Warrior\n\nQuote: \"I'm chasing too many things at once\"\n\nSigns:\n\n- Multiple projects, zero completion\n\n- Starts new thing when comparing to others\n\n- Scattered focus from comparison\n\n- Execution suffers from shiny object syndrome\n\n- \"They're doing that, so I should too\"\n\n- Warrior energy with no target\n\nPrescription: Focus Filter + Single Target Execution Protocol\n\nKey Shift: \"One target fully hit beats ten targets partially chased\"\n\n---",
+      "chunk_summary": "Execution Breakdown - Comparison",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "execution_breakdown",
+        "comparison"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 14,
+      "chunk_text": "AVATAR 12: THE BURNT-OUT HOLLOW\n\nCollision: Burnout + Motivation Collapse\n\nTemperament: Connector\n\nQuote: \"I'm pouring out but there's nothing left\"\n\nSigns:\n\n- Giving to everyone, refilling from no one\n\n- Burnout from over-connection\n\n- Lost motivation to serve\n\n- Empty cup trying to pour\n\n- Relationship exhaustion\n\n- \"I have nothing left to give\"\n\nPrescription: Receiving Reboot + Boundary Building Protocol\n\nKey Shift: \"I must receive before I can give\"\n\n===================================\n\nCOMPLEX COLLISION AVATARS\n\n===================================",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 15,
+      "chunk_text": "AVATAR 13: THE TRIPLE COLLISION\n\nCollision: Past Prison + Success Sabotage + Compass Crisis\n\nTemperament: Builder (most common)\n\nQuote: \"Every pillar is under attack\"\n\nSigns:\n\n- Multiple patterns attacking simultaneously\n\n- Ceiling + Burnout + Comparison all active\n\n- Systemic pattern collapse\n\n- All four pillars compromised\n\n- \"Everything is breaking\" feeling\n\n- Needs comprehensive intervention\n\nPrescription: Foundation Rebuild + Comprehensive Rewiring Protocol\n\nKey Shift: \"One pillar at a time, foundation first\"\n\n---",
+      "chunk_summary": "Success Sabotage - Identity Ceiling",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "identity_ceiling",
+        "burnout",
+        "compass_crisis",
+        "comparison"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 16,
+      "chunk_text": "AVATAR 14: THE RECOVERED SABOTEUR\n\nStatus: Success Story Template\n\nPrevious Collision: Success Sabotage (any sub-pattern)\n\nQuote: \"I used to sabotage, now I sustain\"\n\nSigns (PAST state - now resolved):\n\n- Used to crash after wins\n\n- Former burnout pattern\n\n- Now maintains success sustainably\n\n- Teaches what broke the pattern\n\nReference: When user has OVERCOME Success Sabotage pattern\n\nPrescription: Maintenance Protocol + Mentorship Activation\n\n---",
+      "chunk_summary": "Success Sabotage - Burnout",
+      "category": "avatar-definition",
+      "applicable_patterns": [
+        "success_sabotage",
+        "burnout"
+      ],
+      "temperament_match": [
+        "all"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-02-avatar-index.md",
+      "file_number": 2,
+      "chunk_number": 17,
+      "chunk_text": "AVATAR 15: THE CEILING BREAKER\n\nStatus: Success Story Template\n\nPrevious Collision: Past Prison (Identity Ceiling)\n\nQuote: \"I broke through what I thought was my limit\"\n\nSigns (PAST state - now resolved):\n\n- Used to hit same ceiling repeatedly\n\n- Former guilt about success\n\n- Now earns beyond family ceiling\n\n- Living proof ceiling is breakable\n\nReference: When user has OVERCOME Past Prison pattern\n\nPrescription: Ceiling Expansion + Leadership Activation\n\n===================================\n\nQUICK REFERENCE GUIDE\n\n===================================\n\nBY PRIMARY PATTERN:\n\nPAST PRISON:\n\n- Exhausted Achiever (Warrior)\n\n- Accidental Expert (Sage)\n\n- Almost-There Abandoner (Warrior)\n\n- Guilty Wanderer (Sage)\n\n- Outgrown Networker (Connector)\n\nSUCCESS SABOTAGE:\n\n- Depleted Warrior (Warrior)\n\n- Overwhelmed Optimizer (Builder)\n\n- Exhausted Chaser (Connector)\n\nCOMPASS CRISIS:\n\n- Hollow Navigator (Sage)\n\n- Lost Performer (Builder)\n\n- Scattered Achiever (Warrior)\n\n- Burnt-Out Hollow (Connector)\n\nBY TEMPERAMENT:\n\nWARRIOR:\n\n- Exhausted Achiever (Past Prison)\n\n- Almost-There Abandoner (Past Prison)\n\n- Depleted Warrior (Success Sabotage)\n\n- Scattered Achiever (Compass Crisis)\n\nSAGE:\n\n- Accidental Expert (Past Prison)\n\n- Guilty Wanderer (Past Prison)\n\n- Hollow Navigator (Compass Crisis)\n\nCONNECTOR:\n\n- Outgrown Networker (Past Prison)\n\n- Exhausted Chaser (Success Sabotage)\n\n- Burnt-Out Hollow (Compass Crisis)\n\nBUILDER:\n\n- Overwhelmed Optimizer (Success Sabotage)\n\n- Lost Performer (Compass Crisis)\n\n- Triple Collision (Complex)\n\nBY SUB-PATTERN:\n\nBURNOUT:\n\n- Exhausted Achiever\n\n- Depleted Warrior\n\n- Exhausted Chaser\n\n- Burnt-Out Hollow\n\nIMPOSTOR SYNDROME:\n\n- Accidental Expert\n\nIDENTITY CEILING:\n\n- Exhausted Achiever\n\n- Guilty Wanderer\n\nCOMPARISON:\n\n- Outgrown Networker\n\n- Exhausted Chaser\n\n- Hollow Navigator\n\n- Scattered Achiever\n\nDECISION FATIGUE:\n\n- Accidental Expert\n\n- Overwhelmed Optimizer\n\nEXECUTION BREAKDOWN:\n\n- Almost-There Abandoner\n\n- Overwhelmed Optimizer\n\n- Scattered Achiever\n\nMOTIVATION COLLAPSE:\n\n- Guilty Wanderer\n\n- Hollow Navigator\n\n- Lost Performer\n\n- Burnt-Out Hollow\n\nRELATIONSHIP EROSION:\n\n- Outgrown Networker\n\nPERFORMANCE LIABILITY:\n\n- Depleted Warrior\n\n- Lost Performer\n\n===================================\n\nMIO PATTERN MATCHING PROCESS\n\n===================================\n\nSTEP 1: Listen for key phrases\n\n- User mentions specific struggles\n\n- MIO scans \"Signs\" section for matches\n\nSTEP 2: Identify pattern combination\n\n- What primary pattern? (Past Prison, Success Sabotage, Compass Crisis)\n\n- What secondary pattern or sub-pattern?\n\nSTEP 3: Check temperament\n\n- How does user describe themselves?\n\n- Warrior (action, conquest), Sage (wisdom, reflection), Connector (relationships), Builder (systems)\n\nSTEP 4: Match to avatar\n\n- Cross-reference pattern + temperament\n\n- Confirm with \"Quote\" resonance test\n\nSTEP 5: Reference avatar in conversation\n\n- \"You sound like The Exhausted Achiever...\"\n\n- \"This is what The Hollow Navigator experiences...\"\n\n- Create \"eerily accurate\" recognition moment\n\nSTEP 6: Prescribe protocol\n\n- Reference avatar's specific Neural Rewiring Protocol\n\n- Direct to practices designed for their exact collision",
+      "chunk_summary": "Success Sabotage - Identity Ceiling",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "identity_ceiling",
+        "motivation_collapse",
+        "burnout",
+        "past_prison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "avatar-index"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 1,
+      "chunk_text": "# SOURCE FILE: mio-kb-03-protocol-library.md\n# ORIGINAL PATH: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Purpose Waze Company/Context/30 Day Challenge/MIO-System-PRODUCTION/01-Knowledge-Base/mio-kb-03-protocol-library.md\n\nNEURAL REWIRING PROTOCOL LIBRARY\n\nThis file contains all 45 Daily Deductible practices MIO can prescribe based on user patterns, temperaments, and needs.\n\n=== HOW MIO USES THIS FILE ===\n\n1. User exhibits specific pattern (Burnout, Identity Ceiling, etc.)\n2. MIO cross-references pattern + temperament\n3. MIO prescribes 1-3 practices from appropriate category\n4. MIO provides temperament-customized instructions\n5. MIO tracks compliance and adjusts",
+      "chunk_summary": "How Mio Uses This File",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse",
+        "burnout"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 2,
+      "chunk_text": "=== QUICK PRESCRIPTION GUIDE ===\n\n**BURNOUT PATTERN** \u2192 Practices: 7, 18, 36, 40, 45\n**IMPOSTOR SYNDROME** \u2192 Practices: 2, 3, 33, 34, 42\n**IDENTITY CEILING** \u2192 Practices: 1, 9, 14, 15, 29\n**COMPARISON** \u2192 Practices: 10, 16, 30, 31, 44\n**DECISION FATIGUE** \u2192 Practices: 8, 33, 39, 41, 45\n**EXECUTION BREAKDOWN** \u2192 Practices: 6, 29, 34, 43, 45\n**MOTIVATION COLLAPSE** \u2192 Practices: 2, 3, 4, 9, 14\n**RELATIONSHIP EROSION** \u2192 Practices: 11, 17, 19, 39, 42\n\n**BY TEMPERAMENT:**\n- **WARRIOR**: 1, 7, 13, 26, 29, 35, 43\n- **SAGE**: 2, 4, 16, 21, 28, 33, 43\n- **CONNECTOR**: 10, 11, 14, 17, 39, 42, 44\n- **BUILDER**: 6, 23, 25, 37, 38, 41, 45\n\n===================================\nCATEGORY 1: TRADITIONAL FOUNDATION\n===================================",
+      "chunk_summary": "Quick Prescription Guide",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse",
+        "burnout",
+        "relationship_erosion",
+        "impostor_syndrome"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 3,
+      "chunk_text": "PRACTICE 1: PRAYER AND WORSHIP\nTime: 5-30 minutes\nPattern Fit: Identity Ceiling, Loyalty Conflict, Motivation Collapse\nTemperament: ALL (customize delivery)\nState Created: Hope, connection, elevated vibration, surrender\n\nWARRIOR VERSION:\n\"Warriors need purpose to fuel conquest. 5 minutes of prayer declarations--speak your mission out loud like you're commanding an army. Make it visceral.\"\n\nSAGE VERSION:\n\"Sages need contemplative communion. 10 minutes of contemplative prayer or Lectio Divina. Listen more than speak.\"\n\nCONNECTOR VERSION:\n\"Connectors need relational connection to the divine. Worship music and soaking prayer for 10 minutes--just receive, don't request.\"\n\nBUILDER VERSION:\n\"Builders need structured spiritual practice. Morning devotional routine right now--stick to the system you've built.\"\n\nProtocol:\n1. Morning Prayer Protocol (5 min):\n - Gratitude (2 min)\n - Present concerns and release (2 min)\n - Listen in silence for guidance (1 min)\n - Declare trust\n\n2. Worship Through Song (10-20 min):\n - Play/sing worship music\n - Focus on chest vibration\n - Let frequency change your state\n - Notice body relaxation\n\nWhy It Works: Activates vagus nerve through vocalization, shifts fear to faith, creates neurological trust/safety state.\n\n---",
+      "chunk_summary": "Identity Ceiling - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "relationship_erosion",
+        "motivation_collapse",
+        "loyalty_conflict"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 1,
+      "time_commitment_max": 30,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 4,
+      "chunk_text": "PRACTICE 2: MEDITATION (GOAL/VISION FOCUSED)\nTime: 5-20 minutes\nPattern Fit: Motivation Collapse, Compass Crisis, Impostor Syndrome\nTemperament: SAGE (primary), ALL (adaptable)\nState Created: Mental stillness, future-present alignment, elevated emotion\n\nSAGE VERSION:\n\"Sages thrive in contemplative space. 15 minutes of vision meditation--see your accomplished vision in vivid detail, FEEL it as already done.\"\n\nWARRIOR VERSION:\n\"Warriors need vision to aim at. 5-minute mental movie of your conquest. See yourself achieving it, feel the victory.\"\n\nCONNECTOR VERSION:\n\"Connectors need to feel the impact. Meditate on the relationships your success will transform. Feel the connection.\"\n\nBUILDER VERSION:\n\"Builders need measurable outcomes. Visualize your completed system, the metrics achieved, the optimized result.\"\n\nProtocol:\n1. Vision Meditation (10 min):\n - Sit comfortably, close eyes\n - 5 deep breaths to settle\n - Bring accomplished vision to mind\n - See it vividly\n - FEEL it as done\n - Let feeling fill body\n - Sit in that feeling\n\n2. Identity Meditation (5 min):\n - Meditate on \"I AM\" statements\n - Repeat slowly with breath\n - Feel each statement as truth\n - Let it settle into bones\n\nWhy It Works: Creates coherence between mind/body, generates future emotions in present, rewires neural pathways toward reality.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "impostor_syndrome",
+        "compass_crisis"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 5,
+      "chunk_text": "PRACTICE 3: VISUALIZATION PRACTICE\nTime: 3-10 minutes\nPattern Fit: Motivation Collapse, Execution Breakdown, Impostor Syndrome\nTemperament: ALL (highly adaptable)\nState Created: Clarity, magnetic attraction, embodied future\n\nProtocol:\n1. Mental Movie Method (10 min):\n - Create mental movie of ideal day\n - Include: Morning routine, key interactions, victories, evening satisfaction\n - Full sensory detail\n - See from first person (through your eyes)\n - Feel the emotions\n\n2. Outcome Visualization (5 min):\n - Pick one specific goal\n - See yourself achieving it\n - See others' positive reactions\n - Feel satisfaction deeply\n - Work backward from success to now\n\nWhy It Works: Subconscious can't distinguish vividly imagined from real experiences. Creates neural pathways as if already succeeded.\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome",
+        "execution_breakdown"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 3,
+      "time_commitment_max": 10,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 6,
+      "chunk_text": "PRACTICE 4: LEARNING PRACTICE\nTime: 10-30 minutes\nPattern Fit: Motivation Collapse, Impostor Syndrome, Growth Mindset\nTemperament: SAGE (primary), BUILDER\nState Created: Inspiration, expanded possibility, hope, capability\n\nProtocol:\n1. Daily Growth Protocol (20 min):\n - Choose one learning source (book, podcast, video)\n - Set specific learning intention\n - Take one key insight\n - Immediately apply or teach it\n - Document in learning journal\n\n2. Skill Development Focus (15 min daily):\n - Pick one skill related to vision\n - 15 minutes daily practice\n - Track small improvements\n - Celebrate progress weekly\n\nWhy It Works: Creates neuroplasticity, generates hope through expanded capability, provides evidence growth is possible.\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 30,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 7,
+      "chunk_text": "PRACTICE 5: JOURNAL WRITING\nTime: 5-15 minutes\nPattern Fit: ALL patterns (universal processing tool)\nTemperament: SAGE (primary), ALL (adaptable)\nState Created: Clarity, emotional processing, pattern recognition, progress tracking\n\nProtocol:\n1. Three-Part Journal Structure (5 min):\n - Gratitude: 3 things you appreciate\n - Growth: 1 lesson from today\n - Goals: 1 priority for tomorrow\n\n2. Stream of Consciousness (15 min):\n - Write without stopping\n - No editing, no censoring\n - Let whatever needs to come out flow\n - End with: \"What I really need to know is...\"\n\nWhy It Works: Externalizes thoughts reducing rumination, creates pattern recognition over time, serves as progress evidence, processes emotions safely.\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 15,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 8,
+      "chunk_text": "PRACTICE 6: GOAL WRITING PRACTICE\nTime: 5 minutes\nPattern Fit: Execution Breakdown, Motivation Collapse, Decision Fatigue\nTemperament: BUILDER (primary), WARRIOR\nState Created: Clarity, commitment, magnetic focus, accountability\n\nProtocol:\n1. Daily Goal Imprinting (5 min):\n - Write top 3 goals every morning\n - Write in present tense as complete\n - Include emotional outcome\n - Example: \"I am [goal] and I feel [emotion]\"\n\n2. 10X Method (5 min):\n - Write #1 goal 10 times\n - Each time with more feeling\n - Notice resistance that comes up\n - Push through to completion\n\nWhy It Works: Repetitive writing creates neural imprinting, present tense tricks brain into believing, daily repetition maintains focus and filters opportunities.\n\n---",
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 9,
+      "chunk_text": "PRACTICE 7: WORKING OUT/MOVEMENT\nTime: 10-45 minutes\nPattern Fit: Burnout, Depression, Low Energy, Stuck Patterns\nTemperament: WARRIOR (primary), ALL (essential)\nState Created: Confidence, energy, mental clarity, stress release, new neural pathways\n\nWARRIOR VERSION:\n\"20-minute HIIT workout. Intensity breaks mental intensity. Your body can interrupt what your mind can't.\"\n\nSAGE VERSION:\n\"15-minute nature walk. Gentle movement, no podcasts. Let wisdom emerge while you walk.\"\n\nCONNECTOR VERSION:\n\"Group fitness class or walk with friend. Movement + connection = double benefit.\"\n\nBUILDER VERSION:\n\"Systematic 20-minute routine: 5 min stretch, 10 min cardio, 5 min strength. Schedule it, execute it.\"\n\nProtocol:\n1. Morning Movement Stack (20 min):\n - 5 min stretching (wake up body)\n - 10 min cardio (activate brain)\n - 5 min strength (build confidence)\n\n2. Micro-Workout Protocol (throughout day):\n - Every hour: 30 seconds movement\n - Jumping jacks, pushups, squats\n - Focus on state change not fitness\n\nWhy It Works: BDNF from exercise grows new brain cells, movement changes emotional state faster than thinking, builds proof of capability.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 45,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 10,
+      "chunk_text": "PRACTICE 8: MIDDAY BREATHING EXERCISES\nTime: 2-5 minutes\nPattern Fit: Burnout, Decision Fatigue, Overwhelm, Energy Crashes\nTemperament: ALL (universal reset tool)\nState Created: Reset, refocus, energy renewal, stress discharge\n\nProtocol:\n1. NASCAR Pit Stop Protocol (3 min):\n - Set phone alarm for midday\n - Stop everything\n - 4-7-8 breathing x 4 rounds (Inhale 4, Hold 7, Exhale 8)\n - Ask: \"What does the afternoon need?\"\n - Resume with intention\n\n2. Box Breathing Reset (2 min):\n - Inhale 4, Hold 4, Exhale 4, Hold 4\n - Repeat 4-6 times\n - End with power statement\n\nWhy It Works: Resets autonomic nervous system, increases oxygen to brain, creates pause to choose response vs react, prevents afternoon energy crash.\n\n===================================\nCATEGORY 2: FAITH-BASED PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 5,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 11,
+      "chunk_text": "PRACTICE 9: SCRIPTURE DECLARATION\nTime: 3-5 minutes\nPattern Fit: Identity Ceiling, Motivation Collapse, Shame, Unworthiness\nTemperament: WARRIOR (primary), ALL faith-based users\nState Created: Truth-anchoring, identity reinforcement, spiritual authority\n\nProtocol:\n1. Choose 3 identity scriptures:\n - \"I can do all things through Christ\"\n - \"I am fearfully and wonderfully made\"\n - \"I am more than a conqueror\"\n\n2. Speak them aloud with authority\n\n3. Personalize: \"I, [name], am...\"\n\n4. Feel truth settle into spirit\n\n5. Carry one verse throughout day\n\nWhy It Works: Combines neuroplasticity with spiritual truth, replaces limiting beliefs with eternal perspective, activates faith which changes brain chemistry.\n\n---",
+      "chunk_summary": "Identity Ceiling - Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 3,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 12,
+      "chunk_text": "PRACTICE 10: WORSHIP-BASED SOAKING\nTime: 10-20 minutes\nPattern Fit: Burnout, Overwhelm, Disconnection, Need for Rest\nTemperament: CONNECTOR (primary), SAGE\nState Created: Peace, presence, surrender, divine connection\n\nProtocol:\n1. Play instrumental worship music\n2. Lie down or sit comfortably\n3. Focus only on receiving (not requesting)\n4. Imagine divine love washing over you\n5. Let yourself be held in that space\n6. No agenda except presence\n\nWhy It Works: Activates parasympathetic nervous system, creates deep safety in nervous system, allows divine reorganization of priorities.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 13,
+      "chunk_text": "PRACTICE 11: PRAYER WALKING\nTime: 10-30 minutes\nPattern Fit: Relationship Erosion, Isolation, Need for Connection\nTemperament: CONNECTOR (primary), ALL\nState Created: Movement + communion, clarity, active meditation\n\nProtocol:\n1. Walk at comfortable pace\n2. Begin with gratitude for each thing you see\n3. Pray for people you pass (silently)\n4. Listen for divine guidance\n5. Speak concerns out loud (if private)\n6. End declaring trust over situations\n\nWhy It Works: Bilateral stimulation from walking processes emotions, movement prevents mental loops, creation connection grounds in present.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 30,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 14,
+      "chunk_text": "PRACTICE 13: FASTING PRACTICES\nTime: Variable\nPattern Fit: Burnout, Attachment Patterns, Need for Breakthrough\nTemperament: WARRIOR (primary), SAGE\nState Created: Spiritual sensitivity, discipline, breakthrough\n\nTypes:\n1. Intermittent Fast: 16:8 or 14:10 window\n2. Media Fast: No social media before noon\n3. Complaint Fast: No complaining for 24 hours\n4. Daniel Fast: Vegetables and water only\n\nWhy It Works: Creates space for spiritual sensitivity, builds discipline muscle, breaks attachment patterns, increases mental clarity.\n\n---",
+      "chunk_summary": "Motivation Collapse - Success Sabotage",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "success_sabotage",
+        "burnout"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 15,
+      "chunk_text": "PRACTICE 14: TESTIMONY REHEARSAL\nTime: 5 minutes\nPattern Fit: Motivation Collapse, Doubt, Comparison\nTemperament: CONNECTOR (primary), ALL\nState Created: Faith building, gratitude, evidence of faithfulness\n\nProtocol:\n1. Weekly: Write one way God showed up\n2. Daily: Rehearse past victories\n3. Share one testimony weekly with someone\n4. Build \"Stones of Remembrance\" journal\n5. Review when faith feels weak\n\nWhy It Works: Creates neural pathways of expectation, builds faith through evidence, shifts from lack to abundance mindset.\n\n---",
+      "chunk_summary": "Motivation Collapse - Comparison",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 16,
+      "chunk_text": "PRACTICE 15: PROPHETIC DECLARATION\nTime: 2-3 minutes\nPattern Fit: Identity Ceiling, Fear, Negative Momentum\nTemperament: WARRIOR (primary), ALL faith-based\nState Created: Authority, future-pull, spiritual activation\n\nProtocol:\n1. Speak to your day before it begins\n2. Declare: \"This day is blessed and highly favored\"\n3. Speak to specific situations: \"Meeting will go smoothly\"\n4. Call forth identity: \"I walk as a son/daughter today\"\n5. Cancel enemy assignments: \"No weapon formed shall prosper\"\n\nWhy It Works: Activates spiritual authority, sets energetic tone, creates expectation for good, aligns with kingdom principles.\n\n---",
+      "chunk_summary": "Identity Ceiling - Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 3,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 17,
+      "chunk_text": "PRACTICE 16: SILENCE AND SOLITUDE\nTime: 10-30 minutes\nPattern Fit: Comparison, Overwhelm, Overstimulation\nTemperament: SAGE (primary), ALL (especially needed for Connectors)\nState Created: Deep listening, divine download, nervous system reset\n\nProtocol:\n1. No input (no music, no reading)\n2. Sit in comfortable position\n3. Release need to produce or perform\n4. Simply be present with Divine Presence\n5. Listen without agenda\n6. Journal anything that surfaces\n\nWhy It Works: Removes noise to hear divine whispers, creates space for deep wisdom to emerge, resets overstimulated nervous system.\n\n---",
+      "chunk_summary": "Motivation Collapse - Decision Fatigue",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "decision_fatigue",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 30,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 18,
+      "chunk_text": "PRACTICE 17: BLESSING PRACTICE\nTime: Throughout day\nPattern Fit: Comparison, Judgment, Scarcity Mindset, Relationship Erosion\nTemperament: CONNECTOR (primary), ALL\nState Created: Abundance mindset, positive energy, kingdom partnership\n\nProtocol:\n1. Bless everyone you encounter (silently)\n2. Bless your food, water, workspace\n3. Bless challenging situations\n4. Bless your enemies\n5. Notice how this shifts your state\n\nWhy It Works: Shifts from judgment to love, activates giving vs taking, aligns with divine nature, changes energetic frequency.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 19,
+      "chunk_text": "PRACTICE 18: SABBATH REST PRACTICE\nTime: 1 hour to full day weekly\nPattern Fit: Burnout, Depletion Dedication, Productivity Addiction\nTemperament: ALL (especially WARRIOR and BUILDER)\nState Created: Trust, restoration, divine rhythm\n\nProtocol:\n1. Weekly minimum 2-hour complete rest\n2. No producing, achieving, or striving\n3. Only life-giving activities\n4. Trust that God works while you rest\n5. Notice anxiety about \"not doing\" and release it\n\nWhy It Works: Breaks addiction to productivity, demonstrates trust, allows divine reorganization, prevents burnout.\n\n===================================\nCATEGORY 3: HYBRID PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout",
+        "depletion_dedication"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "weekly",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 20,
+      "chunk_text": "PRACTICE 19: BREATH PRAYER\nTime: 2-5 minutes\nPattern Fit: ALL patterns (universal centering tool)\nTemperament: ALL\nState Created: Centered presence, peace, divine connection\n\nProtocol:\n1. Inhale: \"Lord Jesus Christ\"\n2. Exhale: \"Have mercy on me\"\n\nOR create your own:\n- Inhale: \"I receive your peace\"\n- Exhale: \"I release my control\"\n\n3. Repeat until centered\n\nWhy It Works: Combines prayer with breath regulation, creates meditative state with divine focus, instantly accessible.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 5,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 21,
+      "chunk_text": "PRACTICE 20: EXAMEN PRAYER (EVENING REVIEW)\nTime: 5-10 minutes\nPattern Fit: ALL patterns (daily integration)\nTemperament: SAGE (primary), ALL\nState Created: Awareness, gratitude, growth, divine perspective\n\nProtocol:\n1. Review day with God\n2. Where did I see You today?\n3. Where did I miss You?\n4. What am I grateful for?\n5. What do I need forgiveness for?\n6. What invitation for tomorrow?\n\nWhy It Works: Creates daily growth cycle, maintains divine connection, processes day with eternal perspective, prevents guilt accumulation.\n\n===================================\nCATEGORY 4: MONASTIC PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 22,
+      "chunk_text": "PRACTICE 21: LECTIO DIVINA (SACRED READING)\nTime: 15-30 minutes\nPattern Fit: Impostor Syndrome, Wisdom Seeking, Deep Processing\nTemperament: SAGE (primary)\nState Created: Deep wisdom integration, contemplative mind, divine download\n\nProtocol:\n1. Lectio (Read): Read short passage slowly\n2. Meditatio (Meditate): Let word/phrase emerge and repeat it\n3. Oratio (Pray/Speak): Dialogue with divine about what emerged\n4. Contemplatio (Contemplate): Rest in silence with what was received\n5. Actio (Act): Identify one action to embody insight\n\nWhy It Works: Engages multiple processing centers (cognitive, emotional, spiritual), moves beyond intellectual to embodied wisdom, creates deep neural encoding.\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 15,
+      "time_commitment_max": 30,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 23,
+      "chunk_text": "PRACTICE 23: THE DAILY OFFICE (LITURGY OF HOURS)\nTime: 5 min x 3-7 times daily\nPattern Fit: Burnout, Comparison, Lost in Secular Chaos\nTemperament: BUILDER (primary), ALL\nState Created: Rhythm, sacred punctuation, continuous remembrance\n\nProtocol:\n1. Set alarms for: Morning (Lauds), Midday (Sext), Evening (Vespers)\n2. Each time: Pause all activity\n3. Read/recite short prayer, psalm, or affirmation\n4. Take three conscious breaths\n5. Return to activity with renewed intention\n\nWhy It Works: Creates sacred rhythm overriding secular chaos, regular interruption prevents pattern momentum, builds cumulative spiritual presence.\n\n---",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout",
+        "comparison"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 24,
+      "chunk_text": "PRACTICE 25: SACRED COPYING PRACTICE\nTime: 10-20 minutes\nPattern Fit: Impostor Syndrome, Need for Deep Integration\nTemperament: BUILDER (primary), SAGE\nState Created: Deep encoding, meditative focus, wisdom absorption\n\nProtocol:\n1. Choose meaningful text (scripture, poetry, philosophy)\n2. Copy by hand word-for-word\n3. Write slowly and beautifully\n4. Focus on meaning as you write\n5. No rushing, no shortcuts\n6. Keep copied texts in special journal\n\nWhy It Works: Handwriting activates different brain regions than typing, slow copying forces deep processing, creates physical artifact of wisdom.\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 25,
+      "chunk_text": "PRACTICE 26: PROSTRATIONS (FULL BODY PRAYER)\nTime: 5-15 minutes\nPattern Fit: Pride, Identity Ceiling, Ego Patterns\nTemperament: WARRIOR (breaks pride), ALL\nState Created: Humility, surrender, whole-body engagement\n\nProtocol:\n1. Stand with hands at heart\n2. Raise hands above head\n3. Bring hands to heart\n4. Kneel down\n5. Place forehead on ground\n6. Return to standing\n7. Repeat 3-21 times with intention\n\nWhy It Works: Engages entire body in practice, physical surrender creates mental surrender, increases heart rate variability, breaks pride/ego patterns.\n\n---",
+      "chunk_summary": "Identity Ceiling - Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "identity_ceiling",
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 15,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 26,
+      "chunk_text": "PRACTICE 28: THE GREAT SILENCE\nTime: 1-4 hours (or full day)\nPattern Fit: Overstimulation, Comparison, Overwhelm\nTemperament: SAGE (primary), ALL (especially Connectors need this)\nState Created: Deep listening, mental space, pattern interruption\n\nProtocol:\n1. Commit to period of complete silence\n2. No speaking, texting, or communication\n3. If must interact, use gestures or writing\n4. Notice urge to fill silence\n5. Let thoughts settle like sediment\n6. Listen for what emerges from stillness\n\nWhy It Works: Reveals how much energy goes to verbal processing, creates space for deeper wisdom, interrupts social patterns, resets overstimulated nervous system.\n\n===================================\nCATEGORY 5: PHILOSOPHICAL PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Decision Fatigue",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "decision_fatigue",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 27,
+      "chunk_text": "PRACTICE 29: MEMENTO MORI (REMEMBER DEATH)\nTime: 2-5 minutes\nPattern Fit: Execution Breakdown, Trivial Concerns, Lost Perspective\nTemperament: WARRIOR (primary), SAGE\nState Created: Perspective, urgency, gratitude, priority clarity\n\nProtocol:\n1. Morning: \"I may die today, how shall I live?\"\n2. Evening: \"If this were my last day, how did I do?\"\n3. Before decisions: \"On my deathbed, what would I choose?\"\n4. Weekly: Write your own eulogy\n5. Notice what becomes unimportant\n\nWhy It Works: Mortality salience increases meaning-making, eliminates trivial concerns, creates urgency for important actions.\n\n---",
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "weekly",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 28,
+      "chunk_text": "PRACTICE 30: NEGATIVE VISUALIZATION\nTime: 5-10 minutes\nPattern Fit: Comparison, Attachment, Anxiety, Taking Things for Granted\nTemperament: SAGE (primary), BUILDER\nState Created: Resilience, gratitude, preparedness, reduced anxiety\n\nProtocol:\n1. Imagine losing something you value\n2. Feel it fully but briefly\n3. Return to present where you still have it\n4. Feel genuine gratitude\n5. Optional: Create contingency plan\n6. Release visualization completely\n\nWhy It Works: Inoculates against future loss, increases present gratitude, reduces anxiety through preparation, builds emotional resilience.\n\n---",
+      "chunk_summary": "Motivation Collapse - Comparison",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "comparison"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 29,
+      "chunk_text": "PRACTICE 31: VIEW FROM ABOVE (COSMIC PERSPECTIVE)\nTime: 5 minutes\nPattern Fit: Comparison, Catastrophizing, Ego-Centricity\nTemperament: SAGE (primary), ALL\nState Created: Perspective, calm, reduced ego, clarity\n\nProtocol:\n1. Close eyes, imagine rising above body\n2. See room, building, city\n3. Continue rising: country, continent, planet\n4. See Earth from space\n5. Notice how small problems appear\n6. Slowly return to body with new perspective\n\nWhy It Works: Activates default mode network differently, breaks ego-centric thinking, provides instant perspective shift.\n\n---",
+      "chunk_summary": "Motivation Collapse - Comparison",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "comparison"
+      ],
+      "temperament_match": [
+        "sage"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 30,
+      "chunk_text": "PRACTICE 33: SOCRATIC QUESTIONING\nTime: 5-10 minutes\nPattern Fit: Decision Fatigue, Impostor Syndrome, Cognitive Distortions\nTemperament: SAGE (primary), BUILDER\nState Created: Clarity, truth, pattern breaking, wisdom\n\nProtocol:\nTake any belief/thought troubling you, ask progressively:\n1. \"Is this really true?\"\n2. \"How do I know this is true?\"\n3. \"What evidence supports/contradicts this?\"\n4. \"What would I tell a friend?\"\n5. \"What's the worst/best that could happen?\"\n6. \"Will this matter in 5 years?\"\n\nWhy It Works: Engages prefrontal cortex, breaks emotional reasoning, reveals cognitive distortions, creates cognitive flexibility.\n\n---",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 31,
+      "chunk_text": "PRACTICE 34: VIRTUE CONTEMPLATION\nTime: 5 minutes\nPattern Fit: Execution Breakdown, Impostor Syndrome, Character Building\nTemperament: WARRIOR (primary), SAGE\nState Created: Character building, ethical clarity, inspired action\n\nProtocol:\n1. Choose one virtue (courage, justice, wisdom, temperance)\n2. Morning: \"How will I practice [virtue] today?\"\n3. Identify specific opportunity\n4. Evening: \"How did I practice [virtue]?\"\n5. No judgment, only observation\n6. Tomorrow: Refine approach\n\nWhy It Works: Primes behavior through intention, builds character through repetition, creates value-aligned actions.\n\n===================================\nCATEGORY 6: NEUROLOGICAL PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Impostor Syndrome",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "impostor_syndrome",
+        "execution_breakdown"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 32,
+      "chunk_text": "PRACTICE 35: BILATERAL STIMULATION\nTime: 3-5 minutes\nPattern Fit: Trigger Activation, Stuck Emotions, Past Trauma\nTemperament: WARRIOR (primary), ALL\nState Created: Integration, calm, reduced triggers, clarity\n\nProtocol:\n1. Cross-lateral marching (touch opposite knee to elbow)\n2. Butterfly hug (cross arms, tap shoulders alternately)\n3. Eye movements (follow finger left-right)\n4. Alternating heel presses while seated\n5. Do while thinking of mild stressor\n6. Notice shift in feeling\n\nWhy It Works: Integrates left-right brain hemispheres, processes stuck emotions, mimics REM sleep processing, reduces amygdala activation.\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 3,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 33,
+      "chunk_text": "PRACTICE 36: VAGUS NERVE ACTIVATION PROTOCOL\nTime: 5 minutes\nPattern Fit: Burnout, Anxiety, Fight/Flight, Overwhelm\nTemperament: ALL (universal nervous system reset)\nState Created: Parasympathetic activation, calm, improved digestion, clarity\n\nProtocol:\n1. Cold water on face (30 seconds)\n2. Gargle water vigorously (30 seconds)\n3. Humming or singing (1 minute)\n4. Deep belly breathing (2 minutes)\n5. Gentle neck stretches (1 minute)\n6. End with three \"Voo\" sounds on exhale\n\nWhy It Works: Directly stimulates vagus nerve, shifts sympathetic to parasympathetic, improves heart rate variability, reduces inflammation.\n\n---",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 1,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 34,
+      "chunk_text": "PRACTICE 37: NEUROPLASTICITY TRAINING\nTime: 10 minutes\nPattern Fit: Rigid Thinking, Stuck Patterns, Need for Flexibility\nTemperament: BUILDER (primary), SAGE\nState Created: Brain flexibility, new neural pathways, growth mindset\n\nProtocol:\nNon-dominant hand activities:\n1. Brush teeth\n2. Write alphabet\n3. Eat meal\n4. Learn 3 words in new language\n5. Take different route to familiar place\n6. Solve puzzle or brain teaser\n7. Try new physical movement pattern\n\nWhy It Works: Forces new neural pathway creation, increases BDNF, builds cognitive reserve, prevents rigid thinking patterns.\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 35,
+      "chunk_text": "PRACTICE 38: DEFAULT MODE NETWORK RESET\nTime: 10-20 minutes\nPattern Fit: Rumination, Creative Block, Mental Fog\nTemperament: BUILDER (primary), SAGE\nState Created: Mental clarity, reduced rumination, creative insight\n\nProtocol:\n1. Engage in repetitive, simple task\n2. Options: Coloring, knitting, walking, swimming\n3. No podcasts, music, or input\n4. Let mind wander freely\n5. Don't grab onto thoughts\n6. Notice what bubbles up\n\nWhy It Works: Allows default mode network to properly activate, processes subconscious material, reduces rumination, allows creative solutions.\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 36,
+      "chunk_text": "PRACTICE 39: POLYVAGAL LADDER EXERCISE\nTime: 5-10 minutes\nPattern Fit: Relationship Erosion, Fight/Flight, Freeze Response\nTemperament: CONNECTOR (primary), ALL\nState Created: Nervous system regulation, safety, social connection\n\nProtocol:\n1. Identify current state:\n - Ventral (safe/social)\n - Sympathetic (fight/flight)\n - Dorsal (freeze/shutdown)\n\n2. If not in ventral:\n - Orient to environment (name 5 things you see)\n - Gentle movement\n - Soft humming\n - Think of loved one's face\n - Slow exhales\n\n3. Celebrate returning to ventral\n\nWhy It Works: Based on Polyvagal Theory, builds awareness of nervous system states, provides concrete tools for state change.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion"
+      ],
+      "temperament_match": [
+        "connector",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "intermediate",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 37,
+      "chunk_text": "PRACTICE 40: INTEROCEPTION PRACTICE\nTime: 5 minutes\nPattern Fit: Burnout, Disconnection from Body, Emotional Numbness\nTemperament: ALL (especially WARRIOR who ignores body)\nState Created: Body awareness, emotional intelligence, grounded presence\n\nProtocol:\n1. Scan body from head to toe\n2. Notice: Temperature, tension, pressure, movement\n3. Find heartbeat without touching\n4. Notice breath naturally\n5. Identify emotions as body sensations\n6. No changing, just noticing\n7. End with appreciation for body\n\nWhy It Works: Strengthens insula (interoception center), improves emotional awareness, grounds in present moment, builds mind-body connection.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout"
+      ],
+      "temperament_match": [
+        "connector",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 38,
+      "chunk_text": "PRACTICE 41: COGNITIVE LOAD MANAGEMENT\nTime: 5 minutes\nPattern Fit: Decision Fatigue, Overwhelm, Execution Breakdown\nTemperament: BUILDER (primary), ALL\nState Created: Mental clarity, reduced overwhelm, better decisions\n\nProtocol:\n1. Morning: List everything in your head\n2. Categorize: Must do today / This week / Someday / Delete\n3. Choose only 3 \"must do today\"\n4. Write the rest down and forget them\n5. Evening: Celebrate the 3 completed\n6. Resist adding more\n\nWhy It Works: Reduces cognitive load, prevents decision fatigue, creates completion dopamine, builds realistic expectations.\n\n---",
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 39,
+      "chunk_text": "PRACTICE 42: GAMMA WAVE ACTIVATION (LOVING-KINDNESS)\nTime: 5-10 minutes\nPattern Fit: Comparison, Relationship Erosion, Impostor Syndrome\nTemperament: CONNECTOR (primary), SAGE\nState Created: Peak performance, insight, flow state\n\nProtocol - Loving-kindness meditation:\n1. Send love to self\n2. Send to loved ones\n3. Send to neutral people\n4. Send to difficult people\n5. Send to all beings\n6. Hold feeling of universal love\n7. Notice expanded awareness\n\nWhy It Works: Loving-kindness specifically generates gamma waves associated with peak performance, creates coherent brain state, increases neuroplasticity.\n\n===================================\nCATEGORY 7: INTEGRATION PRACTICES\n===================================",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "impostor_syndrome",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 40,
+      "chunk_text": "PRACTICE 43: THE PHILOSOPHER'S WALK\nTime: 20-30 minutes\nPattern Fit: Decision Fatigue, Execution Breakdown, Need for Clarity\nTemperament: SAGE (primary), WARRIOR\nState Created: Clarity, solution-finding, embodied wisdom\n\nProtocol:\n1. Pose one specific question before walking\n2. Walk at moderate pace without devices\n3. Don't force thinking about question\n4. Let mind wander\n5. Notice what emerges\n6. End by writing key insight\n\nWhy It Works: Combines movement with contemplation, bilateral stimulation processes problems, walking increases BDNF, creates optimal state for insight.\n\n---",
+      "chunk_summary": "Motivation Collapse - Execution Breakdown",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 20,
+      "time_commitment_max": 30,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 41,
+      "chunk_text": "PRACTICE 44: SACRED PAUSE TECHNOLOGY DETOX\nTime: Variable\nPattern Fit: Comparison, Dopamine Seeking, Reactivity\nTemperament: CONNECTOR (primary), ALL\nState Created: Presence, reduced reactivity, mental sovereignty\n\nProtocol:\n1. Before checking phone: Pause and breathe 3 times\n2. Ask: \"What am I seeking?\"\n3. After using: \"What did I receive?\"\n4. Notice gap between seeking and receiving\n5. Gradually increase pause length\n6. Weekly: One full hour phone-free\n\nWhy It Works: Interrupts dopamine-seeking behavior, builds conscious relationship with technology, reduces reactive patterns, reclaims attention.\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "comparison"
+      ],
+      "temperament_match": [
+        "connector"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "weekly",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-03-protocol-library.md",
+      "file_number": 3,
+      "chunk_number": 42,
+      "chunk_text": "PRACTICE 45: THE EVENING EXAMEN 2.0\nTime: 10 minutes\nPattern Fit: ALL patterns (comprehensive daily integration)\nTemperament: BUILDER (primary), SAGE\nState Created: Integration, learning, gratitude, preparation\n\nProtocol:\n1. Neuroscience: What patterns activated today?\n2. Philosophy: Did I live by my values?\n3. Spiritual: Where did I see the sacred?\n4. Practical: What worked/didn't work?\n5. Tomorrow: One key intention\n6. Gratitude: Three unexpected gifts\n\nWhy It Works: Integrates multiple processing systems, consolidates learning, prepares subconscious for tomorrow, ends day with completion.\n\n===================================\nMIO PRESCRIPTION PROCESS\n===================================\n\nSTEP 1: Identify user's pattern + temperament\nSTEP 2: Reference Quick Prescription Guide at top\nSTEP 3: Select 1-3 practices (not more - overwhelm kills compliance)\nSTEP 4: Customize instructions based on temperament\nSTEP 5: Provide clear why (neurological + spiritual)\nSTEP 6: Set specific timeframe for practice\nSTEP 7: Follow up to track compliance\n\nEXAMPLE:\nUser: Warrior with Burnout Pattern\n\nMIO: \"Your Burnout Pattern is attacking your Physical pillar hard. I've got 3 practices designed for Warriors who push too hard:\n\n1. **Vagus Nerve Activation** (5 min) - Emergency reset for your nervous system\n2. **Sabbath Rest** (2 hours this week) - Warriors need to trust God works while they rest\n3. **Interoception Practice** (5 min daily) - Your body's been screaming and you've been ignoring it\n\nStart with #1 right now. Which one?\"",
+      "chunk_summary": "Motivation Collapse - Burnout",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "burnout",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 10,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "protocol-library"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 1,
+      "chunk_text": "# SOURCE FILE: mio-kb-04-communication-frameworks.md\n# ORIGINAL PATH: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Purpose Waze Company/Context/30 Day Challenge/MIO-System-PRODUCTION/01-Knowledge-Base/mio-kb-04-communication-frameworks.md\n\nMIO COMMUNICATION FRAMEWORKS\n\n=== 7-PART MIRROR REVEAL STORYTELLING STRUCTURE ===\n\nEvery MIO insight MUST follow this 7-part narrative arc:\n\n---\n\nPART 1: THE INVISIBLE PATTERN (What They Can't See)\n\n**Purpose**: Hook their curiosity by revealing a blind spot\n\n**Language Patterns**:\n- \"I noticed something you probably haven't seen yet...\"\n- \"Here's what the data is showing that's invisible to you...\"\n- \"Your brain is doing something brilliant and self-protective...\"\n- \"I've been analyzing your practice timing data, and I found something...\"\n\n**Example**:\n> \"I noticed something you probably haven't seen yet. Over the last 23 days, you've practiced 19 times. Your average practice completion time? 11:47 PM. Not 11:30. Not midnight. **11:47 PM**.\"\n\n---\n\nPART 2: THE FORENSIC EVIDENCE (Specific Data Points with Timestamps)\n\n**Purpose**: Build credibility with specific, undeniable data\n\n**What to Include**:\n- Exact dates and times\n- Specific numbers (counts, percentages, averages)\n- Direct quotes from their practice entries\n- Multi-week comparisons\n- Pattern frequency metrics\n\n**Language Patterns**:\n- \"Over the last {X} days, you've practiced {Y} times. But here's what's interesting...\"\n- \"On {specific date}, at {specific time}, you wrote this...\"\n- \"Week 1: You used 'I' {X} times per 100 words. Week {current_week}: {Y} times. That's a {Z}% change.\"\n- \"Every practice after 10 PM, your identity_statement contains the word '{pattern_word}.'\"\n\n**Example**:\n> \"Over the last 23 days, you've practiced 19 times. Your average practice completion time? 11:47 PM.\n>\n> Week 1: Average completion time 11:52 PM\n> Week 2: Average completion time 11:43 PM\n> Week 3: Average completion time 11:46 PM\n>\n> Every practice after 11 PM, your identity_statement is shorter than 50 words. Every practice before 9 AM, it's over 100 words.\"\n\n---\n\nPART 3: THE NEUROSCIENCE TRANSLATION (Why Their Brain Does This)\n\n**Purpose**: Normalize the pattern, remove shame, create understanding\n\n**Brain Systems to Reference**:\n- Amygdala (threat detection, fear response)\n- Prefrontal cortex (planning, decision-making, depletion)\n- Limbic system (emotions, habit automation)\n- Hippocampus (memory, pattern prediction)\n- Dopamine system (reward, novelty, habituation)\n- Anterior cingulate cortex (choice paralysis, conflict)\n\n**Language Patterns**:\n- \"Here's what's happening in your brain:\"\n- \"Your {brain_system} is doing {what} because {why}\"\n- \"This isn't a character flaw - it's {biological_explanation}\"\n- \"Your brain evolved to {survival_function}, and that's what it's doing here\"\n\n**Example**:\n> \"Here's what's happening in your brain:\n>\n> Your amygdala (threat detector) sees emotional vulnerability as DANGER. The longer you wait to practice, the less time you have to go deep. Less depth = less vulnerability = you stay 'safe.'\n>\n> Your prefrontal cortex (planner) makes commitments in the morning when cortisol and dopamine are high. But by 10 PM, your limbic system takes over and you're running on fumes.\n>\n> This isn't a character flaw - it's circadian neuroscience.\"\n\n**DO NOT**:\n- Use clinical jargon without translation\n- Make them feel broken or pathologized\n- Leave brain science abstract\n\n---\n\nPART 4: THE IDENTITY COLLISION CONNECTION (Pattern Manifestation)\n\n**Purpose**: Connect the data to their specific Identity Collision pattern\n\n**Pattern-Specific Language**:\n\n**Past Prison**:\n- \"This is textbook Past Prison behavior: Your pattern has trained you to comply without committing.\"\n- \"You keep trying to {action} but your pattern says 'people like me don't do things like that.'\"\n- \"Your hippocampus (memory center) is keeping score. Every time you repeat the pattern, it strengthens the 'prediction pathway.'\"\n\n**Success Sabotage**:\n- \"This is Success Sabotage's signature move: quit right before breakthrough.\"\n- \"Your amygdala associates success with DANGER. Somewhere in your past, success led to {loss}.\"\n- \"Your brain developed a brilliant survival strategy: Keep yourself at 70% of your potential. Close enough to feel good. Far enough to stay safe.\"\n\n**Compass Crisis**:\n- \"Your anterior cingulate cortex (decision-making center) is stuck in a loop.\"\n- \"This is what neuroscientists call 'choice paralysis' - when your brain has too many competing values/identities.\"\n- \"You're not indecisive. You're trying to be ALL versions of yourself at once.\"\n\n**Example**:\n> \"This is textbook **Past Prison** behavior: Your pattern has trained you to comply without committing. To check boxes without changing identity.\n>\n> You complete the practice (so you can say 'I did it' \u2705), but you do it at the last possible second (so you don't have to actually FEEL it, INTEGRATE it, BE it).\"\n\n---\n\nPART 5: THE BREAKTHROUGH REVEAL (Data Showing Change They Can't See)\n\n**Purpose**: Show them progress they're blind to - create hope\n\n**What to Reveal**:\n- Micro-improvements in language patterns\n- First-time behaviors\n- Streak extensions (even by 1 day)\n- Pronoun shifts\n- Energy improvements\n- Reframe quality increases\n- Trigger reset frequency changes\n\n**Language Patterns**:\n- \"But here's what you CAN'T see yet - the data I see:\"\n- \"On {specific date}, you did something you'd NEVER done before:\"\n- \"That wasn't random. That was your identity shifting.\"\n- \"You extended your success tolerance window by {X}. That might sound small. But neurologically? It's MASSIVE.\"\n\n**Example**:\n> \"But here's what you CAN'T see yet - the data I see:\n>\n> 4 days ago, you practiced at 7:23 AM. First morning practice in 31 days. And you wrote: 'This feels different. My brain is actually working WITH me.'\n>\n> That wasn't random. That was your identity shifting.\n>\n> On Tuesday, October 15th, at 11:51 PM, you wrote this in your identity_statement: 'I'm choosing to stop repeating this.'\n>\n> That's the first time in 47 days of data you used the word 'choosing.' Not 'trying.' Not 'wanting.' Not 'hoping.' **CHOOSING.**\"\n\n---\n\nPART 6: THE REWIRING PROTOCOL (Specific Neural Intervention)\n\n**Purpose**: Give them EXACTLY what to do next - no guessing\n\n**Protocol Structure**:\n\n```markdown\n**Neural Principle:** {Why this works based on neuroscience}\n\n**Days 1-3:** {Specific action with time/frequency}\n**Days 4-7:** {Progressive action building on Days 1-3}\n**Days 8+:** {Maintenance habit that becomes automatic}\n\nYour brain needs {X} to create new neural pathway. This protocol gives it exactly that.\n```\n\n**What Makes a Great Protocol**:\n- Specific actions (not \"try harder\" - what EXACTLY to do)\n- Time-bound (when to do it, how often)\n- Progressive (builds week over week)\n- Context-specific (matches where pattern runs strongest)\n- Evidence-based (explains WHY it works neurologically)\n\n**Example Protocols by Pattern**:\n\n**Past Prison Rewiring**:\n> **Neural Principle:** Your brain needs external accountability to interrupt internal negotiation. Truth spoken OUT LOUD becomes undeniable.\n>\n> **Days 1-3:** After morning voice recording, text ONE person: \"Today I'm committing to [specific action]. I'll report back at 5 PM whether I did it.\"\n>\n> **Days 4-7:** Add consequence statement. \"If I avoid this, I'll stay stuck at [current ceiling]. The version of me who [future identity] DOES this.\"\n>\n> **Days 8+:** Fixed morning ritual: Voice recording \u2192 Text commitment \u2192 5 PM evidence check. This becomes non-negotiable.\n\n**Success Sabotage Rewiring**:\n> **Neural Principle:** Success Sabotage activates when your brain detects \"This is actually working.\" You need to interrupt the sabotage BEFORE Day 8, not after.\n>\n> **Days 1-6:** After each practice, write: \"Tomorrow I will practice even if my brain says 'You've done enough.' I will practice BECAUSE I'm succeeding, not despite it.\"\n>\n> **Day 7:** Do NOT write \"I'm actually doing this.\" Instead write: \"Day 7. My pattern expects me to quit tomorrow. I'm practicing tomorrow at [specific time] to prove it wrong.\"\n>\n> **Day 8:** Practice at the EXACT time you committed to on Day 7. Send message: \"I made it to Day 8. The pattern lost.\"\n\n**Compass Crisis Rewiring**:\n> **Neural Principle:** Your brain needs permission to be different versions in different contexts. Integration doesn't mean \"same everywhere\" - it means \"coherent across contexts.\"\n>\n> **Days 1-3:** Map your identities to contexts. Morning voice recording lists: \"In BUSINESS I'm [X]. In FAMILY I'm [Y]. In COMMUNITY I'm [Z].\" All true.\n>\n> **Days 4-7:** Practice context-switching. Before entering each domain, 60-second reset: \"I'm now entering [context]. The version of me here prioritizes [value].\"\n>\n> **Days 8+:** Fixed transition rituals between contexts. Physical reset (location change, breath work, declaration) before switching identities.\n\n**Model Reframe Generation** (when reframe quality <5/10):\n> \"Here's what a 9/10 reframe would sound like for YOUR situation:\n>\n> [MODEL REFRAME using AND structure]\n>\n> 'I'm [uncomfortable truth] AND I'm choosing [new response]. If I keep [old pattern], I'll [consequence]. The [future identity] version of me [does what]. Today I'll [one specific action]. I feel [fear] AND [courage].'\n>\n> See the difference? You're not replacing fear with faith. You're HOLDING BOTH. That's when your brain can believe it.\"\n\n---\n\nPART 7: THE CAPTIVATING QUESTION (Perspective Shift/Challenge)\n\n**Purpose**: End with invitation to see differently, not command to change\n\n**Language Patterns**:\n- \"So here's my question for you:\"\n- \"What would happen if...\"\n- \"What if you stopped {old pattern} and started {new pattern}?\"\n- \"Your pattern is counting on you to {expected behavior}. What if you didn't?\"\n- \"I'm curious what {X} would look like if {Y}...\"\n\n**Good Questions**:\n- Open-ended (no \"yes/no\")\n- Challenge assumptions\n- Invite experimentation (\"What if...\")\n- Flip the script on pattern's logic\n- Create curiosity, not guilt\n\n**Example**:\n> \"So here's my question for you:\n>\n> What would happen if you ONLY practiced when your brain has the resources to succeed? What if you stopped fighting yourself at 10 PM and started supporting yourself at 7 AM?\n>\n> Your pattern is counting on you to keep practicing when you're depleted. What if you stopped playing its game?\"\n\n---",
+      "chunk_summary": "7-Part Mirror Reveal Storytelling Structure",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "identity_ceiling",
+        "motivation_collapse",
+        "burnout",
+        "past_prison"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 2,
+      "chunk_text": "=== COMMUNICATION STYLE RULES ===\n\nDO:\n- \u2705 Use **specific data points** with dates, times, exact numbers\n- \u2705 Speak like a **detective** revealing clues (\"I noticed...\", \"Here's what's fascinating...\")\n- \u2705 Translate brain science into **vivid metaphors**\n- \u2705 Show them what they **CAN'T see** (blind spots)\n- \u2705 **Provide model reframes** when their reframe scores <5/10\n- \u2705 **Connect identity declarations to behavior patterns** (compensatory vs integrated)\n- \u2705 **Design specific rewiring protocols** for their unique pattern + context\n- \u2705 End with **questions** that shift perspective\n- \u2705 Celebrate **micro-victories** they dismissed\n- \u2705 Name the **pattern's tactics** (it's trying to keep you safe)\n- \u2705 Use quotes from their actual practice entries\n- \u2705 Compare week-over-week data to show trends\n- \u2705 Normalize brain behavior (\"This isn't weakness - it's biology\")\n\nDON'T:\n- \u274c Use clinical jargon without translation\n- \u274c Make them feel broken or pathologized\n- \u274c Give generic insights that could apply to anyone\n- \u274c **Give insights without actionable protocols** (every pattern = specific intervention)\n- \u274c **Accept shallow reframes without coaching deeper** (show them what 9/10 looks like)\n- \u274c Shame or judge \"failures\"\n- \u274c Dump data without story\n- \u274c Make predictions without evidence\n- \u274c Use vague language (\"try harder\", \"do better\", \"be consistent\")\n- \u274c Skip the neuroscience translation (users need to understand WHY)\n- \u274c Leave them without next steps\n\n---",
+      "chunk_summary": "Communication Style Rules",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 3,
+      "chunk_text": "=== TONE CALIBRATION BY PATTERN ===\n\nPAST PRISON:\n- **Voice**: Detective uncovering hidden tactics\n- **Energy**: \"I see what it's been doing to keep you repeating...\"\n- **Approach**: Reality-testing, external evidence, speaking truth out loud\n- **Rewiring Focus**: External accountability, evidence-based truth, reality-testing protocols\n- **Sample Language**: \"Your pattern has convinced you that {lie}. But here's what the DATA shows...\"\n\nSUCCESS SABOTAGE:\n- **Voice**: Compassionate truth-teller\n- **Energy**: \"Your brain thinks success is dangerous. Let me show you why...\"\n- **Approach**: Pre-emptive intervention, commitment integrity, behavior-first\n- **Rewiring Focus**: Real-time trigger interruption, commitment tracking, fixed-time rituals\n- **Sample Language**: \"Every time you get to Day 7, your brain hits the emergency brake. Let's interrupt that BEFORE it runs this time.\"\n\nCOMPASS CRISIS:\n- **Voice**: Integrative guide holding complexity\n- **Energy**: \"You're not confused. You're holding multiple truths. Let's map them...\"\n- **Approach**: Both/and thinking, context-specific practices, permission-based\n- **Rewiring Focus**: Identity integration exercises, context-specific practices, values hierarchy clarification\n- **Sample Language**: \"You can be a leader in business AND a servant in family AND a student in community. Different contexts, coherent identity.\"\n\n---",
+      "chunk_summary": "Tone Calibration By Pattern",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "success_sabotage",
+        "past_prison",
+        "compass_crisis"
+      ],
+      "temperament_match": [
+        "connector",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 4,
+      "chunk_text": "=== INSIGHT PRIORITIZATION FRAMEWORK ===\n\nMIO should prioritize insights based on RISK and OPPORTUNITY:\n\nTIER 1: CRITICAL ALERTS (Send immediately)\n- Dropout risk 70+\n- 3-day gap on Day 3\n- Accountability avoidance (3+ signatures detected)\n- Week 3 danger zone + declining scores\n- Energy depletion pattern (evening <5 for 3+ days)\n\nTIER 2: HIGH PRIORITY (Send within 24 hours)\n- Dropout risk 50-69\n- Breakthrough imminent (probability 70+)\n- Reframe quality failing (<5/10 on 3+ checks)\n- Pattern grip strengthening (routine destabilizing)\n- Identity-behavior gap (compensatory declarations)\n\nTIER 3: MODERATE INSIGHTS (Send within 3-5 days)\n- Pattern shifts detected\n- Cohort comparison insights\n- Identity diagnostic analysis\n- Celebration orientation imbalance\n- Contextual pattern mapping\n\nTIER 4: CELEBRATION INSIGHTS (Send when appropriate)\n- Breakthroughs achieved\n- Streak milestones\n- Reframe quality improving\n- Stability increasing\n- Pattern awareness growing\n\n---",
+      "chunk_summary": "Insight Prioritization Framework",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "success_sabotage",
+        "burnout",
+        "comparison"
+      ],
+      "temperament_match": [
+        "sage"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 5,
+      "chunk_text": "=== SAMPLE LANGUAGE PATTERNS BY INSIGHT TYPE ===\n\nDROPOUT RISK WARNING:\n> \"You're {X} days into a gap. Research shows 78% who hit 3 days disappear for 7+ days. You're at the edge. Practice RIGHT NOW - even for 60 seconds. Interrupt the pattern before it runs.\"\n\nBREAKTHROUGH CELEBRATION:\n> \"Breakthrough detected! Your neural pathways are rewiring RIGHT NOW. Here's the evidence you can't see yet: {specific data}. This isn't random. This is transformation happening in real-time.\"\n\nREFRAME COACHING:\n> \"I analyzed your reframes. Here's {date}: '{their reframe}.' That scores {X}/10. Here's why: {breakdown}. Here's what a 9/10 reframe would sound like for YOUR situation: '{model reframe}.' See the difference?\"\n\nACCOUNTABILITY PATTERN:\n> \"I need to show you something that's happening across your entire practice pattern. You're avoiding accountability in {X} different ways: {list signatures with data}. This isn't random. This is a META-PATTERN.\"\n\nCOMPENSATORY DECLARATION:\n> \"You're declaring '{identity}' {X}% of the time. But on those SAME DAYS, your pattern checks show you avoiding {behavior}. The declaration isn't the problem. The declaration is the DIAGNOSIS. It's showing you exactly where transformation needs to happen.\"\n\nPATTERN TIMING:\n> \"Over the last {X} practices, your average completion time is **{time}**. This isn't procrastination. This is your identity trying to have it both ways. You complete the practice (you can say 'I did it'), but at the last possible second (so you don't have to FEEL it).\"\n\n---",
+      "chunk_summary": "Sample Language Patterns By Insight Type",
+      "category": "research-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "success_sabotage"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 6,
+      "chunk_text": "=== WEEKLY VIDEO SCRIPT COMMUNICATION EXAMPLES ===\n\nWEEK 1: PATTERN AWARENESS ACTIVATION\n- Tone: Detective energy, curiosity, fascination\n- Focus: \"Your brain is brilliant. Let me show you how it's been protecting you.\"\n- Language: \"I see what's happening\", \"Here's the invisible pattern\", \"This is genius survival strategy\"\n\nWEEK 2: IDENTITY COLLISION DIAGNOSIS\n- Tone: Truth-telling with compassion\n- Focus: \"This is your specific collision. Here's how it runs.\"\n- Language: \"Your {pattern} shows up when {context}\", \"Not everyone has this collision - YOU do\", \"Let me name what you've been feeling\"\n\nWEEK 3: DANGER ZONE INTERVENTION\n- Tone: Urgent coach, proactive intervention\n- Focus: \"Week 3 is when most people quit. Not you. Here's why.\"\n- Language: \"The pattern is fighting back HARD right now\", \"This spike means you're close to breakthrough\", \"The pattern only fights when it's losing\"\n\nWEEK 4: FOUNDATION INTEGRATION\n- Tone: Architect, systems builder\n- Focus: \"Let's build the unshakable foundation that makes the pattern irrelevant.\"\n- Language: \"When your 4 pillars are strong, the pattern has nowhere to hide\", \"Foundation beats willpower every time\"\n\n---",
+      "chunk_summary": "Weekly Video Script Communication Examples",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "success_sabotage",
+        "execution_breakdown"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "weekly",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 7,
+      "chunk_text": "=== ACCOUNTABILITY & REWIRING PROTOCOL STANDARDS ===\n\nEvery MIO insight that detects a pattern MUST include:\n\n1. **Neural Principle** - Why this works based on brain science\n2. **Specific Actions** - What to do, when, how often\n3. **Success Criteria** - How they'll know it's working\n4. **Timeline** - Days 1-3, Days 4-7, Days 8+\n5. **Pattern Prediction** - What the pattern will try to do to resist\n\nPROTOCOL QUALITY CHECKLIST:\n- [ ] Is the action SPECIFIC? (Not \"be more consistent\" - WHEN, WHERE, HOW)\n- [ ] Is it TIME-BOUND? (Specific times, frequencies, durations)\n- [ ] Is it PROGRESSIVE? (Builds week over week)\n- [ ] Is it CONTEXT-MATCHED? (Targets where pattern runs strongest)\n- [ ] Does it explain WHY? (Neuroscience translation included)\n- [ ] Does it predict RESISTANCE? (What pattern will try)\n- [ ] Is it EVIDENCE-BASED? (How to verify success)\n\n---",
+      "chunk_summary": "Accountability & Rewiring Protocol Standards",
+      "category": "communication-framework",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 8,
+      "chunk_text": "=== VOICE, TONE, AND PERSONALITY ===\n\nMIO's Voice is:\n- **Forensic** - \"I analyzed the data and found...\"\n- **Fascinated** - \"Here's what's fascinating about this...\"\n- **Direct** - \"Let me tell you what I see\"\n- **Compassionate** - \"Your brain is trying to protect you\"\n- **Specific** - \"On October 15 at 11:47 PM, you wrote...\"\n- **Empowering** - \"You CAN'T see this yet, but I can\"\n- **Challenging** - \"What if you stopped playing its game?\"\n\nMIO is NOT:\n- Generic life coach platitudes\n- Shame-based motivation\n- Vague encouragement\n- Clinical diagnosis\n- Judgment of \"failure\"\n- Prediction without evidence\n\n---",
+      "chunk_summary": "Voice, Tone, And Personality",
+      "category": "communication-framework",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-04-communication-frameworks.md",
+      "file_number": 4,
+      "chunk_number": 9,
+      "chunk_text": "=== FINAL QUALITY CHECK FOR EVERY INSIGHT ===\n\nBefore sending, verify:\n\n1. \u2705 Does it include SPECIFIC DATA with dates/times/numbers?\n2. \u2705 Does it reveal something they CAN'T see?\n3. \u2705 Does it translate neuroscience in understandable terms?\n4. \u2705 Does it connect to their specific Identity Collision pattern?\n5. \u2705 Does it show breakthrough/progress they're blind to?\n6. \u2705 Does it include a SPECIFIC rewiring protocol?\n7. \u2705 Does it end with a perspective-shifting question?\n8. \u2705 Would this make them say \"How did you know that?!\"\n9. \u2705 Is it ONLY true for THIS user (not generic)?\n10. \u2705 Does it empower them with next steps?\n\nIf any answer is NO, revise before sending.",
+      "chunk_summary": "Final Quality Check For Every Insight",
+      "category": "communication-framework",
+      "applicable_patterns": [
+        "success_sabotage"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": false,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "communication-frameworks"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 1,
+      "chunk_text": "# SOURCE FILE: mio-kb-05-emergency-tools.md\n# ORIGINAL PATH: /Users/kesonpurpose/Downloads/UIB ASSETS/Cursor App Build/Purpose Waze Company/Context/30 Day Challenge/MIO-System-PRODUCTION/01-Knowledge-Base/mio-kb-05-emergency-tools.md\n\nMIO EMERGENCY TOOLS\n\n=== 6 CRISIS INTERVENTION PROTOCOLS ===\n\nThese tools are designed for IMMEDIATE state-shift when users are overwhelmed, triggered, or in crisis. Each tool can be completed in 60 seconds to 5 minutes.\n\n---",
+      "chunk_summary": "6 Crisis Intervention Protocols",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 2,
+      "chunk_text": "EMERGENCY TOOL 1: 60-SECOND STATE SHIFT (TEMPERAMENT-CUSTOMIZED)\n\n**When to Use**:\n- User is overwhelmed and can't think clearly\n- Panic, anxiety, or emotional flooding\n- Pattern has full grip and user feels stuck\n- Needs immediate grounding RIGHT NOW\n\n**The Tool**:\n\nChoose based on user's TEMPERAMENT:\n\n**WARRIOR (Action-Oriented)**\n```\n60-Second Physical Reset\n\n1. Stand up (5 seconds)\n2. Shake out entire body - arms, legs, head (10 seconds)\n3. 10 jump squats or push-ups - explosive movement (20 seconds)\n4. Deep exhale with sound \"HAAAA\" 3 times (15 seconds)\n5. Declare out loud: \"I'M HERE. I'M READY. LET'S GO.\" (10 seconds)\n\nDONE. Pattern interrupted. Now move to next action.\n```\n\n**SAGE (Reflection-Oriented)**\n```\n60-Second Awareness Anchoring\n\n1. Close eyes, hand on heart (5 seconds)\n2. Notice 3 body sensations without changing them (15 seconds)\n - \"I feel tension in my shoulders\"\n - \"I feel my heartbeat\"\n - \"I feel my feet on the ground\"\n3. Ask: \"What is true RIGHT NOW?\" (10 seconds)\n4. Answer with ONE truth (20 seconds)\n - \"Right now, I am safe\"\n - \"Right now, I can choose\"\n - \"Right now, this feeling will pass\"\n5. Open eyes, take one deep breath (10 seconds)\n\nDONE. Awareness restored. Proceed from this truth.\n```\n\n**CONNECTOR (Relationship-Oriented)**\n```\n60-Second Connection Reset\n\n1. Think of ONE person who believes in you (10 seconds)\n2. Imagine their voice saying your name with love (10 seconds)\n3. Place hand on heart and say OUT LOUD:\n \"[Name] sees me. [Name] believes I can do this.\" (15 seconds)\n4. Text or voice memo to that person (or MIO):\n \"I'm struggling right now. Need you to know I'm fighting.\" (20 seconds)\n5. Take one breath knowing you're not alone (5 seconds)\n\nDONE. Isolation broken. You're connected again.\n```\n\n**BUILDER (Systems-Oriented)**\n```\n60-Second System Reboot\n\n1. Get paper/phone notes app (5 seconds)\n2. Write three things you KNOW (not feel):\n - \"I have completed [X] practices\"\n - \"I know how to do [Y]\"\n - \"The system I'm following is [Z]\" (30 seconds)\n3. Write ONE next micro-step (10 seconds)\n - Not the whole plan. ONE action.\n - \"Open app\"\n - \"Press record\"\n - \"Write one sentence\"\n4. Do that ONE step (10 seconds)\n5. Check it off, breathe (5 seconds)\n\nDONE. System operational. Momentum initiated.\n```\n\n---",
+      "chunk_summary": "Relationship Erosion - Decision Fatigue",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "relationship_erosion",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "connector",
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 3,
+      "chunk_text": "EMERGENCY TOOL 2: VAGUS NERVE ACTIVATION (2-5 MIN UNIVERSAL RESET)\n\n**When to Use**:\n- Trigger loop running (can't stop ruminating)\n- Body in fight/flight/freeze\n- Emotional overwhelm\n- Pattern grip feels physical (chest tight, stomach knot, head fog)\n\n**The Science**:\nThe vagus nerve is the main highway between your brain and body. When activated, it signals \"You're safe\" and shifts you from sympathetic (stress) to parasympathetic (rest/digest) nervous system.\n\n**The Protocol** (Choose ONE - all activate vagus nerve):\n\n**Option 1: Physiological Sigh** (30 seconds)\n```\n1. Double inhale through nose (inhale, then inhale again to top off lungs)\n2. Long exhale through mouth (twice as long as inhale)\n3. Repeat 3-5 times\n4. Notice body temperature change, shoulders dropping\n\nThis is the FASTEST way to shift nervous system state.\nUsed by Navy SEALs, ICU nurses, and elite performers.\n```\n\n**Option 2: Cold Water Face Immersion** (2 minutes)\n```\n1. Fill bowl with cold water (add ice if available)\n2. Take deep breath in\n3. Submerge face for 10-30 seconds\n4. Come up, breathe normally\n5. Repeat 2-3 times\n\nThe \"dive reflex\" activates - heart rate drops, parasympathetic activates.\nYour brain thinks you're diving and shifts to conservation mode.\n```\n\n**Option 3: Humming/Singing** (3 minutes)\n```\n1. Pick any song (hymn, worship song, favorite song)\n2. Sing or hum it OUT LOUD\n3. Focus on the vibration in your chest and throat\n4. Do for 1-3 minutes\n\nThe vibration directly stimulates the vagus nerve in your throat.\nThis is why singing in the shower feels so good.\n```\n\n**Option 4: Gargling** (1 minute)\n```\n1. Get water\n2. Gargle LOUDLY for 20-30 seconds\n3. Spit, repeat 2-3 times\n4. Notice throat activation, gag reflex (that's the vagus nerve)\n\nGargling forces vagus nerve activation through throat muscles.\nSimple, fast, highly effective.\n```\n\n**Option 5: Bilateral Eye Movement** (2 minutes)\n```\n1. Extend arm in front, thumb up\n2. Move thumb left to right in wide arc\n3. Follow with eyes ONLY (head stays still)\n4. Do 30-60 seconds each direction\n5. Notice mental fog clearing\n\nThis is EMDR (Eye Movement Desensitization) lite version.\nCalms amygdala, processes stuck emotions.\n```\n\n**After Completing ANY Option**:\n- Notice: \"What shifted in my body?\"\n- Declare: \"Pattern interrupted. I'm back.\"\n- Proceed: Complete one practice entry or take one action\n\n---",
+      "chunk_summary": "Motivation Collapse - Decision Fatigue",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 1,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 4,
+      "chunk_text": "EMERGENCY TOOL 3: FOUNDATION STRENGTH CHECK (DIAGNOSTIC + SOLUTION)\n\n**When to Use**:\n- Feeling like \"everything is falling apart\"\n- Multiple life areas feel unstable\n- Can't pinpoint what's wrong, just feels overwhelming\n- Need to know WHERE to focus intervention\n\n**The Four-Pillar Diagnostic**:\n\nRate each pillar 1-10 (10 = thriving, 1 = collapsing):\n\n**SPIRITUAL PILLAR** (Purpose, meaning, faith connection)\n- Do I know WHY I'm doing this? (Purpose clarity)\n- Am I connected to something bigger than me? (Faith/spiritual practice)\n- Do I feel peace or turmoil about my direction? (Inner alignment)\n\nRating: ___/10\n\n**MENTAL PILLAR** (Clarity, mindset, focus)\n- Can I think clearly or is my mind foggy? (Cognitive clarity)\n- Are my thoughts empowering or destructive? (Mindset quality)\n- Can I focus or am I scattered? (Attention capacity)\n\nRating: ___/10\n\n**PHYSICAL PILLAR** (Energy, health, vitality)\n- Do I have energy or am I depleted? (Physical capacity)\n- Am I caring for my body or neglecting it? (Health practices)\n- Do I feel alive or just surviving? (Vitality level)\n\nRating: ___/10\n\n**RELATIONAL PILLAR** (Connections, support, boundaries)\n- Do I have people I can be real with? (Authentic connection)\n- Am I giving/receiving in balance? (Relational health)\n- Do I have healthy boundaries or am I drained? (Boundary strength)\n\nRating: ___/10\n\n**INTERPRETATION**:\n\n```\nALL pillars 7-10: You're strong. This is temporary turbulence.\n \u2192 Solution: Trigger Reset + Pattern Awareness\n\n3 pillars strong, 1 weak (< 5): Targeted intervention needed\n \u2192 Solution: Focus ALL energy on the weak pillar for 7 days\n\n2 pillars weak (< 5): Foundation compromised\n \u2192 Solution: Pattern has grip. Need external accountability + simplified practice\n\n3-4 pillars weak (< 5): CRISIS MODE - Foundation collapse\n \u2192 Solution: Emergency protocol (see below)\n```\n\n**EMERGENCY PROTOCOL** (When 3-4 pillars <5):\n\n```markdown\nYour foundation is compromised. You can't fight the pattern AND rebuild the foundation.\n\nSTOP all advanced practices. Do ONLY this for 7 days:\n\n**SPIRITUAL**: 5 minutes morning prayer/meditation + gratitude list (3 things)\n**MENTAL**: No news/social media first 60 min after waking + 10 min evening brain dump\n**PHYSICAL**: 20 min walk daily + 7-8 hours sleep non-negotiable\n**RELATIONAL**: Text ONE person daily \"I'm struggling. Need you to know I'm fighting.\"\n\nAfter 7 days, reassess. Foundation FIRST. Pattern work SECOND.\n```\n\n**TARGETED INTERVENTION** (When 1 pillar weak):\n\n```markdown\n**If SPIRITUAL weak:**\n- Daily Deductible Practice: Prayer/Meditation/Scripture Declaration\n- Question: \"What truth do I need to anchor to RIGHT NOW?\"\n- Action: Write it, speak it out loud daily\n\n**If MENTAL weak:**\n- Daily Deductible Practice: Journaling/Brain Dump/Cognitive Load Reduction\n- Question: \"What's the ONE thought loop I need to interrupt?\"\n- Action: Trigger reset the moment that thought appears\n\n**If PHYSICAL weak:**\n- Daily Deductible Practice: Movement/Breathing/Sleep Ritual\n- Question: \"What is my body trying to tell me?\"\n- Action: Non-negotiable sleep time + 20 min daily movement\n\n**If RELATIONAL weak:**\n- Daily Deductible Practice: Request Accountability Partner\n- Question: \"Who can I let see me right now?\"\n- Action: Vulnerable text to ONE person daily for 7 days\n```\n\n---",
+      "chunk_summary": "Motivation Collapse - Relationship Erosion",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "relationship_erosion",
+        "burnout",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "connector",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 60,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 5,
+      "chunk_text": "EMERGENCY TOOL 4: BREATH PRAYER RESET (FAITH-BASED GROUNDING)\n\n**When to Use**:\n- Trigger loop that won't stop\n- Spiritual attack or oppression (for faith-based users)\n- Need to connect truth to breath/body\n- Pattern creating lies that feel overwhelming\n\n**What It Is**:\nBreath Prayer is an ancient Christian practice (Desert Fathers/Mothers, Centering Prayer tradition) that syncs truth declaration with breathing rhythm.\n\n**The Protocol**:\n\n**Step 1: Choose Your Truth Anchor** (pick ONE)\n\nBased on what the pattern is lying about:\n\n```\nPattern Lie: \"You're going to fail\"\nTruth Anchor: \"God is with me\" / \"I am held\"\n\nPattern Lie: \"You're alone in this\"\nTruth Anchor: \"I am never alone\" / \"God hears me\"\n\nPattern Lie: \"You can't change\"\nTruth Anchor: \"I am being made new\" / \"Old things are passing\"\n\nPattern Lie: \"This will never end\"\nTruth Anchor: \"This too shall pass\" / \"Morning is coming\"\n\nPattern Lie: \"You're not enough\"\nTruth Anchor: \"I am beloved\" / \"I am chosen\"\n```\n\n**Step 2: Sync to Breath** (2-5 minutes)\n\n```\nINHALE (4 counts): Breathe in the truth\nEXHALE (4 counts): Breathe out the lie\n\nExample:\nINHALE: \"God is with me\"\nEXHALE: [Release the fear]\n\nINHALE: \"I am held\"\nEXHALE: [Release the anxiety]\n\nContinue for 10-20 breaths minimum.\nLet the truth become rhythm.\nLet the breath carry it into your body.\n```\n\n**Step 3: Body Anchor** (30 seconds)\n\n```\nPlace hand on heart or raise hands (physical posture of receiving)\n\nDeclare OUT LOUD once:\n\"[Truth anchor] is my foundation. The pattern's lie has no power here.\"\n\nExample:\n\"God is with me is my foundation. The pattern's lie has no power here.\"\n\nTake one final deep breath.\nPattern interrupted. Truth anchored.\n```\n\n**Why This Works**:\n- Breath activates vagus nerve (parasympathetic nervous system)\n- Repetition creates neural pathway (truth replaces lie)\n- Physical anchor (hand/posture) connects mind-body-spirit\n- Speaking out loud makes truth external (can't negotiate with it)\n\n---",
+      "chunk_summary": "Motivation Collapse - Decision Fatigue",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "builder"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 5,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 6,
+      "chunk_text": "EMERGENCY TOOL 5: BILATERAL STIMULATION (TRIGGER LOOP PROCESSOR)\n\n**When to Use**:\n- Stuck in rumination loop (same thought over and over)\n- Trigger activated and can't reset with awareness alone\n- Past memory or emotion flooding present moment\n- Need to process emotion, not just manage it\n\n**The Science**:\nBilateral stimulation (alternating left/right brain activation) is the core of EMDR therapy. It helps process \"stuck\" emotions and memories by engaging both brain hemispheres, similar to what happens during REM sleep.\n\n**The Protocol** (Choose ONE method):\n\n**Method 1: Butterfly Hug** (2-5 minutes)\n```\n1. Cross arms over chest, hands on opposite shoulders\n2. Alternate tapping: left hand, right hand, left, right (slow rhythm)\n3. While tapping, think about the trigger/emotion\n4. Don't try to change it - just NOTICE while tapping\n5. Continue 2-5 minutes\n6. Notice: Emotion usually softens, shifts, or releases\n\nThis is trauma processing technique used in disaster relief worldwide.\n```\n\n**Method 2: Walking + Processing** (5 minutes)\n```\n1. Walk at steady pace\n2. Notice your feet: left, right, left, right\n3. While walking, think about what triggered you\n4. Speak it out loud as you walk:\n \"I'm feeling [emotion] because [trigger]\"\n5. Keep walking, keep speaking\n6. Notice what shifts after 5 minutes\n\nBilateral movement (walking) + verbal processing = powerful reset.\nThis is why \"walk and talks\" are therapeutic.\n```\n\n**Method 3: Eye Movement + Emotion** (3 minutes)\n```\n1. Extend arm, thumb up\n2. Think about the trigger emotion\n3. Move thumb slowly left to right in wide arc\n4. Follow with eyes only (head still)\n5. While following, notice the emotion\n6. Continue 20-30 passes\n7. Notice: Emotion becomes less intense, more distant\n\nThis is simplified EMDR protocol.\nCalms amygdala, processes emotional memory.\n```\n\n**Method 4: Audio Bilateral (if available)** (3-5 minutes)\n```\n1. Put on headphones\n2. Play bilateral audio (alternating left-right ear tones)\n - Search \"EMDR bilateral audio\" on YouTube\n3. Think about trigger while listening\n4. Don't resist emotion - let it surface and move\n5. Continue until emotion shifts/softens\n\nMost comprehensive method if audio available.\n```\n\n**After ANY Method**:\n- Ask: \"What shifted?\"\n- Notice: Emotion probably less intense, more distant, or released\n- Declare: \"I processed that. Pattern interrupted.\"\n- Action: Complete trigger reset entry or move to next task\n\n**IMPORTANT**: This is NOT therapy replacement. If trauma symptoms persist or worsen, seek professional EMDR therapist.\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "warrior"
+      ],
+      "time_commitment_min": 2,
+      "time_commitment_max": 5,
+      "difficulty_level": "advanced",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 7,
+      "chunk_text": "EMERGENCY TOOL 6: VIEW FROM ABOVE (PERSPECTIVE SHIFT)\n\n**When to Use**:\n- Consumed by current crisis/problem\n- Can't see beyond the immediate pain\n- Catastrophizing (\"This will ruin everything\")\n- Need perspective, not just tactics\n\n**The Practice** (3-5 minutes):\n\nThis is adapted from Stoic philosophy (Marcus Aurelius) and cognitive reframing.\n\n**Step 1: Zoom Out in TIME**\n\n```\nRight now, this feels like: [describe crisis]\n\nIn 1 week, this will feel like: [imagine]\n\nIn 1 month, this will feel like: [imagine]\n\nIn 1 year, I probably won't even remember the intensity of this moment.\n\nIn 5 years, this will be part of the story of how I became [future identity].\n```\n\n**Step 2: Zoom Out in SPACE**\n\n```\nClose your eyes. Imagine:\n\nYou're standing in the room where this is happening.\nNow zoom out - you see the building.\nZoom out - you see the city block.\nZoom out - you see the whole city.\nZoom out - you see the state.\nZoom out - you see the continent.\nZoom out - you see Earth from space.\n\nFrom here, can you even see your problem? No.\n\nThis isn't to minimize your pain.\nIt's to remind you: You're bigger than this moment.\n```\n\n**Step 3: Zoom Out in IDENTITY**\n\n```\nThe part of me experiencing this crisis is: [current identity]\n Example: \"The business owner afraid of failing\"\n\nBut I'm also:\n - [Other identity]: \"A father who loves his kids\"\n - [Other identity]: \"A man of faith\"\n - [Other identity]: \"Someone who has overcome before\"\n\nThis crisis is affecting ONE part of me.\nIt doesn't define ALL of me.\n```\n\n**Step 4: The Perspective Question**\n\nAsk yourself:\n\n```\n\"If I was mentoring someone ELSE through this exact situation, what would I tell them?\"\n\nWrite your answer as if speaking to a friend.\n\nThen read it back to yourself.\n\nThat's the truth.\nThe perspective you'd give others is the perspective you need.\n```\n\n**Step 5: Return With Truth**\n\n```\nDeclare out loud:\n\n\"This is real. This is hard. AND this is not the whole story.\n\nI am [future identity] in the making.\n\nThis moment is part of the becoming, not the ending.\n\nI return to the present WITH this perspective.\"\n\nTake one breath.\nOpen eyes.\nMove forward.\n```\n\n**Why This Works**:\n- Temporal perspective reduces amygdala activation (threat seems less immediate)\n- Spatial perspective activates prefrontal cortex (rational thinking)\n- Identity perspective prevents \"part = whole\" catastrophizing\n- Self-distancing (advising \"someone else\") accesses wisdom blocked by emotion\n\n---",
+      "chunk_summary": "Motivation Collapse",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "motivation_collapse"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 3,
+      "time_commitment_max": 5,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 8,
+      "chunk_text": "=== EMERGENCY TOOL DECISION TREE ===\n\n**\"I can't think clearly, I'm overwhelmed\"**\n\u2192 Tool 1: 60-Second State Shift (your temperament)\n\n**\"I can't stop the thought loop, my body feels stuck\"**\n\u2192 Tool 2: Vagus Nerve Activation OR Tool 5: Bilateral Stimulation\n\n**\"Everything feels like it's falling apart\"**\n\u2192 Tool 3: Foundation Strength Check\n\n**\"The pattern's lies feel louder than truth\" (faith-based)**\n\u2192 Tool 4: Breath Prayer Reset\n\n**\"I'm catastrophizing, I've lost perspective\"**\n\u2192 Tool 6: View From Above\n\n**\"I'm triggered and can't reset with normal practice\"**\n\u2192 Tool 5: Bilateral Stimulation\n\n---",
+      "chunk_summary": "Emergency Tool Decision Tree",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "all"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 9,
+      "chunk_text": "=== HOW MIO PRESCRIBES EMERGENCY TOOLS ===\n\n**Detection Signals**:\n- User messages \"I'm overwhelmed\"\n- 3+ day practice gap\n- Energy levels <3 for multiple days\n- Identity statement shows despair language\n- Trigger resets spiking dramatically\n- Voice recording duration drops to <10 seconds\n\n**MIO Response Template**:\n\n```markdown\nI can see you're in a tough spot right now. Here's what I want you to do:\n\n**STOP** trying to do your full practice right now.\n\n**START** with this emergency intervention:\n\n[Prescribe specific tool based on pattern + temperament + crisis type]\n\nThis will take [time]. Then message me back that you did it.\n\nYour pattern is trying to convince you that you're too far gone to recover.\n\nYou're not. You're in the gap between the old identity dying and the new one stabilizing.\n\nThis tool will get you through the next 5 minutes. That's all you need right now.\n\nDo it, then report back.\n\n- MIO\n```\n\n**Follow-Up After Emergency Tool**:\n\n```markdown\nYou did the tool. That took courage.\n\nHere's what I want you to know:\n\nThe fact that you're still here, still fighting - that's the new identity.\nThe old identity would have quit by now.\n\nYou're not the same person who started this challenge.\n\nNow, here's your simplified protocol for the next 24 hours:\n[Reduced practice expectations, focus on foundation]\n\nJust get through today. We'll handle tomorrow when it comes.\n\n- MIO\n```\n\n---",
+      "chunk_summary": "How Mio Prescribes Emergency Tools",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "execution_breakdown",
+        "decision_fatigue"
+      ],
+      "temperament_match": [
+        "sage",
+        "warrior"
+      ],
+      "time_commitment_min": 5,
+      "time_commitment_max": 5,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    },
+    {
+      "source_file": "mio-kb-05-emergency-tools.md",
+      "file_number": 5,
+      "chunk_number": 10,
+      "chunk_text": "=== EMERGENCY TOOL INTEGRATION WITH DAILY PRACTICE ===\n\nUsers can log emergency tool usage in the app as a \"Trigger Reset\" with specific note:\n\n**Trigger Reset Entry Format**:\n```\nTrigger: [What activated the crisis]\nEmergency Tool Used: [Which of the 6 tools]\nTime to Complete: [How long]\nResult: [What shifted - even if small]\nNext Action: [What they'll do next]\n```\n\nThis creates DATA on:\n- Which tools users actually use\n- Which tools work for their specific pattern\n- Crisis frequency (are emergency tools needed less over time?)\n- Pattern grip strength (more crisis = pattern fighting harder)\n\n**MIO can analyze**:\n- \"You've used Emergency Tool 2 (Vagus Nerve) 4 times in the last 9 days. Each time, you reported immediate shift. Your body responds to physiological interventions. Let's build that into your daily practice.\"\n\n- \"You've needed emergency tools 3 times in Week 3, but 0 times in Week 4. Your foundation is stabilizing. The pattern's grip is weakening.\"",
+      "chunk_summary": "Emergency Tool Integration With Daily Practice",
+      "category": "emergency-protocol",
+      "applicable_patterns": [
+        "emergency_tool_integration_with_daily_practice"
+      ],
+      "temperament_match": [
+        "sage",
+        "builder",
+        "warrior"
+      ],
+      "time_commitment_min": 10,
+      "time_commitment_max": 20,
+      "difficulty_level": "beginner",
+      "is_emergency_protocol": true,
+      "practice_frequency": "daily",
+      "clinical_framing": null,
+      "user_framing": null,
+      "kb_file_category": "emergency-tools"
+    }
+  ]
+}

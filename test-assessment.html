@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Auto-Save Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="radio"] {
+            margin-right: 8px;
+        }
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+        .secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .danger {
+            background: #ef4444;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+        }
+        .dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+        .dialog.show {
+            display: block;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Assessment Auto-Save Test Demo</h1>
+
+    <div id="resumeDialog" class="dialog">
+        <h3>Resume Your Assessment?</h3>
+        <p id="resumeMessage">We found a saved assessment. Would you like to continue where you left off?</p>
+        <div class="buttons">
+            <button class="secondary" onclick="startFresh()">Start Fresh</button>
+            <button class="primary" onclick="resumeProgress()">Resume Progress</button>
+        </div>
+    </div>
+    <div id="overlay" class="overlay"></div>
+
+    <div class="card">
+        <div id="status" class="status info"></div>
+
+        <h2>Step <span id="currentStep">1</span> of 3</h2>
+        <div class="progress">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="step1" class="step">
+            <div class="form-group">
+                <label>How much capital do you have available?</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="capital" value="less-5k" id="cap1" onchange="saveAnswer('capital', this.value)">
+                        <label for="cap1">Less than $5,000</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="capital" value="5k-15k" id="cap2" onchange="saveAnswer('capital', this.value)">
+                        <label for="cap2">$5,000 - $15,000</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="capital" value="15k-30k" id="cap3" onchange="saveAnswer('capital', this.value)">
+                        <label for="cap3">$15,000 - $30,000</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="capital" value="more-30k" id="cap4" onchange="saveAnswer('capital', this.value)">
+                        <label for="cap4">More than $30,000</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step2" class="step" style="display: none;">
+            <div class="form-group">
+                <label>What is your timeline?</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="timeline" value="3-months" id="time1" onchange="saveAnswer('timeline', this.value)">
+                        <label for="time1">Within 3 months</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="timeline" value="6-months" id="time2" onchange="saveAnswer('timeline', this.value)">
+                        <label for="time2">Within 6 months</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="timeline" value="12-months" id="time3" onchange="saveAnswer('timeline', this.value)">
+                        <label for="time3">Within 12 months</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="timeline" value="no-timeline" id="time4" onchange="saveAnswer('timeline', this.value)">
+                        <label for="time4">Just researching</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step3" class="step" style="display: none;">
+            <div class="form-group">
+                <label>What's your primary motivation?</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="motivation" value="passive-income" id="mot1" onchange="saveAnswer('motivation', this.value)">
+                        <label for="mot1">Generate passive income</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="motivation" value="impact" id="mot2" onchange="saveAnswer('motivation', this.value)">
+                        <label for="mot2">Make a positive impact</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="motivation" value="business" id="mot3" onchange="saveAnswer('motivation', this.value)">
+                        <label for="mot3">Build a scalable business</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="motivation" value="career" id="mot4" onchange="saveAnswer('motivation', this.value)">
+                        <label for="mot4">Career transition</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="secondary" onclick="previousStep()" id="backBtn" style="display: none;">Back</button>
+            <button class="primary" onclick="nextStep()" id="nextBtn">Next</button>
+            <button class="success" onclick="submitAssessment()" id="submitBtn" style="display: none;">Submit</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Testing Actions</h3>
+        <div class="buttons">
+            <button class="secondary" onclick="refreshPage()">Simulate Page Refresh</button>
+            <button class="danger" onclick="clearStorage()">Clear Saved Progress</button>
+            <button class="secondary" onclick="showStorageData()">Show Storage Data</button>
+        </div>
+    </div>
+
+    <div id="storageDisplay" class="card" style="display: none;">
+        <h3>LocalStorage Data</h3>
+        <pre id="storageContent"></pre>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let answers = {};
+        const totalSteps = 3;
+        const storageKey = 'assessment_progress_guest_demo';
+
+        // Check for saved progress on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSavedProgress();
+            updateStatus('Page loaded. Auto-save is active.');
+            updateProgress();
+        });
+
+        function checkSavedProgress() {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                const progress = JSON.parse(saved);
+                const savedTime = new Date(progress.timestamp);
+                const now = new Date();
+                const minutesAgo = Math.floor((now - savedTime) / 60000);
+
+                let timeAgo = minutesAgo < 1 ? 'just now' :
+                              minutesAgo === 1 ? '1 minute ago' :
+                              minutesAgo < 60 ? `${minutesAgo} minutes ago` :
+                              `${Math.floor(minutesAgo / 60)} hour(s) ago`;
+
+                document.getElementById('resumeMessage').textContent =
+                    `We found a saved assessment from ${timeAgo}. Would you like to continue where you left off?`;
+
+                showResumeDialog();
+            }
+        }
+
+        function showResumeDialog() {
+            document.getElementById('resumeDialog').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+        }
+
+        function hideResumeDialog() {
+            document.getElementById('resumeDialog').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function resumeProgress() {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                const progress = JSON.parse(saved);
+                answers = progress.answers;
+                currentStep = progress.currentStep;
+
+                // Restore form state
+                for (const [key, value] of Object.entries(answers)) {
+                    const input = document.querySelector(`input[name="${key}"][value="${value}"]`);
+                    if (input) input.checked = true;
+                }
+
+                showStep(currentStep);
+                updateStatus('Assessment resumed from saved progress!', 'success');
+            }
+            hideResumeDialog();
+        }
+
+        function startFresh() {
+            localStorage.removeItem(storageKey);
+            answers = {};
+            currentStep = 1;
+            showStep(1);
+            updateStatus('Starting fresh assessment. Previous progress cleared.', 'info');
+            hideResumeDialog();
+        }
+
+        function saveAnswer(field, value) {
+            answers[field] = value;
+            saveProgress();
+            updateStatus(`Answer saved: ${field} = ${value}`, 'success');
+        }
+
+        function saveProgress() {
+            const progress = {
+                currentStep: currentStep,
+                answers: answers,
+                timestamp: new Date().toISOString(),
+                assessmentType: 'demo_assessment'
+            };
+            localStorage.setItem(storageKey, JSON.stringify(progress));
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
+            // Show current step
+            document.getElementById(`step${step}`).style.display = 'block';
+            // Update step counter
+            document.getElementById('currentStep').textContent = step;
+            // Update buttons
+            document.getElementById('backBtn').style.display = step > 1 ? 'inline-block' : 'none';
+            document.getElementById('nextBtn').style.display = step < totalSteps ? 'inline-block' : 'none';
+            document.getElementById('submitBtn').style.display = step === totalSteps ? 'inline-block' : 'none';
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const percentage = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+                saveProgress();
+                updateStatus(`Moved to step ${currentStep}. Progress auto-saved.`, 'info');
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+                saveProgress();
+                updateStatus(`Moved back to step ${currentStep}. Progress auto-saved.`, 'info');
+            }
+        }
+
+        function submitAssessment() {
+            // Simulate submission
+            updateStatus('Assessment submitted successfully! Clearing saved progress...', 'success');
+            localStorage.removeItem(storageKey);
+            setTimeout(() => {
+                alert('Assessment complete! In the real app, you would be redirected to the dashboard.');
+            }, 500);
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        function clearStorage() {
+            localStorage.removeItem(storageKey);
+            updateStatus('Saved progress cleared from localStorage.', 'warning');
+        }
+
+        function showStorageData() {
+            const data = localStorage.getItem(storageKey);
+            const display = document.getElementById('storageDisplay');
+            const content = document.getElementById('storageContent');
+
+            if (data) {
+                content.textContent = JSON.stringify(JSON.parse(data), null, 2);
+            } else {
+                content.textContent = 'No saved progress found.';
+            }
+
+            display.style.display = 'block';
+        }
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type === 'success' ? 'info' : type}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{
+  "brain_structures": [
+    "amygdala",
+    "anterior cingulate cortex",
+    "hippocampus",
+    "insula",
+    "limbic system",
+    "prefrontal cortex"
+  ],
+  "neurochemicals": [
+    "adrenaline",
+    "cortisol",
+    "dopamine"
+  ],
+  "neural_processes": [
+    "habituation",
+    "neural pathway",
+    "neural rewiring",
+    "neuroplasticity"
+  ],
+  "psychological_concepts": [
+    "catastrophizing",
+    "cognitive load",
+    "cognitive restructuring",
+    "emotional regulation",
+    "executive function",
+    "growth mindset",
+    "identity collision",
+    "impostor syndrome",
+    "learned helplessness",
+    "locus of control",
+    "mindfulness",
+    "projection",
+    "reframing",
+    "resilience",
+    "rumination",
+    "schema",
+    "self-compassion",
+    "self-efficacy",
+    "self-sabotage",
+    "working memory"
+  ],
+  "clinical_techniques": [
+    "act",
+    "cbt",
+    "cognitive restructuring",
+    "emdr",
+    "exposure therapy",
+    "interoception",
+    "polyvagal theory",
+    "vagal tone",
+    "visualization"
+  ],
+  "behavioral_patterns": [
+    "avoidance",
+    "engagement",
+    "habit formation",
+    "perfectionism",
+    "procrastination",
+    "reinforcement",
+    "trigger",
+    "withdrawal"
+  ],
+  "emotional_states": [
+    "anxiety",
+    "dissociation",
+    "emotional flooding",
+    "guilt",
+    "overwhelm",
+    "panic"
+  ],
+  "trauma_related": [
+    "autonomic nervous system",
+    "parasympathetic nervous system",
+    "ptsd",
+    "survival mode",
+    "sympathetic nervous system",
+    "threat detection",
+    "trauma"
+  ]
+}

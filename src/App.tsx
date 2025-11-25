@@ -12,6 +12,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
 import AssessmentPage from "./pages/AssessmentPage";
 import AvatarAssessmentPage from "./pages/AvatarAssessmentPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -37,6 +40,10 @@ import TriggerReset from "./pages/mind-insurance/practices/TriggerReset";
 import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
 import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
 import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
+import ProtocolDemo from "./pages/ProtocolDemo";
+import TestTooltip from "./pages/TestTooltip";
+import ChatPageDemo from "./pages/ChatPageDemo";
+import TestSSE from "./pages/TestSSE";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +61,9 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
@@ -79,6 +89,20 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
+<<<<<<< HEAD
+=======
+              {/* Test pages for Training Materials feature - No auth required for testing */}
+              <Route path="/test-resources" element={<TestResourcesPage />} />
+              <Route path="/test-demo" element={<TestResourcesDemo />} />
+              {/* Test page for Glossary Tooltips - No auth required for testing */}
+              <Route path="/test-tooltip" element={<TestTooltip />} />
+              {/* Test page for Chat with SSE - No auth required for testing */}
+              <Route path="/chat-demo" element={<ChatPageDemo />} />
+              {/* Test page for SSE streaming with detailed logging */}
+              <Route path="/test-sse" element={<TestSSE />} />
+              {/* Protocol Demo page - Interactive glossary demonstration */}
+              <Route path="/protocol-demo" element={<ProtectedRoute><AppLayout><ProtocolDemo /></AppLayout></ProtectedRoute>} />
+>>>>>>> 72f48da (feat: Add critical UX improvements - welcome modal fix and assessment auto-save)
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />

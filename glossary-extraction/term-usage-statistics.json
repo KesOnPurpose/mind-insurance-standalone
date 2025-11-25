@@ -1,0 +1,190 @@
+{
+  "total_unique_terms": 61,
+  "total_term_instances": 179,
+  "protocols_with_terms": 90,
+  "top_20_terms": [
+    {
+      "rank": 1,
+      "term": "awareness",
+      "count": 14,
+      "percent_of_protocols": 6.8
+    },
+    {
+      "rank": 2,
+      "term": "neural pathways",
+      "count": 11,
+      "percent_of_protocols": 5.4
+    },
+    {
+      "rank": 3,
+      "term": "amygdala",
+      "count": 11,
+      "percent_of_protocols": 5.4
+    },
+    {
+      "rank": 4,
+      "term": "presence",
+      "count": 10,
+      "percent_of_protocols": 4.9
+    },
+    {
+      "rank": 5,
+      "term": "rumination",
+      "count": 9,
+      "percent_of_protocols": 4.4
+    },
+    {
+      "rank": 6,
+      "term": "Awareness",
+      "count": 9,
+      "percent_of_protocols": 4.4
+    },
+    {
+      "rank": 7,
+      "term": "Decision Fatigue",
+      "count": 8,
+      "percent_of_protocols": 3.9
+    },
+    {
+      "rank": 8,
+      "term": "neuroplasticity",
+      "count": 6,
+      "percent_of_protocols": 2.9
+    },
+    {
+      "rank": 9,
+      "term": "reinforcement",
+      "count": 5,
+      "percent_of_protocols": 2.4
+    },
+    {
+      "rank": 10,
+      "term": "dopamine",
+      "count": 5,
+      "percent_of_protocols": 2.4
+    },
+    {
+      "rank": 11,
+      "term": "Visualization",
+      "count": 4,
+      "percent_of_protocols": 2.0
+    },
+    {
+      "rank": 12,
+      "term": "Presence",
+      "count": 4,
+      "percent_of_protocols": 2.0
+    },
+    {
+      "rank": 13,
+      "term": "Bilateral stimulation",
+      "count": 4,
+      "percent_of_protocols": 2.0
+    },
+    {
+      "rank": 14,
+      "term": "Rumination",
+      "count": 4,
+      "percent_of_protocols": 2.0
+    },
+    {
+      "rank": 15,
+      "term": "prefrontal cortex",
+      "count": 4,
+      "percent_of_protocols": 2.0
+    },
+    {
+      "rank": 16,
+      "term": "Dopamine",
+      "count": 3,
+      "percent_of_protocols": 1.5
+    },
+    {
+      "rank": 17,
+      "term": "VISUALIZATION",
+      "count": 3,
+      "percent_of_protocols": 1.5
+    },
+    {
+      "rank": 18,
+      "term": "visualization",
+      "count": 3,
+      "percent_of_protocols": 1.5
+    },
+    {
+      "rank": 19,
+      "term": "sensory detail",
+      "count": 2,
+      "percent_of_protocols": 1.0
+    },
+    {
+      "rank": 20,
+      "term": "executive function",
+      "count": 2,
+      "percent_of_protocols": 1.0
+    }
+  ],
+  "all_terms": {
+    "neural pathways": 11,
+    "rumination": 9,
+    "Visualization": 4,
+    "sensory detail": 2,
+    "Dopamine": 3,
+    "executive function": 2,
+    "Prefrontal cortex": 2,
+    "amygdala": 11,
+    "Amygdala": 2,
+    "neuroplasticity": 6,
+    "reinforcement": 5,
+    "dopamine": 5,
+    "Presence": 4,
+    "presence": 10,
+    "Bilateral stimulation": 4,
+    "Rumination": 4,
+    "Loving-kindness": 2,
+    "awareness": 14,
+    "LOVING-KINDNESS": 1,
+    "Neuroplasticity": 1,
+    "bilateral stimulation": 2,
+    "Centering": 1,
+    "GROUNDING": 1,
+    "Future Self": 1,
+    "Pattern Interrupt": 1,
+    "Awareness": 9,
+    "Dissociation": 1,
+    "dissociation": 1,
+    "Bilateral Stimulation": 2,
+    "VISUALIZATION": 3,
+    "Decision Fatigue": 8,
+    "Analysis paralysis": 1,
+    "DECISION FATIGUE": 2,
+    "centering": 1,
+    "cognitive flexibility": 2,
+    "prefrontal cortex": 4,
+    "visualization": 3,
+    "BILATERAL STIMULATION": 2,
+    "Freeze Response": 1,
+    "decision fatigue": 2,
+    "cognitive load": 2,
+    "COGNITIVE LOAD": 1,
+    "Interoception": 2,
+    "Hippocampus": 1,
+    "Limbic system": 1,
+    "AWARENESS": 2,
+    "grounding": 1,
+    "emotional flooding": 1,
+    "Cognitive Load": 2,
+    "anterior cingulate cortex": 1,
+    "hippocampus": 1,
+    "learned helplessness": 1,
+    "tolerance": 2,
+    "Grounding": 1,
+    "mindfulness": 2,
+    "Mindfulness": 2,
+    "attentional bias": 1,
+    "freeze response": 1,
+    "interoception": 2,
+    "NEUROPLASTICITY": 1,
+    "INTEROCEPTION": 1
+  }
+}

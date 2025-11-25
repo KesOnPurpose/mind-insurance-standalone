@@ -1,0 +1,37 @@
+
+[94m================================================================================[0m
+[94m                         SCHEMA MIGRATION VERIFICATION                          [0m
+[94m================================================================================[0m
+
+Supabase URL: https://hpyodaugrkctagkrfofj.supabase.co
+Table: mio_knowledge_chunks
+
+1. Testing database connection...
+[92m✅[0m Database connection - Table accessible (1 sample row)
+
+2. Verifying new columns...
+[91m❌[0m Column 'simplified_text' - Column does not exist
+[91m❌[0m Column 'glossary_terms' - Column does not exist
+[91m❌[0m Column 'reading_level_before' - Column does not exist
+[91m❌[0m Column 'reading_level_after' - Column does not exist
+[91m❌[0m Column 'language_variant' - Column does not exist
+
+   Columns: 0/5 exist
+
+
+[94m================================================================================[0m
+[94m                              VERIFICATION SUMMARY                              [0m
+[94m================================================================================[0m
+
+Total Checks:  5
+Passed:        [92m0[0m
+Failed:        [91m5[0m
+
+[91m                         ❌ SCHEMA MIGRATION NOT STARTED                         [0m
+
+No schema changes detected. Please execute schema-migration.sql
+via Supabase SQL Editor.
+
+Migration File: glossary-extraction/schema-migration.sql
+Supabase Dashboard: https://supabase.com/dashboard/project/hpyodaugrkctagkrfofj
+

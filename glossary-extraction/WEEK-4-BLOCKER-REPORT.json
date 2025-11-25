@@ -1,0 +1,41 @@
+{
+  "status": "BLOCKED",
+  "blocker_type": "DATABASE_MIGRATION_REQUIRED",
+  "blocker_severity": "CRITICAL",
+  "week_4_completion_percentage": 40,
+  "completed_tasks": [
+    "Agent 1: Baseline analysis (205 protocols, avg 13.20 reading level)",
+    "Agent 2: Dry-run validation (5 samples tested)",
+    "Agent 2: Production scripts prepared and tested"
+  ],
+  "blocked_tasks": [
+    "Database schema migration (requires manual execution)",
+    "Production protocol updates (205 protocols)",
+    "Update validation and metrics calculation",
+    "Search functionality testing",
+    "Week 4 completion report generation"
+  ],
+  "resolution_steps": [
+    "Execute add-glossary-columns.sql in Supabase SQL Editor",
+    "Verify 5 new columns added to mio_knowledge_chunks table",
+    "Run: python3 execute-week-4-agent-2.py",
+    "Run: python3 week4-validation.py",
+    "Generate final Week 4 report"
+  ],
+  "manual_migration_instructions": {
+    "url": "https://supabase.com/dashboard/project/hpyodaugrkctagkrfofj/sql/new",
+    "file": "add-glossary-columns.sql",
+    "columns_to_add": [
+      "simplified_text (TEXT)",
+      "glossary_terms (JSONB)",
+      "reading_level_before (FLOAT)",
+      "reading_level_after (FLOAT)",
+      "language_variant (VARCHAR(20))"
+    ],
+    "indexes_to_create": [
+      "idx_mio_chunks_language_variant",
+      "idx_mio_chunks_glossary_terms (GIN)"
+    ]
+  },
+  "estimated_time_to_complete_after_unblock": "20 minutes"
+}

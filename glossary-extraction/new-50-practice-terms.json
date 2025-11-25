@@ -1,0 +1,512 @@
+[
+  {
+    "term": "accountability",
+    "category": "behavioral_patterns",
+    "clinical_definition": "State of being answerable for one's actions and commitments to oneself or others",
+    "user_friendly": "Being responsible for following through on what you say you'll do",
+    "analogy": "Like having a workout buddy who shows up even when you don't feel like it",
+    "why_it_matters": "Accountability makes you 3x more likely to complete goals because someone is watching",
+    "example_sentence": "Accountability partners help you stick with meditation when motivation fades",
+    "reading_level": 8.0
+  },
+  {
+    "term": "action step",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Specific, measurable behavior that moves toward a goal",
+    "user_friendly": "One small thing you actually do, not just think about",
+    "analogy": "Like a single stair on a staircase - clear and concrete",
+    "why_it_matters": "Vague goals fail. Action steps turn wishes into progress",
+    "example_sentence": "Instead of 'be healthier,' your action step is 'walk 10 minutes after breakfast'",
+    "reading_level": 6.5
+  },
+  {
+    "term": "breathing technique",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Structured pattern of inhalation and exhalation for physiological regulation",
+    "user_friendly": "Specific way of breathing to change how you feel",
+    "analogy": "Like different gears in a car - each breathing technique creates a different effect",
+    "why_it_matters": "Different breathing techniques can calm anxiety, boost energy, or improve focus in minutes",
+    "example_sentence": "Box breathing technique (4-4-4-4) calms your nervous system before presentations",
+    "reading_level": 7.2
+  },
+  {
+    "term": "calm",
+    "category": "emotional_regulation",
+    "clinical_definition": "State of low physiological arousal and mental tranquility",
+    "user_friendly": "Feeling peaceful and not worked up",
+    "analogy": "Like still water in a lake - no ripples or waves",
+    "why_it_matters": "Calm is the foundation for clear thinking and good decisions",
+    "example_sentence": "Finding calm before reacting prevents emotional mistakes",
+    "reading_level": 6.0
+  },
+  {
+    "term": "cold exposure",
+    "category": "physical_practices",
+    "clinical_definition": "Intentional exposure to cold temperatures for physiological adaptation",
+    "user_friendly": "Deliberately getting cold to train your body and mind",
+    "analogy": "Like strength training for your nervous system - uncomfortable but strengthening",
+    "why_it_matters": "Cold exposure builds mental resilience and reduces inflammation",
+    "example_sentence": "Cold showers teach your brain to stay calm under stress",
+    "reading_level": 7.5
+  },
+  {
+    "term": "commitment",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Binding decision to follow through on intended action regardless of circumstances",
+    "user_friendly": "Deciding you'll do something no matter what",
+    "analogy": "Like signing a contract with yourself - not just a wish",
+    "why_it_matters": "Commitment eliminates daily decisions about whether to do something, saving willpower",
+    "example_sentence": "Commitment to morning meditation means you do it even when tired",
+    "reading_level": 6.8
+  },
+  {
+    "term": "concentration",
+    "category": "cognitive_processes",
+    "clinical_definition": "Sustained focused attention on a single object or task",
+    "user_friendly": "Keeping your mind on one thing without drifting",
+    "analogy": "Like a laser beam focused on a single point instead of scattered light",
+    "why_it_matters": "Concentration is a trainable skill that improves everything from work to relationships",
+    "example_sentence": "Building concentration through meditation helps you focus during difficult conversations",
+    "reading_level": 7.0
+  },
+  {
+    "term": "consistency",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Regular repetition of behavior across time regardless of conditions",
+    "user_friendly": "Doing it over and over, even when you don't feel like it",
+    "analogy": "Like water dripping on a stone - small actions repeated create big change",
+    "why_it_matters": "Consistency beats intensity. Small daily actions outperform occasional heroic efforts",
+    "example_sentence": "Consistency with 5-minute meditations creates more change than occasional hour-long sessions",
+    "reading_level": 6.5
+  },
+  {
+    "term": "contemplation",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Deep reflective thought on meaningful questions or truths",
+    "user_friendly": "Thinking deeply about important things without rushing",
+    "analogy": "Like chewing food slowly instead of gulping it down",
+    "why_it_matters": "Contemplation reveals insights that surface thinking misses",
+    "example_sentence": "Morning contemplation on your values clarifies daily decisions",
+    "reading_level": 7.8
+  },
+  {
+    "term": "cue",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Environmental or internal trigger that initiates a habitual behavior",
+    "user_friendly": "Something that sets off an automatic behavior",
+    "analogy": "Like a doorbell that makes you automatically get up to answer",
+    "why_it_matters": "Identifying cues lets you interrupt bad habits and install good ones",
+    "example_sentence": "Your phone notification is the cue that triggers mindless scrolling",
+    "reading_level": 6.2
+  },
+  {
+    "term": "daily practice",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Behavior performed consistently every day as part of routine",
+    "user_friendly": "Something you do every single day without fail",
+    "analogy": "Like brushing your teeth - non-negotiable and automatic",
+    "why_it_matters": "Daily practice compounds like interest. Missing days breaks the chain",
+    "example_sentence": "Making meditation a daily practice rewires your brain faster than sporadic sessions",
+    "reading_level": 6.0
+  },
+  {
+    "term": "discipline",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Ability to pursue long-term goals despite short-term discomfort",
+    "user_friendly": "Doing what you committed to even when you don't want to",
+    "analogy": "Like a muscle - it gets stronger with use and weaker when neglected",
+    "why_it_matters": "Discipline is choosing between what you want now and what you want most",
+    "example_sentence": "Discipline means meditating even on days when your mind resists",
+    "reading_level": 6.5
+  },
+  {
+    "term": "emotional awareness",
+    "category": "emotional_regulation",
+    "clinical_definition": "Conscious recognition and identification of emotional states as they arise",
+    "user_friendly": "Noticing what you're feeling while you're feeling it",
+    "analogy": "Like having an internal weather report for your emotions",
+    "why_it_matters": "You can't regulate emotions you don't notice. Awareness precedes control",
+    "example_sentence": "Emotional awareness helps you catch irritation before it becomes anger",
+    "reading_level": 7.0
+  },
+  {
+    "term": "exercise",
+    "category": "physical_practices",
+    "clinical_definition": "Physical activity performed for health, fitness, or mental benefits",
+    "user_friendly": "Moving your body on purpose to feel better",
+    "analogy": "Like charging your phone - it powers up your body and brain",
+    "why_it_matters": "Exercise is as effective as medication for mild to moderate depression",
+    "example_sentence": "Morning exercise primes your brain for better focus all day",
+    "reading_level": 6.0
+  },
+  {
+    "term": "focus",
+    "category": "cognitive_processes",
+    "clinical_definition": "Directed attention toward a specific object while filtering distractions",
+    "user_friendly": "Aiming your attention at one thing and keeping it there",
+    "analogy": "Like a magnifying glass concentrating sunlight on a single spot",
+    "why_it_matters": "What you focus on expands. Scattered focus creates scattered results",
+    "example_sentence": "Practicing focus during meditation improves concentration at work",
+    "reading_level": 6.5
+  },
+  {
+    "term": "gratitude",
+    "category": "emotional_regulation",
+    "clinical_definition": "Emotion of appreciation for positive aspects of life or circumstances",
+    "user_friendly": "Feeling thankful for what you have",
+    "analogy": "Like highlighting the good parts of your day instead of the bad",
+    "why_it_matters": "Gratitude rewires your brain to notice positives and reduces depression",
+    "example_sentence": "Daily gratitude practice shifts your attention from problems to blessings",
+    "reading_level": 6.8
+  },
+  {
+    "term": "habit formation",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Process of establishing automatic behavioral responses through repetition",
+    "user_friendly": "Creating new behaviors that run on autopilot",
+    "analogy": "Like creating a groove in a record - repeat until it plays automatically",
+    "why_it_matters": "Habits eliminate willpower struggles by making behaviors automatic",
+    "example_sentence": "Habit formation takes 66 days on average for a behavior to become automatic",
+    "reading_level": 7.0
+  },
+  {
+    "term": "imagination",
+    "category": "visualization_imagery",
+    "clinical_definition": "Mental faculty to form images and concepts not present to the senses",
+    "user_friendly": "Creating pictures and scenarios in your mind",
+    "analogy": "Like a movie projector in your head that you control",
+    "why_it_matters": "Your brain can't distinguish vivid imagination from reality - use it to rehearse success",
+    "example_sentence": "Using imagination to rehearse difficult conversations makes them easier",
+    "reading_level": 6.5
+  },
+  {
+    "term": "intention setting",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Deliberate establishment of purpose or direction before action",
+    "user_friendly": "Deciding what you want from something before you start",
+    "analogy": "Like setting a destination in GPS before driving",
+    "why_it_matters": "Intention focuses your subconscious mind on what matters most",
+    "example_sentence": "Setting intention before meditation clarifies what you're working on",
+    "reading_level": 7.2
+  },
+  {
+    "term": "journaling",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Regular written reflection on thoughts, feelings, and experiences",
+    "user_friendly": "Writing down your thoughts and feelings regularly",
+    "analogy": "Like having a conversation with yourself on paper",
+    "why_it_matters": "Journaling makes unconscious patterns visible and processable",
+    "example_sentence": "Daily journaling reveals thought patterns you can't see while they're happening",
+    "reading_level": 6.0
+  },
+  {
+    "term": "letting go",
+    "category": "emotional_regulation",
+    "clinical_definition": "Conscious release of attachment to outcomes, thoughts, or emotions",
+    "user_friendly": "Choosing to stop holding onto something that hurts",
+    "analogy": "Like opening your fist to release a stone you've been gripping",
+    "why_it_matters": "Letting go creates space for new growth. Holding on keeps you stuck",
+    "example_sentence": "Letting go of perfectionism allows you to actually finish projects",
+    "reading_level": 6.5
+  },
+  {
+    "term": "mantra",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Sacred or meaningful word or phrase repeated during meditation",
+    "user_friendly": "Word or phrase you repeat to focus your mind",
+    "analogy": "Like an anchor for your wandering thoughts",
+    "why_it_matters": "Mantras give your mind something to return to when it wanders",
+    "example_sentence": "Repeating the mantra 'I am enough' replaces self-criticism with compassion",
+    "reading_level": 6.8
+  },
+  {
+    "term": "meditation practice",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Regular discipline of training attention and awareness",
+    "user_friendly": "Regular time spent training your mind to focus",
+    "analogy": "Like going to the gym for your mind instead of your body",
+    "why_it_matters": "Meditation practice physically changes your brain structure over time",
+    "example_sentence": "Consistent meditation practice reduces anxiety and improves focus",
+    "reading_level": 6.5
+  },
+  {
+    "term": "mindful eating",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Eating with full attention to sensory experience and internal cues",
+    "user_friendly": "Paying full attention to your food while eating",
+    "analogy": "Like tasting food for the first time instead of mindlessly chewing",
+    "why_it_matters": "Mindful eating prevents overeating and increases satisfaction",
+    "example_sentence": "Mindful eating helps you notice fullness before you overeat",
+    "reading_level": 6.0
+  },
+  {
+    "term": "morning routine",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Sequence of behaviors performed consistently upon waking",
+    "user_friendly": "What you do every morning in the same order",
+    "analogy": "Like a launch sequence that sets the trajectory for your day",
+    "why_it_matters": "Morning routines determine your mental state for the entire day",
+    "example_sentence": "A strong morning routine eliminates decision fatigue before the day begins",
+    "reading_level": 6.2
+  },
+  {
+    "term": "movement practice",
+    "category": "physical_practices",
+    "clinical_definition": "Regular intentional physical activity for mental and physical integration",
+    "user_friendly": "Deliberately moving your body as a daily practice",
+    "analogy": "Like oiling a machine - keeps everything running smoothly",
+    "why_it_matters": "Movement practice releases stuck emotions and energizes your nervous system",
+    "example_sentence": "Daily movement practice reduces anxiety better than many medications",
+    "reading_level": 6.5
+  },
+  {
+    "term": "outcome visualization",
+    "category": "visualization_imagery",
+    "clinical_definition": "Mental imagery of desired end result or achievement",
+    "user_friendly": "Picturing exactly how you want things to turn out",
+    "analogy": "Like seeing the finish line before running the race",
+    "why_it_matters": "Outcome visualization programs your brain to recognize opportunities toward that goal",
+    "example_sentence": "Athletes use outcome visualization to rehearse perfect performance",
+    "reading_level": 7.0
+  },
+  {
+    "term": "pattern recognition",
+    "category": "cognitive_processes",
+    "clinical_definition": "Ability to identify recurring sequences in thoughts, behaviors, or situations",
+    "user_friendly": "Noticing when the same thing keeps happening",
+    "analogy": "Like seeing the same movie play out over and over",
+    "why_it_matters": "Pattern recognition is the first step to breaking destructive cycles",
+    "example_sentence": "Pattern recognition helps you see how you sabotage relationships before it happens again",
+    "reading_level": 7.5
+  },
+  {
+    "term": "peace",
+    "category": "emotional_regulation",
+    "clinical_definition": "State of inner tranquility free from mental disturbance",
+    "user_friendly": "Feeling settled and not disturbed inside",
+    "analogy": "Like finding the quiet center in a storm",
+    "why_it_matters": "Peace is not absence of trouble but presence of calm despite trouble",
+    "example_sentence": "Finding peace through acceptance transforms suffering into serenity",
+    "reading_level": 6.0
+  },
+  {
+    "term": "perspective shift",
+    "category": "cognitive_processes",
+    "clinical_definition": "Change in interpretive framework altering meaning of experience",
+    "user_friendly": "Seeing the same situation in a completely different way",
+    "analogy": "Like turning a picture upside down and seeing something new",
+    "why_it_matters": "Perspective shifts can instantly change suffering into growth opportunity",
+    "example_sentence": "A perspective shift turns failure from devastating to educational",
+    "reading_level": 6.8
+  },
+  {
+    "term": "physical movement",
+    "category": "physical_practices",
+    "clinical_definition": "Bodily motion through space for therapeutic or expressive purposes",
+    "user_friendly": "Moving your body to change your mental state",
+    "analogy": "Like shaking an etch-a-sketch to clear the screen",
+    "why_it_matters": "Physical movement releases emotional energy stuck in your body",
+    "example_sentence": "Physical movement after trauma helps discharge stress hormones",
+    "reading_level": 6.5
+  },
+  {
+    "term": "posture",
+    "category": "physical_practices",
+    "clinical_definition": "Position and alignment of the body affecting physiological and psychological state",
+    "user_friendly": "How you hold your body - sitting, standing, moving",
+    "analogy": "Like the foundation of a building - everything rests on it",
+    "why_it_matters": "Posture directly affects your mood, confidence, and breathing",
+    "example_sentence": "Changing posture from slouched to upright instantly improves mood",
+    "reading_level": 6.0
+  },
+  {
+    "term": "practice frequency",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Rate of repetition for skill development or habit formation",
+    "user_friendly": "How often you do something to make it stick",
+    "analogy": "Like watering a plant - frequency determines growth rate",
+    "why_it_matters": "Practice frequency matters more than session length for building habits",
+    "example_sentence": "Daily 5-minute practice beats weekly 1-hour sessions for lasting change",
+    "reading_level": 6.5
+  },
+  {
+    "term": "prayer practice",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Regular communication with higher power or spiritual source",
+    "user_friendly": "Talking to God or the universe regularly",
+    "analogy": "Like calling a trusted friend who always listens",
+    "why_it_matters": "Prayer practice reduces anxiety by releasing control to higher power",
+    "example_sentence": "Morning prayer practice shifts worry into trust and surrender",
+    "reading_level": 6.0
+  },
+  {
+    "term": "reframing",
+    "category": "cognitive_processes",
+    "clinical_definition": "Changing the conceptual or emotional frame around a situation",
+    "user_friendly": "Finding a different way to think about something",
+    "analogy": "Like putting a new frame on a picture - same image, different feel",
+    "why_it_matters": "Reframing transforms problems into opportunities without changing circumstances",
+    "example_sentence": "Reframing rejection as redirection reduces emotional pain",
+    "reading_level": 6.8
+  },
+  {
+    "term": "reflection",
+    "category": "cognitive_processes",
+    "clinical_definition": "Thoughtful consideration of experiences to extract meaning and learning",
+    "user_friendly": "Thinking back on what happened to understand it better",
+    "analogy": "Like watching game film to improve your performance",
+    "why_it_matters": "Reflection turns experience into wisdom. Without it, you just repeat mistakes",
+    "example_sentence": "Evening reflection helps you learn from the day instead of just surviving it",
+    "reading_level": 6.5
+  },
+  {
+    "term": "release technique",
+    "category": "emotional_regulation",
+    "clinical_definition": "Method for consciously discharging emotional or physical tension",
+    "user_friendly": "Way to let out feelings you've been holding in",
+    "analogy": "Like opening a pressure valve to let steam escape",
+    "why_it_matters": "Release techniques prevent emotional buildup that leads to explosions",
+    "example_sentence": "Breath release technique helps you discharge anger without hurting anyone",
+    "reading_level": 6.5
+  },
+  {
+    "term": "repetition",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Multiple performances of same action to build neural pathways",
+    "user_friendly": "Doing the same thing over and over until it's automatic",
+    "analogy": "Like wearing a path in the grass - each pass makes it clearer",
+    "why_it_matters": "Repetition is how the brain learns. No shortcuts exist",
+    "example_sentence": "Repetition of positive self-talk eventually overwrites negative patterns",
+    "reading_level": 6.0
+  },
+  {
+    "term": "routine building",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Process of establishing consistent sequence of behaviors",
+    "user_friendly": "Creating a set of actions you do in the same order",
+    "analogy": "Like building a train track - once laid, the train follows automatically",
+    "why_it_matters": "Routine building eliminates willpower drain from decision-making",
+    "example_sentence": "Routine building makes healthy behaviors automatic instead of optional",
+    "reading_level": 6.5
+  },
+  {
+    "term": "running",
+    "category": "physical_practices",
+    "clinical_definition": "Repetitive forward locomotion for cardiovascular and mental benefits",
+    "user_friendly": "Moving fast on your feet for exercise",
+    "analogy": "Like meditation in motion - rhythm creates mental clarity",
+    "why_it_matters": "Running triggers endorphin release that naturally improves mood",
+    "example_sentence": "Regular running reduces depression as effectively as medication for many people",
+    "reading_level": 6.0
+  },
+  {
+    "term": "self-awareness",
+    "category": "cognitive_processes",
+    "clinical_definition": "Conscious knowledge of one's character, feelings, motives, and desires",
+    "user_friendly": "Knowing yourself - your patterns, triggers, and habits",
+    "analogy": "Like having an internal mirror that shows you how you really operate",
+    "why_it_matters": "Self-awareness is the foundation of all personal growth and change",
+    "example_sentence": "Self-awareness helps you notice when you're about to repeat a mistake",
+    "reading_level": 7.0
+  },
+  {
+    "term": "self-talk",
+    "category": "cognitive_processes",
+    "clinical_definition": "Internal dialogue and commentary on experiences and self",
+    "user_friendly": "The voice in your head that comments on everything",
+    "analogy": "Like a narrator for your life - can be encouraging or critical",
+    "why_it_matters": "Self-talk shapes your beliefs about yourself and what's possible",
+    "example_sentence": "Changing negative self-talk to neutral observation reduces anxiety",
+    "reading_level": 6.5
+  },
+  {
+    "term": "sitting meditation",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Formal meditation practice in seated posture with focus on breath or object",
+    "user_friendly": "Sitting still and focusing your attention on purpose",
+    "analogy": "Like training a puppy to stay - gentle persistence builds focus",
+    "why_it_matters": "Sitting meditation builds the mental muscle of returning attention after distraction",
+    "example_sentence": "Daily sitting meditation increases gray matter in brain regions for attention",
+    "reading_level": 6.8
+  },
+  {
+    "term": "stretching",
+    "category": "physical_practices",
+    "clinical_definition": "Deliberate lengthening of muscles to improve flexibility and release tension",
+    "user_friendly": "Gently pulling your muscles to make them longer",
+    "analogy": "Like unfolding a crumpled piece of paper",
+    "why_it_matters": "Stretching releases physical tension that stores emotional stress",
+    "example_sentence": "Morning stretching wakes up your body and signals readiness for the day",
+    "reading_level": 6.0
+  },
+  {
+    "term": "success visualization",
+    "category": "visualization_imagery",
+    "clinical_definition": "Mental imagery of achieving desired outcomes with sensory detail",
+    "user_friendly": "Imagining yourself succeeding in vivid detail",
+    "analogy": "Like watching a movie of your future success",
+    "why_it_matters": "Success visualization primes your brain to recognize and seize opportunities",
+    "example_sentence": "Athletes who practice success visualization perform better than those who don't",
+    "reading_level": 7.0
+  },
+  {
+    "term": "support system",
+    "category": "emotional_regulation",
+    "clinical_definition": "Network of relationships providing emotional and practical assistance",
+    "user_friendly": "People who have your back when things get hard",
+    "analogy": "Like safety ropes on a climbing wall - they catch you when you slip",
+    "why_it_matters": "Strong support systems predict recovery from mental health challenges",
+    "example_sentence": "Building a support system prevents isolation during difficult times",
+    "reading_level": 6.5
+  },
+  {
+    "term": "thought pattern",
+    "category": "cognitive_processes",
+    "clinical_definition": "Habitual sequence or style of thinking that repeats automatically",
+    "user_friendly": "The same kind of thoughts you have over and over",
+    "analogy": "Like a broken record playing the same groove",
+    "why_it_matters": "Thought patterns create reality. Change the pattern, change your life",
+    "example_sentence": "Recognizing your thought patterns is the first step to changing them",
+    "reading_level": 6.5
+  },
+  {
+    "term": "tracking",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Systematic recording of behaviors or outcomes to measure progress",
+    "user_friendly": "Writing down what you do to see patterns and progress",
+    "analogy": "Like keeping score in a game - numbers reveal what's working",
+    "why_it_matters": "Tracking makes invisible progress visible and motivates continuation",
+    "example_sentence": "Tracking meditation minutes helps you see consistency patterns you'd otherwise miss",
+    "reading_level": 6.0
+  },
+  {
+    "term": "trigger management",
+    "category": "behavioral_patterns",
+    "clinical_definition": "Skills to recognize and respond to stimuli that initiate unwanted reactions",
+    "user_friendly": "Handling things that set off your automatic reactions",
+    "analogy": "Like defusing a bomb before it explodes",
+    "why_it_matters": "Trigger management gives you choice where you previously had only reaction",
+    "example_sentence": "Good trigger management means noticing irritation before it becomes rage",
+    "reading_level": 7.0
+  },
+  {
+    "term": "walking meditation",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Mindfulness practice performed during slow, deliberate walking",
+    "user_friendly": "Paying full attention to each step as you walk slowly",
+    "analogy": "Like turning walking into a moving prayer",
+    "why_it_matters": "Walking meditation brings mindfulness into motion, making it more accessible than sitting",
+    "example_sentence": "Walking meditation helps people who find sitting meditation too difficult",
+    "reading_level": 6.5
+  },
+  {
+    "term": "worship practice",
+    "category": "meditation_mindfulness",
+    "clinical_definition": "Regular acts of reverence toward higher power or sacred principles",
+    "user_friendly": "Honoring God or the sacred through regular practices",
+    "analogy": "Like tending a holy fire that keeps your spirit connected",
+    "why_it_matters": "Worship practice creates sense of meaning larger than personal concerns",
+    "example_sentence": "Daily worship practice shifts focus from self-centered worry to sacred purpose",
+    "reading_level": 6.5
+  }
+]
