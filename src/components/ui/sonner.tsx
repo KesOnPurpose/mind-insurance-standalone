@@ -1,10 +1,10 @@
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  // Using "light" as default theme since next-themes is not compatible with Vite
+  const theme = "light";
 
   return (
     <Sonner

@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { visualizer } from "rollup-plugin-visualizer";
+import viteCompression from "vite-plugin-compression";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -9,10 +11,137 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    // Bundle analyzer in build mode
+    mode === "production" && visualizer({
+      filename: "./dist/stats.html",
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+      template: "sunburst", // or treemap, network, raw-data
+    }),
+    // Gzip compression analysis
+    mode === "production" && viteCompression({
+      verbose: true,
+      disable: false,
+      threshold: 10240, // Only compress files larger than 10kb
+      algorithm: "gzip",
+      ext: ".gz",
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    // Enable source maps for production debugging
+    sourcemap: mode === "production" ? "hidden" : false,
+
+    // Handle CommonJS/ESM mixed packages
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
+
+    // Optimize chunk splitting
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: (id) => {
+          // Vendor chunks for node_modules
+          if (id.includes("node_modules")) {
+            // React ecosystem
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
+              return "react-vendor";
+            }
+            // Radix UI components
+            if (id.includes("@radix-ui")) {
+              return "radix-ui";
+            }
+            // Charting library
+            if (id.includes("recharts")) {
+              return "charts";
+            }
+            // Supabase SDK
+            if (id.includes("@supabase")) {
+              return "supabase";
+            }
+            // Form handling
+            if (id.includes("react-hook-form") || id.includes("@hookform")) {
+              return "forms";
+            }
+            // Animation libraries
+            if (id.includes("framer-motion")) {
+              return "animation";
+            }
+            // PDF processing
+            if (id.includes("pdfjs-dist")) {
+              return "pdf";
+            }
+            // All other vendor code
+            return "vendor";
+          }
+        },
+        // Consistent chunk naming
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split("/").pop() : "chunk";
+          return `js/[name]-${facadeModuleId}-[hash].js`;
+        },
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
+
+    // Build optimizations
+    target: "es2020",
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: mode === "production",
+        drop_debugger: true,
+        pure_funcs: mode === "production" ? ["console.log", "console.info"] : [],
+      },
+      format: {
+        comments: false,
+      },
+    },
+
+    // Performance budgets
+    chunkSizeWarningLimit: 500, // 500kb warning threshold
+
+    // Report compressed size
+    reportCompressedSize: true,
+
+    // CSS code splitting
+    cssCodeSplit: true,
+  },
+
+  // Optimize dependencies - include CommonJS packages that need ESM conversion
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-tabs",
+      "recharts",
+      "pdfjs-dist",
+      "csv-parse",
+      "next-themes",
+      // Supabase and its CJS dependencies must be included for ESM transformation
+      "@supabase/supabase-js",
+      "@supabase/postgrest-js",
+      "@supabase/realtime-js",
+      "@supabase/storage-js",
+      "@supabase/auth-js",
+      "@supabase/functions-js",
+    ],
+    // Force ESM transformation for problematic packages
+    esbuildOptions: {
+      target: "es2020",
     },
   },
 }));
