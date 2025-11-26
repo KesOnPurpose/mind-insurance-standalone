@@ -1,7 +1,6 @@
-// DocumentManagement Page - Temporarily Disabled
-// Components and services need to be created
-
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText } from 'lucide-react';
 import { DocumentAnalyticsSummary } from '@/components/admin/documents/DocumentAnalyticsSummary';
 import { DocumentUploadZone } from '@/components/admin/documents/DocumentUploadZone';
@@ -24,7 +23,7 @@ import type {
   DifficultyLevel,
 } from '@/types/documents';
 
-export const DocumentManagement = () => {
+export function DocumentManagement() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'library' | 'upload' | 'bulk-upload'>('library');
@@ -59,17 +58,15 @@ export const DocumentManagement = () => {
     });
 
     if (document) {
-      // Move to next file or finish
       if (currentFileIndex < uploadedFiles.length - 1) {
         setCurrentFileIndex((prev) => prev + 1);
       } else {
-        // All files uploaded
         toast.success(`Successfully uploaded ${uploadedFiles.length} document(s)`);
         setUploadedFiles([]);
         setCurrentFileIndex(0);
         setActiveTab('library');
         refetchDocuments();
-        refetchAnalytics(); // Refresh analytics to show updated counts
+        refetchAnalytics();
       }
     }
   };
@@ -101,7 +98,7 @@ export const DocumentManagement = () => {
       setIsEditingDocument(false);
       setSelectedDocument(null);
       refetchDocuments();
-      refetchAnalytics(); // Refresh analytics after edit
+      refetchAnalytics();
     } catch (error) {
       toast.error('Failed to update document');
       console.error('Update error:', error);
@@ -120,10 +117,8 @@ export const DocumentManagement = () => {
   const currentFile = uploadedFiles[currentFileIndex];
   const showMetadataForm = uploadedFiles.length > 0 && currentFile;
 
-export function DocumentManagement() {
   return (
     <div className="container mx-auto py-6 px-4 space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <FileText className="h-8 w-8 text-primary" />
@@ -140,10 +135,8 @@ export function DocumentManagement() {
         </div>
       </div>
 
-      {/* Analytics Summary */}
       <DocumentAnalyticsSummary />
 
-      {/* Main Content */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'upload' | 'bulk-upload')}>
         <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="library">Document Library</TabsTrigger>
@@ -210,12 +203,11 @@ export function DocumentManagement() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Document Modal (reuse metadata form) */}
       {isEditingDocument && selectedDocument && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <DocumentMetadataForm
-              file={new File([], selectedDocument.document_name)} // Dummy file for editing
+              file={new File([], selectedDocument.document_name)}
               onSave={handleEditSave}
               onCancel={() => {
                 setIsEditingDocument(false);
@@ -226,7 +218,6 @@ export function DocumentManagement() {
         </div>
       )}
 
-      {/* Tactic Linker Modal */}
       <DocumentTacticLinker
         document={selectedDocument}
         isOpen={isTacticLinkerOpen}
