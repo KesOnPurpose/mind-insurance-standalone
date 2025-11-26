@@ -9,6 +9,8 @@ import { ProductProvider } from "@/contexts/ProductContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ConfigurationRequired } from "@/components/ConfigurationRequired";
+import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
@@ -48,7 +50,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  if (!isSupabaseConfigured) {
+    return <ConfigurationRequired />;
+  }
+
+  return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <AdminProvider>
@@ -109,6 +116,7 @@ const App = () => (
       </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
