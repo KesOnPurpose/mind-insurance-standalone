@@ -104,8 +104,8 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
         </div>
 
         <div className="flex-1">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold text-base leading-tight">
                 {tactic.tactic_name}
               </h3>
@@ -125,7 +125,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
                 </TooltipProvider>
               )}
             </div>
-            <Badge className={getCategoryColor(tactic.category)}>
+            <Badge className={`${getCategoryColor(tactic.category)} whitespace-nowrap flex-shrink-0`}>
               {tactic.category}
             </Badge>
           </div>
