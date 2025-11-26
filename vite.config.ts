@@ -46,51 +46,18 @@ export default defineConfig(({ mode }) => ({
       transformMixedEsModules: true,
     },
 
-    // Optimize chunk splitting
+    // Simplified chunk splitting to avoid circular dependency issues
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching
-        manualChunks: (id) => {
-          // Vendor chunks for node_modules
-          if (id.includes("node_modules")) {
-            // React ecosystem
-            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
-              return "react-vendor";
-            }
-            // Radix UI components
-            if (id.includes("@radix-ui")) {
-              return "radix-ui";
-            }
-            // Charting library
-            if (id.includes("recharts")) {
-              return "charts";
-            }
-            // Supabase SDK
-            if (id.includes("@supabase")) {
-              return "supabase";
-            }
-            // Form handling
-            if (id.includes("react-hook-form") || id.includes("@hookform")) {
-              return "forms";
-            }
-            // Animation libraries
-            if (id.includes("framer-motion")) {
-              return "animation";
-            }
-            // PDF processing
-            if (id.includes("pdfjs-dist")) {
-              return "pdf";
-            }
-            // All other vendor code
-            return "vendor";
-          }
-        },
-        // Consistent chunk naming
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split("/").pop() : "chunk";
-          return `js/[name]-${facadeModuleId}-[hash].js`;
+        // Let Vite handle chunk splitting automatically with minimal manual intervention
+        manualChunks: {
+          // Only split out large, stable dependencies
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase': ['@supabase/supabase-js'],
         },
         assetFileNames: "assets/[name]-[hash][extname]",
+        chunkFileNames: "js/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
       },
     },
 
