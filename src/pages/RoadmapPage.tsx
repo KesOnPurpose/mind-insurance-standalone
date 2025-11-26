@@ -402,7 +402,7 @@ export default function RoadmapPage() {
               )}
             </div>
             
-            <Card className="p-4 bg-card/10 backdrop-blur border-primary-foreground/20">
+            <Card className="p-4 bg-card/10 backdrop-blur border-primary-foreground/20 hidden md:flex">
               <div className="flex items-center gap-3">
                 <TrendingUp className="w-8 h-8" />
                 <div>
@@ -418,7 +418,7 @@ export default function RoadmapPage() {
       </div>
       
       <div className="container mx-auto px-4 py-8">
-        {/* Personalization Badge - Shows how roadmap is personalized */}
+        {/* Personalization Badge - Shows how roadmap is personalized (hidden on mobile) */}
         <PersonalizationBadge
           totalTactics={343}
           filteredTactics={tactics.length}
@@ -426,7 +426,7 @@ export default function RoadmapPage() {
           populations={assessment?.target_populations}
           budget={assessment?.capital_available}
           immediatePriority={assessment?.immediate_priority}
-          className="mb-6"
+          className="mb-6 hidden md:block"
         />
 
         {/* Incomplete Strategy Profile Banner */}
@@ -521,8 +521,8 @@ export default function RoadmapPage() {
           )}
         </div>
 
-        {/* Collapsible Journey Map & Week Details */}
-        <Collapsible open={showJourneyMap} onOpenChange={setShowJourneyMap} className="mb-6">
+        {/* Collapsible Journey Map & Week Details (hidden on mobile) */}
+        <Collapsible open={showJourneyMap} onOpenChange={setShowJourneyMap} className="mb-6 hidden md:block">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full justify-between mb-2">
               <span className="flex items-center gap-2">
