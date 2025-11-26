@@ -157,7 +157,7 @@ const ChatPage = () => {
 
     try {
       // Call n8n webhook for AI agent response
-      const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n-n8n.vq00fr.easypanel.host/webhook/chat';
+      const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat';
 
       console.log('[Chat] Calling n8n webhook:', N8N_WEBHOOK_URL);
       console.log('[Chat] User ID:', user.id);
