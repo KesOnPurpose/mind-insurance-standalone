@@ -8,6 +8,7 @@ import { AdminProvider } from "@/contexts/AdminContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { AssessmentGuard } from "@/components/AssessmentGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
@@ -44,6 +45,8 @@ import ProtocolDemo from "./pages/ProtocolDemo";
 import TestTooltip from "./pages/TestTooltip";
 import ChatPageDemo from "./pages/ChatPageDemo";
 import TestSSE from "./pages/TestSSE";
+import TestResourcesPage from "./pages/TestResourcesPage";
+import TestResourcesDemo from "./pages/TestResourcesDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,31 +69,29 @@ const App = () => (
               <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/protect" element={<ProtectedRoute><AppLayout><ProtectPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance" element={<ProtectedRoute><AppLayout><MindInsuranceHub /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practice" element={<ProtectedRoute><AppLayout><MindInsurancePracticePage /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/championship" element={<ProtectedRoute><AppLayout><ChampionshipPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/insights" element={<ProtectedRoute><AppLayout><InsightsPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/vault" element={<ProtectedRoute><AppLayout><VaultPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><AssessmentGuard><AppLayout><DashboardPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/protect" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProtectPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsuranceHub /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practice" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsurancePracticePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/championship" element={<ProtectedRoute><AssessmentGuard><AppLayout><ChampionshipPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/insights" element={<ProtectedRoute><AssessmentGuard><AppLayout><InsightsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/vault" element={<ProtectedRoute><AssessmentGuard><AppLayout><VaultPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               {/* PROTECT Practice Routes */}
-              <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AppLayout><PatternCheck /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AppLayout><ReinforceIdentity /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AppLayout><OutcomeVisualization /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AppLayout><TriggerReset /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AppLayout><EnergyAudit /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AppLayout><CelebrateWins /></AppLayout></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AppLayout><TomorrowSetup /></AppLayout></ProtectedRoute>} />
-              <Route path="/chat" element={<ProtectedRoute><AppLayout><ChatPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/model-week" element={<ProtectedRoute><AppLayout><ModelWeekPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/roadmap" element={<ProtectedRoute><AppLayout><RoadmapPage /></AppLayout></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AssessmentGuard><AppLayout><PatternCheck /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AssessmentGuard><AppLayout><ReinforceIdentity /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AssessmentGuard><AppLayout><OutcomeVisualization /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AssessmentGuard><AppLayout><TriggerReset /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AssessmentGuard><AppLayout><EnergyAudit /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AssessmentGuard><AppLayout><CelebrateWins /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AssessmentGuard><AppLayout><TomorrowSetup /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><AssessmentGuard><AppLayout><ChatPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/model-week" element={<ProtectedRoute><AssessmentGuard><AppLayout><ModelWeekPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/roadmap" element={<ProtectedRoute><AssessmentGuard><AppLayout><RoadmapPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
-              <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProfilePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
-<<<<<<< HEAD
-=======
               {/* Test pages for Training Materials feature - No auth required for testing */}
               <Route path="/test-resources" element={<TestResourcesPage />} />
               <Route path="/test-demo" element={<TestResourcesDemo />} />
@@ -101,8 +102,7 @@ const App = () => (
               {/* Test page for SSE streaming with detailed logging */}
               <Route path="/test-sse" element={<TestSSE />} />
               {/* Protocol Demo page - Interactive glossary demonstration */}
-              <Route path="/protocol-demo" element={<ProtectedRoute><AppLayout><ProtocolDemo /></AppLayout></ProtectedRoute>} />
->>>>>>> 72f48da (feat: Add critical UX improvements - welcome modal fix and assessment auto-save)
+              <Route path="/protocol-demo" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProtocolDemo /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />

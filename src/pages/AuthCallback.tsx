@@ -11,6 +11,39 @@ const AuthCallback = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [isEmailVerification, setIsEmailVerification] = useState(false);
 
+  // Smart redirect based on assessment completion status
+  const smartRedirect = async (userId: string) => {
+    try {
+      console.log('AuthCallback: Checking assessment completion for smart redirect...');
+
+      // Check if user has completed assessment
+      const { data: onboarding, error: onboardingError } = await supabase
+        .from('user_onboarding')
+        .select('assessment_completed_at')
+        .eq('user_id', userId)
+        .single();
+
+      if (onboardingError && onboardingError.code !== 'PGRST116') {
+        console.error('Error checking onboarding status:', onboardingError);
+      }
+
+      // If assessment is NOT completed, redirect to assessment
+      if (!onboarding?.assessment_completed_at) {
+        console.log('AuthCallback: Assessment not completed - redirecting to /assessment');
+        window.location.href = '/assessment';
+        return;
+      }
+
+      // Assessment completed - redirect to dashboard
+      console.log('AuthCallback: Assessment completed - redirecting to /dashboard');
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error('Smart redirect error, defaulting to assessment:', err);
+      // On error, default to assessment (safer - ensures onboarding)
+      window.location.href = '/assessment';
+    }
+  };
+
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -23,8 +56,8 @@ const AuthCallback = () => {
         const { data: { session: autoSession }, error: autoError } = await supabase.auth.getSession();
 
         if (autoSession) {
-          console.log('Supabase auto-detected session, redirecting to dashboard...');
-          window.location.href = '/dashboard';
+          console.log('Supabase auto-detected session, using smart redirect...');
+          await smartRedirect(autoSession.user.id);
           return;
         }
 
@@ -87,8 +120,8 @@ const AuthCallback = () => {
           console.log('Session verification after setting:', !!verifySession);
 
           if (verifySession) {
-            console.log('Session verified, redirecting to dashboard...');
-            window.location.href = '/dashboard';
+            console.log('Session verified, using smart redirect...');
+            await smartRedirect(verifySession.user.id);
             return;
           }
         }
@@ -118,8 +151,8 @@ const AuthCallback = () => {
           console.log('Session after code exchange:', !!newSession);
 
           if (newSession) {
-            console.log('Session established, redirecting to dashboard...');
-            window.location.href = '/dashboard';
+            console.log('Session established, using smart redirect...');
+            await smartRedirect(newSession.user.id);
             return;
           }
         }
@@ -127,8 +160,8 @@ const AuthCallback = () => {
         // Final check for session
         const { data: { session: finalSession } } = await supabase.auth.getSession();
         if (finalSession) {
-          console.log('Final session check passed, redirecting...');
-          window.location.href = '/dashboard';
+          console.log('Final session check passed, using smart redirect...');
+          await smartRedirect(finalSession.user.id);
           return;
         }
 
