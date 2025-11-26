@@ -17,7 +17,6 @@ import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, useSaveNotes, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { WeekProgressCard } from '@/components/roadmap/WeekProgressCard';
 import { TacticCard } from '@/components/roadmap/TacticCard';
-import { BudgetTracker } from '@/components/roadmap/BudgetTracker';
 import { TacticWithProgress, WeekSummary, JourneyPhase, TacticWithPrerequisites } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
@@ -905,13 +904,6 @@ export default function RoadmapPage() {
           {/* Sidebar - 1 column */}
           <div className="lg:col-span-1">
             <div className="sticky top-4 space-y-4">
-              <BudgetTracker
-                costBreakdown={costBreakdown}
-                userBudgetMax={assessment?.budget_max_usd || 50000}
-                criticalPathCount={criticalPathTactics}
-                blockedTacticsCount={blockedTactics}
-              />
-
               {/* Strategy Profile (Collapsible) */}
               <Collapsible defaultOpen={true}>
                 <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">

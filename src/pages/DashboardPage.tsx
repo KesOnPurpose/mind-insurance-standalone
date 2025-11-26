@@ -267,15 +267,15 @@ const DashboardPage = () => {
       )}
 
       {/* Hero: Your Next Move */}
-      <Card className="p-8 bg-white shadow-lg">
-        <div className="flex items-center justify-between mb-6">
+      <Card className="p-4 sm:p-6 md:p-8 bg-white shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
           <div>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wide">
               WEEK {currentWeek} OF {totalWeeks}
             </p>
-            <h1 className="text-2xl font-bold text-gray-900 mt-1">Your Next Move</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">Your Next Move</h1>
           </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1">
               <Flame className="w-4 h-4 text-orange-500" />
               {protectStreak} day streak
@@ -391,16 +391,18 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Personalization Badge - Show transparency about how tactics are filtered */}
+        {/* Personalization Badge - Show progress through personalized roadmap */}
         {assessment && totalTacticsCount > 0 && (
           <div className="mt-6">
             <PersonalizationBadge
               totalTactics={343}
               filteredTactics={totalTacticsCount}
+              completedTactics={completedTactics}
               strategy={assessment.ownership_model}
               populations={assessment.target_populations}
               budget={assessment.capital_available}
               immediatePriority={assessment.immediate_priority}
+              showProgress={true}
             />
           </div>
         )}
@@ -409,10 +411,10 @@ const DashboardPage = () => {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Week Progress */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Week {currentWeek}: Foundation & Vision</h3>
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-sm sm:text-base font-bold text-gray-900">Week {currentWeek}: Foundation & Vision</h3>
               <span className="text-sm text-muted-foreground">
                 {weekCategories.reduce((acc, c) => acc + c.completed, 0)}/
                 {weekCategories.reduce((acc, c) => acc + c.total, 0)} tactics
@@ -430,9 +432,9 @@ const DashboardPage = () => {
             </div>
 
             {/* Category Breakdown */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
               {weekCategories.map((category) => (
-                <div key={category.name} className="p-4 bg-gray-50 rounded-lg">
+                <div key={category.name} className="p-3 sm:p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">{category.name}</span>
                     <span className="text-xs text-muted-foreground">
@@ -459,19 +461,19 @@ const DashboardPage = () => {
           </Card>
 
           {/* Nette AI Quick Access */}
-          <Card className="p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6" />
+          <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Need Help? Ask Nette</h3>
-                  <p className="text-white/80 text-sm">Your AI group home coach is ready to answer questions</p>
+                  <h3 className="font-bold text-base sm:text-lg">Need Help? Ask Nette</h3>
+                  <p className="text-white/80 text-xs sm:text-sm">Your AI group home coach is ready to answer questions</p>
                 </div>
               </div>
-              <Link to="/chat">
-                <Button className="bg-white text-primary hover:bg-gray-100">
+              <Link to="/chat" className="sm:flex-shrink-0">
+                <Button className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
                   Chat with Nette
                 </Button>
               </Link>
@@ -494,7 +496,7 @@ const DashboardPage = () => {
                   </p>
                 </div>
               </div>
-              <Link to="/protect">
+              <Link to="/mind-insurance">
                 <Button variant="link" className="text-purple-600 font-medium p-0 h-auto">
                   Start Practice →
                 </Button>
@@ -507,54 +509,7 @@ const DashboardPage = () => {
         <div className="space-y-6">
           <BusinessProfileSnapshot />
 
-          {/* Quick Stats */}
-          <Card className="p-6">
-            <h3 className="font-bold mb-4">Your Journey</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Total Progress</span>
-                  <span className="font-semibold">{completedTactics}/403</span>
-                </div>
-                <Progress value={(completedTactics / 403) * 100} className="h-2" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Current Level</span>
-                  <span className="font-semibold">{Math.floor(totalPoints / 100)}</span>
-                </div>
-                <Progress value={totalPoints % 100} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {100 - (totalPoints % 100)} XP to next level
-                </p>
-              </div>
-            </div>
-          </Card>
 
-          {/* Quick Actions */}
-          <Card className="p-6">
-            <h3 className="font-bold mb-4">Quick Actions</h3>
-            <div className="space-y-2">
-              <Link to="/roadmap" className="block">
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Target className="w-4 h-4 mr-2" />
-                  View Roadmap
-                </Button>
-              </Link>
-              <Link to="/model-week" className="block">
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Model Week
-                </Button>
-              </Link>
-              <Link to="/chat" className="block">
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Ask Nette AI
-                </Button>
-              </Link>
-            </div>
-          </Card>
         </div>
       </div>
     </div>
