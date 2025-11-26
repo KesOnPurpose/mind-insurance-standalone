@@ -7,7 +7,6 @@ import {
 } from "@/services/assessmentService";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 export function useAssessment() {
   const { toast } = useToast();
@@ -33,14 +32,11 @@ export function useAssessment() {
       // Calculate scores
       const scores = calculateScores(answers);
 
-      // Save to database
+      // Save to database - this now includes onboarding_step in a single atomic operation
       await saveAssessmentResults(user.id, answers, scores);
 
-      // Update onboarding step to assessment_complete
-      await supabase
-        .from('user_onboarding')
-        .update({ onboarding_step: 'assessment_complete' })
-        .eq('user_id', user.id);
+      // Invalidate onboarding status query to force refresh
+      queryClient.invalidateQueries({ queryKey: ['onboardingStatus', user.id] });
 
       return { answers, scores };
     },
@@ -48,6 +44,7 @@ export function useAssessment() {
       // Invalidate queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ['assessment', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['personalizedTactics'] });
+      queryClient.invalidateQueries({ queryKey: ['onboardingStatus', user?.id] });
       
       // Show success message with readiness level
       const readinessLabels = {

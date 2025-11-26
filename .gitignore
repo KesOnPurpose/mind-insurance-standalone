@@ -19,6 +19,8 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+glossary-extraction/.env
+**/.env
 
 # Editor directories and files
 .vscode/*

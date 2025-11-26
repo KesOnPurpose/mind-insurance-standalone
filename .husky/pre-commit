@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔒 Running pre-commit security checks..."
+
+# Run security audit (only HIGH/CRITICAL)
+echo "📦 Checking npm dependencies..."
+npm run security:check
+
+# Run TypeScript strict check
+echo "📝 Checking TypeScript..."
+npx tsc --noEmit
+
+# Run ESLint
+echo "🧹 Running ESLint..."
+npm run lint
+
+# Run Gitleaks if installed
+if command -v gitleaks &> /dev/null; then
+  echo "🔍 Scanning for secrets..."
+  gitleaks detect --config .gitleaksrc.toml --no-git
+else
+  echo "⚠️  Gitleaks not installed. Install with: brew install gitleaks"
+fi
+
+echo "✅ Pre-commit checks passed!"

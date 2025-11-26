@@ -651,9 +651,9 @@ export default function RoadmapPage() {
               </div>
             </Card>
 
-            {/* Week Stats */}
+            {/* Week Stats - Hidden on mobile */}
             {currentWeekSummary && (
-              <Card className="p-6 mb-6 bg-gradient-card">
+              <Card className="hidden md:block p-6 mb-6 bg-gradient-card">
                 <div className="grid md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Week Progress</p>

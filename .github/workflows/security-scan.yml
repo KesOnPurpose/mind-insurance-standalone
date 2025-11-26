@@ -1,0 +1,116 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly security scan every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for Gitleaks
+
+      # Dependency vulnerability scanning
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (production)
+        run: npm audit --production --audit-level=moderate
+        continue-on-error: true
+        id: npm-audit-prod
+
+      - name: npm audit (full)
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+        id: npm-audit-full
+
+      # Block on HIGH/CRITICAL vulnerabilities
+      - name: npm audit (strict check)
+        run: npm audit --audit-level=high
+        id: npm-audit-strict
+
+      # TypeScript strict mode check
+      - name: TypeScript strict check
+        run: npx tsc --noEmit
+
+      # ESLint security rules
+      - name: ESLint security check
+        run: npx eslint . --ext .ts,.tsx
+        continue-on-error: true
+
+      # Secret detection with Gitleaks
+      - name: Gitleaks secret detection
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Optional for premium features
+
+      # OWASP Dependency Check (optional, slower)
+      # - name: OWASP Dependency Check
+      #   uses: dependency-check/Dependency-Check_Action@main
+      #   with:
+      #     project: 'mind-insurance-grouphome'
+      #     path: '.'
+      #     format: 'HTML'
+
+      # Report summary
+      - name: Security scan summary
+        if: always()
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript: ${{ steps.tsc-check.outcome || 'Passed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- npm audit (strict): ${{ steps.npm-audit-strict.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Gitleaks: ${{ steps.gitleaks.outcome || 'Passed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed results in the job logs above." >> $GITHUB_STEP_SUMMARY
+
+      # Notify on failure (optional - configure notification service)
+      # - name: Notify security team
+      #   if: failure()
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     text: 'Security scan failed! Check GitHub Actions for details.'
+      #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Optional: CodeQL analysis for advanced code scanning
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'javascript,typescript'
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2

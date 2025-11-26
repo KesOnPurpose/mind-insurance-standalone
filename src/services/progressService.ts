@@ -44,7 +44,7 @@ export function useStartTactic() {
       queryClient.invalidateQueries({ queryKey: ['userProgress'] });
       toast.success('Tactic started! 🚀');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to start tactic:', error);
       toast.error('Failed to start tactic');
     }
@@ -87,7 +87,7 @@ export function useCompleteTactic() {
         duration: 3000,
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to complete tactic:', error);
       toast.error('Failed to complete tactic');
     }
@@ -138,7 +138,7 @@ export function useSaveNotes() {
         duration: 2000,
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to save notes:', error);
       toast.error('Failed to save notes');
     }
