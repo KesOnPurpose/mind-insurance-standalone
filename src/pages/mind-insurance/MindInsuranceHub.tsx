@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, FileText, Play, TrendingUp } from 'lucide-react';
+import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -229,7 +229,7 @@ export default function MindInsuranceHub() {
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Button
           variant="outline"
           onClick={() => navigate('/mind-insurance/insights')}
@@ -255,6 +255,15 @@ export default function MindInsuranceHub() {
         >
           <TrendingUp className="w-6 h-6" />
           <span>Progress</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={() => navigate('/avatar-assessment')}
+          className="h-20 flex-col gap-2"
+        >
+          <Brain className="w-6 h-6" />
+          <span>Temperament</span>
         </Button>
       </div>
     </div>

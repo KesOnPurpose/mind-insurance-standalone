@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { LogOut, MessageSquare, Map, Settings, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
+import { BottomNav } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AppLayoutProps {
@@ -71,10 +72,13 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* Main Content - pb-20 for mobile bottom nav space */}
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-20 sm:pb-6">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

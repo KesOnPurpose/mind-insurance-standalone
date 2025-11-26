@@ -19,7 +19,7 @@ import EmailVerificationPage from "./pages/EmailVerificationPage";
 import AssessmentPage from "./pages/AssessmentPage";
 import AvatarAssessmentPage from "./pages/AvatarAssessmentPage";
 import DashboardPage from "./pages/DashboardPage";
-import ProtectPage from "./pages/ProtectPage";
+import ResourcesPage from "./pages/ResourcesPage";
 import ChatPage from "./pages/ChatPage";
 import ModelWeekPage from "./pages/ModelWeekPage";
 import RoadmapPage from "./pages/RoadmapPage";
@@ -41,12 +41,9 @@ import TriggerReset from "./pages/mind-insurance/practices/TriggerReset";
 import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
 import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
 import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
-import ProtocolDemo from "./pages/ProtocolDemo";
 import TestTooltip from "./pages/TestTooltip";
 import ChatPageDemo from "./pages/ChatPageDemo";
 import TestSSE from "./pages/TestSSE";
-import TestResourcesPage from "./pages/TestResourcesPage";
-import TestResourcesDemo from "./pages/TestResourcesDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,7 +67,7 @@ const App = () => (
               <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><AssessmentGuard><AppLayout><DashboardPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/protect" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProtectPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/resources" element={<ProtectedRoute><AssessmentGuard><AppLayout><ResourcesPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsuranceHub /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/practice" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsurancePracticePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/championship" element={<ProtectedRoute><AssessmentGuard><AppLayout><ChampionshipPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
@@ -92,17 +89,12 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProfilePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
-              {/* Test pages for Training Materials feature - No auth required for testing */}
-              <Route path="/test-resources" element={<TestResourcesPage />} />
-              <Route path="/test-demo" element={<TestResourcesDemo />} />
               {/* Test page for Glossary Tooltips - No auth required for testing */}
               <Route path="/test-tooltip" element={<TestTooltip />} />
               {/* Test page for Chat with SSE - No auth required for testing */}
               <Route path="/chat-demo" element={<ChatPageDemo />} />
               {/* Test page for SSE streaming with detailed logging */}
               <Route path="/test-sse" element={<TestSSE />} />
-              {/* Protocol Demo page - Interactive glossary demonstration */}
-              <Route path="/protocol-demo" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProtocolDemo /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
