@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
-import { ShieldCheck, Users, BarChart3, Settings, Activity } from 'lucide-react';
+import { ShieldCheck, Users, BarChart3, Settings, Activity, FileText } from 'lucide-react';
 import { AnalyticsDashboard } from '@/components/admin/analytics';
 import { Button } from '@/components/ui/button';
 
@@ -42,7 +43,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* View Toggle */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={view === 'analytics' ? 'default' : 'outline'}
                 onClick={() => setView('analytics')}
@@ -57,6 +58,12 @@ export default function AdminDashboard() {
                 <Settings className="mr-2 h-4 w-4" />
                 Permissions
               </Button>
+              <Link to="/admin/documents">
+                <Button variant="outline">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Documents
+                </Button>
+              </Link>
             </div>
           </div>
 
