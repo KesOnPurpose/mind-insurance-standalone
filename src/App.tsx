@@ -89,11 +89,6 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
-<<<<<<< HEAD
-=======
-              {/* Test pages for Training Materials feature - No auth required for testing */}
-              <Route path="/test-resources" element={<TestResourcesPage />} />
-              <Route path="/test-demo" element={<TestResourcesDemo />} />
               {/* Test page for Glossary Tooltips - No auth required for testing */}
               <Route path="/test-tooltip" element={<TestTooltip />} />
               {/* Test page for Chat with SSE - No auth required for testing */}
@@ -102,7 +97,6 @@ const App = () => (
               <Route path="/test-sse" element={<TestSSE />} />
               {/* Protocol Demo page - Interactive glossary demonstration */}
               <Route path="/protocol-demo" element={<ProtectedRoute><AppLayout><ProtocolDemo /></AppLayout></ProtectedRoute>} />
->>>>>>> 72f48da (feat: Add critical UX improvements - welcome modal fix and assessment auto-save)
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />

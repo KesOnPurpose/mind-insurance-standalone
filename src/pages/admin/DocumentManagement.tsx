@@ -3,8 +3,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
-<<<<<<< HEAD
-=======
 import { DocumentAnalyticsSummary } from '@/components/admin/documents/DocumentAnalyticsSummary';
 import { DocumentUploadZone } from '@/components/admin/documents/DocumentUploadZone';
 import { DocumentMetadataForm } from '@/components/admin/documents/DocumentMetadataForm';
@@ -121,38 +119,9 @@ export const DocumentManagement = () => {
 
   const currentFile = uploadedFiles[currentFileIndex];
   const showMetadataForm = uploadedFiles.length > 0 && currentFile;
->>>>>>> 72f48da (feat: Add critical UX improvements - welcome modal fix and assessment auto-save)
 
 export function DocumentManagement() {
   return (
-<<<<<<< HEAD
-    <div className="container mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-6 h-6" />
-            Document Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Document management system is under construction. The following components need to be created:
-          </p>
-          <ul className="list-disc list-inside mt-4 space-y-2 text-sm text-muted-foreground">
-            <li>DocumentAnalyticsSummary</li>
-            <li>DocumentUploadZone</li>
-            <li>DocumentMetadataForm</li>
-            <li>DocumentLibraryTable</li>
-            <li>DocumentTacticLinker</li>
-            <li>useDocumentUpload hook</li>
-            <li>useDocuments hook</li>
-            <li>useDocumentAnalytics hook</li>
-            <li>documentService</li>
-            <li>types/documents</li>
-          </ul>
-        </CardContent>
-      </Card>
-=======
     <div className="container mx-auto py-6 px-4 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -267,7 +236,6 @@ export function DocumentManagement() {
         }}
         onLinksUpdated={handleLinksUpdated}
       />
->>>>>>> 72f48da (feat: Add critical UX improvements - welcome modal fix and assessment auto-save)
     </div>
   );
 }
