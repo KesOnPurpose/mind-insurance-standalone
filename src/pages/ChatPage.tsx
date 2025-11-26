@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CoachSelector from "@/components/chat/CoachSelector";
 import ChatMessage from "@/components/chat/ChatMessage";
@@ -11,6 +11,7 @@ import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useToast } from "@/hooks/use-toast";
+import { fetchRecentConversation } from "@/services/chatHistoryService";
 
 interface Message {
   id: string;
@@ -60,6 +61,7 @@ const ChatPage = () => {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,66 @@ const ChatPage = () => {
       console.log('[Conversation] Restored conversation:', storedConversationId);
     }
   }, []);
+
+  // Load chat history on mount and when coach changes
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!user?.id) {
+        setIsLoadingHistory(false);
+        return;
+      }
+
+      setIsLoadingHistory(true);
+      console.log('[ChatHistory] Loading history for', selectedCoach);
+
+      try {
+        const history = await fetchRecentConversation(user.id, selectedCoach, 30);
+
+        if (history.length > 0) {
+          console.log('[ChatHistory] Loaded', history.length, 'messages');
+          // Add the initial greeting at the start, then the history
+          setMessages([
+            {
+              id: "1",
+              role: "assistant",
+              content: getInitialGreeting(selectedCoach),
+              timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+              coachType: selectedCoach
+            },
+            ...history
+          ]);
+        } else {
+          console.log('[ChatHistory] No history found, showing greeting');
+          // No history, just show the greeting
+          setMessages([
+            {
+              id: "1",
+              role: "assistant",
+              content: getInitialGreeting(selectedCoach),
+              timestamp: new Date(),
+              coachType: selectedCoach
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('[ChatHistory] Error loading history:', error);
+        // On error, just show the greeting
+        setMessages([
+          {
+            id: "1",
+            role: "assistant",
+            content: getInitialGreeting(selectedCoach),
+            timestamp: new Date(),
+            coachType: selectedCoach
+          }
+        ]);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, [user?.id, selectedCoach]);
 
   // Save conversation ID to localStorage when it changes
   useEffect(() => {
@@ -292,15 +354,22 @@ const ChatPage = () => {
           
           {/* Messages */}
           <div className="space-y-6 mb-6">
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                timestamp={message.timestamp}
-                coachType={message.coachType}
-              />
-            ))}
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading conversation...</span>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  role={message.role}
+                  content={message.content}
+                  timestamp={message.timestamp}
+                  coachType={message.coachType}
+                />
+              ))
+            )}
 
             {handoffSuggestion && (
               <HandoffSuggestion
@@ -369,12 +438,12 @@ const ChatPage = () => {
                 onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
                 className="flex-1"
-                disabled={isTyping}
+                disabled={isTyping || isLoadingHistory}
               />
               <Button
                 onClick={handleSend}
                 size="icon"
-                disabled={isTyping || !input.trim()}
+                disabled={isTyping || isLoadingHistory || !input.trim()}
                 style={{ background: COACHES[selectedCoach].gradient }}
                 className="text-white hover:opacity-90"
               >
