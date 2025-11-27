@@ -1,17 +1,55 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  requireAssessment?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requireAssessment = true }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [assessmentStatus, setAssessmentStatus] = useState<'loading' | 'completed' | 'not_completed'>('loading');
 
-  if (loading) {
+  useEffect(() => {
+    const checkAssessment = async () => {
+      if (!user?.id || !requireAssessment) {
+        setAssessmentStatus('completed');
+        return;
+      }
+
+      try {
+        const { data: onboarding, error } = await supabase
+          .from('user_onboarding')
+          .select('onboarding_step, assessment_completed_at')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking assessment status:', error);
+          setAssessmentStatus('completed');
+          return;
+        }
+
+        const isCompleted = onboarding?.assessment_completed_at != null || 
+          ['assessment_complete', 'assessment_skipped', 'welcome_shown', 'roadmap_visited'].includes(onboarding?.onboarding_step || '');
+
+        setAssessmentStatus(isCompleted ? 'completed' : 'not_completed');
+      } catch (err) {
+        console.error('Assessment check failed:', err);
+        setAssessmentStatus('completed');
+      }
+    };
+
+    if (user?.id) {
+      checkAssessment();
+    }
+  }, [user?.id, requireAssessment]);
+
+  if (loading || (requireAssessment && assessmentStatus === 'loading')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -21,6 +59,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (requireAssessment && assessmentStatus === 'not_completed' && location.pathname !== '/assessment') {
+    return <Navigate to="/assessment" replace />;
   }
 
   return <>{children}</>;

@@ -71,8 +71,8 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<EmailVerificationPage />} />
-              <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
-              <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
+              <Route path="/assessment" element={<ProtectedRoute requireAssessment={false}><AssessmentPage /></ProtectedRoute>} />
+              <Route path="/avatar-assessment" element={<ProtectedRoute requireAssessment={false}><AvatarAssessmentPage /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
               <Route path="/protect" element={<ProtectedRoute><AppLayout><ProtectPage /></AppLayout></ProtectedRoute>} />
               <Route path="/mind-insurance" element={<ProtectedRoute><AppLayout><MindInsuranceHub /></AppLayout></ProtectedRoute>} />
