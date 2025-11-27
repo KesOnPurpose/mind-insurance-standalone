@@ -1,52 +1,44 @@
-import { TrendingUp, Target, Clock, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, Target, Clock, CheckCircle2, User, Award, MessageSquare, Map, Building, DollarSign } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useUserProgress } from '@/services/progressService';
 import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useAuth } from '@/contexts/AuthContext';
+import { useJourneyContext } from '@/hooks/useJourneyContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
 /**
- * DashboardPanel - Quick stats and achievements for dashboard context
+ * DashboardPanel - Enhanced sidebar for dashboard context
+ *
+ * Shows:
+ * - Journey progress card
+ * - Profile snapshot
+ * - Assessment score summary
+ * - Quick actions
  */
 export function DashboardPanel() {
   const { user } = useAuth();
-  const { tactics, startingWeek, isLoading: tacticsLoading } = usePersonalizedTactics();
+  const { tactics, assessment, isLoading: tacticsLoading } = usePersonalizedTactics();
   const { data: progressData, isLoading: progressLoading } = useUserProgress(user?.id || '');
+  const journey = useJourneyContext();
 
-  const isLoading = tacticsLoading || progressLoading;
+  const isLoading = tacticsLoading || progressLoading || journey.isLoading;
 
   if (isLoading) {
     return (
       <div className="px-2 py-2 space-y-3">
+        <Skeleton className="h-24 w-full" />
         <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-20 w-full" />
         <Skeleton className="h-16 w-full" />
       </div>
     );
   }
 
-  // Calculate stats from actual data
-  const totalTactics = tactics.length;
-  const completedTactics = progressData?.filter(p => p.status === 'completed').length || 0;
+  // Calculate in-progress count
   const inProgressTactics = progressData?.filter(p => p.status === 'in_progress').length || 0;
-  const completionRate = totalTactics > 0 ? Math.round((completedTactics / totalTactics) * 100) : 0;
-
-  // Calculate current week based on progress
-  const tacticsWithProgress = tactics.map(tactic => ({
-    ...tactic,
-    status: progressData?.find(p => p.tactic_id === tactic.tactic_id)?.status || 'not_started',
-  }));
-
-  // Determine current week (first incomplete week)
-  const weekNumbers = [...new Set(tactics.map(t => t.week_assignment).filter(Boolean))].sort((a, b) => (a || 0) - (b || 0));
-  const currentWeek = weekNumbers.find(week => {
-    const weekTactics = tacticsWithProgress.filter(t => t.week_assignment === week);
-    return weekTactics.some(t => t.status !== 'completed');
-  }) || startingWeek || 1;
-
-  // Calculate weekly completion
-  const weekTactics = tacticsWithProgress.filter(t => t.week_assignment === currentWeek);
-  const weekCompleted = weekTactics.filter(t => t.status === 'completed').length;
 
   // Get last completed tactic
   const lastCompleted = progressData
@@ -57,37 +49,110 @@ export function DashboardPanel() {
     ? tactics.find(t => t.tactic_id === lastCompleted.tactic_id)?.tactic_name
     : null;
 
+  // Format ownership model for display
+  const formatOwnershipModel = (model: string | undefined) => {
+    if (!model) return null;
+    return model.split('_').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  // Format readiness level
+  const getReadinessColor = (level: string | undefined) => {
+    switch (level?.toLowerCase()) {
+      case 'ready': return 'text-green-600 bg-green-50 border-green-200';
+      case 'developing': return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'beginning': return 'text-blue-600 bg-blue-50 border-blue-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
   return (
     <div className="px-2 py-2 space-y-3">
-      {/* Overall Progress */}
-      <div className="rounded-lg border bg-card p-3 text-card-foreground">
+      {/* Journey Progress Card */}
+      <div className="rounded-lg border bg-gradient-to-br from-primary/10 to-primary/5 p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Progress</span>
           </div>
-          <span className="text-sm font-bold text-primary">{completionRate}%</span>
+          <span className="text-sm font-bold text-primary">{journey.completionRate}%</span>
         </div>
-        <Progress value={completionRate} className="h-2" />
-        <p className="text-xs text-muted-foreground mt-2">
-          {completedTactics} of {totalTactics} tactics completed
-        </p>
+        <Progress value={journey.completionRate} className="h-2 mb-2" />
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{journey.completedTactics} of {journey.totalTactics} tactics</span>
+          <Badge variant="outline" className="text-xs h-5">
+            Week {journey.currentWeek}
+          </Badge>
+        </div>
       </div>
 
-      {/* Current Week */}
-      <div className="rounded-lg border bg-card p-3 text-card-foreground">
-        <div className="flex items-center gap-2 mb-1">
-          <Target className="h-4 w-4 text-secondary" />
-          <span className="text-sm font-medium">Current Week</span>
+      {/* Profile Snapshot */}
+      {assessment && (
+        <div className="rounded-lg border bg-card p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Your Profile</span>
+          </div>
+
+          <div className="space-y-2">
+            {assessment.ownership_model && (
+              <div className="flex items-center gap-2">
+                <Building className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs">{formatOwnershipModel(assessment.ownership_model)}</span>
+              </div>
+            )}
+            {assessment.capital_available && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs">{assessment.capital_available}</span>
+              </div>
+            )}
+            {assessment.target_state && (
+              <div className="flex items-center gap-2">
+                <Target className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs">{assessment.target_state}</span>
+              </div>
+            )}
+          </div>
+
+          <Link to="/dashboard?section=profile" className="block mt-2">
+            <Button variant="ghost" size="sm" className="w-full h-7 text-xs">
+              Edit Profile
+            </Button>
+          </Link>
         </div>
-        <p className="text-2xl font-bold">Week {currentWeek}</p>
-        <p className="text-xs text-muted-foreground">
-          {weekCompleted} of {weekTactics.length} tactics this week
-        </p>
-      </div>
+      )}
+
+      {/* Assessment Score Summary */}
+      {assessment && (
+        <div className="rounded-lg border bg-card p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Award className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium">Readiness</span>
+          </div>
+
+          <div className="flex items-center justify-between mb-2">
+            <Badge variant="outline" className={`text-xs ${getReadinessColor(assessment.readiness_level)}`}>
+              {assessment.readiness_level || 'Unknown'}
+            </Badge>
+            {assessment.overall_score && (
+              <span className="text-lg font-bold text-primary">
+                {Math.round(assessment.overall_score)}%
+              </span>
+            )}
+          </div>
+
+          {assessment.immediate_priority && (
+            <p className="text-xs text-muted-foreground">
+              Focus: {assessment.immediate_priority.replace(/_/g, ' ')}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Active Tactics */}
-      <div className="rounded-lg border bg-card p-3 text-card-foreground">
+      <div className="rounded-lg border bg-card p-3">
         <div className="flex items-center gap-2 mb-1">
           <Clock className="h-4 w-4 text-blue-500" />
           <span className="text-sm font-medium">In Progress</span>
@@ -108,6 +173,25 @@ export function DashboardPanel() {
           </p>
         </div>
       )}
+
+      {/* Quick Actions */}
+      <div className="rounded-lg border bg-card p-3">
+        <span className="text-xs font-medium text-muted-foreground mb-2 block">Quick Actions</span>
+        <div className="space-y-1">
+          <Link to="/chat" className="block">
+            <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs">
+              <MessageSquare className="h-3 w-3 mr-2" />
+              Ask Nette
+            </Button>
+          </Link>
+          <Link to="/roadmap" className="block">
+            <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs">
+              <Map className="h-3 w-3 mr-2" />
+              View Roadmap
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

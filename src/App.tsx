@@ -85,7 +85,7 @@ const App = () => (
               <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AssessmentGuard><AppLayout><TomorrowSetup /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><AssessmentGuard><ChatPage /></AssessmentGuard></ProtectedRoute>} />
               <Route path="/model-week" element={<ProtectedRoute><AssessmentGuard><AppLayout><ModelWeekPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/roadmap" element={<ProtectedRoute><AssessmentGuard><AppLayout><RoadmapPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/roadmap" element={<ProtectedRoute><AssessmentGuard><RoadmapPage /></AssessmentGuard></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
               <Route path="/settings" element={<ProtectedRoute><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />

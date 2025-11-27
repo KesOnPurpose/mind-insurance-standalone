@@ -4,6 +4,7 @@ import { COACHES, CoachType } from "@/types/coach";
 import ReactMarkdown from "react-markdown";
 import { GlossaryTooltip } from "@/components/protocol/GlossaryTooltip";
 import { useMemo, useCallback } from "react";
+import { sanitizeAIResponse } from "@/utils/sanitizeResponse";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -16,17 +17,23 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
   const coach = COACHES[coachType];
   const isUser = role === "user";
 
+  // Sanitize assistant messages to remove internal codes (tactic codes, etc.)
+  const displayContent = useMemo(() => {
+    if (isUser) return content;
+    return sanitizeAIResponse(content);
+  }, [content, isUser]);
+
   // Extract glossary terms from the content for analytics
   const extractedTerms = useMemo(() => {
     if (isUser) return [];
     const regex = /\{\{([^|]+)\|\|[^}]+\}\}/g;
     const terms: string[] = [];
     let match;
-    while ((match = regex.exec(content)) !== null) {
+    while ((match = regex.exec(displayContent)) !== null) {
       terms.push(match[1]);
     }
     return terms;
-  }, [content, isUser]);
+  }, [displayContent, isUser]);
 
   // Handle tooltip interactions for analytics
   const handleTooltipInteraction = useCallback((term: string, action: 'hover' | 'click') => {
@@ -37,8 +44,8 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
 
   // Check if content contains glossary markup
   const hasGlossaryMarkup = useMemo(() => {
-    return /\{\{[^|]+\|\|[^}]+\}\}/.test(content);
-  }, [content]);
+    return /\{\{[^|]+\|\|[^}]+\}\}/.test(displayContent);
+  }, [displayContent]);
 
   // Render content with or without glossary tooltips
   const renderContent = () => {
@@ -46,7 +53,7 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
     if (isUser || !hasGlossaryMarkup) {
       return (
         <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown>{displayContent}</ReactMarkdown>
         </div>
       );
     }
@@ -56,7 +63,7 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
     return (
       <div className="text-sm leading-relaxed">
         <GlossaryTooltip
-          text={content}
+          text={displayContent}
           glossaryTerms={extractedTerms}
           onTooltipInteraction={handleTooltipInteraction}
         />

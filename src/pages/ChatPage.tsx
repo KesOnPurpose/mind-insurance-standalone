@@ -73,15 +73,8 @@ function ChatPageContent() {
   const defaultCoach = getDefaultCoachForProduct(currentProduct);
 
   const [selectedCoach, setSelectedCoach] = useState<CoachType>(defaultCoach);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: getInitialGreeting(defaultCoach),
-      timestamp: new Date(),
-      coachType: defaultCoach
-    },
-  ]);
+  // Start with empty messages for new chats - greeting only shows for handoffs/switching
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -121,15 +114,9 @@ function ChatPageContent() {
     const loadConversation = async () => {
       if (!user?.id) return;
 
-      // If it's a new conversation, reset to greeting
+      // If it's a new conversation, start with empty messages (welcome screen shows)
       if (isNewConversation || !activeConversationId) {
-        setMessages([{
-          id: "1",
-          role: "assistant",
-          content: getInitialGreeting(selectedCoach),
-          timestamp: new Date(),
-          coachType: selectedCoach
-        }]);
+        setMessages([]);
         setIsLoadingHistory(false);
         return;
       }
@@ -146,36 +133,17 @@ function ChatPageContent() {
           // Determine coach from messages
           const lastCoach = history[history.length - 1]?.coachType || selectedCoach;
           setSelectedCoach(lastCoach);
-
-          setMessages([
-            {
-              id: "1",
-              role: "assistant",
-              content: getInitialGreeting(lastCoach),
-              timestamp: new Date(Date.now() - 1000 * 60 * 60),
-              coachType: lastCoach
-            },
-            ...history
-          ]);
+          // Load history without preloaded greeting - shows actual conversation
+          setMessages(history);
         } else {
           console.log('[ChatHistory] No history found for conversation');
-          setMessages([{
-            id: "1",
-            role: "assistant",
-            content: getInitialGreeting(selectedCoach),
-            timestamp: new Date(),
-            coachType: selectedCoach
-          }]);
+          // Empty conversation - welcome screen will show
+          setMessages([]);
         }
       } catch (error) {
         console.error('[ChatHistory] Error loading history:', error);
-        setMessages([{
-          id: "1",
-          role: "assistant",
-          content: getInitialGreeting(selectedCoach),
-          timestamp: new Date(),
-          coachType: selectedCoach
-        }]);
+        // On error, show welcome screen instead of fallback greeting
+        setMessages([]);
       } finally {
         setIsLoadingHistory(false);
       }
@@ -325,7 +293,7 @@ function ChatPageContent() {
       coachType: selectedCoach
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     const messageText = input;
     setInput("");
     setIsTyping(true);
@@ -435,8 +403,8 @@ function ChatPageContent() {
     }
   };
 
-  // Show welcome screen for new conversations
-  if (isNewConversation && messages.length === 1 && messages[0].role === 'assistant') {
+  // Show welcome screen for new conversations (empty messages array)
+  if (isNewConversation && messages.length === 0) {
     return (
       <SidebarInset>
         {/* Sidebar toggle - always visible */}
@@ -534,9 +502,9 @@ function ChatPageContent() {
           <div className="container mx-auto px-4 py-4">
             <div className="max-w-4xl mx-auto">
               {/* Active Conversation Indicator */}
-              {activeConversationId && (
+              {activeConversationId && messages.length > 0 && (
                 <div className="text-xs text-muted-foreground text-center mb-2">
-                  Active conversation • {messages.length - 1} {messages.length === 2 ? 'message' : 'messages'}
+                  Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
                 </div>
               )}
 

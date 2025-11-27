@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import { UpdateStrategyModal } from '@/components/modals/UpdateStrategyModal';
 import { SkipAssessmentModal } from '@/components/modals/SkipAssessmentModal';
 import { CATEGORY_HIERARCHY, isParentCategory } from '@/config/categoryHierarchy';
+import { expandSearchTerms } from '@/config/searchSynonyms';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
@@ -215,18 +216,57 @@ export default function RoadmapPage() {
     return summary;
   });
   
+  /**
+   * Multi-field search for tactics - "Google for Grouphomes"
+   * Searches name, categories, descriptions, tips, and instructions
+   * Includes synonym expansion for industry-specific terminology
+   * @param tactic The tactic to check
+   * @param query The search query (case-insensitive)
+   * @returns true if the tactic matches the search query or any synonyms
+   */
+  const tacticMatchesSearch = (tactic: TacticWithProgress, query: string): boolean => {
+    if (!query) return true;
+
+    // Expand query to include synonyms (e.g., "reentry" -> ["reentry", "returning_citizens", ...])
+    const searchTerms = expandSearchTerms(query);
+
+    // Check if ANY expanded term matches ANY field
+    return searchTerms.some(term => {
+      const q = term.toLowerCase();
+
+      // Primary fields (title/category matches)
+      const primaryMatch =
+        tactic.tactic_name.toLowerCase().includes(q) ||
+        tactic.category.toLowerCase().includes(q) ||
+        (tactic.parent_category?.toLowerCase().includes(q) ?? false);
+
+      if (primaryMatch) return true;
+
+      // Content fields (rich text - where "Marketing" appears in descriptions/instructions)
+      const contentMatch =
+        (tactic.why_it_matters?.toLowerCase().includes(q) ?? false) ||
+        ((tactic as any).instructions?.toLowerCase().includes(q) ?? false) ||
+        (tactic.lynettes_tip?.toLowerCase().includes(q) ?? false) ||
+        (tactic.official_lynette_quote?.toLowerCase().includes(q) ?? false);
+
+      // Also check target_populations field for population-specific searches
+      const populationMatch =
+        ((tactic as any).target_populations?.some((p: string) => p.toLowerCase().includes(q)) ?? false);
+
+      return contentMatch || populationMatch;
+    });
+  };
+
   // Filter tactics - Hybrid approach with hierarchical category support
   const filteredTactics = tacticsWithProgress.filter(tactic => {
-    // When category filter is active OR population filter is active, show tactics from ALL weeks (grouped later)
-    // When both filters are 'all'/empty, maintain week-specific view
-    const hasActiveFilter = categoryFilter !== 'all' || populationFilter.length > 0;
+    // When search, category filter, or population filter is active, show tactics from ALL weeks (grouped later)
+    // When all filters are 'all'/empty, maintain week-specific view
+    const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0;
     const matchesWeek = hasActiveFilter
-      ? true // Show all weeks when filtering by category or population
+      ? true // Show all weeks when filtering by search, category, or population
       : tactic.week_assignment === selectedWeek;
 
-    const matchesSearch = searchQuery === '' ||
-      tactic.tactic_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tactic.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = tacticMatchesSearch(tactic, searchQuery);
 
     // Enhanced category matching: support both parent categories and subcategories
     const matchesCategory = (() => {
@@ -274,8 +314,8 @@ export default function RoadmapPage() {
     return acc;
   }, {} as Record<string, TacticWithProgress[]>);
 
-  // Group by week (for cross-week filtered view when category or population filter is active)
-  const hasActiveFilter = categoryFilter !== 'all' || populationFilter.length > 0;
+  // Group by week (for cross-week filtered view when search, category, or population filter is active)
+  const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0;
   const tacticsByWeek = hasActiveFilter
     ? filteredTactics.reduce((acc, tactic) => {
         const week = tactic.week_assignment;
@@ -294,30 +334,10 @@ export default function RoadmapPage() {
     <SidebarLayout
       mode="roadmap"
       showHeader
-      headerTitle="Your Personalized Roadmap"
-      headerSubtitle={`${assessment?.readiness_level?.replace(/_/g, ' ').toUpperCase() || 'CUSTOM'} Path • Week ${selectedWeek} of ${recommendedWeeks}`}
+      headerTitle={`Week ${selectedWeek}: ${currentPhase?.name || 'Foundation Building'}`}
+      headerSubtitle={`${currentPhase?.icon || '🎯'} ${currentPhase?.description || 'Your personalized roadmap'}`}
     >
       <div className="min-h-screen bg-muted/30">
-        {/* Phase Header */}
-        <div className="bg-gradient-hero text-primary-foreground">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">Week {selectedWeek}: {currentPhase?.name || 'Foundation'}</h1>
-              
-              {currentPhase && (
-                <div className="flex items-center gap-2 mt-4">
-                  <span className="text-3xl">{currentPhase.icon}</span>
-                  <div>
-                    <h2 className="font-semibold">{currentPhase.name}</h2>
-                    <p className="text-sm text-primary-foreground/70">{currentPhase.description}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
       
       <div className="container mx-auto px-4 py-8">
 
@@ -515,7 +535,9 @@ export default function RoadmapPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
-                          {populationFilter.length > 0 && categoryFilter === 'all'
+                          {searchQuery
+                            ? `Search: "${searchQuery}"`
+                            : populationFilter.length > 0 && categoryFilter === 'all'
                             ? `${populationFilter.map(p => POPULATION_OPTIONS.find(o => o.value === p)?.label).join(' + ')} Tactics`
                             : populationFilter.length > 0
                             ? `${categoryFilter} + ${populationFilter.length} Population${populationFilter.length > 1 ? 's' : ''}`
@@ -529,6 +551,7 @@ export default function RoadmapPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
+                          setSearchQuery('');
                           setCategoryFilter('all');
                           setPopulationFilter([]);
                         }}

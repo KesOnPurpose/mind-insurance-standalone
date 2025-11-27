@@ -25,11 +25,13 @@ interface SidebarLayoutProps {
  * Detect sidebar mode based on current route
  */
 function getCurrentMode(pathname: string): SidebarMode {
+  if (pathname.startsWith('/resources')) return 'resources';
   if (pathname.startsWith('/chat')) return 'chat';
   if (pathname.startsWith('/roadmap')) return 'roadmap';
   if (pathname.startsWith('/dashboard')) return 'dashboard';
   if (pathname.startsWith('/mind-insurance')) return 'mind-insurance';
   if (pathname.startsWith('/model-week')) return 'model-week';
+  if (pathname.startsWith('/profile')) return 'profile';
   return 'default';
 }
 
@@ -93,7 +95,9 @@ export function SidebarLayout({
                 <SidebarTrigger className="h-10 w-10 bg-background shadow-lg border rounded-lg" />
               </div>
             )}
-            {children}
+            <div className="container mx-auto px-4 py-6 pt-16 md:pt-6 max-w-6xl">
+              {children}
+            </div>
           </main>
         </div>
       </SidebarInset>

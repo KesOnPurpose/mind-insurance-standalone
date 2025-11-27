@@ -1,40 +1,17 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Target,
-  Zap,
-  CheckCircle2,
-  ArrowRight,
-  Flame,
-  Trophy,
-  Clipboard,
-  Shield,
-  MessageSquare,
-  Clock,
-  Star,
-  Lock as LockIcon,
-  AlertCircle,
-  DollarSign,
-  Users,
-  Building,
-  FileText,
-  Briefcase,
-  Home
-} from "lucide-react";
+import { Shield, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/services/progressService";
-import { BusinessProfileSnapshot } from "@/components/dashboard/BusinessProfileSnapshot";
 import { usePersonalizedTactics } from "@/hooks/usePersonalizedTactics";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
-import { OnboardingProgressStepper } from "@/components/onboarding/OnboardingProgressStepper";
-import { PersonalizationBadge } from "@/components/PersonalizationBadge";
+import { SidebarLayout } from "@/components/layout/SidebarLayout";
+import { JourneyHeroSection } from "@/components/dashboard/JourneyHeroSection";
+import { NextActionCard } from "@/components/dashboard/NextActionCard";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
@@ -49,10 +26,6 @@ const DashboardPage = () => {
     tactics,
     nextTactic: dynamicNextTactic,
     isLoading: isTacticsLoading,
-    criticalPathTactics,
-    blockedTactics,
-    assessment,
-    totalTacticsCount
   } = usePersonalizedTactics();
 
   // Fetch user profile and onboarding data
@@ -92,11 +65,8 @@ const DashboardPage = () => {
     fetchProfile();
   }, [user?.id]);
 
-  const currentWeek = userProfile?.current_week || 1;
-  const totalWeeks = 12;
   const protectStreak = userProfile?.current_streak || 0;
   const totalPoints = userProfile?.total_points || 0;
-  const completedTactics = userProfile?.completed_tactics_count || 0;
 
   // Smart next tactic selection - prioritize in-progress, critical path, and unblocked tactics
   const getSmartNextTactic = () => {
@@ -153,69 +123,6 @@ const DashboardPage = () => {
     return 0;
   };
 
-  // Category icon mapping
-  const getCategoryIcon = (category: string) => {
-    const categoryLower = category.toLowerCase();
-    if (categoryLower.includes('business') || categoryLower.includes('planning')) return Briefcase;
-    if (categoryLower.includes('legal') || categoryLower.includes('compliance')) return FileText;
-    if (categoryLower.includes('financial') || categoryLower.includes('finance')) return DollarSign;
-    if (categoryLower.includes('property') || categoryLower.includes('location')) return Home;
-    if (categoryLower.includes('operations') || categoryLower.includes('staffing')) return Users;
-    if (categoryLower.includes('marketing')) return Target;
-    return Clipboard;
-  };
-
-  // Calculate real week progress from actual tactics data
-  const calculateWeekProgress = () => {
-    if (!tactics || tactics.length === 0) {
-      return [];
-    }
-
-    const completedIds = new Set(userProgress?.filter(p => p.status === 'completed').map(p => p.tactic_id) || []);
-
-    // Group tactics by category
-    const categoryMap = new Map<string, { completed: number; total: number }>();
-
-    tactics.forEach(tactic => {
-      const category = tactic.category || 'Other';
-      if (!categoryMap.has(category)) {
-        categoryMap.set(category, { completed: 0, total: 0 });
-      }
-      const cat = categoryMap.get(category)!;
-      cat.total++;
-      if (completedIds.has(tactic.tactic_id)) {
-        cat.completed++;
-      }
-    });
-
-    // Color mapping for categories
-    const colorMap: Record<string, string> = {
-      'Business Planning': 'bg-blue-500',
-      'Legal & Compliance': 'bg-purple-500',
-      'Financial': 'bg-green-500',
-      'Operations': 'bg-orange-500',
-      'Marketing': 'bg-pink-500',
-      'Property': 'bg-cyan-500',
-      'Staffing': 'bg-yellow-500',
-      'Licensure': 'bg-indigo-500'
-    };
-
-    // Convert to array and take top 4 categories
-    const categories = Array.from(categoryMap.entries())
-      .map(([name, data]) => ({
-        name,
-        completed: data.completed,
-        total: data.total,
-        color: colorMap[name] || 'bg-gray-500'
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 4);
-
-    return categories;
-  };
-
-  const weekCategories = calculateWeekProgress();
-
   // Real-time subscription for progress updates
   useEffect(() => {
     if (!user?.id) return;
@@ -243,12 +150,7 @@ const DashboardPage = () => {
   }, [queryClient, user?.id]);
 
   return (
-    <div className="space-y-6">
-      {/* Onboarding Progress Stepper - show only during assessment→welcome transition */}
-      {onboardingData && onboardingData.onboarding_step === 'assessment_complete' && (
-        <OnboardingProgressStepper currentStep={onboardingData.onboarding_step} />
-      )}
-
+    <SidebarLayout>
       {/* Welcome Modal - shows on first dashboard visit after assessment */}
       {onboardingData && user?.id && (
         <WelcomeModal
@@ -266,253 +168,67 @@ const DashboardPage = () => {
         />
       )}
 
-      {/* Hero: Your Next Move */}
-      <Card className="p-4 sm:p-6 md:p-8 bg-white shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wide">
-              WEEK {currentWeek} OF {totalWeeks}
-            </p>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">Your Next Move</h1>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1">
-              <Flame className="w-4 h-4 text-orange-500" />
-              {protectStreak} day streak
-            </span>
-            <span>{completedTactics}/{tactics.length || 403} tactics</span>
-            <span className="flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-primary" />
-              {totalPoints} pts
-            </span>
-          </div>
-        </div>
+      <div className="space-y-6">
+        {/* Journey Hero Section - Shows week position, phase, and primary CTAs */}
+        <JourneyHeroSection
+          protectStreak={protectStreak}
+          totalPoints={totalPoints}
+          userName={onboardingData?.business_name || userProfile?.full_name}
+        />
 
-        {/* Dynamic Next Tactic Card */}
-        {isTacticsLoading ? (
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
-            <div className="flex items-start gap-4">
-              <Skeleton className="w-12 h-12 rounded-xl" />
-              <div className="flex-1 space-y-3">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-7 w-3/4" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-10 w-40" />
+        {/* Next Action Card - Enhanced tactic recommendation */}
+        <NextActionCard
+          tactic={smartNextTactic?.tactic || null}
+          isInProgress={smartNextTactic?.isInProgress || false}
+          daysSinceStarted={smartNextTactic ? getDaysSinceStarted(smartNextTactic.tactic.tactic_id) : 0}
+          isLoading={isTacticsLoading}
+        />
+
+        {/* Nette AI Quick Access - Primary CTA */}
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base sm:text-lg">Need Help? Ask Nette</h3>
+                <p className="text-white/80 text-xs sm:text-sm">Your AI group home coach is ready to answer questions</p>
               </div>
             </div>
+            <Link to="/chat" className="sm:flex-shrink-0">
+              <Button className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
+                Chat with Nette
+              </Button>
+            </Link>
           </div>
-        ) : smartNextTactic ? (
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                {(() => {
-                  const IconComponent = getCategoryIcon(smartNextTactic.tactic.category || '');
-                  return <IconComponent className="w-6 h-6 text-white" />;
-                })()}
+        </Card>
+
+        {/* Mind Insurance - Secondary CTA */}
+        <Card className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <Shield className="w-4 h-4 text-white" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    {smartNextTactic.tactic.category}
-                  </Badge>
-                  {smartNextTactic.tactic.is_critical_path && (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                      <Star className="w-3 h-3 mr-1 fill-amber-400" />
-                      Critical Path
-                    </Badge>
-                  )}
-                  {smartNextTactic.isInProgress && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      <Clock className="w-3 h-3 mr-1" />
-                      In Progress
-                    </Badge>
-                  )}
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  {smartNextTactic.tactic.tactic_name}
-                </h2>
-                <p className="text-gray-600 text-sm mb-4">
-                  {smartNextTactic.tactic.why_it_matters ||
-                    `This tactic is part of your personalized ${smartNextTactic.tactic.category?.toLowerCase() || 'group home'} journey.`}
+              <div>
+                <p className="font-semibold text-foreground">Protect Your Mindset Today</p>
+                <p className="text-xs text-muted-foreground">
+                  {protectStreak === 0
+                    ? "You haven't started your PROTECT streak yet"
+                    : `${protectStreak} day streak - Keep it going!`}
                 </p>
-
-                {/* Urgency indicator for in-progress tactics */}
-                {smartNextTactic.isInProgress && (
-                  <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-600" />
-                      <span className="text-sm font-medium text-amber-800">
-                        {getDaysSinceStarted(smartNextTactic.tactic.tactic_id) === 0
-                          ? "Started today - Great momentum!"
-                          : getDaysSinceStarted(smartNextTactic.tactic.tactic_id) === 1
-                            ? "Started yesterday - Keep going!"
-                            : `Started ${getDaysSinceStarted(smartNextTactic.tactic.tactic_id)} days ago - Time to finish this!`}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4">
-                  <Link to={`/roadmap?tactic=${smartNextTactic.tactic.tactic_id}`}>
-                    <Button className="bg-primary hover:bg-primary/90">
-                      {smartNextTactic.isInProgress ? 'Continue This Tactic' : 'Start This Tactic'}
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
-                  {smartNextTactic.tactic.estimated_time && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {smartNextTactic.tactic.estimated_time}
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
+            <Link to="/mind-insurance">
+              <Button variant="link" className="text-purple-600 dark:text-purple-400 font-medium p-0 h-auto">
+                Start Practice →
+              </Button>
+            </Link>
           </div>
-        ) : (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">All Tactics Completed!</h2>
-                <p className="text-gray-600 text-sm mb-4">
-                  Congratulations! You've completed all your personalized tactics. You're ready to launch your group home business!
-                </p>
-                <Link to="/roadmap">
-                  <Button variant="outline">
-                    Review Your Roadmap
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Personalization Badge - Show progress through personalized roadmap */}
-        {assessment && totalTacticsCount > 0 && (
-          <div className="mt-6">
-            <PersonalizationBadge
-              totalTactics={343}
-              filteredTactics={totalTacticsCount}
-              completedTactics={completedTactics}
-              strategy={assessment.ownership_model}
-              populations={assessment.target_populations}
-              budget={assessment.capital_available}
-              immediatePriority={assessment.immediate_priority}
-              showProgress={true}
-            />
-          </div>
-        )}
-      </Card>
-
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Week Progress */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          <Card className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900">Week {currentWeek}: Foundation & Vision</h3>
-              <span className="text-sm text-muted-foreground">
-                {weekCategories.reduce((acc, c) => acc + c.completed, 0)}/
-                {weekCategories.reduce((acc, c) => acc + c.total, 0)} tactics
-              </span>
-            </div>
-
-            {/* Overall Week Progress */}
-            <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
-              <div
-                className="bg-primary h-3 rounded-full transition-all"
-                style={{
-                  width: `${(weekCategories.reduce((acc, c) => acc + c.completed, 0) / weekCategories.reduce((acc, c) => acc + c.total, 0)) * 100}%`
-                }}
-              />
-            </div>
-
-            {/* Category Breakdown */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
-              {weekCategories.map((category) => (
-                <div key={category.name} className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{category.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {category.completed}/{category.total}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`${category.color} h-2 rounded-full transition-all`}
-                      style={{ width: `${(category.completed / category.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-4 border-t">
-              <Link to="/roadmap">
-                <Button variant="link" className="text-primary p-0 h-auto font-medium">
-                  View Full Roadmap →
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          {/* Nette AI Quick Access */}
-          <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base sm:text-lg">Need Help? Ask Nette</h3>
-                  <p className="text-white/80 text-xs sm:text-sm">Your AI group home coach is ready to answer questions</p>
-                </div>
-              </div>
-              <Link to="/chat" className="sm:flex-shrink-0">
-                <Button className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
-                  Chat with Nette
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          {/* Cross-Product Link: Mind Insurance */}
-          <Card className="p-4 bg-purple-50 border border-purple-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Protect Your Mindset Today</p>
-                  <p className="text-xs text-gray-600">
-                    {protectStreak === 0
-                      ? "You haven't started your PROTECT streak yet"
-                      : `${protectStreak} day streak - Keep it going!`}
-                  </p>
-                </div>
-              </div>
-              <Link to="/mind-insurance">
-                <Button variant="link" className="text-purple-600 font-medium p-0 h-auto">
-                  Start Practice →
-                </Button>
-              </Link>
-            </div>
-          </Card>
-        </div>
-
-        {/* Right: Business Snapshot */}
-        <div className="space-y-6">
-          <BusinessProfileSnapshot />
-
-
-        </div>
+        </Card>
       </div>
-    </div>
+    </SidebarLayout>
   );
 };
 

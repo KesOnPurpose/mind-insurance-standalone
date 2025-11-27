@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,15 +19,14 @@ import {
   Loader2,
   CheckCircle,
   Save,
-  ArrowLeft,
   Lightbulb,
   Edit3
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
 interface ProfileData {
   // Strategy fields
@@ -190,63 +190,58 @@ export function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <SidebarLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </SidebarLayout>
     );
   }
 
   const currentCompleteness = calculateCompleteness(profileData);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Back to Dashboard
-              </Button>
-            </Link>
+    <SidebarLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+              <User className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+              My Profile
+            </h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+              Manage your business profile to get personalized recommendations
+            </p>
           </div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <User className="w-8 h-8 text-primary" />
-            My Profile
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your business profile to get personalized recommendations
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {editMode ? (
-            <>
-              <Button variant="outline" onClick={handleReset}>
-                Cancel
+          <div className="flex items-center gap-3">
+            {editMode ? (
+              <>
+                <Button variant="outline" size="sm" onClick={handleReset}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={!hasChanges || isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setEditMode(true)}>
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit Profile
               </Button>
-              <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setEditMode(true)}>
-              <Edit3 className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Profile Completeness Card */}
       <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
@@ -723,7 +718,8 @@ export function ProfilePage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }
 

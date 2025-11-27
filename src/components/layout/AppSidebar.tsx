@@ -1,4 +1,4 @@
-import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, User, MessageSquare } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, MessageSquare, User } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -18,9 +18,11 @@ import { RoadmapPanel } from './sidebar-panels/RoadmapPanel';
 import { DashboardPanel } from './sidebar-panels/DashboardPanel';
 import { MindInsurancePanel } from './sidebar-panels/MindInsurancePanel';
 import { ModelWeekPanel } from './sidebar-panels/ModelWeekPanel';
+import { ResourcesPanel } from './sidebar-panels/ResourcesPanel';
+import { ProfilePanel } from './sidebar-panels/ProfilePanel';
 import { DefaultPanel } from './sidebar-panels/DefaultPanel';
 
-export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'default';
+export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'profile' | 'default';
 
 interface AppSidebarProps {
   mode: SidebarMode;
@@ -39,6 +41,10 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
       return <MindInsurancePanel />;
     case 'model-week':
       return <ModelWeekPanel />;
+    case 'resources':
+      return <ResourcesPanel />;
+    case 'profile':
+      return <ProfilePanel />;
     case 'chat':
       // Chat mode uses ChatSidebar directly, not AppSidebar
       return null;
@@ -60,6 +66,10 @@ function getSectionLabel(mode: SidebarMode): string {
       return 'PROTECT Practice';
     case 'model-week':
       return 'This Week';
+    case 'resources':
+      return 'Knowledge Base';
+    case 'profile':
+      return 'Your Profile';
     default:
       return 'Overview';
   }
