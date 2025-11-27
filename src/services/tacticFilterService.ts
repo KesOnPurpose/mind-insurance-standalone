@@ -27,6 +27,8 @@ const POPULATION_MAPPING: Record<string, string[]> = {
   'mental-health': ['mental_health', 'disabled'],
   'at-risk-youth': ['ssi', 'mental_health'],
   'substance-abuse': ['mental_health', 'returning_citizens'],
+  'veterans': ['veterans', 'mental_health'],
+  'reentry': ['returning_citizens', 'mental_health'],
   'not-sure': ['ssi', 'elderly', 'disabled', 'mental_health', 'veterans', 'returning_citizens']
 };
 

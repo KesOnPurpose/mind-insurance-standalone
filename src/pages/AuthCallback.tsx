@@ -34,9 +34,9 @@ const AuthCallback = () => {
         return;
       }
 
-      // Assessment completed - redirect to dashboard
-      console.log('AuthCallback: Assessment completed - redirecting to /dashboard');
-      window.location.href = '/dashboard';
+      // Assessment completed - redirect to chat (home screen)
+      console.log('AuthCallback: Assessment completed - redirecting to /chat');
+      window.location.href = '/chat';
     } catch (err) {
       console.error('Smart redirect error, defaulting to assessment:', err);
       // On error, default to assessment (safer - ensures onboarding)

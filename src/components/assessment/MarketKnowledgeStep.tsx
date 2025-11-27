@@ -114,10 +114,30 @@ export const MarketKnowledgeStep = ({ answers, updateAnswer, toggleArrayItem }: 
           <div className="flex items-center space-x-2">
             <Checkbox
               id="pop6"
+              checked={answers.targetPopulations?.includes('veterans')}
+              onCheckedChange={() => toggleArrayItem('targetPopulations', 'veterans')}
+            />
+            <Label htmlFor="pop6" className="font-normal cursor-pointer">
+              Veterans
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="pop7"
+              checked={answers.targetPopulations?.includes('reentry')}
+              onCheckedChange={() => toggleArrayItem('targetPopulations', 'reentry')}
+            />
+            <Label htmlFor="pop7" className="font-normal cursor-pointer">
+              Reentry/Returning citizens
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="pop8"
               checked={answers.targetPopulations?.includes('not-sure')}
               onCheckedChange={() => toggleArrayItem('targetPopulations', 'not-sure')}
             />
-            <Label htmlFor="pop6" className="font-normal cursor-pointer">
+            <Label htmlFor="pop8" className="font-normal cursor-pointer">
               Not sure yet
             </Label>
           </div>

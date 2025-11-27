@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { ProductProvider } from "@/contexts/ProductContext";
+import { ConversationProvider } from "@/contexts/ConversationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AssessmentGuard } from "@/components/AssessmentGuard";
@@ -57,6 +58,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ProductProvider>
+              <ConversationProvider>
               <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -81,7 +83,7 @@ const App = () => (
               <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AssessmentGuard><AppLayout><EnergyAudit /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AssessmentGuard><AppLayout><CelebrateWins /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AssessmentGuard><AppLayout><TomorrowSetup /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/chat" element={<ProtectedRoute><AssessmentGuard><AppLayout><ChatPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><AssessmentGuard><ChatPage /></AssessmentGuard></ProtectedRoute>} />
               <Route path="/model-week" element={<ProtectedRoute><AssessmentGuard><AppLayout><ModelWeekPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/roadmap" element={<ProtectedRoute><AssessmentGuard><AppLayout><RoadmapPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
@@ -101,6 +103,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+              </ConversationProvider>
           </ProductProvider>
         </BrowserRouter>
       </TooltipProvider>

@@ -158,8 +158,8 @@ const AssessmentPage = () => {
         await submitAssessmentAsync(answers as AssessmentAnswers);
         // Clear localStorage after successful submission
         clearAssessmentProgress(user?.id);
-        // Navigation happens after submission completes successfully
-        navigate('/dashboard');
+        // Navigate to chat page for personalized onboarding experience
+        navigate('/chat');
       } catch (error) {
         console.error('Assessment submission failed:', error);
         // Error is already handled by useAssessment hook with toast

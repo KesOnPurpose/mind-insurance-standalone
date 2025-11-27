@@ -173,6 +173,45 @@ export async function fetchRecentConversation(
   }
 }
 
+/**
+ * Fetch chat history for a specific conversation by conversation_id
+ */
+export async function fetchConversationById(
+  userId: string,
+  conversationId: string,
+  limit: number = 100
+): Promise<ChatHistoryMessage[]> {
+  try {
+    // Session IDs are formatted as: "{conversation_id}:{agent}"
+    // We match any agent suffix for this conversation
+    const sessionPattern = `${conversationId}:%`;
+
+    const { data, error } = await supabase
+      .from('n8n_chat_histories')
+      .select('*')
+      .like('session_id', sessionPattern)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      console.error('[ChatHistory] Error fetching conversation by ID:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.log('[ChatHistory] No messages found for conversation:', conversationId);
+      return [];
+    }
+
+    console.log('[ChatHistory] Found', data.length, 'messages for conversation:', conversationId);
+    return transformMessages(data.reverse()); // reverse because we want chronological for transform
+
+  } catch (err) {
+    console.error('[ChatHistory] Unexpected error:', err);
+    return [];
+  }
+}
+
 function transformMessages(data: RawChatHistory[]): ChatHistoryMessage[] {
   // Reverse to get chronological order
   const chronological = [...data].reverse();

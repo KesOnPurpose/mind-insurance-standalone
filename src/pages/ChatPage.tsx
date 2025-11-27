@@ -1,17 +1,27 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Send, Loader2, Menu } from "lucide-react";
 import CoachSelector from "@/components/chat/CoachSelector";
 import ChatMessage from "@/components/chat/ChatMessage";
 import HandoffSuggestion from "@/components/chat/HandoffSuggestion";
+import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { CoachType, COACHES } from "@/types/coach";
 import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProduct, ProductType } from "@/contexts/ProductContext";
+import { useConversationContext } from "@/contexts/ConversationContext";
+import { useConversations } from "@/hooks/useConversations";
 import { useToast } from "@/hooks/use-toast";
-import { fetchRecentConversation } from "@/services/chatHistoryService";
+import { fetchRecentConversation, fetchConversationById } from "@/services/chatHistoryService";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 interface Message {
   id: string;
@@ -41,10 +51,23 @@ const getInitialGreeting = (coach: CoachType): string => {
   return greetings[coach];
 };
 
-const ChatPage = () => {
+// Inner component that uses sidebar context
+function ChatPageContent() {
   const { currentProduct } = useProduct();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  // Conversation context for sidebar integration
+  const {
+    activeConversationId,
+    isNewConversation,
+    setActiveConversation,
+    selectConversation,
+  } = useConversationContext();
+
+  // Conversations hook for creating new conversations
+  const { addConversation, updateConversation } = useConversations();
 
   // Initialize coach based on current product context
   const defaultCoach = getDefaultCoachForProduct(currentProduct);
@@ -61,87 +84,105 @@ const ChatPage = () => {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load conversation ID from localStorage on mount
+  // Fetch user profile for personalized greeting
   useEffect(() => {
-    const storedConversationId = localStorage.getItem('mio_conversation_id');
-    if (storedConversationId) {
-      setConversationId(storedConversationId);
-      console.log('[Conversation] Restored conversation:', storedConversationId);
-    }
-  }, []);
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
 
-  // Load chat history on mount and when coach changes
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('[UserProfile] Error fetching profile:', error);
+          return;
+        }
+
+        setUserProfile(data);
+        console.log('[UserProfile] Loaded:', data?.full_name);
+      } catch (error) {
+        console.error('[UserProfile] Error:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
+
+  // Load conversation when activeConversationId changes
   useEffect(() => {
-    const loadChatHistory = async () => {
-      if (!user?.id) {
+    const loadConversation = async () => {
+      if (!user?.id) return;
+
+      // If it's a new conversation, reset to greeting
+      if (isNewConversation || !activeConversationId) {
+        setMessages([{
+          id: "1",
+          role: "assistant",
+          content: getInitialGreeting(selectedCoach),
+          timestamp: new Date(),
+          coachType: selectedCoach
+        }]);
         setIsLoadingHistory(false);
         return;
       }
 
+      // Load existing conversation
       setIsLoadingHistory(true);
-      console.log('[ChatHistory] Loading history for', selectedCoach);
+      console.log('[ChatHistory] Loading conversation:', activeConversationId);
 
       try {
-        const history = await fetchRecentConversation(user.id, selectedCoach, 30);
+        const history = await fetchConversationById(user.id, activeConversationId);
 
         if (history.length > 0) {
           console.log('[ChatHistory] Loaded', history.length, 'messages');
-          // Add the initial greeting at the start, then the history
+          // Determine coach from messages
+          const lastCoach = history[history.length - 1]?.coachType || selectedCoach;
+          setSelectedCoach(lastCoach);
+
           setMessages([
             {
               id: "1",
               role: "assistant",
-              content: getInitialGreeting(selectedCoach),
-              timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-              coachType: selectedCoach
+              content: getInitialGreeting(lastCoach),
+              timestamp: new Date(Date.now() - 1000 * 60 * 60),
+              coachType: lastCoach
             },
             ...history
           ]);
         } else {
-          console.log('[ChatHistory] No history found, showing greeting');
-          // No history, just show the greeting
-          setMessages([
-            {
-              id: "1",
-              role: "assistant",
-              content: getInitialGreeting(selectedCoach),
-              timestamp: new Date(),
-              coachType: selectedCoach
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('[ChatHistory] Error loading history:', error);
-        // On error, just show the greeting
-        setMessages([
-          {
+          console.log('[ChatHistory] No history found for conversation');
+          setMessages([{
             id: "1",
             role: "assistant",
             content: getInitialGreeting(selectedCoach),
             timestamp: new Date(),
             coachType: selectedCoach
-          }
-        ]);
+          }]);
+        }
+      } catch (error) {
+        console.error('[ChatHistory] Error loading history:', error);
+        setMessages([{
+          id: "1",
+          role: "assistant",
+          content: getInitialGreeting(selectedCoach),
+          timestamp: new Date(),
+          coachType: selectedCoach
+        }]);
       } finally {
         setIsLoadingHistory(false);
       }
     };
 
-    loadChatHistory();
-  }, [user?.id, selectedCoach]);
-
-  // Save conversation ID to localStorage when it changes
-  useEffect(() => {
-    if (conversationId) {
-      localStorage.setItem('mio_conversation_id', conversationId);
-      console.log('[Conversation] Saved conversation:', conversationId);
-    }
-  }, [conversationId]);
+    loadConversation();
+  }, [user?.id, activeConversationId, isNewConversation]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -154,13 +195,6 @@ const ChatPage = () => {
   const handleCoachChange = (coach: CoachType, isHandoff: boolean = false) => {
     const previousCoach = selectedCoach;
     setSelectedCoach(coach);
-
-    // Reset conversation when switching coaches
-    if (!isHandoff) {
-      setConversationId(null);
-      localStorage.removeItem('mio_conversation_id');
-      console.log('[Conversation] Reset - coach changed');
-    }
 
     // Build warm introduction with context
     let greetingContent = `Hi! I'm ${COACHES[coach].name}, your ${COACHES[coach].title}.`;
@@ -193,14 +227,93 @@ const ChatPage = () => {
     setHandoffSuggestion(null);
   };
 
+  // Handle message from welcome screen - triggers transition to full chat
+  const handleWelcomeMessage = async (messageText: string) => {
+    if (!messageText.trim() || !user) return;
+
+    // Generate conversation ID
+    const newConversationId = crypto.randomUUID();
+
+    // Create conversation metadata for sidebar
+    await addConversation(newConversationId, messageText, 'nette');
+
+    // Set as active conversation
+    setActiveConversation(newConversationId);
+
+    console.log('[Conversation] Started new conversation from welcome:', newConversationId);
+
+    // Create user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: messageText,
+      timestamp: new Date(),
+      coachType: 'nette'
+    };
+
+    // Add user message to existing greeting
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+
+    try {
+      const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat';
+
+      console.log('[Chat] Welcome message to n8n:', messageText);
+
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          message: messageText,
+          agent: 'nette',
+          conversation_id: newConversationId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get response: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('[Chat] Welcome response:', data);
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.response || "I'm here to help you with your group home journey. Let me know what you'd like to explore.",
+        timestamp: new Date(),
+        coachType: 'nette'
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Update conversation metadata with AI response preview
+      await updateConversation(newConversationId, aiMessage.content, 'nette');
+
+      setIsTyping(false);
+    } catch (error) {
+      console.error('Error sending welcome message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+      setIsTyping(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || !user) return;
 
-    // Generate conversation ID on first message
-    let currentConversationId = conversationId;
+    // Generate conversation ID on first message if not set
+    let currentConversationId = activeConversationId;
     if (!currentConversationId) {
       currentConversationId = crypto.randomUUID();
-      setConversationId(currentConversationId);
+      await addConversation(currentConversationId, input, selectedCoach);
+      setActiveConversation(currentConversationId);
       console.log('[Conversation] Started new conversation:', currentConversationId);
     }
 
@@ -289,6 +402,9 @@ const ChatPage = () => {
 
       setMessages((prev) => [...prev, aiMessage]);
 
+      // Update conversation metadata
+      await updateConversation(currentConversationId, aiMessage.content, responseAgent);
+
       // Handle handoff detection from n8n
       if (data.handoff_detected && data.handoff_message) {
         console.log('[Chat] Handoff detected:', data.agent);
@@ -319,144 +435,148 @@ const ChatPage = () => {
     }
   };
 
+  // Show welcome screen for new conversations
+  if (isNewConversation && messages.length === 1 && messages[0].role === 'assistant') {
+    return (
+      <SidebarInset>
+        {/* Mobile menu trigger */}
+        <div className="md:hidden fixed top-4 left-4 z-50">
+          <SidebarTrigger className="h-10 w-10 bg-background shadow-lg border" />
+        </div>
+        <ChatWelcomeScreen
+          userName={userProfile?.full_name ?? null}
+          onSendMessage={handleWelcomeMessage}
+          isLoading={isTyping}
+        />
+      </SidebarInset>
+    );
+  }
+
+  // Full chat interface
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
-      {/* Header */}
-      <div 
-        className="text-white transition-all"
-        style={{ background: COACHES[selectedCoach].gradient }}
-      >
-        <div className="container mx-auto px-4 py-6">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back to Dashboard</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
-              {COACHES[selectedCoach].avatar}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Chat with {COACHES[selectedCoach].name}</h1>
-              <p className="text-white/90 text-sm">{COACHES[selectedCoach].title}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <SidebarInset>
+      <div className="min-h-screen bg-muted/30 flex flex-col">
+        {/* Header */}
+        <div
+          className="text-white transition-all"
+          style={{ background: COACHES[selectedCoach].gradient }}
+        >
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center gap-3">
+              {/* Mobile menu trigger */}
+              <SidebarTrigger className="md:hidden h-8 w-8 text-white hover:bg-white/20" />
 
-      {/* Content */}
-      <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
-          {/* Coach Selector */}
-          <CoachSelector 
-            selectedCoach={selectedCoach} 
-            onSelectCoach={handleCoachChange}
-          />
-          
-          {/* Messages */}
-          <div className="space-y-6 mb-6">
-            {isLoadingHistory ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Loading conversation...</span>
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
+                {COACHES[selectedCoach].avatar}
               </div>
-            ) : (
-              messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  role={message.role}
-                  content={message.content}
-                  timestamp={message.timestamp}
-                  coachType={message.coachType}
-                />
-              ))
-            )}
-
-            {handoffSuggestion && (
-              <HandoffSuggestion
-                suggestedAgent={handoffSuggestion.suggestedAgent}
-                reason={handoffSuggestion.reason}
-                confidence={handoffSuggestion.confidence}
-                method={handoffSuggestion.method}
-                onAccept={handleAcceptHandoff}
-                onDismiss={handleDismissHandoff}
-              />
-            )}
-
-            {isTyping && (
-              <ChatMessage
-                role="assistant"
-                content="..."
-                timestamp={new Date()}
-                coachType={selectedCoach}
-              />
-            )}
-            <div ref={messagesEndRef} />
+              <div>
+                <h1 className="text-2xl font-bold">Chat with {COACHES[selectedCoach].name}</h1>
+                <p className="text-white/90 text-sm">{COACHES[selectedCoach].title}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Input */}
-      <div className="border-t bg-background sticky bottom-0">
-        <div className="container mx-auto px-4 py-4">
+        {/* Content */}
+        <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            {/* New Conversation Button */}
-            {conversationId && messages.length > 1 && (
-              <div className="flex justify-center mb-4">
+            {/* Coach Selector */}
+            <CoachSelector
+              selectedCoach={selectedCoach}
+              onSelectCoach={handleCoachChange}
+            />
+
+            {/* Messages */}
+            <div className="space-y-6 mb-6">
+              {isLoadingHistory ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Loading conversation...</span>
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    role={message.role}
+                    content={message.content}
+                    timestamp={message.timestamp}
+                    coachType={message.coachType}
+                  />
+                ))
+              )}
+
+              {handoffSuggestion && (
+                <HandoffSuggestion
+                  suggestedAgent={handoffSuggestion.suggestedAgent}
+                  reason={handoffSuggestion.reason}
+                  confidence={handoffSuggestion.confidence}
+                  method={handoffSuggestion.method}
+                  onAccept={handleAcceptHandoff}
+                  onDismiss={handleDismissHandoff}
+                />
+              )}
+
+              {isTyping && (
+                <ChatMessage
+                  role="assistant"
+                  content="..."
+                  timestamp={new Date()}
+                  coachType={selectedCoach}
+                />
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+        </div>
+
+        {/* Input */}
+        <div className="border-t bg-background sticky bottom-0">
+          <div className="container mx-auto px-4 py-4">
+            <div className="max-w-4xl mx-auto">
+              {/* Active Conversation Indicator */}
+              {activeConversationId && (
+                <div className="text-xs text-muted-foreground text-center mb-2">
+                  Active conversation • {messages.length - 1} {messages.length === 2 ? 'message' : 'messages'}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                  placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
+                  className="flex-1"
+                  disabled={isTyping || isLoadingHistory}
+                />
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setConversationId(null);
-                    localStorage.removeItem('mio_conversation_id');
-                    setMessages([{
-                      id: "1",
-                      role: "assistant",
-                      content: getInitialGreeting(selectedCoach),
-                      timestamp: new Date(),
-                      coachType: selectedCoach
-                    }]);
-                    console.log('[Conversation] Reset - starting fresh');
-                  }}
-                  className="text-xs"
+                  onClick={handleSend}
+                  size="icon"
+                  disabled={isTyping || isLoadingHistory || !input.trim()}
+                  style={{ background: COACHES[selectedCoach].gradient }}
+                  className="text-white hover:opacity-90"
                 >
-                  Start New Conversation
+                  <Send className="w-4 h-4" />
                 </Button>
               </div>
-            )}
-
-            {/* Active Conversation Indicator */}
-            {conversationId && (
-              <div className="text-xs text-muted-foreground text-center mb-2">
-                Active conversation • {messages.length - 1} {messages.length === 2 ? 'message' : 'messages'}
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                className="flex-1"
-                disabled={isTyping || isLoadingHistory}
-              />
-              <Button
-                onClick={handleSend}
-                size="icon"
-                disabled={isTyping || isLoadingHistory || !input.trim()}
-                style={{ background: COACHES[selectedCoach].gradient }}
-                className="text-white hover:opacity-90"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </SidebarInset>
+  );
+}
+
+// Main ChatPage component with providers
+const ChatPage = () => {
+  return (
+    <SidebarProvider defaultOpen={false}>
+      <ChatSidebar />
+      <ChatPageContent />
+    </SidebarProvider>
   );
 };
 

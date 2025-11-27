@@ -3,7 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+// Collapsible imports kept for potential future use with Training Materials
+// import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   CheckCircle,
   Circle,
@@ -21,13 +22,13 @@ import {
   ListChecks,
   ChevronDown,
   ChevronUp,
-  FileText,
   Save
 } from 'lucide-react';
 import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
 import { TacticCompletionForm } from './TacticCompletionForm';
-import { TacticResourcePanel } from './TacticResourcePanel';
+// TacticResourcePanel kept for potential future use
+// import { TacticResourcePanel } from './TacticResourcePanel';
 import { BusinessProfile } from '@/types/assessment';
 import { formatCostRange } from '@/services/tacticFilterService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -48,13 +49,12 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
-  const [showResources, setShowResources] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
 
-  // Fetch resource counts
-  const { documents } = useTacticDocuments(tactic.tactic_id);
-  const { knowledge } = useTacticKnowledge(tactic.tactic_id);
-  const totalResources = documents.length + knowledge.length;
+  // Fetch resource data (hooks kept for potential future use)
+  const { documents: _documents } = useTacticDocuments(tactic.tactic_id);
+  const { knowledge: _knowledge } = useTacticKnowledge(tactic.tactic_id);
+  // const totalResources = _documents.length + _knowledge.length;
 
   // Track if notes have changed from original
   const notesChanged = notes !== (tactic.notes || '');
@@ -135,12 +135,6 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {tactic.estimated_time}
-              </span>
-            )}
-            {totalResources > 0 && (
-              <span className="flex items-center gap-1 text-blue-600">
-                <FileText className="w-3 h-3" />
-                {totalResources} Training Material{totalResources !== 1 ? 's' : ''}
               </span>
             )}
             {/* Show enriched cost range if available, fallback to legacy */}
@@ -262,39 +256,6 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
                   </ol>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Training Materials Section - COLLAPSIBLE */}
-          {totalResources > 0 && (
-            <div className="mb-3">
-              <Collapsible open={showResources} onOpenChange={setShowResources}>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-between text-left h-auto py-2 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200"
-                  >
-                    <span className="flex items-center gap-2 text-blue-700">
-                      <FileText className="w-4 h-4" />
-                      <span className="font-semibold text-xs">
-                        Training Materials ({totalResources} resource{totalResources !== 1 ? 's' : ''})
-                      </span>
-                    </span>
-                    {showResources ? (
-                      <ChevronUp className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-blue-600" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-
-                <CollapsibleContent>
-                  <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <TacticResourcePanel tacticId={tactic.tactic_id} />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
             </div>
           )}
 

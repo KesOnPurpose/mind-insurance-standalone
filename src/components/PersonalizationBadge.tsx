@@ -16,7 +16,9 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
-  User
+  User,
+  Shield,
+  RefreshCw
 } from 'lucide-react';
 
 interface PersonalizationBadgeProps {
@@ -47,10 +49,14 @@ const getStrategyIcon = (strategy?: string) => {
 
 // Population icon mapping
 const getPopulationIcon = (population: string) => {
-  if (population.toLowerCase().includes('senior')) return <Users className="w-4 h-4" />;
-  if (population.toLowerCase().includes('mental')) return <Brain className="w-4 h-4" />;
-  if (population.toLowerCase().includes('child')) return <Baby className="w-4 h-4" />;
-  if (population.toLowerCase().includes('disability')) return <Heart className="w-4 h-4" />;
+  const lowerPop = population.toLowerCase();
+  if (lowerPop.includes('senior')) return <Users className="w-4 h-4" />;
+  if (lowerPop.includes('mental')) return <Brain className="w-4 h-4" />;
+  if (lowerPop.includes('child') || lowerPop.includes('youth')) return <Baby className="w-4 h-4" />;
+  if (lowerPop.includes('disability') || lowerPop.includes('developmental')) return <Heart className="w-4 h-4" />;
+  if (lowerPop.includes('veteran')) return <Shield className="w-4 h-4" />;
+  if (lowerPop.includes('reentry') || lowerPop.includes('returning')) return <RefreshCw className="w-4 h-4" />;
+  if (lowerPop.includes('substance')) return <Brain className="w-4 h-4" />;
   return <User className="w-4 h-4" />;
 };
 
