@@ -18,17 +18,19 @@ export interface PasswordRequirements {
   requireSpecialChars: boolean;
 }
 
-// Default password requirements for enterprise security
+// Default password requirements - relaxed for user convenience
+// Strength meter shows recommendations, but only minimum length is required
 export const DEFAULT_PASSWORD_REQUIREMENTS: PasswordRequirements = {
-  minLength: 8,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSpecialChars: true,
+  minLength: 6, // Supabase minimum is 6
+  requireUppercase: false, // Recommended but not required
+  requireLowercase: false, // Recommended but not required
+  requireNumbers: false, // Recommended but not required
+  requireSpecialChars: false, // Recommended but not required
 };
 
 /**
  * Validates password against requirements and returns strength assessment
+ * Note: isValid only checks minimum length - strength is informational only
  */
 export const validatePassword = (
   password: string,
@@ -37,9 +39,10 @@ export const validatePassword = (
   const feedback: string[] = [];
   let score = 0;
 
-  // Check minimum length
-  if (password.length < requirements.minLength) {
-    feedback.push(`Password must be at least ${requirements.minLength} characters long`);
+  // Check minimum length - this is the ONLY hard requirement
+  const meetsMinLength = password.length >= requirements.minLength;
+  if (!meetsMinLength) {
+    feedback.push(`Password must be at least ${requirements.minLength} characters`);
   } else {
     score++;
     // Bonus points for extra length
@@ -47,35 +50,28 @@ export const validatePassword = (
     if (password.length >= 16) score++;
   }
 
+  // These are RECOMMENDATIONS, not requirements
   // Check for uppercase letters
-  if (requirements.requireUppercase && !/[A-Z]/.test(password)) {
-    feedback.push('Password must contain at least one uppercase letter');
-  } else if (/[A-Z]/.test(password)) {
+  if (/[A-Z]/.test(password)) {
     score++;
   }
 
   // Check for lowercase letters
-  if (requirements.requireLowercase && !/[a-z]/.test(password)) {
-    feedback.push('Password must contain at least one lowercase letter');
-  } else if (/[a-z]/.test(password)) {
+  if (/[a-z]/.test(password)) {
     score++;
   }
 
   // Check for numbers
-  if (requirements.requireNumbers && !/\d/.test(password)) {
-    feedback.push('Password must contain at least one number');
-  } else if (/\d/.test(password)) {
+  if (/\d/.test(password)) {
     score++;
   }
 
   // Check for special characters
-  if (requirements.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    feedback.push('Password must contain at least one special character');
-  } else if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     score++;
   }
 
-  // Check for common patterns (bonus deduction)
+  // Check for common patterns (warning only, doesn't block)
   if (/(.)\1{2,}/.test(password)) {
     feedback.push('Avoid repeating characters');
     score = Math.max(0, score - 1);
@@ -111,8 +107,9 @@ export const validatePassword = (
       strength = 'weak';
   }
 
-  // Password is valid only if all requirements are met
-  const isValid = feedback.length === 0 && password.length >= requirements.minLength;
+  // Password is valid if it meets ONLY the minimum length requirement
+  // Users can sign up with weak passwords - we just show them the strength
+  const isValid = meetsMinLength;
 
   return {
     score: normalizedScore,
