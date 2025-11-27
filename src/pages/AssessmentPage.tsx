@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssessmentAnswers } from "@/types/assessment";
-import { ChevronLeft, ChevronRight, Loader2, Home, Search, FileText, Rocket, BookOpen, TrendingUp, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Home, Search, FileText, Rocket, BookOpen, TrendingUp, AlertCircle, LogOut } from "lucide-react";
 import { useAssessment } from "@/hooks/useAssessment";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -32,7 +32,7 @@ import {
 const AssessmentPage = () => {
   const navigate = useNavigate();
   const { submitAssessmentAsync, isSubmitting } = useAssessment();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<AssessmentAnswers>>({
     targetPopulations: [],
@@ -1109,6 +1109,27 @@ const AssessmentPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+      {/* Header with Logout Button */}
+      <header className="bg-white border-b shadow-sm sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-3 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-lg">Grouphomes4newbies</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-foreground"
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* Resume Progress Dialog */}
       <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
         <AlertDialogContent>
