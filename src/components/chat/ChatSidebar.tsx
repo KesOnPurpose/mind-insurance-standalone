@@ -1,4 +1,4 @@
-import { Plus, Settings, LogOut, Home } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -99,20 +99,73 @@ export function ChatSidebar() {
 
       <SidebarSeparator />
 
-      {/* Footer */}
+      {/* Footer - Navigation & Account */}
       <SidebarFooter className="p-2">
+        {/* Navigation Section */}
+        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+          Navigation
+        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Roadmap">
+              <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
+                <Map className="h-4 w-4" />
+                <span>Roadmap</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Model Week">
+              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
+                <Calendar className="h-4 w-4" />
+                <span>Model Week</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Mind Insurance">
+              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
+                <Shield className="h-4 w-4" />
+                <span>Mind Insurance</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Resources">
+              <Link to="/resources" onClick={() => isMobile && setOpenMobile(false)}>
+                <BookOpen className="h-4 w-4" />
+                <span>Resources</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <SidebarSeparator className="my-2" />
+
+        {/* Account Section */}
+        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+          Account
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Dashboard">
-              <Link to="/dashboard">
+              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Profile">
+              <Link to="/profile" onClick={() => isMobile && setOpenMobile(false)}>
+                <User className="h-4 w-4" />
+                <span>Profile</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link to="/settings">
+              <Link to="/settings" onClick={() => isMobile && setOpenMobile(false)}>
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </Link>

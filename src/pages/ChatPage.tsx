@@ -439,8 +439,8 @@ function ChatPageContent() {
   if (isNewConversation && messages.length === 1 && messages[0].role === 'assistant') {
     return (
       <SidebarInset>
-        {/* Mobile menu trigger */}
-        <div className="md:hidden fixed top-4 left-4 z-50">
+        {/* Sidebar toggle - always visible */}
+        <div className="fixed top-4 left-4 z-50">
           <SidebarTrigger className="h-10 w-10 bg-background shadow-lg border" />
         </div>
         <ChatWelcomeScreen
@@ -463,8 +463,8 @@ function ChatPageContent() {
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3">
-              {/* Mobile menu trigger */}
-              <SidebarTrigger className="md:hidden h-8 w-8 text-white hover:bg-white/20" />
+              {/* Sidebar toggle */}
+              <SidebarTrigger className="h-8 w-8 text-white hover:bg-white/20" />
 
               <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
                 {COACHES[selectedCoach].avatar}
@@ -573,7 +573,7 @@ function ChatPageContent() {
 // Main ChatPage component with providers
 const ChatPage = () => {
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <ChatSidebar />
       <ChatPageContent />
     </SidebarProvider>
