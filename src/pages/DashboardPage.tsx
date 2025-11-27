@@ -16,7 +16,7 @@ import {
   MessageSquare,
   Clock,
   Star,
-  Lock,
+  Lock as LockIcon,
   AlertCircle,
   DollarSign,
   Users,

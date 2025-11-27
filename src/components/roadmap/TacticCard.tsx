@@ -15,7 +15,7 @@ import {
   Lightbulb,
   AlertTriangle,
   Star,
-  Lock,
+  Lock as LockIcon,
   Unlock,
   Quote,
   Link2,
@@ -93,7 +93,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Lock className="w-4 h-4 text-amber-500" />
+                  <LockIcon className="w-4 h-4 text-amber-500" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">Complete first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}</p>
@@ -282,7 +282,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
                             disabled
                             className="flex items-center gap-1 opacity-50"
                           >
-                            <Lock className="w-3 h-3" />
+                            <LockIcon className="w-3 h-3" />
                             Locked
                           </Button>
                         </TooltipTrigger>
@@ -374,7 +374,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
           {!canStart && blockingPrereqs.length > 0 && (
             <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <div className="flex items-start gap-2">
-                <Lock className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <LockIcon className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-xs font-semibold text-amber-700 mb-1">
                     Complete these tactics first:

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
@@ -81,8 +80,9 @@ export function ChatSidebar() {
 
       <SidebarSeparator />
 
-      {/* Conversation History */}
+      {/* Scrollable Content - Conversations, Navigation & Account */}
       <SidebarContent className="px-2">
+        {/* Conversation History */}
         <div className="text-xs font-medium text-muted-foreground px-2 py-2">
           Recent Conversations
         </div>
@@ -95,12 +95,9 @@ export function ChatSidebar() {
           onRenameConversation={renameConversation}
           onArchiveConversation={removeConversation}
         />
-      </SidebarContent>
 
-      <SidebarSeparator />
+        <SidebarSeparator className="my-3" />
 
-      {/* Footer - Navigation & Account */}
-      <SidebarFooter className="p-2">
         {/* Navigation Section */}
         <div className="text-xs font-medium text-muted-foreground px-2 py-2">
           Navigation
@@ -140,7 +137,7 @@ export function ChatSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <SidebarSeparator className="my-2" />
+        <SidebarSeparator className="my-3" />
 
         {/* Account Section */}
         <div className="text-xs font-medium text-muted-foreground px-2 py-2">
@@ -181,13 +178,13 @@ export function ChatSidebar() {
 
         {/* User info */}
         {user && (
-          <div className="mt-2 px-2 py-2 rounded-md bg-sidebar-accent/30">
+          <div className="mt-3 px-2 py-2 rounded-md bg-sidebar-accent/50">
             <p className="text-xs text-muted-foreground truncate">
               {user.email}
             </p>
           </div>
         )}
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   );
 }

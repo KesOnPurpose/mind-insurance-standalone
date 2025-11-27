@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Clock, Lock } from 'lucide-react';
+import { CheckCircle, Clock, Lock as LockIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PracticeType } from '@/types/practices';
 import { PRACTICE_CONFIG } from '@/types/practices';
@@ -99,7 +99,7 @@ export const PracticeCard = ({
             ) : isAvailable ? (
               <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-label="Available now" />
             ) : (
-              <Lock className="w-5 h-5 text-gray-400" aria-label="Locked" />
+              <LockIcon className="w-5 h-5 text-gray-400" aria-label="Locked" />
             )}
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Circle, Lock } from 'lucide-react';
+import { CheckCircle, Circle, Lock as LockIcon } from 'lucide-react';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { JourneyPhase } from '@/types/tactic';
 import { cn } from '@/lib/utils';
@@ -60,7 +60,7 @@ export function JourneyMap({ currentPhase, phaseProgress, completedMilestones = 
                       <CheckCircle className="absolute -top-2 -right-2 w-8 h-8 text-success bg-background rounded-full" />
                     )}
                     {status === 'locked' && (
-                      <Lock className="absolute -top-2 -right-2 w-6 h-6 text-muted-foreground bg-background rounded-full p-1" />
+                      <LockIcon className="absolute -top-2 -right-2 w-6 h-6 text-muted-foreground bg-background rounded-full p-1" />
                     )}
                     <span>{phase.icon}</span>
                   </div>
@@ -127,7 +127,7 @@ export function JourneyMap({ currentPhase, phaseProgress, completedMilestones = 
                     <CheckCircle className="absolute -top-1 -right-1 w-6 h-6 text-success bg-background rounded-full" />
                   )}
                   {status === 'locked' && (
-                    <Lock className="absolute -top-1 -right-1 w-5 h-5 text-muted-foreground bg-background rounded-full p-0.5" />
+                    <LockIcon className="absolute -top-1 -right-1 w-5 h-5 text-muted-foreground bg-background rounded-full p-0.5" />
                   )}
                   <span>{phase.icon}</span>
                 </div>

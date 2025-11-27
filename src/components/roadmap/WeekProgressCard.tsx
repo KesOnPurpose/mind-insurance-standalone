@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Lock, CheckCircle, Clock } from 'lucide-react';
+import { Lock as LockIcon, CheckCircle, Clock } from 'lucide-react';
 import { WeekSummary } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 
@@ -31,7 +31,7 @@ export function WeekProgressCard({ week, isActive, onClick }: WeekProgressCardPr
           </div>
         </div>
         
-        {!week.isUnlocked && <Lock className="w-4 h-4 text-muted-foreground" />}
+        {!week.isUnlocked && <LockIcon className="w-4 h-4 text-muted-foreground" />}
         {isCompleted && <CheckCircle className="w-5 h-5 text-success" />}
         {week.isRecommendedStart && (
           <Badge variant="secondary" className="text-xs">Start Here</Badge>

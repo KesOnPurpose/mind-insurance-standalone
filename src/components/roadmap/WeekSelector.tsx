@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Lock, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock as LockIcon, Star } from 'lucide-react';
 import { WeekSummary } from '@/types/tactic';
 
 interface WeekSelectorProps {
@@ -68,7 +68,7 @@ export const WeekSelector = ({
               <div className="p-3">
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-semibold">Week {week.weekNumber}</span>
-                  {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  {isLocked && <LockIcon className="h-3 w-3 text-muted-foreground" />}
                   {week.isRecommendedStart && (
                     <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
                   )}
