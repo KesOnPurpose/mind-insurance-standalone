@@ -24,7 +24,7 @@ const AuthCallback = () => {
 
         if (autoSession) {
           console.log('Supabase auto-detected session, redirecting to dashboard...');
-          window.location.href = '/dashboard';
+          navigate('/dashboard', { replace: true });
           return;
         }
 
@@ -88,7 +88,7 @@ const AuthCallback = () => {
 
           if (verifySession) {
             console.log('Session verified, redirecting to dashboard...');
-            window.location.href = '/dashboard';
+            navigate('/dashboard', { replace: true });
             return;
           }
         }
@@ -119,7 +119,7 @@ const AuthCallback = () => {
 
           if (newSession) {
             console.log('Session established, redirecting to dashboard...');
-            window.location.href = '/dashboard';
+            navigate('/dashboard', { replace: true });
             return;
           }
         }
@@ -128,7 +128,7 @@ const AuthCallback = () => {
         const { data: { session: finalSession } } = await supabase.auth.getSession();
         if (finalSession) {
           console.log('Final session check passed, redirecting...');
-          window.location.href = '/dashboard';
+          navigate('/dashboard', { replace: true });
           return;
         }
 
