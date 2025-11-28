@@ -147,17 +147,10 @@ export function JourneyHeroSection({
         </p>
       </div>
 
-      {/* Primary CTAs */}
+      {/* Primary CTA - View Roadmap only (Ask Nette available in mobile bottom bar) */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Link to="/chat" className="flex-1 sm:flex-initial">
-          <Button size="lg" className="w-full sm:w-auto gap-2">
-            <MessageSquare className="w-5 h-5" />
-            Ask Nette
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </Link>
         <Link to="/roadmap" className="flex-1 sm:flex-initial">
-          <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2">
+          <Button size="lg" className="w-full sm:w-auto gap-2">
             <Map className="w-5 h-5" />
             View Roadmap
             <ChevronRight className="w-4 h-4" />

@@ -19,10 +19,12 @@ import { DashboardPanel } from './sidebar-panels/DashboardPanel';
 import { MindInsurancePanel } from './sidebar-panels/MindInsurancePanel';
 import { ModelWeekPanel } from './sidebar-panels/ModelWeekPanel';
 import { ResourcesPanel } from './sidebar-panels/ResourcesPanel';
+import { ResourcesHubPanel } from './sidebar-panels/ResourcesHubPanel';
+import { CalculatorPanel } from './sidebar-panels/CalculatorPanel';
 import { ProfilePanel } from './sidebar-panels/ProfilePanel';
 import { DefaultPanel } from './sidebar-panels/DefaultPanel';
 
-export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'profile' | 'default';
+export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'default';
 
 interface AppSidebarProps {
   mode: SidebarMode;
@@ -42,7 +44,11 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
     case 'model-week':
       return <ModelWeekPanel />;
     case 'resources':
+      return <ResourcesHubPanel />;
+    case 'resources-documents':
       return <ResourcesPanel />;
+    case 'resources-calculator':
+      return <CalculatorPanel />;
     case 'profile':
       return <ProfilePanel />;
     case 'chat':
@@ -67,7 +73,11 @@ function getSectionLabel(mode: SidebarMode): string {
     case 'model-week':
       return 'This Week';
     case 'resources':
-      return 'Knowledge Base';
+      return 'Resources';
+    case 'resources-documents':
+      return 'Documents';
+    case 'resources-calculator':
+      return 'Calculator Tips';
     case 'profile':
       return 'Your Profile';
     default:

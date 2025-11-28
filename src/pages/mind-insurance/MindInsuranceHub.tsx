@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -14,35 +15,38 @@ interface DailyPracticeStatus {
   points: number;
 }
 
-interface UserStats {
-  streak: number;
-  totalPoints: number;
-  championshipLevel: string;
-}
-
 export default function MindInsuranceHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: progressData, isLoading: progressLoading } = useMindInsuranceProgress();
   const [practiceStatus, setPracticeStatus] = useState<DailyPracticeStatus>({
     completed: 0,
     total: 7,
     points: 0
   });
-  const [userStats, setUserStats] = useState<UserStats>({
-    streak: 0,
-    totalPoints: 0,
-    championshipLevel: 'BRONZE'
-  });
   const [latestInsight, setLatestInsight] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Get stats from the hook (calculated from actual practice data)
+  const userStats = {
+    streak: progressData?.currentStreak || 0,
+    totalPoints: progressData?.totalPoints || 0,
+    championshipLevel: (progressData?.championshipLevel || 'bronze').toUpperCase()
+  };
 
   useEffect(() => {
     if (user?.id) {
       fetchDailyStatus();
-      fetchUserStats();
       fetchLatestInsight();
     }
   }, [user]);
+
+  // Update loading state when progress data loads
+  useEffect(() => {
+    if (!progressLoading) {
+      setLoading(false);
+    }
+  }, [progressLoading]);
 
   const fetchDailyStatus = async () => {
     if (!user?.id) return;
@@ -67,24 +71,6 @@ export default function MindInsuranceHub() {
     }
   };
 
-  const fetchUserStats = async () => {
-    if (!user?.id) return;
-
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('daily_streak_count, total_points, championship_level')
-      .eq('id', user.id)
-      .single();
-
-    if (!error && data) {
-      setUserStats({
-        streak: data.daily_streak_count || 0,
-        totalPoints: data.total_points || 0,
-        championshipLevel: data.championship_level || 'BRONZE'
-      });
-    }
-    setLoading(false);
-  };
 
   const fetchLatestInsight = async () => {
     if (!user?.id) return;

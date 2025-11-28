@@ -1,32 +1,24 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, MessageSquare } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProgress } from "@/services/progressService";
-import { usePersonalizedTactics } from "@/hooks/usePersonalizedTactics";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { JourneyHeroSection } from "@/components/dashboard/JourneyHeroSection";
-import { NextActionCard } from "@/components/dashboard/NextActionCard";
+import { ReadinessScoresCard } from "@/components/dashboard/ReadinessScoresCard";
+import { ProfileSnapshotCard } from "@/components/dashboard/ProfileSnapshotCard";
+import { FinancialProjectionsCard } from "@/components/dashboard/FinancialProjectionsCard";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { data: userProgress } = useUserProgress(user?.id || '');
   const [userProfile, setUserProfile] = useState<any>(null);
   const [onboardingData, setOnboardingData] = useState<any>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
-  // Fetch personalized tactics and next recommended tactic
-  const {
-    tactics,
-    nextTactic: dynamicNextTactic,
-    isLoading: isTacticsLoading,
-  } = usePersonalizedTactics();
 
   // Fetch user profile and onboarding data
   useEffect(() => {
@@ -67,61 +59,6 @@ const DashboardPage = () => {
 
   const protectStreak = userProfile?.current_streak || 0;
   const totalPoints = userProfile?.total_points || 0;
-
-  // Smart next tactic selection - prioritize in-progress, critical path, and unblocked tactics
-  const getSmartNextTactic = () => {
-    if (!tactics || tactics.length === 0) return null;
-
-    const completedIds = new Set(userProgress?.filter(p => p.status === 'completed').map(p => p.tactic_id) || []);
-    const inProgressIds = new Set(userProgress?.filter(p => p.status === 'in_progress').map(p => p.tactic_id) || []);
-
-    // Priority 1: Return in-progress tactic (finish what you started)
-    const inProgressTactic = tactics.find(t => inProgressIds.has(t.tactic_id));
-    if (inProgressTactic) {
-      return { tactic: inProgressTactic, isInProgress: true };
-    }
-
-    // Priority 2: Critical path tactics that can be started
-    const availableCriticalPath = tactics.find(t =>
-      !completedIds.has(t.tactic_id) &&
-      t.is_critical_path &&
-      ('can_start' in t ? t.can_start : true)
-    );
-    if (availableCriticalPath) {
-      return { tactic: availableCriticalPath, isInProgress: false };
-    }
-
-    // Priority 3: Any tactic that can be started
-    const nextAvailable = tactics.find(t =>
-      !completedIds.has(t.tactic_id) &&
-      ('can_start' in t ? t.can_start : true)
-    );
-    if (nextAvailable) {
-      return { tactic: nextAvailable, isInProgress: false };
-    }
-
-    // Priority 4: Use the hook's recommendation
-    if (dynamicNextTactic) {
-      return { tactic: dynamicNextTactic, isInProgress: false };
-    }
-
-    return null;
-  };
-
-  const smartNextTactic = getSmartNextTactic();
-
-  // Calculate days since tactic was started (urgency indicator)
-  const getDaysSinceStarted = (tacticId: string) => {
-    const progress = userProgress?.find(p => p.tactic_id === tacticId && p.status === 'in_progress');
-    if (progress?.started_at) {
-      const startDate = new Date(progress.started_at);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - startDate.getTime());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays;
-    }
-    return 0;
-  };
 
   // Real-time subscription for progress updates
   useEffect(() => {
@@ -168,7 +105,7 @@ const DashboardPage = () => {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 pb-20 md:pb-4">
         {/* Journey Hero Section - Shows week position, phase, and primary CTAs */}
         <JourneyHeroSection
           protectStreak={protectStreak}
@@ -176,33 +113,14 @@ const DashboardPage = () => {
           userName={onboardingData?.business_name || userProfile?.full_name}
         />
 
-        {/* Next Action Card - Enhanced tactic recommendation */}
-        <NextActionCard
-          tactic={smartNextTactic?.tactic || null}
-          isInProgress={smartNextTactic?.isInProgress || false}
-          daysSinceStarted={smartNextTactic ? getDaysSinceStarted(smartNextTactic.tactic.tactic_id) : 0}
-          isLoading={isTacticsLoading}
-        />
+        {/* Readiness Scores + Profile Snapshot - Grid on desktop, stack on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ReadinessScoresCard />
+          <ProfileSnapshotCard />
+        </div>
 
-        {/* Nette AI Quick Access - Primary CTA */}
-        <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary to-primary/80 text-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base sm:text-lg">Need Help? Ask Nette</h3>
-                <p className="text-white/80 text-xs sm:text-sm">Your AI group home coach is ready to answer questions</p>
-              </div>
-            </div>
-            <Link to="/chat" className="sm:flex-shrink-0">
-              <Button className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
-                Chat with Nette
-              </Button>
-            </Link>
-          </div>
-        </Card>
+        {/* Financial Projections - Auto-calculated from profile */}
+        <FinancialProjectionsCard />
 
         {/* Mind Insurance - Secondary CTA */}
         <Card className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">

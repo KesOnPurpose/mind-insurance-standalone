@@ -1,5 +1,7 @@
-import { Flame, Brain, Shield, Trophy } from 'lucide-react';
+import { Flame, Brain, Shield, Trophy, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 
 /**
  * MindInsurancePanel - PROTECT practice streak and insights
@@ -11,17 +13,43 @@ import { Progress } from '@/components/ui/progress';
  * - Recent wins
  */
 export function MindInsurancePanel() {
-  // TODO: Connect to actual practice data via useMindInsuranceProgress hook
-  const practiceData = {
-    currentStreak: 5,
-    longestStreak: 12,
-    weeklyPractices: 4,
-    weeklyGoal: 7,
-    patternAwareness: 72,
-    recentWin: "Caught my 'not enough time' excuse pattern",
+  const { data: practiceData, isLoading, error } = useMindInsuranceProgress();
+
+  // Loading state with skeleton
+  if (isLoading) {
+    return (
+      <div className="px-2 py-2 space-y-3">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-20 w-full rounded-lg" />
+        <Skeleton className="h-20 w-full rounded-lg" />
+        <Skeleton className="h-16 w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="px-2 py-2">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <p className="text-sm text-destructive">Unable to load practice data</p>
+          <p className="text-xs text-muted-foreground mt-1">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Default values if data is not yet available
+  const data = practiceData || {
+    currentStreak: 0,
+    longestStreak: 0,
+    weeklyPractices: 0,
+    weeklyGoal: 49,
+    patternAwareness: 0,
+    recentWin: null,
   };
 
-  const weeklyProgress = Math.round((practiceData.weeklyPractices / practiceData.weeklyGoal) * 100);
+  const weeklyProgress = Math.round((data.weeklyPractices / data.weeklyGoal) * 100);
 
   return (
     <div className="px-2 py-2 space-y-3">
@@ -33,12 +61,12 @@ export function MindInsurancePanel() {
             <span className="text-sm font-medium">Current Streak</span>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-secondary">{practiceData.currentStreak}</p>
+            <p className="text-2xl font-bold text-secondary">{data.currentStreak}</p>
             <p className="text-xs text-muted-foreground">days</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Best: {practiceData.longestStreak} days
+          Best: {data.longestStreak} days
         </p>
       </div>
 
@@ -50,12 +78,12 @@ export function MindInsurancePanel() {
             <span className="text-sm font-medium">This Week</span>
           </div>
           <span className="text-sm font-medium">
-            {practiceData.weeklyPractices}/{practiceData.weeklyGoal}
+            {data.weeklyPractices}/{data.weeklyGoal}
           </span>
         </div>
         <Progress value={weeklyProgress} className="h-2" />
         <p className="text-xs text-muted-foreground mt-1">
-          {practiceData.weeklyGoal - practiceData.weeklyPractices} more to reach your goal
+          {data.weeklyGoal - data.weeklyPractices} more to reach your goal
         </p>
       </div>
 
@@ -66,9 +94,9 @@ export function MindInsurancePanel() {
           <span className="text-sm font-medium">Pattern Awareness</span>
         </div>
         <div className="flex items-center gap-2">
-          <Progress value={practiceData.patternAwareness} className="h-2 flex-1" />
+          <Progress value={data.patternAwareness} className="h-2 flex-1" />
           <span className="text-sm font-bold text-purple-500">
-            {practiceData.patternAwareness}%
+            {data.patternAwareness}%
           </span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
@@ -77,14 +105,14 @@ export function MindInsurancePanel() {
       </div>
 
       {/* Recent Win */}
-      {practiceData.recentWin && (
+      {data.recentWin && (
         <div className="rounded-lg border border-success/30 bg-success/5 p-3">
           <div className="flex items-center gap-2 mb-1">
             <Trophy className="h-4 w-4 text-success" />
             <span className="text-sm font-medium text-success">Recent Win</span>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2">
-            {practiceData.recentWin}
+            {data.recentWin}
           </p>
         </div>
       )}

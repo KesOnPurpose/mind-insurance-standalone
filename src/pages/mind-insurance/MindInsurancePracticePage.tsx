@@ -8,6 +8,7 @@ import { TimeWindowSection, type TimeWindow as TimeWindowType } from '@/componen
 import { PracticeCard } from '@/components/mind-insurance/PracticeCard';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 import type {
   PracticeType,
   DailyPractice,
@@ -44,13 +45,24 @@ const TIME_WINDOWS: Record<string, TimeWindowType> = {
 
 export default function MindInsurancePracticePage() {
   const navigate = useNavigate();
+  const { data: progressData } = useMindInsuranceProgress();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todaysPractices, setTodaysPractices] = useState<DailyPractice[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [streak, setStreak] = useState<PracticeStreak | null>(null);
   const [championshipLevel, setChampionshipLevel] = useState<ChampionshipLevel>('bronze');
+
+  // Get streak from hook (calculated from actual practice data)
+  const streak: PracticeStreak | null = progressData ? {
+    current_streak: progressData.currentStreak,
+    longest_streak: progressData.longestStreak,
+    user_id: '',
+    id: '',
+    last_practice_date: null,
+    created_at: '',
+    updated_at: ''
+  } : null;
 
   // Update current time every minute
   useEffect(() => {
@@ -101,18 +113,7 @@ export default function MindInsurancePracticePage() {
         setTodaysPractices(practices || []);
       }
 
-      // Load streak data
-      const { data: streakData, error: streakError } = await supabase
-        .from('practice_streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (streakError) {
-        console.error('Streak error:', streakError);
-      } else {
-        setStreak(streakData);
-      }
+      // Streak data comes from useMindInsuranceProgress hook (calculated from actual practice data)
 
       // Calculate championship level based on total points
       const totalPoints = (practices || []).reduce((sum, p) => sum + p.points_earned, 0);

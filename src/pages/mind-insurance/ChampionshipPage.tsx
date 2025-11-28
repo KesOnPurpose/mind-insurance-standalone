@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 
 interface ChampionshipStats {
   currentStreak: number;
@@ -131,6 +132,7 @@ const DailyCommitmentGrid = ({
 export default function ChampionshipPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: progressData } = useMindInsuranceProgress();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ChampionshipStats>({
     currentStreak: 0,
@@ -147,10 +149,10 @@ export default function ChampionshipPage() {
   const [completedDays, setCompletedDays] = useState<boolean[]>(new Array(30).fill(false));
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && progressData) {
       fetchChampionshipData();
     }
-  }, [user]);
+  }, [user, progressData]);
 
   const fetchChampionshipData = async () => {
     if (!user?.id) return;
@@ -206,8 +208,9 @@ export default function ChampionshipPage() {
       // Process data
       const todayPoints = todayPractices?.reduce((sum, p) => sum + (p.points_earned || 0), 0) || 0;
       const todayCompleted = todayPoints >= 20;
-      const totalPoints = profileData?.total_points || 0;
-      const currentStreak = profileData?.current_streak || 0;
+      // Use progressData from hook for accurate streak (calculated from practice data)
+      const totalPoints = progressData?.totalPoints || profileData?.total_points || 0;
+      const currentStreak = progressData?.currentStreak || 0;
       const challengeStartDate = new Date(startDate);
       const currentDay = Math.min(
         Math.ceil((new Date().getTime() - challengeStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,

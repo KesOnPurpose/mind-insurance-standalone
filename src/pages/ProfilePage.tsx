@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   User,
@@ -264,24 +264,21 @@ export function ProfilePage() {
         </p>
       </Card>
 
-      <Tabs defaultValue="business" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="business">Business Profile</TabsTrigger>
-          <TabsTrigger value="strategy">Strategy & Goals</TabsTrigger>
-          <TabsTrigger value="assessment">Assessment Results</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="business" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-6 flex items-center gap-2">
+      <Accordion type="multiple" defaultValue={['business']} className="space-y-3">
+        {/* Business Profile Section */}
+        <AccordionItem value="business" className="border rounded-lg bg-card">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <div className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-primary" />
-              Core Business Information
-              {!editMode && (
-                <span className="text-xs text-muted-foreground ml-2">(Click "Edit Profile" to make changes)</span>
-              )}
-            </h3>
+              <span className="font-semibold">Business Profile</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            {!editMode && (
+              <p className="text-xs text-muted-foreground mb-4">(Click "Edit Profile" to make changes)</p>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               {/* Business Name */}
               <div className="space-y-2">
                 <Label htmlFor="business_name" className="flex items-center gap-2">
@@ -527,31 +524,31 @@ export function ProfilePage() {
             </div>
 
             {!editMode && (
-              <Card className="mt-6 p-4 bg-blue-50 border-blue-200">
+              <Card className="mt-4 p-3 bg-blue-50 border-blue-200">
                 <div className="flex items-start gap-3">
-                  <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-blue-900">Pro Tip</p>
-                    <p className="text-sm text-blue-700">
-                      Many of these fields can be filled by completing relevant tactics in your roadmap.
-                      But you can also edit them directly here at any time. The more complete your profile,
-                      the better we can personalize your journey!
+                    <p className="font-medium text-blue-900 text-sm">Pro Tip</p>
+                    <p className="text-xs text-blue-700">
+                      Complete relevant tactics in your roadmap to fill these fields, or edit directly here.
                     </p>
                   </div>
                 </div>
               </Card>
             )}
-          </Card>
-        </TabsContent>
+          </AccordionContent>
+        </AccordionItem>
 
-        <TabsContent value="strategy" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-6 flex items-center gap-2">
+        {/* Strategy & Goals Section */}
+        <AccordionItem value="strategy" className="border rounded-lg bg-card">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              Strategy Preferences
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <span className="font-semibold">Strategy & Goals</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               {/* Ownership Model */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -654,16 +651,22 @@ export function ProfilePage() {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  This determines how tactics are prioritized in your roadmap (additive, not restrictive)
+                  This determines how tactics are prioritized in your roadmap
                 </p>
               </div>
             </div>
-          </Card>
-        </TabsContent>
+          </AccordionContent>
+        </AccordionItem>
 
-        <TabsContent value="assessment" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-6">Assessment Results</h3>
+        {/* Assessment Results Section */}
+        <AccordionItem value="assessment" className="border rounded-lg bg-card">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <div className="flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-primary" />
+              <span className="font-semibold">Assessment Results</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
             {assessment ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -715,9 +718,9 @@ export function ProfilePage() {
                 </Button>
               </div>
             )}
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       </div>
     </SidebarLayout>
   );

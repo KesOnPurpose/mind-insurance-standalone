@@ -25,6 +25,9 @@ interface SidebarLayoutProps {
  * Detect sidebar mode based on current route
  */
 function getCurrentMode(pathname: string): SidebarMode {
+  // Check more specific resources routes first
+  if (pathname === '/resources/calculator') return 'resources-calculator';
+  if (pathname === '/resources/documents') return 'resources-documents';
   if (pathname.startsWith('/resources')) return 'resources';
   if (pathname.startsWith('/chat')) return 'chat';
   if (pathname.startsWith('/roadmap')) return 'roadmap';
