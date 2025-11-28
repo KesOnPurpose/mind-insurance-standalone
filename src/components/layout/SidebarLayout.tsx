@@ -84,7 +84,10 @@ export function SidebarLayout({
       </div>
 
       <SidebarInset>
-        <div className="min-h-screen bg-muted/30 flex flex-col">
+        <div className={cn(
+          "min-h-screen flex flex-col",
+          isMindInsurance ? "bg-mi-navy" : "bg-muted/30"
+        )}>
           {/* Optional Header with gradient */}
           {showHeader && (
             <div

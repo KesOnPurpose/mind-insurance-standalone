@@ -234,3 +234,112 @@ All colors MUST be HSL.
     @apply w-16 h-16 mx-auto rounded-full bg-[#05c3dd]/10 flex items-center justify-center;
   }
 }
+
+/* ================================================
+   Mind Insurance Sidebar Dark Theme
+   OUTSIDE @layer for proper CSS specificity
+   ================================================ */
+
+/* CSS Variable Overrides for Sidebar */
+.mi-sidebar-dark {
+  --sidebar: 215 38% 12%; /* #132337 mi-navy-light */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 186 95% 44%; /* cyan color for borders */
+  --sidebar-accent: 215 45% 8%; /* #0A1628 mi-navy */
+  --sidebar-accent-foreground: 0 0% 100%;
+  --border: 186 95% 44%; /* for right edge border - cyan */
+}
+
+/* Override all nested border colors */
+.mi-sidebar-dark,
+.mi-sidebar-dark * {
+  --border: 186 95% 44%;
+  --sidebar-border: 186 95% 44%;
+}
+
+/* Separator override - HIGH SPECIFICITY to beat Tailwind utilities */
+.mi-sidebar-dark [data-sidebar="separator"],
+.mi-sidebar-dark [role="separator"],
+.mi-sidebar-dark .bg-sidebar-border {
+  background-color: rgba(5, 195, 221, 0.2) !important;
+  background: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* =============================================
+   FIX #1: Horizontal line below header
+   Target the first SidebarSeparator after SidebarHeader
+   ============================================= */
+.mi-sidebar-dark [data-sidebar="header"] + [data-slot="separator"],
+.mi-sidebar-dark [data-sidebar="header"] + hr,
+.mi-sidebar-dark [data-sidebar="header"] ~ [data-sidebar="separator"]:first-of-type {
+  background-color: rgba(5, 195, 221, 0.2) !important;
+  background: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* =============================================
+   FIX #2: Right edge vertical border
+   The className is passed to the fixed inner div (line 203 in sidebar.tsx)
+   which has: group-data-[side=left]:border-r
+   ============================================= */
+
+/* The mi-sidebar-dark class ends up on the fixed div with border-r */
+.mi-sidebar-dark {
+  border-color: rgba(5, 195, 221, 0.2) !important;
+  border-right-color: rgba(5, 195, 221, 0.2) !important;
+  border-left-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Target nested divs within the fixed sidebar */
+.mi-sidebar-dark > div,
+.mi-sidebar-dark > div > div {
+  border-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Ultimate fallback - catch any border on any descendant */
+.mi-sidebar-dark,
+.mi-sidebar-dark *,
+.mi-sidebar-dark::before,
+.mi-sidebar-dark::after,
+.mi-sidebar-dark > *,
+.mi-sidebar-dark > * > * {
+  border-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Also target via data attributes from sidebar.tsx */
+[data-sidebar="sidebar"].mi-sidebar-dark,
+.mi-sidebar-dark [data-sidebar="sidebar"] {
+  border-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* =============================================
+   FIX #3: The fixed sidebar container with border-r
+   This is the div on line 193-205 of sidebar.tsx that has
+   group-data-[side=left]:border-r applied
+   ============================================= */
+
+/* Target the fixed inner wrapper that has the actual border-r */
+.mi-sidebar-dark.fixed,
+div.mi-sidebar-dark[class*="fixed"],
+.peer .mi-sidebar-dark {
+  border-right-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Target by the specific structure - the fixed div is a child of the peer group */
+.peer[data-side="left"] > div.fixed,
+.peer[data-side="left"] div[class*="border-r"],
+div[data-side="left"] > div[class*="fixed"][class*="border-r"] {
+  border-right-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Specifically target when mi-sidebar-dark is on the fixed container */
+div.fixed.mi-sidebar-dark,
+.mi-sidebar-dark.md\:flex {
+  border-color: rgba(5, 195, 221, 0.2) !important;
+  border-right-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* Nuclear option - target ANY element with border-r inside the sidebar context */
+.peer:has(.mi-sidebar-dark) div[class*="border-r"],
+div:has(> .mi-sidebar-dark)[class*="border-r"] {
+  border-right-color: rgba(5, 195, 221, 0.2) !important;
+}

@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -127,70 +126,73 @@ export function AppSidebar({ mode }: AppSidebarProps) {
     <Sidebar
       side="left"
       collapsible="offcanvas"
-      className={cn(isMindInsurance && "bg-mi-navy-light [&_[data-sidebar=sidebar]]:bg-mi-navy-light")}
+      className={cn(isMindInsurance && "mi-sidebar-dark")}
+      style={isMindInsurance ? {
+        borderColor: 'rgba(5, 195, 221, 0.2)',
+        borderRightColor: 'rgba(5, 195, 221, 0.2)'
+      } : undefined}
     >
-      <SidebarHeader className={cn("p-4", isMindInsurance && "bg-mi-navy-light")}>
-        {/* Logo/Brand */}
-        <Link
-          to="/chat"
-          className={cn("flex items-center gap-2 mb-4", isMindInsurance && "text-white")}
-          onClick={() => isMobile && setOpenMobile(false)}
-        >
-          <div className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center",
-            isMindInsurance
-              ? "bg-gradient-to-br from-mi-cyan to-mi-cyan/60"
-              : "bg-gradient-to-br from-primary to-primary/60"
-          )}>
-            <span className="text-white font-bold text-sm">{isMindInsurance ? "MI" : "GH"}</span>
-          </div>
-          <span className={cn("font-semibold text-lg", isMindInsurance && "text-white")}>
-            {isMindInsurance ? "Mind Insurance" : "Grouphomes4newbies"}
-          </span>
-        </Link>
+      {/* Single scrollable content - everything flows together */}
+      <SidebarContent className={cn("px-2", isMindInsurance && "bg-mi-navy-light")}>
+        {/* Logo/Brand - now part of scrollable content */}
+        <div className="p-2 pt-4">
+          <Link
+            to="/chat"
+            className={cn("flex items-center gap-2 mb-4", isMindInsurance && "text-white")}
+            onClick={() => isMobile && setOpenMobile(false)}
+          >
+            <div className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center",
+              isMindInsurance
+                ? "bg-gradient-to-br from-mi-cyan to-mi-cyan/60"
+                : "bg-gradient-to-br from-primary to-primary/60"
+            )}>
+              <span className="text-white font-bold text-sm">{isMindInsurance ? "MI" : "GH"}</span>
+            </div>
+            <span className={cn("font-semibold text-lg", isMindInsurance && "text-white")}>
+              {isMindInsurance ? "Mind Insurance" : "Grouphomes4newbies"}
+            </span>
+          </Link>
 
-        {/* Primary Action Button - Context-aware: Ask MIO in Mind Insurance, Ask Nette elsewhere */}
-        {(() => {
-          const isInMindInsurance = location.pathname.startsWith('/mind-insurance');
-          const activeCoach = isInMindInsurance ? COACHES.mio : COACHES.nette;
+          {/* Primary Action Button - Context-aware: Ask MIO in Mind Insurance, Ask Nette elsewhere */}
+          {(() => {
+            const isInMindInsurance = location.pathname.startsWith('/mind-insurance');
+            const activeCoach = isInMindInsurance ? COACHES.mio : COACHES.nette;
 
-          if (mode === 'chat') {
+            if (mode === 'chat') {
+              return (
+                <Button
+                  onClick={() => handleNavigate('/chat')}
+                  className="w-full justify-start gap-2"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Chat
+                </Button>
+              );
+            }
+
             return (
               <Button
                 onClick={() => handleNavigate('/chat')}
-                className="w-full justify-start gap-2"
+                className={cn(
+                  "w-full justify-start gap-2 transition-colors",
+                  isMindInsurance && "bg-mi-navy-light border-mi-cyan/30 hover:bg-mi-navy text-mi-cyan hover:text-white"
+                )}
                 variant="outline"
+                style={!isMindInsurance ? {
+                  borderColor: activeCoach.color,
+                  color: activeCoach.color
+                } : undefined}
               >
-                <Plus className="h-4 w-4" />
-                New Chat
+                <MessageSquare className="h-4 w-4" />
+                Ask {activeCoach.name}
               </Button>
             );
-          }
+          })()}
+        </div>
 
-          return (
-            <Button
-              onClick={() => handleNavigate('/chat')}
-              className={cn(
-                "w-full justify-start gap-2 transition-colors",
-                isMindInsurance && "bg-mi-navy-light border-mi-cyan/30 hover:bg-mi-navy text-mi-cyan hover:text-white"
-              )}
-              variant="outline"
-              style={!isMindInsurance ? {
-                borderColor: activeCoach.color,
-                color: activeCoach.color
-              } : undefined}
-            >
-              <MessageSquare className="h-4 w-4" />
-              Ask {activeCoach.name}
-            </Button>
-          );
-        })()}
-      </SidebarHeader>
-
-      <SidebarSeparator className={cn(isMindInsurance && "bg-mi-cyan/20")} />
-
-      {/* Scrollable Content - All sidebar content scrolls together */}
-      <SidebarContent className={cn("px-2", isMindInsurance && "bg-mi-navy-light")}>
+        <SidebarSeparator className={cn("my-2", isMindInsurance && "!bg-mi-cyan/20")} />
         {/* Context-Specific Panel */}
         {mode !== 'chat' && (
           <>
@@ -201,7 +203,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               {getSectionLabel(mode)}
             </div>
             <SidebarContextPanel mode={mode} />
-            <SidebarSeparator className={cn("my-3", isMindInsurance && "bg-mi-cyan/20")} />
+            <SidebarSeparator className={cn("my-3", isMindInsurance && "!bg-mi-cyan/20")} />
           </>
         )}
 
@@ -214,7 +216,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
         </div>
         <SidebarAppSwitcher />
 
-        <SidebarSeparator className={cn("my-3", isMindInsurance && "bg-mi-cyan/20")} />
+        <SidebarSeparator className={cn("my-3", isMindInsurance && "!bg-mi-cyan/20")} />
 
         {/* Navigation Section */}
         <div className={cn(
@@ -301,7 +303,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <SidebarSeparator className={cn("my-2", isMindInsurance && "bg-mi-cyan/20")} />
+        <SidebarSeparator className={cn("my-2", isMindInsurance && "!bg-mi-cyan/20")} />
 
         {/* Account Section */}
         <div className={cn(
