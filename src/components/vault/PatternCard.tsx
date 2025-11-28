@@ -18,19 +18,19 @@ export function PatternCard({ pattern }: PatternCardProps) {
   const collisionColor = getCollisionTypeColor(pattern.collision_type);
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
+    <Card className="p-4 hover:shadow-lg transition-shadow bg-mi-navy-light border border-mi-cyan/20 hover:border-mi-cyan/40">
       <div className="space-y-3">
         {/* Header: Date, collision type, caught status */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <Brain className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center shrink-0">
+              <Brain className="w-5 h-5 text-mi-cyan" />
             </div>
             <div>
-              <Badge variant="outline" className={`${collisionColor} text-xs`}>
+              <Badge variant="outline" className={`${collisionColor} text-xs bg-mi-navy border-mi-cyan/30`}>
                 {collisionLabel}
               </Badge>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+              <div className="flex items-center gap-1 text-sm text-gray-400 mt-1">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{formattedDate}</span>
               </div>
@@ -39,7 +39,7 @@ export function PatternCard({ pattern }: PatternCardProps) {
 
           {/* Caught status indicator */}
           <div className={`flex items-center gap-1 text-sm ${
-            pattern.caught_pattern ? 'text-green-600' : 'text-amber-600'
+            pattern.caught_pattern ? 'text-mi-cyan' : 'text-mi-gold'
           }`}>
             {pattern.caught_pattern ? (
               <>
@@ -58,10 +58,10 @@ export function PatternCard({ pattern }: PatternCardProps) {
         {/* Situation description */}
         {pattern.situation_description && (
           <div className="pl-13">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
               Situation
             </p>
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-gray-300">
               {pattern.situation_description}
             </p>
           </div>
@@ -69,11 +69,11 @@ export function PatternCard({ pattern }: PatternCardProps) {
 
         {/* Reframe description */}
         {pattern.reframe_description && (
-          <div className="pl-13 pt-2 border-t">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+          <div className="pl-13 pt-2 border-t border-mi-cyan/10">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
               Reframe
             </p>
-            <p className="text-sm text-foreground italic">
+            <p className="text-sm text-gray-300 italic">
               "{pattern.reframe_description}"
             </p>
           </div>

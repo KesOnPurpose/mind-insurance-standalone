@@ -40,9 +40,47 @@ export function generateConversationTitle(firstUserMessage: string): string {
 }
 
 /**
+ * Wait for session to be available (handles race condition on page load)
+ */
+async function waitForSession(maxAttempts: number = 5, delayMs: number = 200): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      console.log('[ConversationMetadata] Session available on attempt', i + 1);
+      return true;
+    }
+    console.log('[ConversationMetadata] Session not ready, attempt', i + 1, 'of', maxAttempts);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+  return false;
+}
+
+/**
  * Fetch all non-archived conversations for a user, sorted by last message date
  */
 export async function getConversationsList(userId: string): Promise<ConversationMetadata[]> {
+  console.log('[ConversationMetadata] Fetching conversations for user:', userId);
+
+  // Wait for session to be available (handles race condition on page load)
+  const sessionReady = await waitForSession();
+
+  // Check auth session state for RLS debugging
+  const { data: sessionData } = await supabase.auth.getSession();
+  const session = sessionData?.session;
+  console.log('[ConversationMetadata] Session check:', {
+    hasSession: !!session,
+    sessionReady,
+    sessionUserId: session?.user?.id || 'none',
+    requestedUserId: userId,
+    userIdMatch: session?.user?.id === userId
+  });
+
+  // If no session after waiting, return empty (user will need to re-authenticate)
+  if (!session) {
+    console.error('[ConversationMetadata] No session available after waiting - RLS will block access');
+    return [];
+  }
+
   try {
     const { data, error } = await supabase
       .from('conversation_metadata')
@@ -53,9 +91,11 @@ export async function getConversationsList(userId: string): Promise<Conversation
 
     if (error) {
       console.error('[ConversationMetadata] Error fetching list:', error);
+      console.error('[ConversationMetadata] This may be an RLS policy issue if session is missing');
       return [];
     }
 
+    console.log('[ConversationMetadata] Found', data?.length || 0, 'conversations');
     return (data || []) as ConversationMetadata[];
   } catch (err) {
     console.error('[ConversationMetadata] Unexpected error:', err);

@@ -12,7 +12,7 @@ import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
-import { useConversations } from "@/hooks/useConversations";
+import { useConversationsContext } from "@/contexts/ConversationsContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchRecentConversation, fetchConversationById } from "@/services/chatHistoryService";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,8 +66,8 @@ function ChatPageContent() {
     selectConversation,
   } = useConversationContext();
 
-  // Conversations hook for creating new conversations
-  const { addConversation, updateConversation } = useConversations();
+  // Conversations context for creating new conversations (shared with sidebar)
+  const { addConversation, updateConversation } = useConversationsContext();
 
   // Initialize coach based on current product context
   const defaultCoach = getDefaultCoachForProduct(currentProduct);
@@ -81,6 +81,11 @@ function ChatPageContent() {
   const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Ref to preserve messages during state transitions (prevents race condition)
+  // When a quick action is clicked, messages are stored here BEFORE setActiveConversation
+  // This prevents the loadConversation useEffect from resetting messages to []
+  const pendingMessagesRef = useRef<Message[]>([]);
 
   // Fetch user profile for personalized greeting
   useEffect(() => {
@@ -114,9 +119,27 @@ function ChatPageContent() {
     const loadConversation = async () => {
       if (!user?.id) return;
 
-      // If it's a new conversation, start with empty messages (welcome screen shows)
+      // If it's a new conversation, check for pending messages first
       if (isNewConversation || !activeConversationId) {
+        // CRITICAL: Check if we have pending messages from quick action
+        // This prevents the race condition where setActiveConversation triggers
+        // this effect before the messages state is updated
+        if (pendingMessagesRef.current.length > 0) {
+          console.log('[ChatHistory] Preserving pending messages:', pendingMessagesRef.current.length);
+          setMessages([...pendingMessagesRef.current]);
+          setIsLoadingHistory(false);
+          return;
+        }
         setMessages([]);
+        setIsLoadingHistory(false);
+        return;
+      }
+
+      // CRITICAL: Check for pending messages before loading from DB
+      // This handles the case where we just started a new conversation
+      if (pendingMessagesRef.current.length > 0) {
+        console.log('[ChatHistory] Preserving pending messages for new conversation:', pendingMessagesRef.current.length);
+        setMessages([...pendingMessagesRef.current]);
         setIsLoadingHistory(false);
         return;
       }
@@ -137,13 +160,24 @@ function ChatPageContent() {
           setMessages(history);
         } else {
           console.log('[ChatHistory] No history found for conversation');
-          // Empty conversation - welcome screen will show
-          setMessages([]);
+          // Check pending messages one more time before showing empty
+          if (pendingMessagesRef.current.length > 0) {
+            console.log('[ChatHistory] Using pending messages as fallback');
+            setMessages([...pendingMessagesRef.current]);
+          } else {
+            // Empty conversation - welcome screen will show
+            setMessages([]);
+          }
         }
       } catch (error) {
         console.error('[ChatHistory] Error loading history:', error);
-        // On error, show welcome screen instead of fallback greeting
-        setMessages([]);
+        // Check pending messages before showing empty on error
+        if (pendingMessagesRef.current.length > 0) {
+          setMessages([...pendingMessagesRef.current]);
+        } else {
+          // On error, show welcome screen instead of fallback greeting
+          setMessages([]);
+        }
       } finally {
         setIsLoadingHistory(false);
       }
@@ -211,12 +245,17 @@ function ChatPageContent() {
       coachType: 'nette'
     };
 
+    // CRITICAL FIX: Store in ref BEFORE any state changes
+    // This prevents the race condition where setActiveConversation triggers
+    // the loadConversation useEffect which would reset messages to []
+    pendingMessagesRef.current = [userMessage];
+
     // Add user message to state BEFORE switching view
     // This ensures the message is visible when the view changes
     setMessages([userMessage]);
 
     // NOW set as active conversation (this triggers the view switch)
-    // The message will already be in state so user sees their question
+    // The pendingMessagesRef will protect the messages from being cleared
     setActiveConversation(newConversationId);
 
     // Create conversation metadata for sidebar (async, doesn't block)
@@ -261,12 +300,18 @@ function ChatPageContent() {
 
       setMessages(prev => [...prev, aiMessage]);
 
+      // CRITICAL: Clear pending messages ref after AI response is successfully added
+      // This allows normal conversation flow to continue without the ref interference
+      pendingMessagesRef.current = [];
+
       // Update conversation metadata with AI response preview
       await updateConversation(newConversationId, aiMessage.content, 'nette');
 
       setIsTyping(false);
     } catch (error) {
       console.error('Error sending welcome message:', error);
+      // Clear pending ref even on error to prevent stale data
+      pendingMessagesRef.current = [];
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
@@ -426,6 +471,10 @@ function ChatPageContent() {
   // Full chat interface
   return (
     <SidebarInset>
+      {/* Fixed sidebar trigger - always visible when scrolling */}
+      <div className="fixed top-4 left-4 z-50">
+        <SidebarTrigger className="h-10 w-10 bg-background/80 backdrop-blur-sm shadow-lg border rounded-lg hover:bg-background" />
+      </div>
       <div className="min-h-screen bg-muted/30 flex flex-col">
         {/* Header */}
         <div
@@ -434,9 +483,6 @@ function ChatPageContent() {
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3">
-              {/* Sidebar toggle */}
-              <SidebarTrigger className="h-8 w-8 text-white hover:bg-white/20" />
-
               <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
                 {COACHES[selectedCoach].avatar}
               </div>

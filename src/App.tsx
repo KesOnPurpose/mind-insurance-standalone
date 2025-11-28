@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { ConversationProvider } from "@/contexts/ConversationContext";
+import { ConversationsProvider } from "@/contexts/ConversationsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AssessmentGuard } from "@/components/AssessmentGuard";
@@ -64,6 +65,7 @@ const App = () => (
           <BrowserRouter>
             <ProductProvider>
               <ConversationProvider>
+              <ConversationsProvider>
               <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -111,6 +113,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+              </ConversationsProvider>
               </ConversationProvider>
           </ProductProvider>
         </BrowserRouter>

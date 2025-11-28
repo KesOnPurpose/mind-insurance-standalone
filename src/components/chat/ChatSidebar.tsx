@@ -1,4 +1,4 @@
-import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, User, DollarSign } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useConversations } from '@/hooks/useConversations';
+import { useConversationsContext } from '@/contexts/ConversationsContext';
 import { useConversationContext } from '@/contexts/ConversationContext';
 import { ConversationList } from './ConversationList';
+import { SidebarAppSwitcher } from '@/components/layout/SidebarAppSwitcher';
 
 export function ChatSidebar() {
   const { user, signOut } = useAuth();
@@ -27,7 +28,7 @@ export function ChatSidebar() {
     error,
     renameConversation,
     removeConversation,
-  } = useConversations();
+  } = useConversationsContext();
 
   const {
     activeConversationId,
@@ -80,21 +81,31 @@ export function ChatSidebar() {
 
       <SidebarSeparator />
 
-      {/* Scrollable Content - Conversations, Navigation & Account */}
+      {/* Scrollable Content - All sidebar content scrolls together */}
       <SidebarContent className="px-2">
-        {/* Conversation History */}
+        {/* Conversation History - with internal scroll for many conversations */}
         <div className="text-xs font-medium text-muted-foreground px-2 py-2">
           Recent Conversations
         </div>
-        <ConversationList
-          conversations={conversations}
-          activeConversationId={activeConversationId}
-          isLoading={isLoading}
-          error={error}
-          onSelectConversation={handleSelectConversation}
-          onRenameConversation={renameConversation}
-          onArchiveConversation={removeConversation}
-        />
+        <div className="max-h-[400px] overflow-y-auto">
+          <ConversationList
+            conversations={conversations}
+            activeConversationId={activeConversationId}
+            isLoading={isLoading}
+            error={error}
+            onSelectConversation={handleSelectConversation}
+            onRenameConversation={renameConversation}
+            onArchiveConversation={removeConversation}
+          />
+        </div>
+
+        <SidebarSeparator className="my-3" />
+
+        {/* Apps Section */}
+        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+          Apps
+        </div>
+        <SidebarAppSwitcher />
 
         <SidebarSeparator className="my-3" />
 
@@ -137,38 +148,10 @@ export function ChatSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <SidebarSeparator className="my-3" />
-
-        {/* Apps Section */}
-        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
-          Apps
-        </div>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Mind Insurance">
-              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
-                <Shield className="h-4 w-4" />
-                <span>Mind Insurance</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Millionaire Essentials - Coming Soon"
-              disabled
-              className="opacity-50 cursor-not-allowed"
-            >
-              <DollarSign className="h-4 w-4" />
-              <span>Millionaire Essentials</span>
-              <span className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">Soon</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        <SidebarSeparator className="my-3" />
+        <SidebarSeparator className="my-2" />
 
         {/* Account Section */}
-        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+        <div className="text-xs font-medium text-muted-foreground px-2 py-1">
           Account
         </div>
         <SidebarMenu>
@@ -198,7 +181,7 @@ export function ChatSidebar() {
 
         {/* User info */}
         {user && (
-          <div className="mt-3 px-2 py-2 rounded-md bg-sidebar-accent/50">
+          <div className="mt-2 mb-4 px-2 py-2 rounded-md bg-sidebar-accent/50">
             <p className="text-xs text-muted-foreground truncate">
               {user.email}
             </p>

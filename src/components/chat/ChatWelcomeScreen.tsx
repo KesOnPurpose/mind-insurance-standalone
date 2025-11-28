@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
-import { COACHES } from '@/types/coach';
+import { COACHES, CoachType } from '@/types/coach';
+import { useProduct } from '@/contexts/ProductContext';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
@@ -10,12 +11,27 @@ interface ChatWelcomeScreenProps {
   isLoading?: boolean;
 }
 
-const QUICK_ACTIONS = [
-  "How to use this app?",
-  "Where should I start?",
-  "Do I need a license?",
-  "Tell me about your journey"
-];
+// Product-specific quick actions
+const QUICK_ACTIONS: Record<string, string[]> = {
+  'grouphome': [
+    "How to use this app?",
+    "Where should I start?",
+    "Do I need a license?",
+    "Tell me about your journey"
+  ],
+  'mind-insurance': [
+    "Help me see my patterns",
+    "Why do I keep repeating mistakes?",
+    "Explain the PROTECT practice",
+    "What is identity collision?"
+  ],
+  'me-wealth': [
+    "How to build business credit?",
+    "Funding strategies for beginners",
+    "Where should I start?",
+    "Tell me about your journey"
+  ]
+};
 
 const getTimeBasedGreeting = (): string => {
   const hour = new Date().getHours();
@@ -29,12 +45,26 @@ const getFirstName = (fullName: string | null): string => {
   return fullName.split(' ')[0];
 };
 
+// Map product to coach
+const getCoachForProduct = (product: string): CoachType => {
+  const coachMap: Record<string, CoachType> = {
+    'grouphome': 'nette',
+    'mind-insurance': 'mio',
+    'me-wealth': 'me'
+  };
+  return coachMap[product] || 'nette';
+};
+
 export const ChatWelcomeScreen = ({
   userName,
   onSendMessage,
   isLoading = false
 }: ChatWelcomeScreenProps) => {
   const [input, setInput] = useState('');
+  const { currentProduct } = useProduct();
+  const activeCoach = getCoachForProduct(currentProduct);
+  const coach = COACHES[activeCoach];
+  const quickActions = QUICK_ACTIONS[currentProduct] || QUICK_ACTIONS['grouphome'];
   const firstName = getFirstName(userName);
   const greeting = getTimeBasedGreeting();
 
@@ -48,15 +78,27 @@ export const ChatWelcomeScreen = ({
     onSendMessage(message);
   };
 
+  // Product-specific subtitles
+  const getSubtitle = () => {
+    switch (currentProduct) {
+      case 'mind-insurance':
+        return "I'm here to help you see patterns you can't see yourself.";
+      case 'me-wealth':
+        return "How can I help you build your financial foundation today?";
+      default:
+        return "How can I help you with your group home journey today?";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-2xl flex flex-col items-center">
-        {/* Nette Avatar */}
+        {/* Coach Avatar */}
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-6"
-          style={{ background: COACHES.nette.gradient }}
+          style={{ background: coach.gradient }}
         >
-          {COACHES.nette.avatar}
+          {coach.avatar}
         </div>
 
         {/* Greeting */}
@@ -66,7 +108,7 @@ export const ChatWelcomeScreen = ({
 
         {/* Subtitle */}
         <p className="text-muted-foreground text-center mb-8">
-          How can I help you with your group home journey today?
+          {getSubtitle()}
         </p>
 
         {/* Input Container */}
@@ -76,7 +118,7 @@ export const ChatWelcomeScreen = ({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder="Ask Nette anything..."
+              placeholder={`Ask ${coach.name} anything...`}
               className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base"
               disabled={isLoading}
             />
@@ -85,7 +127,7 @@ export const ChatWelcomeScreen = ({
               size="icon"
               disabled={isLoading || !input.trim()}
               className="rounded-xl h-10 w-10"
-              style={{ background: input.trim() ? COACHES.nette.gradient : undefined }}
+              style={{ background: input.trim() ? coach.gradient : undefined }}
             >
               <Send className="w-4 h-4" />
             </Button>
@@ -94,13 +136,16 @@ export const ChatWelcomeScreen = ({
 
         {/* Quick Action Chips */}
         <div className="flex flex-wrap justify-center gap-2">
-          {QUICK_ACTIONS.map((action) => (
+          {quickActions.map((action) => (
             <Button
               key={action}
               variant="outline"
               onClick={() => handleQuickAction(action)}
               disabled={isLoading}
               className="rounded-full px-4 py-2 text-sm hover:bg-primary/5 hover:border-primary/30"
+              style={{
+                borderColor: `${coach.color}30`,
+              }}
             >
               {action}
             </Button>

@@ -68,39 +68,43 @@ export function TimeWindowSection({
 
   const status = getStatus();
 
-  // Status configurations
+  // Status configurations - Dark Navy Theme
   const statusConfig = {
     upcoming: {
-      color: 'text-gray-500',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-200',
+      color: 'text-gray-400',
+      bgColor: 'bg-mi-navy-light',
+      borderColor: 'border-mi-cyan/20',
       icon: Clock,
-      iconColor: 'text-gray-400',
+      iconColor: 'text-gray-500',
       message: 'Opens soon',
+      badgeStyle: 'bg-mi-navy text-gray-400 border border-gray-600',
     },
     available: {
-      color: 'text-green-700',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
+      color: 'text-mi-cyan',
+      bgColor: 'bg-mi-navy-light',
+      borderColor: 'border-mi-cyan/50',
       icon: CheckCircle,
-      iconColor: 'text-green-600',
+      iconColor: 'text-mi-cyan',
       message: 'Available now',
+      badgeStyle: 'bg-mi-cyan/20 text-mi-cyan border border-mi-cyan/30',
     },
     ending: {
-      color: 'text-yellow-700',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
+      color: 'text-mi-gold',
+      bgColor: 'bg-mi-navy-light',
+      borderColor: 'border-mi-gold/50',
       icon: AlertCircle,
-      iconColor: 'text-yellow-600',
+      iconColor: 'text-mi-gold',
       message: 'Ending soon',
+      badgeStyle: 'bg-mi-gold/20 text-mi-gold border border-mi-gold/30',
     },
     closed: {
-      color: 'text-red-700',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
+      color: 'text-red-400',
+      bgColor: 'bg-mi-navy-light',
+      borderColor: 'border-red-500/30',
       icon: AlertCircle,
-      iconColor: 'text-red-600',
+      iconColor: 'text-red-400',
       message: 'Closed',
+      badgeStyle: 'bg-red-500/20 text-red-400 border border-red-500/30',
     },
   };
 
@@ -140,7 +144,7 @@ export function TimeWindowSection({
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base sm:text-lg text-gray-900">
+              <h3 className="font-semibold text-base sm:text-lg text-white">
                 {window.name}
               </h3>
 
@@ -151,17 +155,14 @@ export function TimeWindowSection({
 
                 <span className={cn(
                   'inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full w-fit',
-                  status === 'available' && 'bg-green-100 text-green-700',
-                  status === 'ending' && 'bg-yellow-100 text-yellow-700',
-                  status === 'closed' && 'bg-red-100 text-red-700',
-                  status === 'upcoming' && 'bg-gray-100 text-gray-600'
+                  config.badgeStyle
                 )}>
                   {config.message}
                 </span>
               </div>
 
               {window.description && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                   {window.description}
                 </p>
               )}
@@ -169,13 +170,13 @@ export function TimeWindowSection({
               {/* Progress indicator for practices */}
               {totalCount > 0 && (
                 <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                     <span>{completedCount} of {totalCount} practices</span>
                     <span>{Math.round(completionPercentage)}%</span>
                   </div>
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-mi-navy rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-green-500 rounded-full transition-all duration-300"
+                      className="h-full bg-mi-cyan rounded-full transition-all duration-300"
                       style={{ width: `${completionPercentage}%` }}
                     />
                   </div>
@@ -188,7 +189,7 @@ export function TimeWindowSection({
           <div className="flex items-center ml-2">
             <ChevronDown
               className={cn(
-                'h-5 w-5 text-gray-400 transition-transform duration-200',
+                'h-5 w-5 text-gray-500 transition-transform duration-200',
                 isOpen && 'rotate-180'
               )}
             />
@@ -197,7 +198,7 @@ export function TimeWindowSection({
       </CollapsibleTrigger>
 
       <CollapsibleContent className="data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down">
-        <div className="border-t border-gray-200">
+        <div className="border-t border-mi-cyan/20">
           <div className="p-4 sm:p-5 space-y-3">
             {/* Practice cards container */}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -206,8 +207,8 @@ export function TimeWindowSection({
 
             {/* Empty state if no practices */}
             {totalCount === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Clock className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+              <div className="text-center py-8 text-gray-400">
+                <Clock className="h-8 w-8 mx-auto mb-2 text-gray-500" />
                 <p className="text-sm">No practices scheduled for this window</p>
               </div>
             )}

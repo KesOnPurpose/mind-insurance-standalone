@@ -15,22 +15,22 @@ function VictoryListSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="p-4 border rounded-lg">
+        <div key={i} className="p-4 border border-mi-gold/20 rounded-lg bg-mi-navy-light">
           <div className="flex items-start gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full bg-mi-navy" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-5 w-28" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-5 w-28 bg-mi-navy" />
+              <Skeleton className="h-4 w-24 bg-mi-navy" />
             </div>
           </div>
           <div className="mt-3 space-y-3">
             <div className="space-y-1">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-24 bg-mi-navy" />
+              <Skeleton className="h-4 w-full bg-mi-navy" />
             </div>
             <div className="space-y-1">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-20 bg-mi-navy" />
+              <Skeleton className="h-4 w-3/4 bg-mi-navy" />
             </div>
           </div>
         </div>
@@ -45,11 +45,11 @@ function VictoryListSkeleton() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
-        <Trophy className="w-8 h-8 text-amber-400" />
+      <div className="w-16 h-16 rounded-full bg-mi-gold/20 flex items-center justify-center mb-4">
+        <Trophy className="w-8 h-8 text-mi-gold" />
       </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No Victories Yet</h3>
-      <p className="text-muted-foreground max-w-sm">
+      <h3 className="text-lg font-medium text-white mb-2">No Victories Yet</h3>
+      <p className="text-gray-400 max-w-sm">
         Your celebrations and wins will appear here. Complete a Celebrate Wins practice to start logging your victories.
       </p>
     </div>

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -6,6 +6,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarMode } from './AppSidebar';
+import { cn } from '@/lib/utils';
 
 interface SidebarLayoutProps {
   children: ReactNode;
@@ -62,9 +63,26 @@ export function SidebarLayout({
   const location = useLocation();
   const mode = explicitMode || getCurrentMode(location.pathname);
 
+  // Check if we're in the Mind Insurance section for dark theme
+  const isMindInsurance = useMemo(() => {
+    return location.pathname.startsWith('/mind-insurance');
+  }, [location.pathname]);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar mode={mode} />
+
+      {/* Fixed sidebar trigger - OUTSIDE SidebarInset for proper fixed positioning */}
+      {/* Always visible on both mobile and desktop so users can open sidebar after scrolling */}
+      <div className="fixed top-4 left-4 z-50">
+        <SidebarTrigger className={cn(
+          "h-10 w-10 backdrop-blur-sm shadow-lg border rounded-lg",
+          isMindInsurance
+            ? "bg-mi-navy-light/80 border-mi-cyan/30 text-mi-cyan hover:bg-mi-navy hover:text-white"
+            : "bg-background/80 hover:bg-background"
+        )} />
+      </div>
+
       <SidebarInset>
         <div className="min-h-screen bg-muted/30 flex flex-col">
           {/* Optional Header with gradient */}
@@ -74,17 +92,13 @@ export function SidebarLayout({
               style={{ background: headerGradient }}
             >
               <div className="container mx-auto px-4 py-4">
-                <div className="flex items-center gap-3">
-                  {/* Sidebar toggle */}
-                  <SidebarTrigger className="h-8 w-8 text-white hover:bg-white/20" />
-                  <div>
-                    {headerTitle && (
-                      <h1 className="text-xl font-bold">{headerTitle}</h1>
-                    )}
-                    {headerSubtitle && (
-                      <p className="text-white/90 text-sm">{headerSubtitle}</p>
-                    )}
-                  </div>
+                <div>
+                  {headerTitle && (
+                    <h1 className="text-xl font-bold">{headerTitle}</h1>
+                  )}
+                  {headerSubtitle && (
+                    <p className="text-white/90 text-sm">{headerSubtitle}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -92,12 +106,6 @@ export function SidebarLayout({
 
           {/* Main Content Area */}
           <main className="flex-1">
-            {/* Fixed sidebar trigger for pages without header */}
-            {!showHeader && (
-              <div className="fixed top-4 left-4 z-50 md:hidden">
-                <SidebarTrigger className="h-10 w-10 bg-background shadow-lg border rounded-lg" />
-              </div>
-            )}
             <div className="container mx-auto px-4 py-6 pt-16 md:pt-6 max-w-6xl">
               {children}
             </div>

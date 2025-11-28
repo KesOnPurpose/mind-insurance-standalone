@@ -18,14 +18,14 @@ function RecordingListSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="p-4 border rounded-lg">
+        <div key={i} className="p-4 border border-mi-cyan/20 rounded-lg bg-mi-navy-light">
           <div className="flex items-start gap-3">
-            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-12 w-12 rounded-full bg-mi-navy" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-5 w-24 bg-mi-navy" />
+              <Skeleton className="h-4 w-32 bg-mi-navy" />
             </div>
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16 bg-mi-navy" />
           </div>
         </div>
       ))}
@@ -39,11 +39,11 @@ function RecordingListSkeleton() {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-        <MicOff className="w-8 h-8 text-purple-400" />
+      <div className="w-16 h-16 rounded-full bg-mi-cyan/20 flex items-center justify-center mb-4">
+        <MicOff className="w-8 h-8 text-mi-cyan" />
       </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No Recordings Yet</h3>
-      <p className="text-muted-foreground max-w-sm">
+      <h3 className="text-lg font-medium text-white mb-2">No Recordings Yet</h3>
+      <p className="text-gray-400 max-w-sm">
         {message}
       </p>
     </div>

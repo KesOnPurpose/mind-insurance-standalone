@@ -215,15 +215,15 @@ export default function OutcomeVisualization() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto p-4 md:p-6">
-      <Card className="w-full">
+    <div className="container max-w-4xl mx-auto p-4 md:p-6 min-h-screen bg-mi-navy">
+      <Card className="w-full bg-mi-navy-light border-mi-cyan/20">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-bold">
+              <CardTitle className="text-2xl font-bold text-white">
                 Outcome Visualization
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-mi-cyan">
                 Visualize your champion future • 3 points
               </CardDescription>
             </div>
@@ -232,6 +232,7 @@ export default function OutcomeVisualization() {
               size="icon"
               onClick={() => navigate('/mind-insurance')}
               aria-label="Close"
+              className="text-gray-400 hover:text-white hover:bg-mi-navy"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -243,10 +244,10 @@ export default function OutcomeVisualization() {
             <>
               {/* Outcome Description */}
               <div className="space-y-2">
-                <Label htmlFor="outcome-description">
+                <Label htmlFor="outcome-description" className="text-white">
                   Describe your desired outcome in detail
                 </Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-400">
                   Be specific and write in present tense as if it has already happened
                 </p>
                 <Textarea
@@ -255,22 +256,22 @@ export default function OutcomeVisualization() {
                   value={outcomeDescription}
                   onChange={(e) => setOutcomeDescription(e.target.value)}
                   rows={5}
-                  className="resize-none"
+                  className="mi-textarea resize-none"
                 />
               </div>
 
               {/* Background Audio Selection */}
               <div className="space-y-2">
-                <Label htmlFor="background-audio">
+                <Label htmlFor="background-audio" className="text-white">
                   Choose your background audio
                 </Label>
                 <Select value={backgroundAudio} onValueChange={setBackgroundAudio}>
-                  <SelectTrigger id="background-audio">
+                  <SelectTrigger id="background-audio" className="mi-select">
                     <SelectValue placeholder="Select background audio" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-mi-navy-light border-mi-cyan/20">
                     {BACKGROUND_AUDIO_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="text-gray-300 focus:bg-mi-cyan/20 focus:text-white">
                         <span className="flex items-center gap-2">
                           <span>{option.icon}</span>
                           <span>{option.label}</span>
@@ -282,12 +283,12 @@ export default function OutcomeVisualization() {
               </div>
 
               {/* Ready to start card */}
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="border-mi-cyan/30 bg-mi-navy">
                 <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-2">
+                  <h3 className="font-semibold mb-2 text-white">
                     Ready for your guided visualization?
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-400">
                     This {MEDITATION_DURATION}-second guided experience will help you visualize
                     your desired outcome with clarity and conviction.
                   </p>
@@ -299,7 +300,7 @@ export default function OutcomeVisualization() {
                 onClick={startMeditation}
                 disabled={!outcomeDescription || !backgroundAudio}
                 size="lg"
-                className="w-full"
+                className="w-full mi-btn-primary"
               >
                 <Play className="mr-2 h-4 w-4" />
                 Begin Visualization
@@ -314,24 +315,24 @@ export default function OutcomeVisualization() {
                 {!meditationComplete ? (
                   <>
                     <div className="space-y-4">
-                      <div className="text-4xl font-bold text-primary">
+                      <div className="text-4xl font-bold text-mi-cyan">
                         {formatTime(countdown)}
                       </div>
-                      <Progress value={(1 - countdown / MEDITATION_DURATION) * 100} />
+                      <Progress value={(1 - countdown / MEDITATION_DURATION) * 100} className="bg-mi-navy [&>div]:bg-mi-cyan" />
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-xl font-medium">
+                      <p className="text-xl font-medium text-white">
                         Close your eyes
                       </p>
-                      <p className="text-muted-foreground max-w-md mx-auto">
+                      <p className="text-gray-400 max-w-md mx-auto">
                         See yourself in a peaceful place. Visualize your desired outcome as if
                         it has already happened. Feel the emotions. Notice the details.
                       </p>
                     </div>
 
                     {backgroundAudio !== 'silence' && (
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <div className="flex items-center justify-center gap-2 text-gray-400">
                         <Volume2 className="h-4 w-4" />
                         <span className="text-sm">Playing background audio</span>
                       </div>
@@ -340,10 +341,10 @@ export default function OutcomeVisualization() {
                 ) : (
                   <>
                     <div className="space-y-4">
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-mi-cyan">
                         Visualization Complete! ✓
                       </div>
-                      <p className="text-muted-foreground max-w-md mx-auto">
+                      <p className="text-gray-400 max-w-md mx-auto">
                         You've successfully visualized your desired outcome.
                         Carry this feeling with you throughout your day.
                       </p>
@@ -355,10 +356,11 @@ export default function OutcomeVisualization() {
                         id="meditation-completed"
                         checked={meditationComplete}
                         disabled
+                        className="border-mi-cyan data-[state=checked]:bg-mi-cyan"
                       />
                       <Label
                         htmlFor="meditation-completed"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm font-medium leading-none text-gray-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Meditation completed
                       </Label>
@@ -382,7 +384,7 @@ export default function OutcomeVisualization() {
               onClick={handleComplete}
               disabled={loading}
               size="lg"
-              className="w-full"
+              className="w-full mi-btn-primary"
             >
               {loading ? (
                 <>

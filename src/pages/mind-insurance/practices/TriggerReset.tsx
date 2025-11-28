@@ -165,14 +165,14 @@ export default function TriggerReset() {
   const canComplete = triggerDescription && oldResponse && resetMethod && newResponse;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-mi-navy">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-mi-cyan/20 flex items-center justify-between">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold text-white">
             Trigger Reset
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-mi-cyan">
             {BASE_POINTS} points
           </p>
         </div>
@@ -181,6 +181,7 @@ export default function TriggerReset() {
           size="icon"
           onClick={() => navigate('/mind-insurance/practice')}
           aria-label="Close"
+          className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >
           <X className="h-5 w-5" />
         </Button>
@@ -188,13 +189,13 @@ export default function TriggerReset() {
 
       <div className="container max-w-2xl mx-auto p-6 space-y-6">
         {/* Title Card */}
-        <Card className="bg-primary/10 border-primary">
+        <Card className="bg-mi-cyan/10 border-mi-cyan/30">
           <CardContent className="pt-6">
             <div className="text-center">
-              <h2 className="text-lg font-bold text-foreground mb-1">
+              <h2 className="text-lg font-bold text-white mb-1">
                 NASCAR Pit Stop - Trigger Reset
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-400">
                 Interrupt old patterns with championship-level responses
               </p>
             </div>
@@ -203,7 +204,7 @@ export default function TriggerReset() {
 
         {/* Trigger Description */}
         <div className="space-y-2">
-          <Label htmlFor="trigger-description" className="text-base font-semibold">
+          <Label htmlFor="trigger-description" className="text-base font-semibold text-white">
             What triggered you right now?
           </Label>
           <Textarea
@@ -211,14 +212,14 @@ export default function TriggerReset() {
             placeholder="Describe what triggered you..."
             value={triggerDescription}
             onChange={(e) => setTriggerDescription(e.target.value)}
-            className="min-h-[100px]"
+            className="mi-textarea min-h-[100px] resize-none"
           />
         </div>
 
         {/* Intensity Level */}
         <div className="space-y-3">
-          <Label htmlFor="intensity-slider" className="text-base font-semibold">
-            Intensity Level: {intensityLevel[0]}
+          <Label htmlFor="intensity-slider" className="text-base font-semibold text-white">
+            Intensity Level: <span className="text-mi-cyan">{intensityLevel[0]}</span>
           </Label>
           <div className="px-2">
             <Slider
@@ -228,9 +229,9 @@ export default function TriggerReset() {
               step={1}
               value={intensityLevel}
               onValueChange={setIntensityLevel}
-              className="w-full"
+              className="w-full [&_[role=slider]]:bg-mi-cyan [&_[role=slider]]:border-mi-cyan [&_.bg-primary]:bg-mi-cyan"
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>1 (Low)</span>
               <span>10 (High)</span>
             </div>
@@ -239,10 +240,10 @@ export default function TriggerReset() {
 
         {/* Old Response Pattern */}
         <div className="space-y-2">
-          <Label htmlFor="old-response" className="text-base font-semibold">
+          <Label htmlFor="old-response" className="text-base font-semibold text-white">
             Your Old Response Pattern
           </Label>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-400">
             How would you normally react to this trigger?
           </p>
           <Textarea
@@ -250,25 +251,25 @@ export default function TriggerReset() {
             placeholder="Describe your typical response..."
             value={oldResponse}
             onChange={(e) => setOldResponse(e.target.value)}
-            className="min-h-[100px]"
+            className="mi-textarea min-h-[100px] resize-none"
           />
         </div>
 
         {/* Reset Method */}
         <div className="space-y-2">
-          <Label htmlFor="reset-method" className="text-base font-semibold">
+          <Label htmlFor="reset-method" className="text-base font-semibold text-white">
             Choose Your Reset Method
           </Label>
           <Select value={resetMethod} onValueChange={setResetMethod}>
-            <SelectTrigger id="reset-method">
+            <SelectTrigger id="reset-method" className="mi-select">
               <SelectValue placeholder="Select a reset method..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-mi-navy-light border-mi-cyan/20">
               {RESET_METHODS.map((method) => (
-                <SelectItem key={method.value} value={method.value}>
+                <SelectItem key={method.value} value={method.value} className="text-gray-300 focus:bg-mi-cyan/20 focus:text-white">
                   <div className="flex flex-col">
                     <span className="font-medium">{method.label}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-gray-400">
                       {method.description}
                     </span>
                   </div>
@@ -279,21 +280,21 @@ export default function TriggerReset() {
         </div>
 
         {/* Additional Techniques */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6 space-y-4">
             <div>
-              <h3 className="text-base font-semibold text-foreground mb-1">
+              <h3 className="text-base font-semibold text-white mb-1">
                 Physical Anchor
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-400">
                 Touch thumb to finger while saying "Reset"
               </p>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-foreground mb-1">
+              <h3 className="text-base font-semibold text-white mb-1">
                 Champion Visualization
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-400">
                 See yourself handling this like a champion
               </p>
             </div>
@@ -301,15 +302,15 @@ export default function TriggerReset() {
         </Card>
 
         {/* New Championship Response */}
-        <Card className="bg-primary/10 border-primary">
+        <Card className="bg-mi-gold/10 border-mi-gold/30">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-primary" />
-              <CardTitle className="text-lg">
+              <Trophy className="h-6 w-6 text-mi-gold" />
+              <CardTitle className="text-lg text-white">
                 Your NEW Championship Response
               </CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-gray-400">
               How will you respond like a champion moving forward?
             </CardDescription>
           </CardHeader>
@@ -319,7 +320,7 @@ export default function TriggerReset() {
               placeholder="Describe your new championship response..."
               value={newResponse}
               onChange={(e) => setNewResponse(e.target.value)}
-              className="min-h-[120px]"
+              className="mi-textarea min-h-[120px] resize-none"
             />
           </CardContent>
         </Card>
@@ -334,7 +335,7 @@ export default function TriggerReset() {
 
         {/* Submit Button */}
         <Button
-          className="w-full"
+          className="w-full mi-btn-primary"
           size="lg"
           onClick={handleComplete}
           disabled={!canComplete || loading}

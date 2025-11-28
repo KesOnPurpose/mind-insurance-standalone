@@ -92,7 +92,7 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
 
   return (
     <>
-      <Card className="p-4 hover:shadow-md transition-shadow">
+      <Card className="p-4 hover:shadow-lg transition-shadow bg-mi-navy-light border border-mi-cyan/20 hover:border-mi-cyan/40">
         <div className="space-y-3">
           {/* Main row: Play button, info, actions */}
           <div className="flex items-start justify-between gap-3">
@@ -102,8 +102,8 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
                 variant="outline"
                 size="icon"
                 onClick={handleTogglePlay}
-                className={`shrink-0 h-12 w-12 rounded-full ${
-                  isPlaying ? 'bg-purple-100 border-purple-300 text-purple-600' : ''
+                className={`shrink-0 h-12 w-12 rounded-full border-mi-cyan/30 ${
+                  isPlaying ? 'bg-mi-cyan/20 border-mi-cyan text-mi-cyan' : 'text-gray-400 hover:text-mi-cyan hover:border-mi-cyan/50'
                 }`}
               >
                 {isPlaying ? (
@@ -115,16 +115,16 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className={`${typeColor} text-xs`}>
+                  <Badge variant="outline" className={`${typeColor} text-xs bg-mi-navy border-mi-cyan/30`}>
                     {typeLabel}
                   </Badge>
                   {recording.transcription_status === 'pending' && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs bg-mi-gold/20 text-mi-gold border border-mi-gold/30">
                       Transcribing...
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1 truncate">
+                <p className="text-sm text-gray-400 mt-1 truncate">
                   {formattedDate}
                 </p>
               </div>
@@ -132,21 +132,21 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
 
             {/* Right: Duration + actions */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm text-gray-400">
                 <Clock className="h-3.5 w-3.5" />
                 <span>{formatDuration(recording.recording_duration)}</span>
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-mi-navy">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="bg-mi-navy-light border-mi-cyan/20">
                   <DropdownMenuItem
                     onClick={() => setShowDeleteDialog(true)}
-                    className="text-destructive focus:text-destructive"
+                    className="text-red-400 focus:text-red-400 focus:bg-red-500/10"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete
@@ -158,9 +158,9 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
 
           {/* Progress bar (shows when playing or paused on this recording) */}
           {audioPlaybackService.isCurrent(recording.id) && (
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div className="w-full bg-mi-navy rounded-full h-1.5">
               <div
-                className="bg-purple-600 h-1.5 rounded-full transition-all"
+                className="bg-mi-cyan h-1.5 rounded-full transition-all"
                 style={{ width: `${Math.min(100, progress)}%` }}
               />
             </div>
@@ -173,7 +173,7 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-between text-muted-foreground hover:text-foreground"
+                  className="w-full justify-between text-gray-400 hover:text-white hover:bg-mi-navy"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -187,8 +187,8 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="mt-2 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                <div className="mt-2 p-3 bg-mi-navy rounded-lg border border-mi-cyan/10">
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">
                     {recording.transcription_text}
                   </p>
                 </div>

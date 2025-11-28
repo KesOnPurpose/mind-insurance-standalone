@@ -64,6 +64,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Mind Insurance brand colors
+        'mi-cyan': '#05c3dd',
+        'mi-cyan-dark': '#0099aa',
+        'mi-gold': '#fac832',
+        'mi-gold-dark': '#e0b52d',
+        'mi-navy': '#0A1628',
+        'mi-navy-light': '#132337',
       },
       backgroundImage: {
         'gradient-hero': 'var(--gradient-hero)',

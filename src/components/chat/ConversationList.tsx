@@ -22,6 +22,15 @@ export function ConversationList({
   onRenameConversation,
   onArchiveConversation,
 }: ConversationListProps) {
+  // Debug logging to trace rendering issues
+  console.log('[ConversationList] Rendering with:', {
+    conversationsCount: conversations.length,
+    isLoading,
+    error,
+    activeConversationId,
+    firstConversation: conversations[0]?.title || 'none'
+  });
+
   // Loading state
   if (isLoading) {
     return (

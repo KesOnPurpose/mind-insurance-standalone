@@ -140,7 +140,7 @@ export async function fetchRecentConversation(
     const { data, error } = await supabase
       .from('n8n_chat_histories')
       .select('*')
-      .like('session_id', sessionPattern)
+      .ilike('session_id', sessionPattern)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -175,6 +175,7 @@ export async function fetchRecentConversation(
 
 /**
  * Fetch chat history for a specific conversation by conversation_id
+ * Uses multi-pattern fallback strategy to handle different session_id formats
  */
 export async function fetchConversationById(
   userId: string,
@@ -182,28 +183,79 @@ export async function fetchConversationById(
   limit: number = 100
 ): Promise<ChatHistoryMessage[]> {
   try {
-    // Session IDs are formatted as: "{conversation_id}:{agent}"
-    // We match any agent suffix for this conversation
+    // Strategy 1: Pattern match "{conversation_id}:{agent}" format
+    // Using ILIKE for case-insensitive matching (PostgreSQL)
     const sessionPattern = `${conversationId}:%`;
+    console.log('[ChatHistory] Trying pattern 1 (ilike):', sessionPattern);
+    console.log('[ChatHistory] User ID:', userId);
+    console.log('[ChatHistory] Conversation ID:', conversationId);
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('n8n_chat_histories')
       .select('*')
-      .like('session_id', sessionPattern)
+      .ilike('session_id', sessionPattern)
       .order('created_at', { ascending: true })
       .limit(limit);
 
     if (error) {
-      console.error('[ChatHistory] Error fetching conversation by ID:', error);
-      return [];
+      console.error('[ChatHistory] Error with pattern 1:', error);
+    }
+
+    // Strategy 2: Try exact match if pattern match fails
+    if (!data || data.length === 0) {
+      console.log('[ChatHistory] Trying exact match for conversation:', conversationId);
+      const exactResult = await supabase
+        .from('n8n_chat_histories')
+        .select('*')
+        .eq('session_id', conversationId)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (!exactResult.error && exactResult.data && exactResult.data.length > 0) {
+        data = exactResult.data;
+        console.log('[ChatHistory] Found', data.length, 'messages with exact match');
+      }
+    }
+
+    // Strategy 3: Try contains pattern "%{conversation_id}%" (case-insensitive)
+    if (!data || data.length === 0) {
+      console.log('[ChatHistory] Trying contains pattern (ilike) for conversation:', conversationId);
+      const containsResult = await supabase
+        .from('n8n_chat_histories')
+        .select('*')
+        .ilike('session_id', `%${conversationId}%`)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (!containsResult.error && containsResult.data && containsResult.data.length > 0) {
+        data = containsResult.data;
+        console.log('[ChatHistory] Found', data.length, 'messages with contains pattern');
+      }
+    }
+
+    // Strategy 4: Try with user_id prefix "{user_id}:{conversation_id}" (case-insensitive)
+    if (!data || data.length === 0) {
+      const userConvPattern = `${userId}:${conversationId}%`;
+      console.log('[ChatHistory] Trying user:conv pattern (ilike):', userConvPattern);
+      const userConvResult = await supabase
+        .from('n8n_chat_histories')
+        .select('*')
+        .ilike('session_id', userConvPattern)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (!userConvResult.error && userConvResult.data && userConvResult.data.length > 0) {
+        data = userConvResult.data;
+        console.log('[ChatHistory] Found', data.length, 'messages with user:conv pattern');
+      }
     }
 
     if (!data || data.length === 0) {
-      console.log('[ChatHistory] No messages found for conversation:', conversationId);
+      console.log('[ChatHistory] No messages found for conversation after all strategies:', conversationId);
       return [];
     }
 
-    console.log('[ChatHistory] Found', data.length, 'messages for conversation:', conversationId);
+    console.log('[ChatHistory] Total messages found for conversation:', conversationId, '-', data.length);
     return transformMessages(data.reverse()); // reverse because we want chronological for transform
 
   } catch (err) {

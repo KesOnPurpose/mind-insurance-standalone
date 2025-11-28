@@ -189,14 +189,14 @@ export default function PatternCheck() {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-mi-navy">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-mi-cyan/20 flex items-center justify-between">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold text-white">
             Pattern Check
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-mi-cyan">
             {BASE_POINTS} points
           </p>
         </div>
@@ -205,6 +205,7 @@ export default function PatternCheck() {
           size="icon"
           onClick={() => navigate('/mind-insurance/practice')}
           aria-label="Close"
+          className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >
           <X className="h-5 w-5" />
         </Button>
@@ -214,8 +215,8 @@ export default function PatternCheck() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-2xl mx-auto">
           {alreadyCompleted && (
-            <Alert className="mb-6 bg-success/20 border-success">
-              <AlertDescription className="text-center">
+            <Alert className="mb-6 bg-mi-cyan/20 border-mi-cyan">
+              <AlertDescription className="text-center text-white">
                 <span className="font-semibold">✓ Already Completed Today</span>
                 <br />
                 You've already completed this practice today. Come back tomorrow!
@@ -223,29 +224,29 @@ export default function PatternCheck() {
             </Alert>
           )}
 
-          <Card>
+          <Card className="bg-mi-navy-light border-mi-cyan/20">
             <CardHeader>
-              <CardTitle>Daily Pattern Recognition</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Daily Pattern Recognition</CardTitle>
+              <CardDescription className="text-gray-400">
                 Identify and reframe negative thought patterns
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Question 1: Caught Pattern */}
               <div className="space-y-3">
-                <Label className="text-base font-semibold">
+                <Label className="text-base font-semibold text-white">
                   Did you catch yourself in a negative thought pattern today?
                 </Label>
                 <RadioGroup value={caughtPattern} onValueChange={setCaughtPattern}>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="no" />
-                    <Label htmlFor="no" className="font-normal cursor-pointer">
+                    <RadioGroupItem value="no" id="no" className="border-mi-cyan/50 text-mi-cyan" />
+                    <Label htmlFor="no" className="font-normal cursor-pointer text-gray-300">
                       No patterns today
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="yes" />
-                    <Label htmlFor="yes" className="font-normal cursor-pointer">
+                    <RadioGroupItem value="yes" id="yes" className="border-mi-cyan/50 text-mi-cyan" />
+                    <Label htmlFor="yes" className="font-normal cursor-pointer text-gray-300">
                       Yes, I caught one!
                     </Label>
                   </div>
@@ -256,16 +257,16 @@ export default function PatternCheck() {
                 <>
                   {/* Collision Type */}
                   <div className="space-y-3">
-                    <Label htmlFor="collision-type" className="text-base font-semibold">
+                    <Label htmlFor="collision-type" className="text-base font-semibold text-white">
                       Which type of collision?
                     </Label>
                     <Select value={collisionType} onValueChange={setCollisionType}>
-                      <SelectTrigger id="collision-type">
+                      <SelectTrigger id="collision-type" className="mi-select">
                         <SelectValue placeholder="Select collision type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-mi-navy-light border-mi-cyan/20">
                         {COLLISION_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
+                          <SelectItem key={type.value} value={type.value} className="text-gray-300 focus:bg-mi-cyan/20 focus:text-white">
                             {type.label}
                           </SelectItem>
                         ))}
@@ -276,10 +277,10 @@ export default function PatternCheck() {
                   {/* Situation */}
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="situation" className="text-base font-semibold">
+                      <Label htmlFor="situation" className="text-base font-semibold text-white">
                         Describe the situation:
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-gray-400 mt-1">
                         What triggered this pattern?
                       </p>
                     </div>
@@ -289,17 +290,17 @@ export default function PatternCheck() {
                       value={situation}
                       onChange={(e) => setSituation(e.target.value)}
                       rows={4}
-                      className="resize-none"
+                      className="mi-textarea resize-none"
                     />
                   </div>
 
                   {/* Reframe */}
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="reframe" className="text-base font-semibold">
+                      <Label htmlFor="reframe" className="text-base font-semibold text-white">
                         How did you reframe it?
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-gray-400 mt-1">
                         How did you switch perspectives?
                       </p>
                     </div>
@@ -309,7 +310,7 @@ export default function PatternCheck() {
                       value={reframe}
                       onChange={(e) => setReframe(e.target.value)}
                       rows={4}
-                      className="resize-none"
+                      className="mi-textarea resize-none"
                     />
                   </div>
                 </>
@@ -326,9 +327,9 @@ export default function PatternCheck() {
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border">
+      <div className="px-6 py-4 border-t border-mi-cyan/20">
         <Button
-          className="w-full"
+          className="w-full mi-btn-primary"
           size="lg"
           onClick={handleComplete}
           disabled={!canComplete || loading || alreadyCompleted}

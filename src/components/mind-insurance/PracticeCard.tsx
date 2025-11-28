@@ -37,21 +37,21 @@ export const PracticeCard = ({
   const displayPoints = pointsEarned !== undefined ? pointsEarned : basePoints;
   const isLateCompletion = false; // No late penalties in current system
 
-  // Determine card state styling
+  // Determine card state styling - Dark Navy Theme
   const cardClassName = cn(
     "relative transition-all duration-200 cursor-pointer min-h-[120px]",
-    "hover:shadow-md active:scale-[0.98]",
+    "bg-mi-navy-light border border-mi-cyan/20",
+    "hover:border-mi-cyan/50 hover:shadow-lg active:scale-[0.98]",
     {
-      "opacity-50 cursor-not-allowed": !isAvailable,
-      "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800": isCompleted,
-      "hover:border-primary/50": isAvailable && !isCompleted
+      "opacity-50 cursor-not-allowed border-mi-navy": !isAvailable,
+      "border-mi-gold/50 bg-mi-gold/5": isCompleted,
     }
   );
 
   // Ensure minimum tap target size (44px) for mobile
   const buttonClassName = cn(
     "w-full h-full min-h-[44px] p-4 flex flex-col justify-between",
-    "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+    "focus:outline-none focus:ring-2 focus:ring-mi-cyan focus:ring-offset-2 focus:ring-offset-mi-navy",
     {
       "pointer-events-none": !isAvailable
     }
@@ -83,10 +83,10 @@ export const PracticeCard = ({
 
             {/* Practice Name */}
             <div>
-              <h3 className="font-semibold text-base">
+              <h3 className="font-semibold text-base text-white">
                 {practice.name}
               </h3>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+              <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
                 {practice.description}
               </p>
             </div>
@@ -95,11 +95,11 @@ export const PracticeCard = ({
           {/* Status Icon */}
           <div className="flex-shrink-0">
             {isCompleted ? (
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" aria-label="Completed" />
+              <CheckCircle className="w-5 h-5 text-mi-gold" aria-label="Completed" />
             ) : isAvailable ? (
-              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-label="Available now" />
+              <Clock className="w-5 h-5 text-mi-cyan" aria-label="Available now" />
             ) : (
-              <LockIcon className="w-5 h-5 text-gray-400" aria-label="Locked" />
+              <LockIcon className="w-5 h-5 text-gray-500" aria-label="Locked" />
             )}
           </div>
         </div>
@@ -111,22 +111,22 @@ export const PracticeCard = ({
             <span className={cn(
               "text-lg font-bold",
               {
-                "text-green-600 dark:text-green-400": isCompleted,
-                "text-orange-600 dark:text-orange-400": isLateCompletion,
-                "text-foreground": !isCompleted && isAvailable,
-                "text-muted-foreground": !isAvailable
+                "text-mi-gold": isCompleted,
+                "text-orange-400": isLateCompletion,
+                "text-mi-cyan": !isCompleted && isAvailable,
+                "text-gray-500": !isAvailable
               }
             )}>
             {isCompleted ? `+${displayPoints}` : displayPoints}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-gray-400">
             pts
           </span>
         </div>
 
         {/* Duration Estimate */}
         {!isCompleted && isAvailable && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-gray-400">
             <Clock className="w-3 h-3" />
             <span>{practice.estimatedDuration} min</span>
           </div>

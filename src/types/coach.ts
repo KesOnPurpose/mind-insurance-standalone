@@ -36,8 +36,8 @@ export const COACHES: Record<CoachType, Coach> = {
     title: 'Mindset & Accountability Coach',
     description: 'I help you overcome mental blocks, stay accountable, and build the mindset needed for breakthrough success.',
     avatar: 'M',
-    color: 'hsl(35 95% 55%)', // Secondary amber
-    gradient: 'linear-gradient(135deg, hsl(35 95% 55%), hsl(35 95% 65%))',
+    color: '#05c3dd', // Mind Insurance cyan
+    gradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
     personality: 'Empathetic, motivating, and insightful. Helps with mindset shifts and accountability.',
     expertise: [
       'Mindset coaching',
