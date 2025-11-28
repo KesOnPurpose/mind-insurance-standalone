@@ -11,6 +11,7 @@ interface ChatWelcomeScreenProps {
 }
 
 const QUICK_ACTIONS = [
+  "How to use this app?",
   "Where should I start?",
   "Do I need a license?",
   "Tell me about your journey"
