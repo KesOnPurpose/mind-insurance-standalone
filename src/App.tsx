@@ -68,8 +68,8 @@ const App = () => (
               <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><AssessmentGuard><AppLayout><DashboardPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/resources" element={<ProtectedRoute><AssessmentGuard><AppLayout><ResourcesPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><AssessmentGuard><DashboardPage /></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/resources" element={<ProtectedRoute><AssessmentGuard><ResourcesPage /></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsuranceHub /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/practice" element={<ProtectedRoute><AssessmentGuard><AppLayout><MindInsurancePracticePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
               <Route path="/mind-insurance/championship" element={<ProtectedRoute><AssessmentGuard><AppLayout><ChampionshipPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
@@ -89,7 +89,7 @@ const App = () => (
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
               <Route path="/settings" element={<ProtectedRoute><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><AssessmentGuard><AppLayout><ProfilePage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><AssessmentGuard><ProfilePage /></AssessmentGuard></ProtectedRoute>} />
               <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
               {/* Test page for Glossary Tooltips - No auth required for testing */}
               <Route path="/test-tooltip" element={<TestTooltip />} />
