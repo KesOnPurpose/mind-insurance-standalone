@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Zap, Calendar, ChevronRight } from 'lucide-react';
+import { RefreshCw, Trophy, Zap, Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
 import { TimeWindowSection, type TimeWindow as TimeWindowType } from '@/components/mind-insurance/TimeWindowSection';
 import { PracticeCard } from '@/components/mind-insurance/PracticeCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -225,6 +225,14 @@ export default function MindInsurancePracticePage() {
 
   return (
     <div className="container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Back Button */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => navigate('/mind-insurance')}>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Hub
+        </Button>
+      </div>
+
       {/* Header Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">

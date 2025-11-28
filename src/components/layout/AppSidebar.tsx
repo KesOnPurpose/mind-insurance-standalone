@@ -119,7 +119,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
       <SidebarHeader className="p-4">
         {/* Logo/Brand */}
         <Link
-          to="/dashboard"
+          to="/chat"
           className="flex items-center gap-2 mb-4"
           onClick={() => isMobile && setOpenMobile(false)}
         >
@@ -174,36 +174,36 @@ export function AppSidebar({ mode }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
+              tooltip="Dashboard"
+              isActive={isActive('/dashboard')}
+            >
+              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
+                <Home className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Chat with Nette"
+              isActive={isActive('/chat')}
+            >
+              <Link to="/chat" onClick={() => isMobile && setOpenMobile(false)}>
+                <MessageSquare className="h-4 w-4" />
+                <span>Chat</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
               tooltip="Roadmap"
               isActive={isActive('/roadmap')}
             >
               <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
                 <Map className="h-4 w-4" />
                 <span>Roadmap</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Model Week"
-              isActive={isActive('/model-week')}
-            >
-              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
-                <Calendar className="h-4 w-4" />
-                <span>Model Week</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Mind Insurance"
-              isActive={isActive('/mind-insurance')}
-            >
-              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
-                <Shield className="h-4 w-4" />
-                <span>Mind Insurance</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -222,12 +222,33 @@ export function AppSidebar({ mode }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              tooltip="Chat with Nette"
-              isActive={isActive('/chat')}
+              tooltip="Model Week"
+              isActive={isActive('/model-week')}
             >
-              <Link to="/chat" onClick={() => isMobile && setOpenMobile(false)}>
-                <MessageSquare className="h-4 w-4" />
-                <span>Chat</span>
+              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
+                <Calendar className="h-4 w-4" />
+                <span>Model Week</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <SidebarSeparator className="my-3" />
+
+        {/* Apps Section */}
+        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+          Apps
+        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Mind Insurance"
+              isActive={isActive('/mind-insurance')}
+            >
+              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
+                <Shield className="h-4 w-4" />
+                <span>Mind Insurance</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -240,18 +261,6 @@ export function AppSidebar({ mode }: AppSidebarProps) {
           Account
         </div>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Dashboard"
-              isActive={isActive('/dashboard')}
-            >
-              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
