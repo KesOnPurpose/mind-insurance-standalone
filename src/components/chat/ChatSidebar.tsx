@@ -1,4 +1,4 @@
-import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, User } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, User, DollarSign } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -60,7 +60,7 @@ export function ChatSidebar() {
     <Sidebar side="left" collapsible="offcanvas">
       <SidebarHeader className="p-4">
         {/* Logo/Brand */}
-        <Link to="/dashboard" className="flex items-center gap-2 mb-4">
+        <Link to="/chat" className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
             <span className="text-white font-bold text-sm">GH</span>
           </div>
@@ -104,26 +104,18 @@ export function ChatSidebar() {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Dashboard">
+              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
+                <Home className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Roadmap">
               <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
                 <Map className="h-4 w-4" />
                 <span>Roadmap</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Model Week">
-              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
-                <Calendar className="h-4 w-4" />
-                <span>Model Week</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Mind Insurance">
-              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
-                <Shield className="h-4 w-4" />
-                <span>Mind Insurance</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -135,6 +127,42 @@ export function ChatSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Model Week">
+              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
+                <Calendar className="h-4 w-4" />
+                <span>Model Week</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <SidebarSeparator className="my-3" />
+
+        {/* Apps Section */}
+        <div className="text-xs font-medium text-muted-foreground px-2 py-2">
+          Apps
+        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Mind Insurance">
+              <Link to="/mind-insurance" onClick={() => isMobile && setOpenMobile(false)}>
+                <Shield className="h-4 w-4" />
+                <span>Mind Insurance</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Millionaire Essentials - Coming Soon"
+              disabled
+              className="opacity-50 cursor-not-allowed"
+            >
+              <DollarSign className="h-4 w-4" />
+              <span>Millionaire Essentials</span>
+              <span className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">Soon</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
 
         <SidebarSeparator className="my-3" />
@@ -144,14 +172,6 @@ export function ChatSidebar() {
           Account
         </div>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Dashboard">
-              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
               <Link to="/profile" onClick={() => isMobile && setOpenMobile(false)}>

@@ -1,4 +1,4 @@
-import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, MessageSquare, User } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, Shield, BookOpen, MessageSquare, User, DollarSign } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -250,6 +250,17 @@ export function AppSidebar({ mode }: AppSidebarProps) {
                 <Shield className="h-4 w-4" />
                 <span>Mind Insurance</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Millionaire Essentials - Coming Soon"
+              disabled
+              className="opacity-50 cursor-not-allowed"
+            >
+              <DollarSign className="h-4 w-4" />
+              <span>Millionaire Essentials</span>
+              <span className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">Soon</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

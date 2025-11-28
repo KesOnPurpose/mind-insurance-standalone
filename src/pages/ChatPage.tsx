@@ -202,15 +202,7 @@ function ChatPageContent() {
     // Generate conversation ID
     const newConversationId = crypto.randomUUID();
 
-    // Create conversation metadata for sidebar
-    await addConversation(newConversationId, messageText, 'nette');
-
-    // Set as active conversation
-    setActiveConversation(newConversationId);
-
-    console.log('[Conversation] Started new conversation from welcome:', newConversationId);
-
-    // Create user message
+    // Create user message FIRST (before any state that triggers view change)
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -219,8 +211,19 @@ function ChatPageContent() {
       coachType: 'nette'
     };
 
-    // Add user message to existing greeting
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message to state BEFORE switching view
+    // This ensures the message is visible when the view changes
+    setMessages([userMessage]);
+
+    // NOW set as active conversation (this triggers the view switch)
+    // The message will already be in state so user sees their question
+    setActiveConversation(newConversationId);
+
+    // Create conversation metadata for sidebar (async, doesn't block)
+    await addConversation(newConversationId, messageText, 'nette');
+
+    console.log('[Conversation] Started new conversation from welcome:', newConversationId);
+
     setIsTyping(true);
 
     try {
