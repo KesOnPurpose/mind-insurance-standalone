@@ -172,9 +172,12 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               );
             }
 
+            // Route to product-appropriate chat
+            const chatRoute = isInMindInsurance ? '/mind-insurance/chat' : '/chat';
+
             return (
               <Button
-                onClick={() => handleNavigate('/chat')}
+                onClick={() => handleNavigate(chatRoute)}
                 className={cn(
                   "w-full justify-start gap-2 transition-colors",
                   isMindInsurance && "bg-mi-navy-light border-mi-cyan/30 hover:bg-mi-navy text-mi-cyan hover:text-white"

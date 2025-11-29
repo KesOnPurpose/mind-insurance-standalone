@@ -1,7 +1,10 @@
-import { Loader2, MessageSquareOff } from 'lucide-react';
+import { useMemo } from 'react';
+import { MessageSquareOff } from 'lucide-react';
 import { ConversationMetadata } from '@/services/conversationMetadataService';
-import { ConversationListItem } from './ConversationListItem';
+import { ConversationFolder } from './ConversationFolder';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CoachType } from '@/types/coach';
+import { useProduct } from '@/contexts/ProductContext';
 
 interface ConversationListProps {
   conversations: ConversationMetadata[];
@@ -13,6 +16,16 @@ interface ConversationListProps {
   onArchiveConversation: (conversationId: string) => Promise<boolean>;
 }
 
+// Map product types to their default coach
+const PRODUCT_TO_COACH: Record<string, CoachType> = {
+  'grouphome': 'nette',
+  'mind-insurance': 'mio',
+  'me-wealth': 'me',
+};
+
+// Define folder order based on current product
+const FOLDER_ORDER: CoachType[] = ['nette', 'mio', 'me'];
+
 export function ConversationList({
   conversations,
   activeConversationId,
@@ -22,13 +35,45 @@ export function ConversationList({
   onRenameConversation,
   onArchiveConversation,
 }: ConversationListProps) {
+  const { currentProduct } = useProduct();
+
+  // Determine which coach folder should be open by default based on current product
+  const defaultOpenCoach = PRODUCT_TO_COACH[currentProduct] || 'nette';
+
+  // Group conversations by coach_type
+  const groupedConversations = useMemo(() => {
+    const groups: Record<CoachType, ConversationMetadata[]> = {
+      nette: [],
+      mio: [],
+      me: [],
+    };
+
+    conversations.forEach((conv) => {
+      const coachType = (conv.coach_type as CoachType) || 'nette';
+      if (groups[coachType]) {
+        groups[coachType].push(conv);
+      } else {
+        // Default to nette if unknown coach type
+        groups.nette.push(conv);
+      }
+    });
+
+    return groups;
+  }, [conversations]);
+
   // Debug logging to trace rendering issues
   console.log('[ConversationList] Rendering with:', {
     conversationsCount: conversations.length,
     isLoading,
     error,
     activeConversationId,
-    firstConversation: conversations[0]?.title || 'none'
+    currentProduct,
+    defaultOpenCoach,
+    groupedCounts: {
+      nette: groupedConversations.nette.length,
+      mio: groupedConversations.mio.length,
+      me: groupedConversations.me.length,
+    }
   });
 
   // Loading state
@@ -73,17 +118,19 @@ export function ConversationList({
     );
   }
 
-  // Conversations list
+  // Conversations list grouped by coach
   return (
-    <div className="space-y-1 p-2">
-      {conversations.map((conversation) => (
-        <ConversationListItem
-          key={conversation.id}
-          conversation={conversation}
-          isActive={conversation.conversation_id === activeConversationId}
-          onClick={() => onSelectConversation(conversation.conversation_id)}
-          onRename={(newTitle) => onRenameConversation(conversation.conversation_id, newTitle)}
-          onArchive={() => onArchiveConversation(conversation.conversation_id)}
+    <div className="space-y-2 p-2">
+      {FOLDER_ORDER.map((coachType) => (
+        <ConversationFolder
+          key={coachType}
+          coachType={coachType}
+          conversations={groupedConversations[coachType]}
+          activeConversationId={activeConversationId}
+          isDefaultOpen={coachType === defaultOpenCoach}
+          onSelectConversation={onSelectConversation}
+          onRenameConversation={onRenameConversation}
+          onArchiveConversation={onArchiveConversation}
         />
       ))}
     </div>

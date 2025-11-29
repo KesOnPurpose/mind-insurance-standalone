@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageSquare, MoreHorizontal, Pencil, Archive, Check, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { ConversationMetadata } from '@/services/conversationMetadataService';
 import { COACHES, CoachType } from '@/types/coach';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,12 @@ export function ConversationListItem({
   const [editTitle, setEditTitle] = useState(conversation.title);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
+
+  // Check if we're in the Mind Insurance section for dark theme
+  const isMindInsurance = useMemo(() => {
+    return location.pathname.startsWith('/mind-insurance');
+  }, [location.pathname]);
 
   // Focus input when editing starts
   useEffect(() => {
@@ -103,8 +110,12 @@ export function ConversationListItem({
       className={cn(
         'group relative flex items-start gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors',
         isActive
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-          : 'hover:bg-sidebar-accent/50'
+          ? isMindInsurance
+            ? 'bg-mi-navy text-white'
+            : 'bg-sidebar-accent text-sidebar-accent-foreground'
+          : isMindInsurance
+            ? 'hover:bg-mi-navy/50'
+            : 'hover:bg-sidebar-accent/50'
       )}
       onClick={isEditing ? undefined : onClick}
     >
@@ -149,9 +160,17 @@ export function ConversationListItem({
           </div>
         ) : (
           <>
-            <p className="text-sm font-medium truncate">{conversation.title}</p>
+            <p className={cn(
+              "text-sm font-medium truncate",
+              isMindInsurance && "text-white"
+            )}>
+              {conversation.title}
+            </p>
             {conversation.preview_text && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
+              <p className={cn(
+                "text-xs truncate mt-0.5",
+                isMindInsurance ? "text-gray-400" : "text-muted-foreground"
+              )}>
                 {conversation.preview_text}
               </p>
             )}
@@ -160,11 +179,17 @@ export function ConversationListItem({
 
         {/* Meta info */}
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted-foreground">
+          <span className={cn(
+            "text-xs",
+            isMindInsurance ? "text-gray-500" : "text-muted-foreground"
+          )}>
             {formatRelativeTime(conversation.last_message_at)}
           </span>
           {conversation.message_count > 0 && (
-            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+            <span className={cn(
+              "text-xs flex items-center gap-0.5",
+              isMindInsurance ? "text-gray-500" : "text-muted-foreground"
+            )}>
               <MessageSquare className="h-3 w-3" />
               {conversation.message_count}
             </span>

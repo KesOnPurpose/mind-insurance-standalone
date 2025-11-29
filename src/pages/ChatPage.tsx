@@ -41,6 +41,25 @@ const getDefaultCoachForProduct = (product: ProductType): CoachType => {
   return coachMap[product];
 };
 
+// Product-specific background styling for immersive experience
+const PRODUCT_BACKGROUNDS: Record<ProductType, {
+  bgClass: string;
+  headerGradient: string;
+}> = {
+  'grouphome': {
+    bgClass: 'bg-muted/30',
+    headerGradient: '', // Uses coach gradient
+  },
+  'mind-insurance': {
+    bgClass: 'bg-[#0a1628]', // MI dark navy background
+    headerGradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
+  },
+  'me-wealth': {
+    bgClass: 'bg-amber-50/30 dark:bg-amber-950/10',
+    headerGradient: '', // Uses coach gradient
+  },
+};
+
 // Get initial greeting based on coach type
 const getInitialGreeting = (coach: CoachType): string => {
   const greetings: Record<CoachType, string> = {
@@ -468,18 +487,22 @@ function ChatPageContent() {
     );
   }
 
+  // Get product-specific styling
+  const productBg = PRODUCT_BACKGROUNDS[currentProduct];
+  const isMindInsurance = currentProduct === 'mind-insurance';
+
   // Full chat interface
   return (
     <SidebarInset>
       {/* Fixed sidebar trigger - always visible when scrolling */}
       <div className="fixed top-4 left-4 z-50">
-        <SidebarTrigger className="h-10 w-10 bg-background/80 backdrop-blur-sm shadow-lg border rounded-lg hover:bg-background" />
+        <SidebarTrigger className={`h-10 w-10 backdrop-blur-sm shadow-lg border rounded-lg ${isMindInsurance ? 'bg-[#1a2a4a]/80 hover:bg-[#1a2a4a] text-[#05c3dd] border-[#05c3dd]/30' : 'bg-background/80 hover:bg-background'}`} />
       </div>
-      <div className="min-h-screen bg-muted/30 flex flex-col">
-        {/* Header */}
+      <div className={`min-h-screen flex flex-col ${productBg.bgClass} ${isMindInsurance ? 'text-white' : ''}`}>
+        {/* Header - Uses product gradient if available, otherwise coach gradient */}
         <div
           className="text-white transition-all"
-          style={{ background: COACHES[selectedCoach].gradient }}
+          style={{ background: productBg.headerGradient || COACHES[selectedCoach].gradient }}
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3">
@@ -547,7 +570,7 @@ function ChatPageContent() {
         </div>
 
         {/* Input */}
-        <div className="border-t bg-background sticky bottom-0">
+        <div className={`border-t sticky bottom-0 ${isMindInsurance ? 'bg-[#0a1628] border-[#05c3dd]/20' : 'bg-background'}`}>
           <div className="container mx-auto px-4 py-4">
             <div className="max-w-4xl mx-auto">
               {/* Active Conversation Indicator */}

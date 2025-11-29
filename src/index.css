@@ -248,6 +248,37 @@ All colors MUST be HSL.
   --sidebar-accent: 215 45% 8%; /* #0A1628 mi-navy */
   --sidebar-accent-foreground: 0 0% 100%;
   --border: 186 95% 44%; /* for right edge border - cyan */
+  background-color: #132337 !important;
+}
+
+/* Force ALL sidebar backgrounds to dark navy */
+.mi-sidebar-dark,
+.mi-sidebar-dark > *,
+.mi-sidebar-dark [data-sidebar],
+.mi-sidebar-dark [data-sidebar="sidebar"],
+.mi-sidebar-dark [data-sidebar="content"],
+.mi-sidebar-dark [data-sidebar="header"],
+.mi-sidebar-dark [data-sidebar="menu"],
+.mi-sidebar-dark [data-sidebar="menu-button"],
+.mi-sidebar-dark .bg-sidebar {
+  background-color: #132337 !important;
+}
+
+/* Sidebar accent backgrounds (hover states, user info) */
+.mi-sidebar-dark .bg-sidebar-accent,
+.mi-sidebar-dark [class*="bg-sidebar-accent"] {
+  background-color: #0a1628 !important;
+}
+
+/* Text colors for readability */
+.mi-sidebar-dark [data-sidebar="menu-button"] span,
+.mi-sidebar-dark [data-sidebar="menu-button"] svg {
+  color: #9ca3af !important; /* gray-400 */
+}
+
+.mi-sidebar-dark [data-sidebar="menu-button"]:hover span,
+.mi-sidebar-dark [data-sidebar="menu-button"]:hover svg {
+  color: #ffffff !important;
 }
 
 /* Override all nested border colors */

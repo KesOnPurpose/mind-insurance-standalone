@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
 import { COACHES, CoachType } from '@/types/coach';
 import { useProduct } from '@/contexts/ProductContext';
+import { cn } from '@/lib/utils';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
@@ -90,8 +91,14 @@ export const ChatWelcomeScreen = ({
     }
   };
 
+  // Check if Mind Insurance for dark theme
+  const isMindInsurance = currentProduct === 'mind-insurance';
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+    <div className={cn(
+      "min-h-screen flex flex-col items-center justify-center px-4",
+      isMindInsurance ? "bg-[#0a1628]" : "bg-background"
+    )}>
       <div className="w-full max-w-2xl flex flex-col items-center">
         {/* Coach Avatar */}
         <div
@@ -102,24 +109,38 @@ export const ChatWelcomeScreen = ({
         </div>
 
         {/* Greeting */}
-        <h1 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-2">
+        <h1 className={cn(
+          "text-2xl md:text-3xl font-semibold text-center mb-2",
+          isMindInsurance ? "text-white" : "text-foreground"
+        )}>
           {greeting}{firstName ? `, ${firstName}` : ''}
         </h1>
 
         {/* Subtitle */}
-        <p className="text-muted-foreground text-center mb-8">
+        <p className={cn(
+          "text-center mb-8",
+          isMindInsurance ? "text-gray-400" : "text-muted-foreground"
+        )}>
           {getSubtitle()}
         </p>
 
         {/* Input Container */}
         <div className="w-full mb-6">
-          <div className="flex items-center gap-2 p-2 bg-background border rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
+          <div className={cn(
+            "flex items-center gap-2 p-2 border rounded-2xl shadow-sm focus-within:ring-2",
+            isMindInsurance
+              ? "bg-[#0f1d32] border-[#05c3dd]/30 focus-within:ring-[#05c3dd]/20"
+              : "bg-background focus-within:ring-primary/20"
+          )}>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder={`Ask ${coach.name} anything...`}
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base"
+              className={cn(
+                "flex-1 border-0 bg-transparent focus-visible:ring-0 text-base",
+                isMindInsurance && "text-white placeholder:text-gray-500"
+              )}
               disabled={isLoading}
             />
             <Button
@@ -142,10 +163,15 @@ export const ChatWelcomeScreen = ({
               variant="outline"
               onClick={() => handleQuickAction(action)}
               disabled={isLoading}
-              className="rounded-full px-4 py-2 text-sm hover:bg-primary/5 hover:border-primary/30"
-              style={{
+              className={cn(
+                "rounded-full px-4 py-2 text-sm",
+                isMindInsurance
+                  ? "bg-[#0f1d32] border-[#05c3dd]/30 text-gray-300 hover:bg-[#05c3dd]/10 hover:text-white hover:border-[#05c3dd]/50"
+                  : "hover:bg-primary/5 hover:border-primary/30"
+              )}
+              style={!isMindInsurance ? {
                 borderColor: `${coach.color}30`,
-              }}
+              } : undefined}
             >
               {action}
             </Button>
