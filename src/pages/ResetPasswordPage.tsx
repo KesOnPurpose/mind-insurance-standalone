@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } from '@/utils/passwordValidator';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
@@ -17,26 +18,66 @@ const ResetPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [isValidating, setIsValidating] = useState(true);
+  const [isValidSession, setIsValidSession] = useState(false);
 
-  const { updatePassword, user } = useAuth();
+  const { updatePassword, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const passwordValidation = validatePassword(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
 
-  // Check if user came from a valid reset link
+  // Handle the password reset token from URL and validate session
   useEffect(() => {
-    // If there's no session from the reset link, redirect to forgot password
-    if (!user) {
-      toast({
-        title: "Invalid or expired link",
-        description: "Please request a new password reset link.",
-        variant: "destructive",
-      });
-      navigate('/forgot-password');
-    }
-  }, [user, navigate, toast]);
+    const validateResetSession = async () => {
+      try {
+        // Check if there are recovery tokens in the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+
+        // If this is a recovery flow, wait for the session to be established
+        if (type === 'recovery' && accessToken) {
+          // Give Supabase time to process the tokens
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Check if session is now established
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            setIsValidSession(true);
+            setIsValidating(false);
+            return;
+          }
+        }
+
+        // If we already have a user from AuthContext, that's also valid
+        if (user) {
+          setIsValidSession(true);
+          setIsValidating(false);
+          return;
+        }
+
+        // Wait for auth loading to complete
+        if (!loading) {
+          // No valid session found
+          setIsValidating(false);
+          toast({
+            title: "Invalid or expired link",
+            description: "Please request a new password reset link.",
+            variant: "destructive",
+          });
+          navigate('/forgot-password');
+        }
+      } catch (err) {
+        console.error('Error validating reset session:', err);
+        setIsValidating(false);
+        navigate('/forgot-password');
+      }
+    };
+
+    validateResetSession();
+  }, [user, loading, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +110,25 @@ const ResetPasswordPage = () => {
     }
   };
 
+  // Show loading state while validating
+  if (isValidating) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-8">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-semibold">Validating reset link...</h2>
+              <p className="text-muted-foreground mt-2">
+                Please wait while we verify your password reset request.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
@@ -90,6 +150,11 @@ const ResetPasswordPage = () => {
         </Card>
       </div>
     );
+  }
+
+  // Don't render form if session is not valid
+  if (!isValidSession) {
+    return null;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -181,15 +182,12 @@ export const LoginForm = () => {
                   </Label>
                 </div>
                 {authMode === 'password' && (
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="px-0 text-sm"
-                    onClick={() => window.location.href = '/forgot-password'}
-                    disabled={isLoading}
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-primary hover:underline"
                   >
                     Forgot password?
-                  </Button>
+                  </Link>
                 )}
               </div>
 
