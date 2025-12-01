@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Loader2, Search, Star, Settings, AlertCircle, Lock as LockIcon, Users
+  Loader2, Search, Star, Settings, AlertCircle, Lock as LockIcon, Users, GraduationCap, BookOpen
 } from 'lucide-react';
 
 /**
@@ -28,6 +28,7 @@ import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, useSaveNotes, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { TacticCard } from '@/components/roadmap/TacticCard';
+import { Week1Checklist } from '@/components/roadmap/Week1Checklist';
 import { TacticWithProgress, WeekSummary } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +51,7 @@ export default function RoadmapPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [populationFilter, setPopulationFilter] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'mentorship' | 'cashflow_course' | 'general'>('all');
   const [highlightedTacticId, setHighlightedTacticId] = useState<string | null>(null);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -261,12 +263,31 @@ export default function RoadmapPage() {
   const filteredTactics = tacticsWithProgress.filter(tactic => {
     // When search, category filter, or population filter is active, show tactics from ALL weeks (grouped later)
     // When all filters are 'all'/empty, maintain week-specific view
-    const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0;
+    const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0 || sourceFilter !== 'all';
     const matchesWeek = hasActiveFilter
       ? true // Show all weeks when filtering by search, category, or population
       : tactic.week_assignment === selectedWeek;
 
     const matchesSearch = tacticMatchesSearch(tactic, searchQuery);
+
+    // Source filter: Check tactic_source field (fallback to legacy is_mentorship_tactic and tactic_id prefix)
+    const matchesSource = (() => {
+      if (sourceFilter === 'all') return true;
+
+      // Prefer tactic_source field if available
+      if (tactic.tactic_source) {
+        return tactic.tactic_source === sourceFilter;
+      }
+
+      // Fallback to legacy logic for backwards compatibility (when tactic_source not set)
+      const isMentorshipTactic = tactic.is_mentorship_tactic || tactic.tactic_id.startsWith('M');
+      if (sourceFilter === 'mentorship') return isMentorshipTactic;
+      if (sourceFilter === 'general') return !isMentorshipTactic && tactic.tactic_id.startsWith('T');
+      // Note: cashflow_course tactics should all have tactic_source='cashflow_course' after migrations
+      if (sourceFilter === 'cashflow_course') return false; // Fallback: no legacy cashflow identification
+
+      return false;
+    })();
 
     // Enhanced category matching: support both parent categories and subcategories
     const matchesCategory = (() => {
@@ -302,7 +323,7 @@ export default function RoadmapPage() {
       );
     })();
 
-    return matchesWeek && matchesSearch && matchesCategory && matchesStatus && matchesPopulation;
+    return matchesWeek && matchesSearch && matchesSource && matchesCategory && matchesStatus && matchesPopulation;
   });
   
   // Group by category (for default week-specific view)
@@ -315,7 +336,7 @@ export default function RoadmapPage() {
   }, {} as Record<string, TacticWithProgress[]>);
 
   // Group by week (for cross-week filtered view when search, category, or population filter is active)
-  const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0;
+  const hasActiveFilter = searchQuery !== '' || categoryFilter !== 'all' || populationFilter.length > 0 || sourceFilter !== 'all';
   const tacticsByWeek = hasActiveFilter
     ? filteredTactics.reduce((acc, tactic) => {
         const week = tactic.week_assignment;
@@ -372,7 +393,58 @@ export default function RoadmapPage() {
         <div className="space-y-6">
             {/* Filters */}
             <Card className="p-4 mb-6">
-              <div className="grid md:grid-cols-4 gap-4">
+              {/* Source Filter - Full Width Row with 4 options */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 pb-4 border-b">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">Tactic Source:</span>
+                </div>
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                  <Button
+                    variant={sourceFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSourceFilter('all')}
+                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="whitespace-nowrap">All Tactics</span>
+                  </Button>
+                  <Button
+                    variant={sourceFilter === 'mentorship' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSourceFilter('mentorship')}
+                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                    style={sourceFilter === 'mentorship' ? {} : { background: 'transparent', color: 'inherit' }}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span className="whitespace-nowrap">Nette's Mentorship</span>
+                    <Badge variant="secondary" className="ml-1 bg-white text-purple-700 hidden sm:inline-flex">Week 1-12</Badge>
+                  </Button>
+                  <Button
+                    variant={sourceFilter === 'cashflow_course' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSourceFilter('cashflow_course')}
+                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
+                    style={sourceFilter === 'cashflow_course' ? {} : { background: 'transparent', color: 'inherit' }}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="whitespace-nowrap">Cashflow Course</span>
+                    <Badge variant="secondary" className="ml-1 bg-white text-green-700 hidden sm:inline-flex">40min</Badge>
+                  </Button>
+                  <Button
+                    variant={sourceFilter === 'general' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSourceFilter('general')}
+                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="whitespace-nowrap">General Tactics</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Existing Filters Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -525,6 +597,30 @@ export default function RoadmapPage() {
               </div>
             </Card>
 
+            {/* Week 1 Mentorship Checklist - Show when Week 1 is selected and mentorship filter is active or all */}
+            {selectedWeek === 1 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week1Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+              />
+            )}
+
             {/* Tactics Display - Conditional based on filter mode */}
             {hasActiveFilter && tacticsByWeek ? (
               /* Week-grouped view when category or population filter is active */
@@ -554,6 +650,7 @@ export default function RoadmapPage() {
                           setSearchQuery('');
                           setCategoryFilter('all');
                           setPopulationFilter([]);
+                          setSourceFilter('all');
                         }}
                         className="text-purple-600 hover:text-purple-700"
                       >
@@ -657,7 +754,15 @@ export default function RoadmapPage() {
                 onValueChange={setOpenAccordionItems}
                 className="space-y-4"
               >
-                {Object.entries(tacticsByCategory).map(([category, categoryTactics]) => (
+                {Object.entries(tacticsByCategory)
+                  .sort(([catA], [catB]) => {
+                    // Always show "Implementation" category first
+                    if (catA === 'Implementation') return -1;
+                    if (catB === 'Implementation') return 1;
+                    // Otherwise maintain original order
+                    return 0;
+                  })
+                  .map(([category, categoryTactics]) => (
                   <AccordionItem key={category} value={category}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center justify-between w-full pr-4">
