@@ -393,52 +393,50 @@ export default function RoadmapPage() {
         <div className="space-y-6">
             {/* Filters */}
             <Card className="p-4 mb-6">
-              {/* Source Filter - Full Width Row with 4 options */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 pb-4 border-b">
+              {/* Source Filter - Mobile-optimized grid layout */}
+              <div className="space-y-3 mb-4 pb-4 border-b">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-primary" />
                   <span className="text-sm font-medium text-muted-foreground">Tactic Source:</span>
                 </div>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   <Button
                     variant={sourceFilter === 'all' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSourceFilter('all')}
-                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                    className="gap-1 text-xs sm:text-sm justify-start sm:justify-center"
                   >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="whitespace-nowrap">All Tactics</span>
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">All</span>
                   </Button>
                   <Button
                     variant={sourceFilter === 'mentorship' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSourceFilter('mentorship')}
-                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                    className="gap-1 text-xs sm:text-sm justify-start sm:justify-center bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
                     style={sourceFilter === 'mentorship' ? {} : { background: 'transparent', color: 'inherit' }}
                   >
-                    <GraduationCap className="w-4 h-4" />
-                    <span className="whitespace-nowrap">Nette's Mentorship</span>
-                    <Badge variant="secondary" className="ml-1 bg-white text-purple-700 hidden sm:inline-flex">Week 1-12</Badge>
+                    <GraduationCap className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Mentorship</span>
                   </Button>
                   <Button
                     variant={sourceFilter === 'cashflow_course' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSourceFilter('cashflow_course')}
-                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
+                    className="gap-1 text-xs sm:text-sm justify-start sm:justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
                     style={sourceFilter === 'cashflow_course' ? {} : { background: 'transparent', color: 'inherit' }}
                   >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="whitespace-nowrap">Cashflow Course</span>
-                    <Badge variant="secondary" className="ml-1 bg-white text-green-700 hidden sm:inline-flex">40min</Badge>
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Cashflow</span>
                   </Button>
                   <Button
                     variant={sourceFilter === 'general' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSourceFilter('general')}
-                    className="gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                    className="gap-1 text-xs sm:text-sm justify-start sm:justify-center"
                   >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="whitespace-nowrap">General Tactics</span>
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">General</span>
                   </Button>
                 </div>
               </div>
