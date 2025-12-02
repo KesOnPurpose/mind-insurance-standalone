@@ -68,21 +68,21 @@ export const ResponseTimeChart: React.FC<ResponseTimeChartProps> = ({ timeRange 
     return [
       {
         name: 'Nette',
-        'Avg Response Time': netteQuery.data.overall_avg_ms,
-        'Cache Hit': netteQuery.data.by_agent.nette?.avg_cache_hit_ms || 0,
-        'Cache Miss': netteQuery.data.by_agent.nette?.avg_cache_miss_ms || 0,
+        'Avg Response Time': netteQuery.data.overall_avg_ms ?? 0,
+        'Cache Hit': netteQuery.data.by_agent.nette?.avg_cache_hit_ms ?? 0,
+        'Cache Miss': netteQuery.data.by_agent.nette?.avg_cache_miss_ms ?? 0,
       },
       {
         name: 'MIO',
-        'Avg Response Time': mioQuery.data.overall_avg_ms,
-        'Cache Hit': mioQuery.data.by_agent.mio?.avg_cache_hit_ms || 0,
-        'Cache Miss': mioQuery.data.by_agent.mio?.avg_cache_miss_ms || 0,
+        'Avg Response Time': mioQuery.data.overall_avg_ms ?? 0,
+        'Cache Hit': mioQuery.data.by_agent.mio?.avg_cache_hit_ms ?? 0,
+        'Cache Miss': mioQuery.data.by_agent.mio?.avg_cache_miss_ms ?? 0,
       },
       {
         name: 'ME',
-        'Avg Response Time': meQuery.data.overall_avg_ms,
-        'Cache Hit': meQuery.data.by_agent.me?.avg_cache_hit_ms || 0,
-        'Cache Miss': meQuery.data.by_agent.me?.avg_cache_miss_ms || 0,
+        'Avg Response Time': meQuery.data.overall_avg_ms ?? 0,
+        'Cache Hit': meQuery.data.by_agent.me?.avg_cache_hit_ms ?? 0,
+        'Cache Miss': meQuery.data.by_agent.me?.avg_cache_miss_ms ?? 0,
       },
     ];
   }, [netteQuery.data, mioQuery.data, meQuery.data]);

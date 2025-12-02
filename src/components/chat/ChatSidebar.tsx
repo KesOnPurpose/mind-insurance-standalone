@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, User, MessageSquare } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, User, MessageSquare, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 import { useConversationsContext } from '@/contexts/ConversationsContext';
 import { useConversationContext } from '@/contexts/ConversationContext';
 import { useProduct, ProductType } from '@/contexts/ProductContext';
@@ -72,6 +73,8 @@ export function ChatSidebar() {
     startNewConversation,
     selectConversation,
   } = useConversationContext();
+
+  const { canAccessAdminPanel } = useAccessControl();
 
   // Check if we're in the Mind Insurance section for dark theme
   const isMindInsurance = useMemo(() => {
@@ -291,6 +294,22 @@ export function ChatSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {canAccessAdminPanel && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Admin"
+                className={cn(
+                  isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
+                )}
+              >
+                <Link to="/admin" onClick={() => isMobile && setOpenMobile(false)}>
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, MessageSquare, User } from 'lucide-react';
+import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, MessageSquare, User, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { COACHES } from '@/types/coach';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 // Import context-specific panels
 import { RoadmapPanel } from './sidebar-panels/RoadmapPanel';
@@ -25,9 +26,10 @@ import { ResourcesHubPanel } from './sidebar-panels/ResourcesHubPanel';
 import { CalculatorPanel } from './sidebar-panels/CalculatorPanel';
 import { ProfilePanel } from './sidebar-panels/ProfilePanel';
 import { DefaultPanel } from './sidebar-panels/DefaultPanel';
+import { AdminPanel } from './sidebar-panels/AdminPanel';
 import { SidebarAppSwitcher } from './SidebarAppSwitcher';
 
-export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'default';
+export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'admin' | 'default';
 
 interface AppSidebarProps {
   mode: SidebarMode;
@@ -54,6 +56,8 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
       return <CalculatorPanel />;
     case 'profile':
       return <ProfilePanel />;
+    case 'admin':
+      return <AdminPanel />;
     case 'chat':
       // Chat mode uses ChatSidebar directly, not AppSidebar
       return null;
@@ -83,6 +87,8 @@ function getSectionLabel(mode: SidebarMode): string {
       return 'Calculator Tips';
     case 'profile':
       return 'Your Profile';
+    case 'admin':
+      return 'Admin Panel';
     default:
       return 'Overview';
   }
@@ -99,6 +105,7 @@ function getSectionLabel(mode: SidebarMode): string {
  */
 export function AppSidebar({ mode }: AppSidebarProps) {
   const { user, signOut } = useAuth();
+  const { canAccessAdminPanel } = useAccessControl();
   const navigate = useNavigate();
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
@@ -346,6 +353,23 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {canAccessAdminPanel && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Admin"
+                isActive={isActive('/admin')}
+                className={cn(
+                  isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
+                )}
+              >
+                <Link to="/admin" onClick={() => isMobile && setOpenMobile(false)}>
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}
