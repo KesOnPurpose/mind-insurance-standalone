@@ -1,6 +1,7 @@
 // DocumentManagement Page - Full Implementation
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { DocumentAnalyticsSummary } from '@/components/admin/documents/DocumentAnalyticsSummary';
 import { DocumentUploadZone } from '@/components/admin/documents/DocumentUploadZone';
 import { DocumentMetadataForm } from '@/components/admin/documents/DocumentMetadataForm';
@@ -74,35 +75,33 @@ export const DocumentManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Document Management</h1>
-          <p className="text-muted-foreground">
-            Upload, organize, and manage training materials
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowBulkUploader(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Bulk Upload
-          </button>
-          <button
-            onClick={() => setShowLinkImporter(true)}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
-          >
-            Import Links
-          </button>
-          <button
-            onClick={() => setShowLinkExporter(true)}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
-          >
-            Export Links
-          </button>
-        </div>
+    <SidebarLayout
+      mode="admin"
+      showHeader
+      headerTitle="Document Management"
+      headerSubtitle="Upload, organize, and manage training materials"
+      headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
+    >
+      {/* Header Actions */}
+      <div className="flex items-center justify-end gap-2 mb-6">
+        <button
+          onClick={() => setShowBulkUploader(true)}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Bulk Upload
+        </button>
+        <button
+          onClick={() => setShowLinkImporter(true)}
+          className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+        >
+          Import Links
+        </button>
+        <button
+          onClick={() => setShowLinkExporter(true)}
+          className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+        >
+          Export Links
+        </button>
       </div>
 
       {/* Analytics Summary */}
@@ -207,6 +206,6 @@ export const DocumentManagement = () => {
           onClose={() => setShowLinkExporter(false)}
         />
       )}
-    </div>
+    </SidebarLayout>
   );
 };

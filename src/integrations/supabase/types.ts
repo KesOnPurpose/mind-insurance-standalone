@@ -710,6 +710,63 @@ export type Database = {
         }
         Relationships: []
       }
+      gh_approved_users: {
+        Row: {
+          id: string
+          email: string
+          user_id: string | null
+          tier: Database["public"]["Enums"]["gh_access_tier"]
+          is_active: boolean
+          full_name: string | null
+          phone: string | null
+          notes: string | null
+          payment_source: string | null
+          payment_reference: string | null
+          approved_at: string
+          approved_by: string | null
+          expires_at: string | null
+          last_access_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          user_id?: string | null
+          tier?: Database["public"]["Enums"]["gh_access_tier"]
+          is_active?: boolean
+          full_name?: string | null
+          phone?: string | null
+          notes?: string | null
+          payment_source?: string | null
+          payment_reference?: string | null
+          approved_at?: string
+          approved_by?: string | null
+          expires_at?: string | null
+          last_access_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          user_id?: string | null
+          tier?: Database["public"]["Enums"]["gh_access_tier"]
+          is_active?: boolean
+          full_name?: string | null
+          phone?: string | null
+          notes?: string | null
+          payment_source?: string | null
+          payment_reference?: string | null
+          approved_at?: string
+          approved_by?: string | null
+          expires_at?: string | null
+          last_access_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gh_model_weeks: {
         Row: {
           active_days_per_week: number | null
@@ -3810,6 +3867,99 @@ export type Database = {
         }[]
       }
       get_user_journey_position: { Args: { p_user_id: string }; Returns: Json }
+      gh_admin_add_user: {
+        Args: {
+          p_email: string
+          p_full_name?: string
+          p_phone?: string
+          p_tier?: string
+          p_notes?: string
+          p_payment_source?: string
+          p_payment_reference?: string
+        }
+        Returns: {
+          id: string
+          email: string
+          user_id: string | null
+          tier: Database["public"]["Enums"]["gh_access_tier"]
+          is_active: boolean
+          full_name: string | null
+          phone: string | null
+          notes: string | null
+          payment_source: string | null
+          payment_reference: string | null
+          expires_at: string | null
+          approved_at: string
+          approved_by: string | null
+          last_access_at: string | null
+          created_at: string
+        }
+      }
+      gh_admin_bulk_add_users: {
+        Args: {
+          p_emails: string[]
+          p_tier?: string
+          p_payment_source?: string
+        }
+        Returns: number
+      }
+      gh_admin_delete_user: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      gh_admin_get_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          user_id: string | null
+          tier: Database["public"]["Enums"]["gh_access_tier"]
+          is_active: boolean
+          full_name: string | null
+          phone: string | null
+          notes: string | null
+          payment_source: string | null
+          payment_reference: string | null
+          expires_at: string | null
+          approved_at: string
+          approved_by: string | null
+          last_access_at: string | null
+          created_at: string
+        }[]
+      }
+      gh_admin_update_user: {
+        Args: {
+          p_user_id: string
+          p_full_name?: string
+          p_phone?: string
+          p_tier?: string
+          p_notes?: string
+          p_payment_source?: string
+          p_payment_reference?: string
+          p_is_active?: boolean
+        }
+        Returns: {
+          id: string
+          email: string
+          user_id: string | null
+          tier: Database["public"]["Enums"]["gh_access_tier"]
+          is_active: boolean
+          full_name: string | null
+          phone: string | null
+          notes: string | null
+          payment_source: string | null
+          payment_reference: string | null
+          expires_at: string | null
+          approved_at: string
+          approved_by: string | null
+          last_access_at: string | null
+          created_at: string
+        }
+      }
+      gh_get_current_user_access: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       gh_get_mio_behavioral_data: {
         Args: { p_days_back?: number; p_user_id: string }
         Returns: Json
@@ -3923,7 +4073,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      gh_access_tier: "user" | "coach" | "admin" | "super_admin" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never

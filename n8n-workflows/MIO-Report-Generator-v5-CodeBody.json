@@ -1,0 +1,290 @@
+{
+  "name": "MIO-Report-Generator-v5-CodeBody",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mio-report-v5",
+        "authentication": "none",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300],
+      "webhookId": "mio-report-v5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body;\nconst userIds = body.target_config?.user_ids || [];\nconst userId = userIds[0];\nconst reportType = body.report_type || 'pattern_analysis';\nconst userName = body.user_name || 'User';\n\nif (!userId) {\n  throw new Error('No user_id provided');\n}\n\nreturn {\n  json: {\n    user_id: userId,\n    report_type: reportType,\n    user_name: userName,\n    triggered_by: body.triggered_by || 'manual'\n  }\n};"
+      },
+      "id": "extract-user",
+      "name": "Extract User ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?id=eq.{{ $json.user_id }}&select=*",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-user-profile",
+      "name": "Load User Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/daily_practices?user_id=eq.{{ $('Extract User ID').item.json.user_id }}&order=practice_date.desc&limit=30&select=*",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-practices",
+      "name": "Load Daily Practices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/practice_streaks?user_id=eq.{{ $('Extract User ID').item.json.user_id }}&select=*",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-streaks",
+      "name": "Load Practice Streaks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Claude API request body\nconst userData = $('Extract User ID').item.json;\nconst profileData = $('Load User Profile').item.json;\nconst practicesData = $('Load Daily Practices').item.json;\nconst streaksData = $('Load Practice Streaks').item.json;\n\n// Handle arrays\nconst profile = Array.isArray(profileData) ? profileData[0] : profileData;\nconst practices = Array.isArray(practicesData) ? practicesData : [practicesData].filter(Boolean);\nconst streaks = Array.isArray(streaksData) ? streaksData[0] : streaksData;\n\n// Calculate metrics\nconst completedPractices = practices.filter(p => p && p.completed);\nconst completionRate = practices.length > 0 ? completedPractices.length / practices.length : 0;\nconst currentStreak = streaks?.current_streak || 0;\nconst longestStreak = streaks?.longest_streak || 0;\n\n// Build prompt content\nconst prompt = `You are MIO - the Mind Insurance Oracle. A forensic behavioral psychologist analyzing user data to generate personalized insights.\n\n## USER DATA:\n\n### Profile:\nName: ${userData.user_name}\nTemperament: ${profile?.temperament || 'Unknown'}\nCollision Pattern: ${profile?.collision_patterns?.primary_pattern || 'Unknown'}\nCurrent Day: ${profile?.current_day || 0}\n\n### Practice Metrics:\n- Completion Rate: ${Math.round(completionRate * 100)}%\n- Current Streak: ${currentStreak} days\n- Longest Streak: ${longestStreak} days\n- Total Practices: ${practices.length}\n\n### Recent Daily Practices:\n${JSON.stringify(practices.slice(0, 5), null, 2)}\n\n## YOUR TASK:\n\nGenerate a ${userData.report_type.replace('_', ' ')} report for ${userData.user_name}. Use your forensic behavioral analysis capabilities to:\n\n1. **Pattern Analysis** - Identify behavioral patterns from practice data\n2. **Progress Assessment** - Evaluate their transformation journey progress\n3. **Actionable Insights** - Provide specific recommendations\n\n## OUTPUT FORMAT:\n\nReturn ONLY a valid JSON object (no markdown, no code blocks) with this structure:\n{\n  \"title\": \"Compelling insight title\",\n  \"summary\": \"2-3 sentence executive summary\",\n  \"sections\": [\n    {\n      \"title\": \"Section title\",\n      \"content\": \"Detailed insight content\",\n      \"type\": \"insight\"\n    }\n  ],\n  \"metrics\": {\n    \"completion_rate\": ${completionRate},\n    \"current_streak\": ${currentStreak}\n  },\n  \"recommendations\": [\"Action item 1\", \"Action item 2\"],\n  \"priority\": \"normal\",\n  \"confidence_score\": 0.85\n}`;\n\nreturn {\n  json: {\n    user_id: userData.user_id,\n    user_name: userData.user_name,\n    report_type: userData.report_type,\n    metrics: {\n      completion_rate: completionRate,\n      current_streak: currentStreak,\n      longest_streak: longestStreak,\n      total_practices: practices.length\n    },\n    claude_request: {\n      model: 'claude-sonnet-4-20250514',\n      max_tokens: 4000,\n      messages: [\n        {\n          role: 'user',\n          content: prompt\n        }\n      ]\n    }\n  }\n};"
+      },
+      "id": "build-claude-request",
+      "name": "Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "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"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claude_request) }}",
+        "options": {}
+      },
+      "id": "claude-generate",
+      "name": "Claude: Generate Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude response and prepare for Supabase\nconst claudeResponse = $input.item.json;\nconst userData = $('Build Claude Request').item.json;\nlet reportContent;\n\ntry {\n  const content = claudeResponse.content?.[0]?.text || '';\n  let cleanContent = content.trim();\n  if (cleanContent.startsWith('```')) {\n    cleanContent = cleanContent.replace(/^```json?\\n?/, '').replace(/\\n?```$/, '');\n  }\n  reportContent = JSON.parse(cleanContent);\n} catch (e) {\n  const rawText = claudeResponse.content?.[0]?.text || String(claudeResponse);\n  reportContent = {\n    title: `${userData.report_type.replace('_', ' ')} Report for ${userData.user_name}`,\n    summary: 'AI-generated behavioral analysis report.',\n    sections: [{ title: 'Analysis', content: rawText, type: 'insight' }],\n    metrics: userData.metrics,\n    recommendations: [],\n    priority: 'normal',\n    confidence_score: 0.75\n  };\n}\n\nreturn {\n  json: {\n    user_id: userData.user_id,\n    report_type: userData.report_type,\n    title: reportContent.title || `Report for ${userData.user_name}`,\n    summary: reportContent.summary || 'AI-generated behavioral analysis',\n    content: reportContent,\n    priority: reportContent.priority || 'normal',\n    confidence_score: reportContent.confidence_score || 0.8,\n    source: 'n8n',\n    source_workflow_id: 'MIO-Report-Generator-v5',\n    display_status: 'unread',\n    pinned: false\n  }\n};"
+      },
+      "id": "parse-response",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_user_reports",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "save-report",
+      "name": "Save Report to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract User ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User ID": {
+      "main": [
+        [
+          {
+            "node": "Load User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load User Profile": {
+      "main": [
+        [
+          {
+            "node": "Load Daily Practices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Daily Practices": {
+      "main": [
+        [
+          {
+            "node": "Load Practice Streaks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Practice Streaks": {
+      "main": [
+        [
+          {
+            "node": "Build Claude Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Claude Request": {
+      "main": [
+        [
+          {
+            "node": "Claude: Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: Generate Report": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [
+          {
+            "node": "Save Report to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

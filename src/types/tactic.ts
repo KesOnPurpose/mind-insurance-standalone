@@ -1,3 +1,6 @@
+// Tactic source type for 3-tier organization
+export type TacticSource = 'mentorship' | 'cashflow_course' | 'general';
+
 export interface Tactic {
   tactic_id: string;
   tactic_name: string;
@@ -13,6 +16,10 @@ export interface Tactic {
   step_by_step: any;
   lynettes_tip: string | null;
   common_mistakes: any;
+
+  // NEW: Tactic source for organizing by program origin
+  tactic_source?: TacticSource | null;       // 'mentorship' | 'cashflow_course' | 'general'
+  is_mentorship_tactic?: boolean | null;     // Legacy field - prefer tactic_source
 
   // Enriched RAG fields (from migrations 016-029)
   ownership_model?: string[] | null;           // ['rental_arbitrage', 'ownership', 'creative_financing', 'house_hack', 'hybrid']

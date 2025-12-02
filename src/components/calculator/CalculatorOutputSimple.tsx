@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  GraduationCap,
 } from 'lucide-react';
 import { CalculatorTooltip } from './CalculatorTooltip';
 import { CALCULATOR_TOOLTIPS } from './calculatorTooltipContent';
@@ -35,8 +36,96 @@ export function CalculatorOutputSimple({ output, riskAssessment }: CalculatorOut
   const viability = getViabilityStatus(output);
   const isProfitable = output.monthlyNetProfit > 0;
 
+  // Calculate Nette's formula components from output
+  const goalProfit = output.monthlyNetProfit > 0 ? output.monthlyNetProfit : 4000; // Use actual or default goal
+  const monthlyExpenses = output.totalMonthlyExpenses;
+  const numberOfBeds = Math.round(output.monthlyGrossRevenue / output.monthlyNetProfit) || 8; // Estimate from data or default
+  const calculatedPricePerBed = (goalProfit + monthlyExpenses) / numberOfBeds;
+
   return (
     <div className="space-y-4">
+      {/* Nette's Week 1 Formula Card */}
+      <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+              <GraduationCap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Nette's Week 1 Profit Formula</CardTitle>
+              <p className="text-xs text-muted-foreground">Price Per Bed Calculation</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-3">
+            {/* Formula Display */}
+            <div className="bg-white rounded-lg p-4 border-2 border-purple-300">
+              <div className="text-center space-y-2">
+                <p className="text-sm font-medium text-purple-900">Price Per Bed =</p>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">Goal Profit</p>
+                    <p className="text-lg font-bold text-green-600">{formatCurrency(goalProfit)}</p>
+                  </div>
+                  <span className="text-2xl text-purple-500">+</span>
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">Monthly Expenses</p>
+                    <p className="text-lg font-bold text-orange-600">{formatCurrency(monthlyExpenses)}</p>
+                  </div>
+                  <span className="text-2xl text-purple-500">÷</span>
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">Number of Beds</p>
+                    <p className="text-lg font-bold text-blue-600">{numberOfBeds}</p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="pt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Your Calculated Price Per Bed:</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    {formatCurrency(calculatedPricePerBed)}/month
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* SSI Validation Check */}
+            <div className={`p-3 rounded-lg border-2 ${calculatedPricePerBed <= 967 ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'}`}>
+              <div className="flex items-start gap-2">
+                {calculatedPricePerBed <= 967 ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                )}
+                <div className="text-sm">
+                  <p className={`font-semibold ${calculatedPricePerBed <= 967 ? 'text-green-900' : 'text-amber-900'}`}>
+                    {calculatedPricePerBed <= 967
+                      ? '✓ SSI-Compatible Pricing'
+                      : '⚠️ Above SSI Rate ($967/month)'
+                    }
+                  </p>
+                  <p className={`text-xs mt-1 ${calculatedPricePerBed <= 967 ? 'text-green-700' : 'text-amber-700'}`}>
+                    {calculatedPricePerBed <= 967
+                      ? 'You can serve SSI recipients (largest population). This pricing works within 2025 SSI limits.'
+                      : `You'll need market-rate residents or dual pricing strategy (see M011). SSI pays $967/month max.`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nette's Teaching Quote */}
+            <div className="bg-purple-100 border-l-4 border-purple-500 p-3 rounded-r-lg">
+              <p className="text-xs italic text-purple-900">
+                "Goal profit plus expenses equals required income. Required income divided by beds equals price per bed.
+                The starting rate is $750. When you get people paying market rent, your average goes up."
+              </p>
+              <p className="text-xs font-semibold text-purple-700 mt-1">- Lynette Wheaton, Session 1</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Viability Banner */}
       <Card className={`border-2 ${isProfitable ? 'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30' : 'border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30'}`}>
         <CardContent className="p-4">

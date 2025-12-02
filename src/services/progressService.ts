@@ -211,3 +211,74 @@ function getPhaseForWeek(weekNumber: number): JourneyPhase {
   if (weekNumber <= 12) return 'operations';
   return 'growth';
 }
+
+/**
+ * validateM013Completion - Hybrid validation for Week 1 Master Checklist
+ *
+ * M013 requires DUAL completion:
+ * 1. 100% of M001-M012 tactics completed (all 12 foundational tactics)
+ * 2. 50%+ of M013's own 9-step accountability checklist
+ *
+ * @param week1Tactics - All Week 1 tactics (M001-M013)
+ * @param m013CompletedSteps - Array of completed step indices for M013
+ * @returns Object with validation results and feedback message
+ */
+export async function validateM013Completion(
+  week1Tactics: TacticWithProgress[],
+  m013CompletedSteps: number[]
+): Promise<{
+  canComplete: boolean;
+  tacticProgressPercent: number;
+  stepProgressPercent: number;
+  message: string;
+}> {
+  // Separate M001-M012 from M013
+  const m001ToM012 = week1Tactics.filter(t =>
+    t.tactic_id >= 'M001' && t.tactic_id <= 'M012'
+  );
+  const m013 = week1Tactics.find(t => t.tactic_id === 'M013');
+
+  if (!m013) {
+    return {
+      canComplete: false,
+      tacticProgressPercent: 0,
+      stepProgressPercent: 0,
+      message: 'M013 tactic not found'
+    };
+  }
+
+  // Calculate M001-M012 completion percentage
+  const completedCount = m001ToM012.filter(t => t.status === 'completed').length;
+  const totalCount = m001ToM012.length; // Should be 12
+  const tacticProgressPercent = totalCount > 0
+    ? Math.round((completedCount / totalCount) * 100)
+    : 0;
+
+  // Calculate M013's own step progress
+  const steps = Array.isArray(m013.step_by_step) ? m013.step_by_step : [];
+  const totalSteps = steps.length;
+  const stepProgressPercent = totalSteps > 0
+    ? Math.round((m013CompletedSteps.length / totalSteps) * 100)
+    : 0;
+
+  // Hybrid validation: 100% tactics + 50% steps
+  const canComplete = tacticProgressPercent === 100 && stepProgressPercent >= 50;
+
+  // Generate user-friendly message
+  let message = '';
+  if (canComplete) {
+    message = '✅ All requirements met! You can complete Week 1.';
+  } else if (tacticProgressPercent < 100) {
+    message = `Complete all 12 tactics first (${completedCount}/12 done)`;
+  } else if (stepProgressPercent < 50) {
+    const remaining = 50 - stepProgressPercent;
+    message = `Complete ${remaining}% more of M013 checklist (currently ${stepProgressPercent}%)`;
+  }
+
+  return {
+    canComplete,
+    tacticProgressPercent,
+    stepProgressPercent,
+    message
+  };
+}

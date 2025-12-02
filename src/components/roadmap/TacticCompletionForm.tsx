@@ -19,18 +19,146 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Building2, Info, AlertCircle, Sparkles } from 'lucide-react';
+import { CheckCircle, Building2, Info, AlertCircle, Sparkles, ChevronDown } from 'lucide-react';
 import { TacticQuestion, BusinessProfile, AssessmentAnswers } from '@/types/assessment';
 import { getQuestionsForTactic } from '@/config/tacticQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Keywords for identifying critical steps
+const CRITICAL_KEYWORDS = [
+  'create', 'design', 'develop', 'build', 'write', 'draft', 'prepare',
+  'document', 'establish', 'set up', 'configure', 'research', 'analyze',
+  'contact', 'schedule', 'meet', 'interview', 'present', 'submit',
+  'gather', 'compile', 'organize', 'file', 'register', 'apply'
+];
+
+const TRIVIAL_KEYWORDS = [
+  'purchase', 'buy', 'download', 'print', 'practice', 'review', 'read',
+  'watch', 'listen', 'check', 'verify'
+];
+
+/**
+ * Identifies 2-3 most critical steps that require deliverables
+ */
+function identifyCriticalSteps(steps: any[]): number[] {
+  if (!Array.isArray(steps) || steps.length === 0) return [];
+
+  const scoredSteps = steps.map((step, index) => {
+    const stepText = typeof step === 'string' ? step : step.step || '';
+    const stepLower = stepText.toLowerCase();
+
+    let score = 0;
+
+    // Add points for critical keywords
+    CRITICAL_KEYWORDS.forEach(keyword => {
+      if (stepLower.includes(keyword)) score += 2;
+    });
+
+    // Subtract points for trivial keywords
+    TRIVIAL_KEYWORDS.forEach(keyword => {
+      if (stepLower.includes(keyword)) score -= 1;
+    });
+
+    // Longer steps are more likely to be important
+    if (stepText.length > 100) score += 1;
+
+    // Steps with specific deliverables
+    if (stepLower.match(/\b(form|plan|document|list|spreadsheet|agreement|contract|policy)\b/)) {
+      score += 1;
+    }
+
+    return { index, score, stepText };
+  });
+
+  // Sort by score descending, take top 2-3
+  const topCount = Math.min(3, steps.length);
+  const criticalSteps = scoredSteps
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topCount)
+    .map(s => s.index)
+    .sort((a, b) => a - b); // Restore original order
+
+  return criticalSteps;
+}
+
+/**
+ * Get contextual help text for a step based on keywords
+ */
+function getStepHelpText(stepText: string): string | null {
+  const lower = stepText.toLowerCase();
+
+  // Specific tactic patterns
+  if (lower.includes('binder') && lower.includes('compliance')) {
+    return "Include what documents you organized and where the binder is located";
+  }
+  if (lower.includes('llc') || lower.includes('ein')) {
+    return "Include the business name, state filed, and EIN if obtained";
+  }
+  if (lower.includes('profit') && lower.includes('formula')) {
+    return "Show your calculation with actual numbers (beds, expenses, target profit)";
+  }
+  if (lower.includes('research') && (lower.includes('market') || lower.includes('competitive'))) {
+    return "Note the properties you researched and average rates you found";
+  }
+  if (lower.includes('contact') || lower.includes('referral')) {
+    return "List agencies contacted, names of contacts, and next steps agreed upon";
+  }
+  if (lower.includes('pricing') || lower.includes('rate')) {
+    return "Include your final rate and how you validated it against SSI/market rates";
+  }
+
+  // Generic patterns
+  if (lower.includes('document') || lower.includes('write')) {
+    return "What did you document and where is it stored?";
+  }
+  if (lower.includes('create') && lower.includes('plan')) {
+    return "Summarize the key components of your plan";
+  }
+
+  return null;
+}
+
+/**
+ * Get smart placeholder text based on step action verbs
+ */
+function getStepPlaceholder(stepText: string): string {
+  const lower = stepText.toLowerCase();
+
+  // Action-specific placeholders
+  if (lower.includes('create') || lower.includes('build') || lower.includes('develop')) {
+    return "Describe what you created and where you saved it...";
+  }
+  if (lower.includes('research') || lower.includes('analyze')) {
+    return "Summarize your key findings and sources...";
+  }
+  if (lower.includes('contact') || lower.includes('schedule') || lower.includes('meet')) {
+    return "Who did you contact and what was the outcome?";
+  }
+  if (lower.includes('document') || lower.includes('write')) {
+    return "What did you document and where is it stored?";
+  }
+  if (lower.includes('gather') || lower.includes('compile')) {
+    return "List what you gathered and how you organized it...";
+  }
+  if (lower.includes('calculate') || lower.includes('formula')) {
+    return "Show your calculation with numbers (e.g., $4,000 profit + $3,500 expenses ÷ 8 beds = $938/bed)...";
+  }
+  if (lower.includes('file') || lower.includes('register') || lower.includes('apply')) {
+    return "What did you file, where, and what was the confirmation/tracking number?";
+  }
+
+  return "Describe what you did...";
+}
 
 interface TacticCompletionFormProps {
   isOpen: boolean;
   onClose: () => void;
   tacticName: string;
   tacticCategory: string;
+  tacticSteps?: any[];  // The step_by_step array from the tactic
   onComplete: (profileUpdates: Partial<BusinessProfile>, notes: string) => void;
 }
 
@@ -45,17 +173,21 @@ export function TacticCompletionForm({
   onClose,
   tacticName,
   tacticCategory,
+  tacticSteps = [],
   onComplete,
 }: TacticCompletionFormProps) {
   const { user } = useAuth();
   const [fieldStates, setFieldStates] = useState<Record<string, FieldState>>({});
   const [notes, setNotes] = useState('');
+  const [stepResponses, setStepResponses] = useState<Record<number, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [assessmentData, setAssessmentData] = useState<Partial<AssessmentAnswers>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [stepValidationErrors, setStepValidationErrors] = useState<Record<number, string>>({});
   const [isLoadingAssessment, setIsLoadingAssessment] = useState(false);
 
   const questions = getQuestionsForTactic(tacticName, tacticCategory);
+  const hasSteps = Array.isArray(tacticSteps) && tacticSteps.length > 0;
 
   // Load assessment data on mount for pre-filling
   useEffect(() => {
@@ -169,6 +301,9 @@ export function TacticCompletionForm({
 
   const validateFields = (): boolean => {
     const errors: Record<string, string> = {};
+    const stepErrors: Record<number, string> = {};
+
+    // Step responses are now optional - no validation required
 
     questions.forEach((question) => {
       const state = fieldStates[question.fieldName];
@@ -203,7 +338,8 @@ export function TacticCompletionForm({
     });
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setStepValidationErrors(stepErrors);
+    return Object.keys(errors).length === 0 && Object.keys(stepErrors).length === 0;
   };
 
   const handleSubmit = async () => {
@@ -234,12 +370,31 @@ export function TacticCompletionForm({
         }
       });
 
-      await onComplete(profileUpdates, notes);
+      // Build comprehensive notes including step responses
+      let completionNotes = '';
+
+      if (hasSteps && Object.keys(stepResponses).length > 0) {
+        completionNotes += '=== STEP-BY-STEP COMPLETION ===\n\n';
+        tacticSteps.forEach((step, index) => {
+          const stepText = typeof step === 'string' ? step : step.step || `Step ${index + 1}`;
+          const response = stepResponses[index] || '';
+          completionNotes += `Step ${index + 1}: ${stepText}\n`;
+          completionNotes += `Response: ${response}\n\n`;
+        });
+      }
+
+      if (notes.trim()) {
+        completionNotes += '=== ADDITIONAL NOTES ===\n' + notes;
+      }
+
+      await onComplete(profileUpdates, completionNotes);
 
       // Reset form state
       setFieldStates({});
       setNotes('');
+      setStepResponses({});
       setValidationErrors({});
+      setStepValidationErrors({});
       onClose();
     } catch (error) {
       console.error('Error completing tactic:', error);
@@ -499,6 +654,111 @@ export function TacticCompletionForm({
               Loading your assessment data...
             </div>
           )}
+
+          {/* Step-by-Step Accountability Section - Smart Filtered */}
+          {hasSteps && (() => {
+            const criticalStepIndices = identifyCriticalSteps(tacticSteps);
+
+            return (
+              <div className="space-y-4">
+                {/* Critical steps - optional responses */}
+                <div className="p-4 bg-muted/30 border border-border rounded-lg space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-foreground">
+                      Key Deliverables (optional)
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    You can optionally describe what you did for these important action steps:
+                  </p>
+
+                  {criticalStepIndices.map(index => {
+                    const stepText = typeof tacticSteps[index] === 'string'
+                      ? tacticSteps[index]
+                      : tacticSteps[index].step || `Step ${index + 1}`;
+                    const hasError = !!stepValidationErrors[index];
+                    const helpText = getStepHelpText(stepText);
+                    const placeholder = getStepPlaceholder(stepText);
+
+                    return (
+                      <div key={index} className="space-y-2">
+                        <Label className="text-sm font-medium flex items-start gap-2">
+                          <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
+                          <span className="flex-1">{stepText}</span>
+                          <Badge variant="secondary" className="text-xs ml-auto">Optional</Badge>
+                        </Label>
+
+                        {/* Contextual help */}
+                        {helpText && (
+                          <p className="text-xs text-muted-foreground flex items-start gap-1">
+                            <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            {helpText}
+                          </p>
+                        )}
+
+                        <Textarea
+                          placeholder={placeholder}
+                          value={stepResponses[index] || ''}
+                          onChange={(e) => {
+                            setStepResponses(prev => ({ ...prev, [index]: e.target.value }));
+                            if (stepValidationErrors[index]) {
+                              setStepValidationErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors[index];
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          rows={3}
+                          className={hasError ? 'border-destructive' : ''}
+                        />
+                        {hasError && (
+                          <p className="text-xs text-destructive flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {stepValidationErrors[index]}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* All steps - reference only */}
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      View all {tacticSteps.length} steps (reference)
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 bg-muted/10 border border-border rounded-lg mt-2">
+                      <ol className="space-y-2">
+                        {tacticSteps.map((step, index) => {
+                          const stepText = typeof step === 'string' ? step : step.step || `Step ${index + 1}`;
+                          const isCritical = criticalStepIndices.includes(index);
+
+                          return (
+                            <li
+                              key={index}
+                              className={`text-sm flex gap-2 ${isCritical ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}
+                            >
+                              <span className="flex-shrink-0">{index + 1}.</span>
+                              <span>{stepText}</span>
+                              {isCritical && (
+                                <Badge variant="secondary" className="ml-2 text-xs">Optional above</Badge>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })()}
 
           {questions.map((question) => {
             const state = fieldStates[question.fieldName] || { skipped: false };

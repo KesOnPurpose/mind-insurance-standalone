@@ -334,12 +334,20 @@ export async function getEnhancedPersonalizedTactics(
 
   // 5. Apply multi-criteria filtering (INITIAL PASS)
   let initialFilteredTactics = allTactics.filter(tactic => {
-    // 0. EXCLUDE Mind Insurance categories (these are handled by MIO product)
+    // 0. CRITICAL: Always include mentorship tactics (M-prefix)
+    // These bypass ALL filtering logic - mentorship tactics are ALWAYS visible
+    if (tactic.tactic_id.startsWith('M') || tactic.is_mentorship_tactic === true) {
+      console.log(`[Mentorship] Including tactic ${tactic.tactic_id} - mentorship bypass`);
+      return true;
+    }
+
+    // 1. EXCLUDE Mind Insurance categories (these are handled by MIO product)
     if (MIND_INSURANCE_CATEGORIES.includes(tactic.category)) {
+      console.warn(`[Filter] Excluding Mind Insurance tactic: ${tactic.tactic_id}`);
       return false;
     }
 
-    // 0.5 EXCLUDE promotional-only tactics (community/promotional items)
+    // 2. EXCLUDE promotional-only tactics (community/promotional items)
     if (PROMOTIONAL_ONLY_TACTICS.includes(tactic.tactic_id)) {
       return false;
     }
@@ -426,8 +434,11 @@ export async function getEnhancedPersonalizedTactics(
     if (!filteredTacticIds.has(prereqId)) {
       const prereqTactic = allTacticsMap.get(prereqId);
       if (prereqTactic) {
-        // Skip Mind Insurance categories - these should NEVER be forced into roadmap
-        if (MIND_INSURANCE_CATEGORIES.includes(prereqTactic.category)) {
+        // Skip Mind Insurance categories UNLESS it's a mentorship tactic
+        // Mentorship tactics (M-prefix) should ALWAYS be included
+        if (MIND_INSURANCE_CATEGORIES.includes(prereqTactic.category) &&
+            !prereqTactic.tactic_id.startsWith('M') &&
+            prereqTactic.is_mentorship_tactic !== true) {
           console.warn(`[PrerequisiteFix] Skipping Mind Insurance prerequisite ${prereqId} - handled by MIO`);
           continue;
         }

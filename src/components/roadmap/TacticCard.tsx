@@ -3,13 +3,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-// Collapsible imports kept for potential future use with Training Materials
-// import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   CheckCircle,
   Circle,
   Play,
-  Clock,
   DollarSign,
   Users,
   Lightbulb,
@@ -20,13 +17,12 @@ import {
   Quote,
   Link2,
   ListChecks,
-  ChevronDown,
-  ChevronUp,
   Save
 } from 'lucide-react';
 import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
 import { TacticCompletionForm } from './TacticCompletionForm';
+import { TacticDetailModal } from './TacticDetailModal';
 // TacticResourcePanel kept for potential future use
 // import { TacticResourcePanel } from './TacticResourcePanel';
 import { BusinessProfile } from '@/types/assessment';
@@ -49,6 +45,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   // Fetch resource data (hooks kept for potential future use)
@@ -85,30 +82,36 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
   const blockingPrereqs = hasPrerequisiteInfo ? (tactic as TacticWithPrerequisites).blocking_prerequisites : [];
 
   return (
-    <Card className={`p-4 hover:shadow-md transition-shadow ${!canStart ? 'opacity-75 border-muted' : ''}`}>
-      <div className="flex items-start gap-3">
-        <div className="flex flex-col items-center gap-1">
-          <StatusIcon className={`w-5 h-5 ${statusColors[tactic.status]}`} />
-          {!canStart && blockingPrereqs.length > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <LockIcon className="w-4 h-4 text-amber-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Complete first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+    <>
+    <Card
+      onClick={() => setShowDetailModal(true)}
+      className={`cursor-pointer hover:shadow-lg transition-shadow ${!canStart ? 'opacity-75 border-muted' : ''}`}
+    >
+        {/* Card header */}
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex flex-col items-center gap-1">
+              <StatusIcon className={`w-5 h-5 ${statusColors[tactic.status]}`} />
+              {!canStart && blockingPrereqs.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <LockIcon className="w-4 h-4 text-amber-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Complete first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
 
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-base leading-tight">
-                {tactic.tactic_name}
-              </h3>
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-base leading-tight">
+                    {tactic.tactic_name}
+                  </h3>
               {showEnrichedFields && tactic.is_critical_path && (
                 <TooltipProvider>
                   <Tooltip>
@@ -130,13 +133,7 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
             </Badge>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-3 text-xs text-muted-foreground">
-            {tactic.estimated_time && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {tactic.estimated_time}
-              </span>
-            )}
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
             {/* Show enriched cost range if available, fallback to legacy */}
             {showEnrichedFields && (tactic.cost_min_usd !== null || tactic.cost_max_usd !== null) ? (
               <span className="flex items-center gap-1 font-medium text-emerald-600">
@@ -163,247 +160,30 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
               </span>
             )}
           </div>
-
-          {/* Official Lynette Quote - NEW ENRICHED FIELD */}
-          {showEnrichedFields && tactic.official_lynette_quote && (
-            <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-              <div className="flex items-start gap-2">
-                <Quote className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-purple-700 mb-1">Lynette's Official Guidance</p>
-                  <p className="text-xs text-purple-900 italic">"{tactic.official_lynette_quote}"</p>
-                  {tactic.course_lesson_reference && (
-                    <p className="text-xs text-purple-600 mt-1">- {tactic.course_lesson_reference}</p>
-                  )}
-                </div>
-              </div>
             </div>
-          )}
-          
-          {tactic.why_it_matters && (
-            <div className="mb-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
-              <div className="flex items-start gap-2">
-                <Lightbulb className="w-4 h-4 text-primary mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-primary mb-1">Why It Matters</p>
-                  <p className="text-xs text-muted-foreground">{tactic.why_it_matters}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {tactic.lynettes_tip && (
-            <div className="mb-3 p-3 bg-secondary/5 rounded-lg border border-secondary/10">
-              <div className="flex items-start gap-2">
-                <span className="text-lg">💡</span>
-                <div>
-                  <p className="text-xs font-semibold text-secondary-foreground mb-1">Lynette's Tip</p>
-                  <p className="text-xs text-muted-foreground italic">{tactic.lynettes_tip}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {tactic.common_mistakes && Array.isArray(tactic.common_mistakes) && tactic.common_mistakes.length > 0 && (
-            <div className="mb-3 p-3 bg-destructive/5 rounded-lg border border-destructive/10">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-destructive mb-1">Common Mistakes</p>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    {tactic.common_mistakes.slice(0, 3).map((mistake: string, i: number) => (
-                      <li key={i}>• {mistake}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step-by-Step Instructions - PRACTICAL ACTION STEPS */}
-          {tactic.step_by_step && Array.isArray(tactic.step_by_step) && tactic.step_by_step.length > 0 && (
-            <div className="mb-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSteps(!showSteps)}
-                className="w-full justify-between text-left h-auto py-2 px-3 bg-emerald-50 hover:bg-emerald-100 border-emerald-200"
-              >
-                <span className="flex items-center gap-2 text-emerald-700">
-                  <ListChecks className="w-4 h-4" />
-                  <span className="font-semibold text-xs">Step-by-Step Instructions ({tactic.step_by_step.length} steps)</span>
-                </span>
-                {showSteps ? (
-                  <ChevronUp className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-emerald-600" />
-                )}
-              </Button>
-
-              {showSteps && (
-                <div className="mt-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200 max-h-96 overflow-y-auto">
-                  <ol className="space-y-3">
-                    {tactic.step_by_step.map((step: string, index: number) => (
-                      <li key={index} className="flex gap-3">
-                        <span className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-xs text-emerald-900 leading-relaxed">{step}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-3">
-            {tactic.status === 'not_started' && (
-              <>
-                {canStart ? (
-                  <Button
-                    size="sm"
-                    onClick={() => onStart(tactic.tactic_id)}
-                    className="flex items-center gap-1"
-                  >
-                    <Unlock className="w-3 h-3" />
-                    Start
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            className="flex items-center gap-1 opacity-50"
-                          >
-                            <LockIcon className="w-3 h-3" />
-                            Locked
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs max-w-xs">
-                            Complete these prerequisites first: {blockingPrereqs.map(id => tacticNameMap[id] || id).join(', ')}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onStart(tactic.tactic_id)}
-                      className="flex items-center gap-1 text-xs text-muted-foreground"
-                    >
-                      <Unlock className="w-3 h-3" />
-                      Start Anyway
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-            
-            {tactic.status === 'in_progress' && (
-              <>
-                <Button
-                  size="sm"
-                  onClick={() => setShowCompletionForm(true)}
-                  className="flex items-center gap-1"
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  Complete
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowNotes(!showNotes)}
-                >
-                  {showNotes ? 'Hide' : 'Add'} Notes
-                </Button>
-              </>
-            )}
-
-            {tactic.status === 'completed' && tactic.completedAt && (
-              <span className="text-xs text-muted-foreground">
-                Completed {new Date(tactic.completedAt).toLocaleDateString()}
-              </span>
-            )}
           </div>
-
-          {showNotes && tactic.status === 'in_progress' && (
-            <div className="mt-3 space-y-2">
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add notes about this tactic..."
-                rows={3}
-              />
-              {onSaveNotes && (
-                <div className="flex items-center justify-between">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleSaveNotes}
-                    disabled={!notesChanged || isSavingNotes}
-                    className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
-                  >
-                    <Save className="w-3 h-3" />
-                    {isSavingNotes ? 'Saving...' : 'Save Notes'}
-                  </Button>
-                  {notesChanged && (
-                    <span className="text-xs text-amber-600">Unsaved changes</span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Display saved notes for completed tactics */}
-          {tactic.status === 'completed' && tactic.notes && (
-            <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-xs font-semibold text-green-700 mb-1">Your Notes</p>
-              <p className="text-xs text-green-900">{tactic.notes}</p>
-            </div>
-          )}
-
-          {/* Show blocking prerequisites clearly for locked tactics */}
-          {!canStart && blockingPrereqs.length > 0 && (
-            <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <div className="flex items-start gap-2">
-                <LockIcon className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-amber-700 mb-1">
-                    Complete these tactics first:
-                  </p>
-                  <ul className="text-xs text-amber-900 space-y-1">
-                    {blockingPrereqs.map((prereqId: string) => (
-                      <li key={prereqId} className="flex items-center gap-1">
-                        <Circle className="w-2 h-2" />
-                        {tacticNameMap[prereqId] || prereqId}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
-
-      <TacticCompletionForm
-        isOpen={showCompletionForm}
-        onClose={() => setShowCompletionForm(false)}
-        tacticName={tactic.tactic_name}
-        tacticCategory={tactic.category}
-        onComplete={(profileUpdates, formNotes) => {
-          onComplete(tactic.tactic_id, formNotes || notes, profileUpdates);
-          setShowCompletionForm(false);
-        }}
-      />
     </Card>
+
+    <TacticCompletionForm
+      isOpen={showCompletionForm}
+      onClose={() => setShowCompletionForm(false)}
+      tacticName={tactic.tactic_name}
+      tacticCategory={tactic.category}
+      tacticSteps={tactic.step_by_step}
+      onComplete={(profileUpdates, formNotes) => {
+        onComplete(tactic.tactic_id, formNotes || notes, profileUpdates);
+        setShowCompletionForm(false);
+      }}
+    />
+
+    <TacticDetailModal
+      tactic={tactic}
+      isOpen={showDetailModal}
+      onClose={() => setShowDetailModal(false)}
+      onStartTactic={onStart}
+      onCompleteTactic={(tacticId) => onComplete(tacticId)}
+    />
+    </>
   );
 }

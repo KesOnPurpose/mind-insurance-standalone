@@ -36,6 +36,7 @@ function getCurrentMode(pathname: string): SidebarMode {
   if (pathname.startsWith('/mind-insurance')) return 'mind-insurance';
   if (pathname.startsWith('/model-week')) return 'model-week';
   if (pathname.startsWith('/profile')) return 'profile';
+  if (pathname.startsWith('/admin')) return 'admin';
   return 'default';
 }
 

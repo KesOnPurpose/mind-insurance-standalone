@@ -11,6 +11,7 @@ import { ConversationsProvider } from "@/contexts/ConversationsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AssessmentGuard } from "@/components/AssessmentGuard";
+import { AccessGate } from "@/components/AccessGate";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import LandingPage from "./pages/LandingPage";
@@ -34,12 +35,16 @@ import ProfilePage from "./pages/ProfilePage";
 import CalculatorPage from "./pages/CalculatorPage";
 import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminKnowledgeBase from "./pages/AdminKnowledgeBase";
 import { DocumentManagement } from "./pages/admin/DocumentManagement";
+import ProtocolManagement from "./pages/admin/ProtocolManagement";
+import ReportManagement from "./pages/admin/ReportManagement";
+import UserManagement from "./pages/admin/UserManagement";
 // Resources pages removed - components not found
 import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
 import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
 import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
-import InsightsPage from "./pages/mind-insurance/InsightsPage";
+import WeeklyInsightsPage from "./pages/mind-insurance/WeeklyInsightsPage";
 import VaultPage from "./pages/mind-insurance/VaultPage";
 import PatternCheck from "./pages/mind-insurance/practices/PatternCheck";
 import ReinforceIdentity from "./pages/mind-insurance/practices/ReinforceIdentity";
@@ -75,34 +80,34 @@ const App = () => (
               <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
               <Route path="/avatar-assessment" element={<ProtectedRoute><AvatarAssessmentPage /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><AssessmentGuard><DashboardPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/resources" element={<ProtectedRoute><AssessmentGuard><ResourcesHubPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/resources/documents" element={<ProtectedRoute><AssessmentGuard><ResourcesDocumentsPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/resources/calculator" element={<ProtectedRoute><AssessmentGuard><ResourcesCalculatorPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practice" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><MindInsurancePracticePage /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/championship" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/insights" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><InsightsPage /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/vault" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><VaultPage /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><AccessGate><AssessmentGuard><DashboardPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/resources" element={<ProtectedRoute><AccessGate><AssessmentGuard><ResourcesHubPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/resources/documents" element={<ProtectedRoute><AccessGate><AssessmentGuard><ResourcesDocumentsPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/resources/calculator" element={<ProtectedRoute><AccessGate><AssessmentGuard><ResourcesCalculatorPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practice" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><MindInsurancePracticePage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/championship" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/insights" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><WeeklyInsightsPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/vault" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><VaultPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
               {/* PROTECT Practice Routes */}
-              <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><PatternCheck /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><ReinforceIdentity /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><OutcomeVisualization /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><TriggerReset /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><EnergyAudit /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><CelebrateWins /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AssessmentGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/chat" element={<ProtectedRoute><AssessmentGuard><ChatPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/mind-insurance/chat" element={<ProtectedRoute><AssessmentGuard><ChatPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/wealth/chat" element={<ProtectedRoute><AssessmentGuard><ChatPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/model-week" element={<ProtectedRoute><AssessmentGuard><AppLayout><ModelWeekPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/roadmap" element={<ProtectedRoute><AssessmentGuard><RoadmapPage /></AssessmentGuard></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><PatternCheck /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><ReinforceIdentity /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><OutcomeVisualization /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><TriggerReset /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><EnergyAudit /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><CelebrateWins /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><ChatPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/mind-insurance/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><ChatPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/wealth/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><ChatPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/model-week" element={<ProtectedRoute><AccessGate><AssessmentGuard><AppLayout><ModelWeekPage /></AppLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/roadmap" element={<ProtectedRoute><AccessGate><AssessmentGuard><RoadmapPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
               {/* Redirect old /my-journey route to consolidated /roadmap */}
               <Route path="/my-journey" element={<Navigate to="/roadmap" replace />} />
-              <Route path="/settings" element={<ProtectedRoute><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><AssessmentGuard><ProfilePage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/calculator" element={<ProtectedRoute><AssessmentGuard><CalculatorPage /></AssessmentGuard></ProtectedRoute>} />
-              <Route path="/populate-kb" element={<PopulateKnowledgeBasePage />} />
+              <Route path="/settings" element={<ProtectedRoute><AccessGate><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><AccessGate><AssessmentGuard><ProfilePage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/calculator" element={<ProtectedRoute><AccessGate><AssessmentGuard><CalculatorPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+              <Route path="/populate-kb" element={<AdminRoute><PopulateKnowledgeBasePage /></AdminRoute>} />
               {/* Test page for Glossary Tooltips - No auth required for testing */}
               <Route path="/test-tooltip" element={<TestTooltip />} />
               {/* Test page for Chat with SSE - No auth required for testing */}
@@ -111,7 +116,11 @@ const App = () => (
               <Route path="/test-sse" element={<TestSSE />} />
               {/* Admin Dashboard - Requires admin authentication */}
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
-              <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><AppLayout><DocumentManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><DocumentManagement /></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/protocols" element={<ProtectedRoute><AdminRoute><ProtocolManagement /></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/reports" element={<ProtectedRoute><AdminRoute><ReportManagement /></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/knowledge-base" element={<ProtectedRoute><AdminRoute><AdminKnowledgeBase /></AdminRoute></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute><AccessGate requiredTier="admin"><UserManagement /></AccessGate></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
