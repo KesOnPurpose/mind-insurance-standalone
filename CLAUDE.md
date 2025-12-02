@@ -306,6 +306,147 @@ export const useMyData = (id: string) => {
 
 ---
 
+## Deployment & Environment Management
+
+### Environment Overview
+
+**Production**: Main user-facing application
+- Branch: `main`
+- Domain: https://grouphome4newbies.com
+- Cloudflare Pages: https://mindhouse-prodigy.pages.dev
+
+**Staging**: Development and testing environment
+- Branch: `staging`
+- Domain: https://staging.grouphome4newbies.com
+- Cloudflare Pages: https://staging.mindhouse-prodigy.pages.dev
+
+### Deployment Commands
+
+```bash
+# Deploy to staging (from staging branch)
+npm run deploy:staging
+
+# Deploy to production (from main branch)
+npm run deploy:production
+
+# Preview locally with staging config
+npm run preview:staging
+
+# Preview locally with production config
+npm run preview:production
+```
+
+### Deployment Workflow
+
+#### Development on Staging
+```bash
+# 1. Switch to staging branch
+git checkout staging
+
+# 2. Make your changes
+# ... development work ...
+
+# 3. Commit changes
+git add .
+git commit -m "feat: Your feature description"
+
+# 4. Push to staging branch (after user approval)
+git push origin staging
+
+# 5. Deploy to staging environment
+npm run deploy:staging
+
+# 6. Test at https://staging.grouphome4newbies.com
+```
+
+#### Promoting to Production
+```bash
+# 1. Switch to main branch
+git checkout main
+
+# 2. Merge staging into main
+git merge staging
+
+# 3. Push to main (after user approval)
+git push origin main
+
+# 4. Deploy to production
+npm run deploy:production
+
+# 5. Verify at https://grouphome4newbies.com
+```
+
+### Environment Variables
+
+All environments use the same configuration (defined in `wrangler.toml`):
+```toml
+VITE_SUPABASE_URL = "https://hpyodaugrkctagkrfofj.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbG..."
+VITE_API_URL = "https://mio-fastapi-production-production.up.railway.app"
+VITE_N8N_WEBHOOK_URL = "https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat"
+```
+
+**Note**: If you need different configs for staging vs production, update `wrangler.toml` with environment-specific sections.
+
+### Cloudflare Pages Configuration
+
+**Project Name**: `mindhouse-prodigy`
+**Build Command**: `npm run build`
+**Build Output**: `dist/`
+**Framework**: Vite
+
+**Custom Domains**:
+- Production: `grouphome4newbies.com` (linked to main branch deployments)
+- Staging: `staging.grouphome4newbies.com` (linked to staging branch deployments)
+
+### Deployment Checklist
+
+Before deploying to production:
+```
+[ ] All features tested on staging
+[ ] TypeScript compilation passes (npx tsc --noEmit)
+[ ] No browser console errors
+[ ] Mobile/tablet/desktop responsive tested
+[ ] Security audit clean (npm audit)
+[ ] Performance acceptable (<2s load time)
+[ ] Accessibility verified (WCAG AA)
+[ ] User has approved deployment
+[ ] Database migrations applied (if any)
+```
+
+### Rollback Procedure
+
+If production deployment has issues:
+
+1. **Via Cloudflare Dashboard**:
+   - Go to Workers & Pages → mindhouse-prodigy → Deployments
+   - Find the last working deployment
+   - Click "⋯" menu → "Rollback to this deployment"
+
+2. **Via Git**:
+   ```bash
+   git checkout main
+   git revert HEAD  # or git reset --hard <previous-commit>
+   git push origin main
+   npm run deploy:production
+   ```
+
+### DNS Configuration
+
+**Main Domain** (`grouphome4newbies.com`):
+- Type: CNAME
+- Name: `grouphome4newbies.com`
+- Target: `mindhouse-prodigy.pages.dev`
+- Proxy: Enabled (orange cloud)
+
+**Staging Subdomain** (`staging.grouphome4newbies.com`):
+- Type: CNAME
+- Name: `staging`
+- Target: `mindhouse-prodigy.pages.dev`
+- Proxy: Enabled (orange cloud)
+
+---
+
 ## Git Workflow
 
 ### Commit Messages
@@ -318,23 +459,30 @@ docs: Add API documentation
 ```
 
 ### Branch Strategy
-- `main` - Production (syncs to Lovable)
-- Feature branches for major changes
+- `main` - Production (deploys to grouphome4newbies.com)
+- `staging` - Staging/development (deploys to staging.grouphome4newbies.com)
+- Feature branches for experimental changes
 - Always pull latest before starting work
 
 ### Sync Cycle
 ```
-Local Development
+Local Development (staging branch)
       ↓
   Git Commit
       ↓
   Ask User Approval
       ↓
-  Git Push (after approval)
+  Git Push to staging (after approval)
       ↓
-  GitHub Repository
+  Deploy to Staging
       ↓
-  Lovable Auto-Sync
+  Test & Validate
+      ↓
+  Merge staging → main
+      ↓
+  Deploy to Production
+      ↓
+  Verify Live Site
 ```
 
 ---
