@@ -21,46 +21,69 @@ const ResetPasswordPage = () => {
   const [isValidating, setIsValidating] = useState(true);
   const [isValidSession, setIsValidSession] = useState(false);
 
-  const { updatePassword, user, loading } = useAuth();
+  const { updatePassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const passwordValidation = validatePassword(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
 
-  // Handle the password reset token from URL and validate session
   useEffect(() => {
-    const validateResetSession = async () => {
-      try {
-        // Check if there are recovery tokens in the URL
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type');
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let hasValidSession = false;
 
-        // If this is a recovery flow, wait for the session to be established
-        if (type === 'recovery' && accessToken) {
-          // Give Supabase time to process the tokens
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Check if session is now established
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            setIsValidSession(true);
-            setIsValidating(false);
-            return;
-          }
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session check error:', error);
+          return false;
         }
 
-        // If we already have a user from AuthContext, that's also valid
-        if (user) {
+        if (session) {
+          console.log('Found existing session for password reset');
+          return true;
+        }
+
+        return false;
+      } catch (err) {
+        console.error('Error checking session:', err);
+        return false;
+      }
+    };
+
+    const handleRecoveryFlow = async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state change:', event, session ? 'has session' : 'no session');
+
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('PASSWORD_RECOVERY event detected');
+          hasValidSession = true;
           setIsValidSession(true);
           setIsValidating(false);
-          return;
+          if (timeoutId) clearTimeout(timeoutId);
+        } else if (event === 'SIGNED_IN' && session) {
+          console.log('SIGNED_IN event detected');
+          hasValidSession = true;
+          setIsValidSession(true);
+          setIsValidating(false);
+          if (timeoutId) clearTimeout(timeoutId);
         }
+      });
 
-        // Wait for auth loading to complete
-        if (!loading) {
-          // No valid session found
+      const existingSession = await checkSession();
+      if (existingSession) {
+        hasValidSession = true;
+        setIsValidSession(true);
+        setIsValidating(false);
+        subscription.unsubscribe();
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        if (!hasValidSession) {
+          console.log('Timeout reached, no valid session found');
           setIsValidating(false);
           toast({
             title: "Invalid or expired link",
@@ -69,15 +92,21 @@ const ResetPasswordPage = () => {
           });
           navigate('/forgot-password');
         }
-      } catch (err) {
-        console.error('Error validating reset session:', err);
-        setIsValidating(false);
-        navigate('/forgot-password');
-      }
+        subscription.unsubscribe();
+      }, 5000);
+
+      return () => {
+        subscription.unsubscribe();
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     };
 
-    validateResetSession();
-  }, [user, loading, navigate, toast]);
+    handleRecoveryFlow();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,14 +132,12 @@ const ResetPasswordPage = () => {
       setError(error.message);
     } else {
       setIsSuccess(true);
-      // Redirect to dashboard after 3 seconds
       setTimeout(() => {
         navigate('/dashboard');
       }, 3000);
     }
   };
 
-  // Show loading state while validating
   if (isValidating) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
@@ -152,7 +179,6 @@ const ResetPasswordPage = () => {
     );
   }
 
-  // Don't render form if session is not valid
   if (!isValidSession) {
     return null;
   }
@@ -184,6 +210,7 @@ const ResetPasswordPage = () => {
                   required
                   disabled={isLoading}
                   autoFocus
+                  data-testid="input-new-password"
                 />
                 <Button
                   type="button"
@@ -192,6 +219,7 @@ const ResetPasswordPage = () => {
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
+                  data-testid="button-toggle-password"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -216,7 +244,7 @@ const ResetPasswordPage = () => {
                         style={{ width: getPasswordStrengthWidth(passwordValidation.score) }}
                       />
                     </div>
-                    <span className={`text-sm ${getPasswordStrengthColor(passwordValidation.strength)}`}>
+                    <span className={`text-sm ${getPasswordStrengthColor(passwordValidation.strength)}`} data-testid="text-password-strength">
                       {passwordValidation.strength}
                     </span>
                   </div>
@@ -241,12 +269,13 @@ const ResetPasswordPage = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                data-testid="input-confirm-password"
               />
               {confirmPassword && !passwordsMatch && (
                 <p className="text-xs text-red-500">Passwords do not match</p>
               )}
               {confirmPassword && passwordsMatch && (
-                <p className="text-xs text-green-500">Passwords match ✓</p>
+                <p className="text-xs text-green-500">Passwords match</p>
               )}
             </div>
 
@@ -260,6 +289,7 @@ const ResetPasswordPage = () => {
               type="submit"
               className="w-full"
               disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}
+              data-testid="button-update-password"
             >
               {isLoading ? 'Updating...' : 'Update Password'}
             </Button>
