@@ -33,7 +33,6 @@ import RoadmapPage from "./pages/RoadmapPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import CalculatorPage from "./pages/CalculatorPage";
-import PopulateKnowledgeBasePage from "./pages/PopulateKnowledgeBasePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminKnowledgeBase from "./pages/AdminKnowledgeBase";
 import { DocumentManagement } from "./pages/admin/DocumentManagement";
@@ -107,7 +106,6 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><AccessGate><AssessmentGuard><AppLayout><SettingsPage /></AppLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><AccessGate><AssessmentGuard><ProfilePage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
               <Route path="/calculator" element={<ProtectedRoute><AccessGate><AssessmentGuard><CalculatorPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
-              <Route path="/populate-kb" element={<AdminRoute><PopulateKnowledgeBasePage /></AdminRoute>} />
               {/* Test page for Glossary Tooltips - No auth required for testing */}
               <Route path="/test-tooltip" element={<TestTooltip />} />
               {/* Test page for Chat with SSE - No auth required for testing */}

@@ -4203,3 +4203,47 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// ============================================================================
+// PROVIDER MERGE SERVICE TYPES
+// ============================================================================
+
+export interface ProviderLink {
+  id: string;
+  primary_user_id: string;
+  secondary_user_id: string;
+  primary_provider: string;
+  secondary_provider: string;
+  email: string;
+  merged_at: string;
+  merged_by: string;
+  merge_reason: string;
+  assessment_migrated: boolean;
+  user_onboarding_migrated: boolean;
+  migration_log: any[];
+  created_at: string;
+}
+
+export interface MergeResult {
+  success: boolean;
+  primary_user_id: string;
+  migrated: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface UserAccount {
+  id: string;
+  email: string;
+  provider: string;
+  created_at: string;
+  assessment_completed_at?: string;
+}
+
+export interface MigrationResult {
+  success: boolean;
+  migrated_count: number;
+  from_user_id: string;
+  to_user_id: string;
+  errors: string[];
+}

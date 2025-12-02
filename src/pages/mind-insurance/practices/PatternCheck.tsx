@@ -16,6 +16,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/hooks/useSession';
+import { useFeatureUsage } from '@/hooks/useFeatureUsage';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -32,6 +34,10 @@ const COLLISION_TYPES = [
 export default function PatternCheck() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Analytics tracking
+  const { trackTactic } = useSession('practice');
+  const { trackFeature } = useFeatureUsage('tactic_practice', true);
 
   // Form state
   const [caughtPattern, setCaughtPattern] = useState<string>('');
@@ -171,6 +177,9 @@ export default function PatternCheck() {
           points_to_add: points,
         });
       }
+
+      // Track tactic completion for analytics
+      await trackTactic();
 
       // Success! Navigate back to practice screen
       navigate('/mind-insurance/practice');

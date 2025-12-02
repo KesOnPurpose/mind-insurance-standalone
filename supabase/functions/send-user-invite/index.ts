@@ -271,7 +271,8 @@ Deno.serve(async (req) => {
     // Check if SMTP is configured for direct email sending
     const smtpUser = Deno.env.get('SMTP_USER');
     const smtpPass = Deno.env.get('SMTP_PASS');
-    const useDirectSMTP = payload.bulk || (smtpUser && smtpPass);
+    // Always use SMTP if configured (more reliable than inviteUserByEmail)
+    const useDirectSMTP = smtpUser && smtpPass;
 
     if (useDirectSMTP && smtpUser && smtpPass) {
       // Direct SMTP path - bypasses Supabase rate limits

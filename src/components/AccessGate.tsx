@@ -1,9 +1,10 @@
 import { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, Mail, Phone, MessageCircle } from 'lucide-react';
+import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut } from 'lucide-react';
 
 interface AccessGateProps {
   children: ReactNode;
@@ -48,6 +49,14 @@ interface PaywallProps {
 }
 
 function Paywall({ userEmail }: PaywallProps) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   const handleContactClick = (method: 'email' | 'phone' | 'chat') => {
     switch (method) {
       case 'email':
@@ -57,8 +66,8 @@ function Paywall({ userEmail }: PaywallProps) {
         window.location.href = 'tel:+1234567890'; // Replace with actual number
         break;
       case 'chat':
-        // Could integrate with chat widget
-        window.open('https://purposewaze.com/contact', '_blank');
+        // Email support with different subject line
+        window.location.href = 'mailto:support@purposewaze.com?subject=Access%20Request%20-%20Account%20Support';
         break;
     }
   };
@@ -107,6 +116,17 @@ function Paywall({ userEmail }: PaywallProps) {
                 <MessageCircle className="w-4 h-4" />
                 Contact Us Online
               </Button>
+
+              {userEmail && (
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 text-muted-foreground hover:text-foreground"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out & Use Different Account
+                </Button>
+              )}
             </div>
           </div>
 

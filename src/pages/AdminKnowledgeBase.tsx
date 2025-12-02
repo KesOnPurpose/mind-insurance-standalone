@@ -34,6 +34,8 @@ import {
   KnowledgeChunkTable,
   QueueWidget,
 } from '@/components/admin/knowledge';
+import { MigrateKnowledgeCard } from '@/components/admin/knowledge/MigrateKnowledgeCard';
+import { PopulateKnowledgeCard } from '@/components/admin/knowledge/PopulateKnowledgeCard';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -66,6 +68,7 @@ import {
   Loader2,
   CheckCircle2,
   BookOpen,
+  Settings,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -76,7 +79,7 @@ export default function AdminKnowledgeBase() {
   // State
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('nette');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'browse' | 'add' | 'queue'>('browse');
+  const [activeTab, setActiveTab] = useState<'browse' | 'add' | 'queue' | 'setup'>('browse');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -274,6 +277,10 @@ export default function AdminKnowledgeBase() {
               <Clock className="h-4 w-4" />
               Processing Queue
             </TabsTrigger>
+            <TabsTrigger value="setup" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Setup & Migration
+            </TabsTrigger>
           </TabsList>
 
           {/* Browse Tab */}
@@ -409,6 +416,46 @@ export default function AdminKnowledgeBase() {
               agentFilter={selectedAgent}
               showStats={true}
             />
+          </TabsContent>
+
+          {/* Setup & Migration Tab */}
+          <TabsContent value="setup" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <MigrateKnowledgeCard />
+              <PopulateKnowledgeCard />
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Setup Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 text-sm text-muted-foreground">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Migrate Nette Knowledge</h4>
+                    <p>
+                      One-time migration of 143 training knowledge chunks from the legacy gh_training_chunks table
+                      to the unified mio_knowledge_chunks table. This operation is idempotent and safe to run multiple times.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Populate Knowledge Base</h4>
+                    <p>
+                      Process markdown files from the knowledge base directory and generate OpenAI embeddings.
+                      This operation reads 6 core Mind Insurance protocol files and creates searchable knowledge chunks
+                      with vector embeddings for semantic search.
+                    </p>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-yellow-800">
+                    <strong>Note:</strong> Both operations invoke Supabase Edge Functions that may incur OpenAI API costs.
+                    Only run these operations when needed.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

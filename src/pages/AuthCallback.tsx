@@ -4,12 +4,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { detectAndMergeProviderAccounts } from '@/services/providerMergeService';
+import { toast } from 'sonner';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
   const [isEmailVerification, setIsEmailVerification] = useState(false);
+
+  // Handle provider merge and smart redirect after authentication
+  const handleAuthenticatedUser = async (session: any) => {
+    try {
+      console.log('AuthCallback: Handling authenticated user:', session.user.email);
+
+      // Check for multi-provider accounts and merge if needed
+      const mergeResult = await detectAndMergeProviderAccounts(session.user);
+
+      if (mergeResult.success && mergeResult.migrated) {
+        console.log('AuthCallback: Provider accounts merged:', mergeResult.message);
+        toast.success('Welcome back! Your previous assessment has been preserved.');
+      }
+
+      // Use primary user_id for redirect logic (in case of merge)
+      const userId = mergeResult.primary_user_id || session.user.id;
+      await smartRedirect(userId);
+
+    } catch (error) {
+      console.error('AuthCallback: Provider merge failed, continuing with original user:', error);
+      // Graceful fallback: continue with current session user_id
+      await smartRedirect(session.user.id);
+    }
+  };
 
   // Smart redirect based on assessment completion status
   const smartRedirect = async (userId: string) => {
@@ -56,8 +82,8 @@ const AuthCallback = () => {
         const { data: { session: autoSession }, error: autoError } = await supabase.auth.getSession();
 
         if (autoSession) {
-          console.log('Supabase auto-detected session, using smart redirect...');
-          await smartRedirect(autoSession.user.id);
+          console.log('Supabase auto-detected session, checking for provider merge...');
+          await handleAuthenticatedUser(autoSession);
           return;
         }
 
@@ -120,8 +146,8 @@ const AuthCallback = () => {
           console.log('Session verification after setting:', !!verifySession);
 
           if (verifySession) {
-            console.log('Session verified, using smart redirect...');
-            await smartRedirect(verifySession.user.id);
+            console.log('Session verified, checking for provider merge...');
+            await handleAuthenticatedUser(verifySession);
             return;
           }
         }
@@ -151,8 +177,8 @@ const AuthCallback = () => {
           console.log('Session after code exchange:', !!newSession);
 
           if (newSession) {
-            console.log('Session established, using smart redirect...');
-            await smartRedirect(newSession.user.id);
+            console.log('Session established, checking for provider merge...');
+            await handleAuthenticatedUser(newSession);
             return;
           }
         }
@@ -160,8 +186,8 @@ const AuthCallback = () => {
         // Final check for session
         const { data: { session: finalSession } } = await supabase.auth.getSession();
         if (finalSession) {
-          console.log('Final session check passed, using smart redirect...');
-          await smartRedirect(finalSession.user.id);
+          console.log('Final session check passed, checking for provider merge...');
+          await handleAuthenticatedUser(finalSession);
           return;
         }
 

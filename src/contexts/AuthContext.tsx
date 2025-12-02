@@ -175,6 +175,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // End active sessions for analytics (fire-and-forget)
+      if (user?.id) {
+        // Find and end any active sessions
+        const { data: activeSessions } = await supabase
+          .from('user_sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .is('ended_at', null);
+
+        if (activeSessions && activeSessions.length > 0) {
+          await supabase
+            .from('user_sessions')
+            .update({
+              ended_at: new Date().toISOString(),
+              exit_action: 'logout',
+            })
+            .eq('user_id', user.id)
+            .is('ended_at', null);
+        }
+      }
+
       await supabase.auth.signOut();
       toast({
         title: "Signed out",

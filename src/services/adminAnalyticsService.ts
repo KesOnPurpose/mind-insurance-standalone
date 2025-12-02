@@ -498,6 +498,12 @@ export async function getDashboardKPIs(
     // Get unique users from today's conversations (simplified - would need user_id in real implementation)
     const daily_active_users = Math.floor(volumeData.result.total_conversations / 3); // Estimate 3 conversations per user
 
+    // Get real error rate from error tracking
+    const errorData = await callAnalyticsEndpoint<{ overall_error_rate: number }>({
+      metric_type: 'error_rate',
+      time_range: '24h',
+    });
+
     const result: DashboardKPIs = {
       system_health_score: Math.round(system_health_score),
       cache_efficiency: cacheData.result.overall_rate,
@@ -506,7 +512,7 @@ export async function getDashboardKPIs(
       daily_active_users,
       total_conversations_today: volumeData.result.total_conversations,
       avg_response_time_ms: responseData.result.overall_avg_ms,
-      error_rate: 0, // Would need error tracking implementation
+      error_rate: errorData.result.overall_error_rate,
     };
 
     // Write to cache (fire-and-forget)
@@ -795,14 +801,14 @@ export async function getUserEngagementMetrics(
       .from('agent_conversations')
       .select('user_id', { count: 'exact', head: true })
       .gte('created_at', oneDayAgo.toISOString())
-      .or('user_id.neq.null');
+      .not('user_id', 'is', null);
 
     // Get MAU (Monthly Active Users) - users with activity in last 30 days
     const { count: mauCount } = await supabase
       .from('agent_conversations')
       .select('user_id', { count: 'exact', head: true })
       .gte('created_at', thirtyDaysAgo.toISOString())
-      .or('user_id.neq.null');
+      .not('user_id', 'is', null);
 
     // Get weekly conversation data for engagement metrics
     const { data: weeklyData } = await supabase
@@ -814,13 +820,32 @@ export async function getUserEngagementMetrics(
     const uniqueUsers = new Set(weeklyData?.map(d => d.user_id) || []);
     const messagesPerUser = weeklyData ? weeklyData.length / Math.max(uniqueUsers.size, 1) : 0;
 
-    // Mock data for tactics and practice streaks (would come from actual tables)
-    // In production, these would be calculated from user_tactics and user_practices tables
-    const tacticsCompleted = Math.floor(Math.random() * 10 + 3); // 3-12 tactics
-    const practiceStreak = Math.floor(Math.random() * 14 + 7); // 7-21 days
+    // Get real user engagement data from edge function
+    const engagementData = await callAnalyticsEndpoint<{
+      daily_active_users: number;
+      monthly_active_users: number;
+      tactics_completed_weekly: number;
+      avg_practice_streak_days: number;
+      user_retention_rate: number;
+      session_frequency: number;
+      time_to_first_action_minutes: number;
+    }>({
+      metric_type: 'user_engagement',
+      time_range: timeRange,
+    });
+
+    // Get real feature adoption data from edge function
+    const featureData = await callAnalyticsEndpoint<{
+      overall_adoption_rate: number;
+    }>({
+      metric_type: 'feature_adoption',
+      time_range: timeRange,
+    });
 
     // Calculate DAU/MAU ratio (engagement health metric)
-    const dauMauRatio = mauCount > 0 ? (dauCount || 0) / mauCount : 0;
+    const dauMauRatio = engagementData.result.monthly_active_users > 0
+      ? engagementData.result.daily_active_users / engagementData.result.monthly_active_users
+      : 0;
 
     // Determine engagement trend
     let engagementTrend: 'up' | 'down' | 'stable' = 'stable';
@@ -843,18 +868,18 @@ export async function getUserEngagementMetrics(
     }
 
     const result: UserEngagementData = {
-      daily_active_users: dauCount || 0,
-      monthly_active_users: mauCount || 0,
+      daily_active_users: engagementData.result.daily_active_users,
+      monthly_active_users: engagementData.result.monthly_active_users,
       dau_mau_ratio: dauMauRatio,
       messages_per_user_monthly: Math.round(messagesPerUser * 4), // Extrapolate to monthly
-      tactics_completed_weekly: tacticsCompleted,
-      avg_practice_streak_days: practiceStreak,
+      tactics_completed_weekly: engagementData.result.tactics_completed_weekly,
+      avg_practice_streak_days: engagementData.result.avg_practice_streak_days,
       engagement_trend: engagementTrend,
       trend_percentage: Math.abs(trendPercentage),
-      user_retention_rate: 85 + Math.random() * 10, // 85-95% retention (mock)
-      session_frequency: 4.5 + Math.random() * 2, // 4.5-6.5 sessions/week (mock)
-      feature_adoption_rate: 70 + Math.random() * 20, // 70-90% adoption (mock)
-      time_to_first_action_minutes: 2 + Math.random() * 3, // 2-5 minutes (mock)
+      user_retention_rate: engagementData.result.user_retention_rate,
+      session_frequency: engagementData.result.session_frequency,
+      feature_adoption_rate: featureData.result.overall_adoption_rate,
+      time_to_first_action_minutes: engagementData.result.time_to_first_action_minutes,
     };
 
     // Write to cache (fire-and-forget)

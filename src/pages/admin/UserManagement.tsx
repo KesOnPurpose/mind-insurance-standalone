@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Loader2,
   Plus,
@@ -55,7 +56,12 @@ import {
   Mail,
   Send,
 } from 'lucide-react';
-import { sendUserInvite } from '@/services/userInviteService';
+import { sendUserInvite, sendBulkInvites } from '@/services/userInviteService';
+import { parseCsvText, parseCsvFile } from '@/utils/csvParser';
+import { downloadCsvTemplate } from '@/utils/csvTemplate';
+import type { ParsedCsvData, CsvImportProgress } from '@/types/csvImport';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface ApprovedUser {
   id: string;
@@ -117,9 +123,22 @@ export default function UserManagement() {
     payment_source: 'manual',
     payment_reference: '',
   });
-  const [bulkEmails, setBulkEmails] = useState('');
   const [sendInviteOnAdd, setSendInviteOnAdd] = useState(true);
   const [isInviting, setIsInviting] = useState(false);
+
+  // CSV Import states
+  const [csvData, setCsvData] = useState('');
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [parsedCsv, setParsedCsv] = useState<ParsedCsvData | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<CsvImportProgress | null>(null);
+  const [csvInputMethod, setCsvInputMethod] = useState<'paste' | 'upload'>('paste');
+  const [sendInvitesAfterImport, setSendInvitesAfterImport] = useState(true);
+
+  // Bulk selection states
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Fetch users using RPC function (bypasses RLS)
   const fetchUsers = async () => {
@@ -168,6 +187,32 @@ export default function UserManagement() {
     if (targetTier === 'owner') return false;
     return TIER_HIERARCHY[currentUserTier] > TIER_HIERARCHY[targetTier];
   };
+
+  // Bulk selection helpers
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUserIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0) {
+      // Deselect all
+      setSelectedUserIds(new Set());
+    } else {
+      // Select all filtered users
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  };
+
+  const isAllSelected = filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length;
+  const isSomeSelected = selectedUserIds.size > 0 && selectedUserIds.size < filteredUsers.length;
 
   // Add single user using RPC function (bypasses RLS)
   const handleAddUser = async () => {
@@ -331,41 +376,372 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk add users using RPC function (bypasses RLS)
-  const handleBulkAdd = async () => {
-    const emails = bulkEmails
-      .split(/[\n,;]/)
-      .map(e => e.trim().toLowerCase())
-      .filter(e => e && e.includes('@'));
+  // Bulk delete users
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    let successCount = 0;
+    let errorCount = 0;
 
-    if (emails.length === 0) {
-      toast({ title: 'Error', description: 'No valid emails found', variant: 'destructive' });
+    try {
+      for (const user of selectedUsers) {
+        try {
+          const { error } = await supabase.rpc('gh_admin_delete_user', {
+            p_user_id: user.id,
+          });
+
+          if (error) throw error;
+          successCount++;
+        } catch (error) {
+          console.error(`Error deleting user ${user.email}:`, error);
+          errorCount++;
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      toast({
+        title: 'Bulk Delete Complete',
+        description: `${successCount} users removed${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        variant: errorCount > 0 ? 'destructive' : 'default',
+      });
+
+      // Clear selection and refresh
+      setSelectedUserIds(new Set());
+      setShowBulkDeleteDialog(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete bulk delete',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  // Bulk send invites
+  const handleBulkSendInvites = async () => {
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    const selectedEmails = selectedUsers.map(u => u.email);
+
+    try {
+      setIsInviting(true);
+
+      toast({
+        title: 'Sending Invites',
+        description: `Sending magic link invites to ${selectedEmails.length} users...`,
+      });
+
+      const { success, failed } = await sendBulkInvites(selectedEmails);
+
+      toast({
+        title: 'Invites Sent',
+        description: `${success.length} invites sent successfully${failed.length > 0 ? `, ${failed.length} failed` : ''}`,
+        variant: failed.length > 0 ? 'destructive' : 'default',
+      });
+
+      // Clear selection and refresh
+      setSelectedUserIds(new Set());
+      fetchUsers();
+    } catch (error) {
+      console.error('Bulk invite error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send bulk invites',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  // Bulk activate users
+  const handleBulkActivate = async () => {
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const user of selectedUsers) {
+        try {
+          const { error } = await supabase
+            .from('gh_approved_users')
+            .update({ is_active: true })
+            .eq('id', user.id);
+
+          if (error) throw error;
+          successCount++;
+        } catch (error) {
+          console.error(`Error activating user ${user.email}:`, error);
+          errorCount++;
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      toast({
+        title: 'Bulk Activate Complete',
+        description: `${successCount} users activated${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        variant: errorCount > 0 ? 'destructive' : 'default',
+      });
+
+      // Clear selection and refresh
+      setSelectedUserIds(new Set());
+      fetchUsers();
+    } catch (error) {
+      console.error('Bulk activate error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete bulk activate',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Bulk deactivate users
+  const handleBulkDeactivate = async () => {
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const user of selectedUsers) {
+        try {
+          const { error } = await supabase
+            .from('gh_approved_users')
+            .update({ is_active: false })
+            .eq('id', user.id);
+
+          if (error) throw error;
+          successCount++;
+        } catch (error) {
+          console.error(`Error deactivating user ${user.email}:`, error);
+          errorCount++;
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      toast({
+        title: 'Bulk Deactivate Complete',
+        description: `${successCount} users deactivated${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        variant: errorCount > 0 ? 'destructive' : 'default',
+      });
+
+      // Clear selection and refresh
+      setSelectedUserIds(new Set());
+      fetchUsers();
+    } catch (error) {
+      console.error('Bulk deactivate error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete bulk deactivate',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Bulk add users using RPC function (bypasses RLS)
+  // Parse CSV data (from paste or file upload)
+  const handleParseCsv = () => {
+    try {
+      const parsed = parseCsvText(csvData);
+      setParsedCsv(parsed);
+
+      if (parsed.valid.length === 0 && parsed.invalid.length === 0) {
+        toast({
+          title: 'No Data',
+          description: 'No valid data found in CSV',
+          variant: 'destructive',
+        });
+      } else if (parsed.invalid.length > 0) {
+        toast({
+          title: 'Validation Warnings',
+          description: `${parsed.valid.length} valid, ${parsed.invalid.length} invalid rows`,
+        });
+      } else {
+        toast({
+          title: 'CSV Parsed',
+          description: `${parsed.valid.length} users ready to import`,
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing CSV:', error);
+      toast({
+        title: 'Parse Error',
+        description: 'Failed to parse CSV data',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const parsed = await parseCsvFile(file);
+      setCsvFile(file);
+      setParsedCsv(parsed);
+
+      if (parsed.valid.length === 0 && parsed.invalid.length === 0) {
+        toast({
+          title: 'No Data',
+          description: 'No valid data found in CSV file',
+          variant: 'destructive',
+        });
+      } else if (parsed.invalid.length > 0) {
+        toast({
+          title: 'Validation Warnings',
+          description: `${parsed.valid.length} valid, ${parsed.invalid.length} invalid rows`,
+        });
+      } else {
+        toast({
+          title: 'File Uploaded',
+          description: `${parsed.valid.length} users ready to import`,
+        });
+      }
+    } catch (error) {
+      console.error('Error reading CSV file:', error);
+      toast({
+        title: 'File Error',
+        description: 'Failed to read CSV file',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Import users from CSV
+  const handleCsvImport = async () => {
+    if (!parsedCsv || parsedCsv.valid.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No valid users to import',
+        variant: 'destructive',
+      });
       return;
     }
 
-    try {
-      const { data: insertedCount, error } = await supabase.rpc('gh_admin_bulk_add_users', {
-        p_emails: emails,
-        p_tier: 'user',
-        p_payment_source: 'bulk_import',
-      });
+    setIsImporting(true);
+    setImportProgress({
+      total: parsedCsv.valid.length,
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+    });
 
-      if (error) throw error;
+    const errors: Array<{ email: string; error: string }> = [];
+    let successCount = 0;
 
-      const addedCount = insertedCount || 0;
-      const skippedCount = emails.length - addedCount;
+    // Import users sequentially with rate limiting
+    for (let i = 0; i < parsedCsv.valid.length; i++) {
+      const user = parsedCsv.valid[i];
 
-      toast({
-        title: 'Success',
-        description: `Added ${addedCount} users${skippedCount > 0 ? ` (${skippedCount} already existed)` : ''}`,
-      });
-      setIsBulkDialogOpen(false);
-      setBulkEmails('');
-      fetchUsers();
-    } catch (error) {
-      console.error('Error bulk adding users:', error);
-      toast({ title: 'Error', description: 'Failed to add users', variant: 'destructive' });
+      try {
+        const { error } = await supabase.rpc('gh_admin_add_user', {
+          p_email: user.email,
+          p_full_name: user.full_name || null,
+          p_phone: user.phone || null,
+          p_tier: user.tier,
+          p_notes: user.notes || null,
+          p_payment_source: user.payment_source || 'csv_import',
+          p_payment_reference: null,
+        });
+
+        if (error) {
+          // Check if user already exists
+          if (error.message.includes('already exists') || error.message.includes('duplicate')) {
+            errors.push({ email: user.email, error: 'User already exists' });
+          } else {
+            throw error;
+          }
+        } else {
+          successCount++;
+        }
+      } catch (error: any) {
+        console.error(`Error adding user ${user.email}:`, error);
+        errors.push({ email: user.email, error: error.message || 'Unknown error' });
+      }
+
+      // Update progress
+      setImportProgress(prev => prev ? {
+        ...prev,
+        processed: i + 1,
+        succeeded: successCount,
+        failed: errors.length,
+      } : null);
+
+      // Rate limiting delay (200ms)
+      if (i < parsedCsv.valid.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     }
+
+    setIsImporting(false);
+
+    // Send invites if requested
+    if (sendInvitesAfterImport && successCount > 0) {
+      try {
+        const successfulEmails = parsedCsv.valid
+          .filter(user => !errors.find(e => e.email === user.email))
+          .map(user => user.email);
+
+        if (successfulEmails.length > 0) {
+          toast({
+            title: 'Sending Invites',
+            description: `Sending magic link invites to ${successfulEmails.length} users...`,
+          });
+
+          const { success, failed } = await sendBulkInvites(successfulEmails);
+
+          toast({
+            title: 'Invites Sent',
+            description: `${success.length} invites sent successfully${failed.length > 0 ? `, ${failed.length} failed` : ''}`,
+            variant: failed.length > 0 ? 'destructive' : 'default',
+          });
+        }
+      } catch (error) {
+        console.error('Error sending bulk invites:', error);
+        toast({
+          title: 'Invite Error',
+          description: 'Failed to send some invites. Users can still be invited manually.',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    // Show import summary
+    const errorCount = errors.length;
+    toast({
+      title: 'Import Complete',
+      description: `${successCount} users imported successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+      variant: errorCount > 0 ? 'destructive' : 'default',
+    });
+
+    if (errorCount > 0) {
+      console.error('[CSV Import] Failed rows:', errors);
+    }
+
+    // Reset and refresh
+    setIsBulkDialogOpen(false);
+    resetCsvImport();
+    fetchUsers();
+  };
+
+  // Reset CSV import state
+  const resetCsvImport = () => {
+    setCsvData('');
+    setCsvFile(null);
+    setParsedCsv(null);
+    setImportProgress(null);
+    setCsvInputMethod('paste');
   };
 
   // Export users to CSV
@@ -446,35 +822,216 @@ export default function UserManagement() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              {selectedUserIds.size > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="w-4 h-4 mr-2" />
+                      Bulk Actions ({selectedUserIds.size})
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleBulkSendInvites} disabled={isInviting}>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Invites
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkActivate}>
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Activate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkDeactivate}>
+                      <UserX className="w-4 h-4 mr-2" />
+                      Deactivate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setShowBulkDeleteDialog(true)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
+              <Dialog open={isBulkDialogOpen} onOpenChange={(open) => {
+                setIsBulkDialogOpen(open);
+                if (!open) resetCsvImport();
+              }}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Upload className="w-4 h-4 mr-2" />
                     Bulk Add
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Bulk Add Users</DialogTitle>
+                    <DialogTitle>Import Users from CSV</DialogTitle>
                     <DialogDescription>
-                      Paste email addresses (one per line, or comma/semicolon separated)
+                      Upload a CSV file or paste CSV data. Download template for format reference.
                     </DialogDescription>
                   </DialogHeader>
-                  <Textarea
-                    placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"
-                    value={bulkEmails}
-                    onChange={e => setBulkEmails(e.target.value)}
-                    rows={10}
-                  />
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsBulkDialogOpen(false)}>
+
+                  {/* Tabs for Paste vs Upload */}
+                  <Tabs value={csvInputMethod} onValueChange={(v) => setCsvInputMethod(v as 'paste' | 'upload')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="paste">Paste CSV</TabsTrigger>
+                      <TabsTrigger value="upload">Upload File</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="paste" className="space-y-4">
+                      <Textarea
+                        placeholder="email,full_name,phone,tier,notes&#10;user@example.com,John Doe,+1234567890,user,Notes here"
+                        value={csvData}
+                        onChange={e => setCsvData(e.target.value)}
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                      <Button onClick={handleParseCsv} disabled={!csvData}>
+                        Parse CSV
+                      </Button>
+                    </TabsContent>
+
+                    <TabsContent value="upload" className="space-y-4">
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileUpload}
+                        disabled={isImporting}
+                      />
+                      {csvFile && (
+                        <p className="text-sm text-muted-foreground">
+                          File: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+                        </p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* Preview Table */}
+                  {parsedCsv && (parsedCsv.valid.length > 0 || parsedCsv.invalid.length > 0) && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Preview</h4>
+                        <div className="text-sm text-muted-foreground">
+                          {parsedCsv.valid.length} valid, {parsedCsv.invalid.length} invalid
+                        </div>
+                      </div>
+
+                      <div className="border rounded-md max-h-64 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-12">Status</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Tier</TableHead>
+                              <TableHead>Notes</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {/* Valid Rows */}
+                            {parsedCsv.valid.map((row, i) => (
+                              <TableRow key={`valid-${i}`} className="bg-green-50">
+                                <TableCell>
+                                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                </TableCell>
+                                <TableCell className="font-mono text-sm">{row.email}</TableCell>
+                                <TableCell>{row.full_name || '-'}</TableCell>
+                                <TableCell>
+                                  <Badge className={TIER_COLORS[row.tier]}>{row.tier}</Badge>
+                                </TableCell>
+                                <TableCell className="text-sm truncate max-w-xs">
+                                  {row.notes || '-'}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            {/* Invalid Rows */}
+                            {parsedCsv.invalid.map((row, i) => (
+                              <TableRow key={`invalid-${i}`} className="bg-red-50">
+                                <TableCell>
+                                  <AlertCircle className="w-4 h-4 text-red-600" />
+                                </TableCell>
+                                <TableCell className="font-mono text-sm">{row.email || 'N/A'}</TableCell>
+                                <TableCell colSpan={3} className="text-sm text-red-600">
+                                  Row {row.row}: {row.message}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Import Progress */}
+                      {importProgress && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Importing users...</span>
+                            <span className="text-muted-foreground">
+                              {importProgress.processed} / {importProgress.total}
+                            </span>
+                          </div>
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all"
+                              style={{ width: `${(importProgress.processed / importProgress.total) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <span className="text-green-600">✓ {importProgress.succeeded} succeeded</span>
+                            {importProgress.failed > 0 && (
+                              <span className="text-red-600">✗ {importProgress.failed} failed</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Send Invites Option */}
+                  {parsedCsv && parsedCsv.valid.length > 0 && (
+                    <div className="flex items-center space-x-2 px-1">
+                      <Switch
+                        id="send-invites"
+                        checked={sendInvitesAfterImport}
+                        onCheckedChange={setSendInvitesAfterImport}
+                        disabled={isImporting}
+                      />
+                      <Label
+                        htmlFor="send-invites"
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        Send magic link invites to imported users
+                      </Label>
+                    </div>
+                  )}
+
+                  <DialogFooter className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={downloadCsvTemplate}
+                      disabled={isImporting}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Template
+                    </Button>
+                    <div className="flex-1" />
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsBulkDialogOpen(false)}
+                      disabled={isImporting}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleBulkAdd}>Add Users</Button>
+                    <Button
+                      onClick={handleCsvImport}
+                      disabled={!parsedCsv || parsedCsv.valid.length === 0 || isImporting}
+                    >
+                      {isImporting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Import {parsedCsv?.valid.length || 0} Users
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -655,6 +1212,14 @@ export default function UserManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all users"
+                        className={isSomeSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                      />
+                    </TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Tier</TableHead>
                     <TableHead>Status</TableHead>
@@ -665,13 +1230,20 @@ export default function UserManagement() {
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No users found
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredUsers.map(user => (
                       <TableRow key={user.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedUserIds.has(user.id)}
+                            onCheckedChange={() => toggleSelectUser(user.id)}
+                            aria-label={`Select ${user.email}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{user.email}</p>
@@ -821,6 +1393,49 @@ export default function UserManagement() {
               Cancel
             </Button>
             <Button onClick={handleUpdateUser}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedUserIds.size} Users?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove {selectedUserIds.size} user{selectedUserIds.size > 1 ? 's' : ''} from the approved list.
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+            <p className="text-sm font-medium">Users to be deleted:</p>
+            <ul className="text-sm space-y-1">
+              {Array.from(selectedUserIds).map(userId => {
+                const user = users.find(u => u.id === userId);
+                return user ? (
+                  <li key={userId} className="text-muted-foreground">
+                    • {user.email} {user.full_name ? `(${user.full_name})` : ''}
+                  </li>
+                ) : null;
+              })}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkDeleteDialog(false)}
+              disabled={isBulkDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+            >
+              {isBulkDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Delete {selectedUserIds.size} User{selectedUserIds.size > 1 ? 's' : ''}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

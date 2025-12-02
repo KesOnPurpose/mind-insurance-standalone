@@ -14,6 +14,9 @@ import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
 import { useConversationsContext } from "@/contexts/ConversationsContext";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/hooks/useSession";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { trackChatError, trackNetworkError } from "@/services/errorTracker";
 import { fetchRecentConversation, fetchConversationById } from "@/services/chatHistoryService";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -76,6 +79,15 @@ function ChatPageContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { setOpenMobile, isMobile } = useSidebar();
+
+  // Analytics tracking hooks
+  const { trackConversation } = useSession('chat');
+  const { trackFeature } = useFeatureUsage(
+    currentProduct === 'mind-insurance' ? 'chat_mio' :
+    currentProduct === 'me-wealth' ? 'chat_me' :
+    'chat_nette',
+    true // Auto-track on mount
+  );
 
   // Conversation context for sidebar integration
   const {
@@ -437,6 +449,9 @@ function ChatPageContent() {
 
       setMessages((prev) => [...prev, aiMessage]);
 
+      // Track successful conversation for analytics
+      await trackConversation();
+
       // Update conversation metadata
       await updateConversation(currentConversationId, aiMessage.content, responseAgent);
 
@@ -461,6 +476,20 @@ function ChatPageContent() {
       setIsTyping(false);
     } catch (error) {
       console.error('Error sending message:', error);
+
+      // Track error for analytics
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      await trackChatError(
+        selectedCoach === 'nette' ? 'nette' : selectedCoach === 'me' ? 'me' : 'mio',
+        errorObj,
+        currentConversationId,
+        {
+          message: messageText,
+          agent: selectedCoach,
+          product: currentProduct
+        }
+      );
+
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",

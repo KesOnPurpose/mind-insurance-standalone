@@ -24,7 +24,7 @@ interface SendInviteResponse {
  * 2. Verifies the email is in the approved list
  * 3. Sends a magic link email via Supabase Auth
  */
-export async function sendUserInvite(params: SendInviteParams): Promise<SendInviteResponse> {
+export async function sendUserInvite(params: SendInviteParams, bulk = false): Promise<SendInviteResponse> {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -36,6 +36,7 @@ export async function sendUserInvite(params: SendInviteParams): Promise<SendInvi
       email: params.email,
       full_name: params.full_name,
       redirect_to: params.redirect_to,
+      bulk, // Pass bulk flag to use SMTP if configured
     },
   });
 
@@ -43,6 +44,12 @@ export async function sendUserInvite(params: SendInviteParams): Promise<SendInvi
     // Try to extract error message from response data
     const errorMsg = response.data?.error || response.data?.message || response.error.message || 'Failed to send invite';
     console.error('Invite error details:', { error: response.error, data: response.data });
+
+    // Provide helpful message for common configuration issues
+    if (errorMsg.includes('SMTP') || errorMsg.includes('email')) {
+      throw new Error('Email delivery not configured. Contact admin to set up SMTP credentials.');
+    }
+
     throw new Error(errorMsg);
   }
 
@@ -71,7 +78,7 @@ export async function sendBulkInvites(
       await sendUserInvite({
         email,
         redirect_to: options?.redirect_to,
-      });
+      }, true); // Pass bulk=true flag
       results.success.push(email);
     } catch (error) {
       results.failed.push({
