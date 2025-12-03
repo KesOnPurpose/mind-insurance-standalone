@@ -41,7 +41,7 @@ export const MindsetCommitmentStep = ({ answers, updateAnswer }: MindsetCommitme
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="passionate-care" id="mot4" />
             <Label htmlFor="mot4" className="font-normal cursor-pointer">
-              Provide care for a specific population I'm passionate about
+              Provide housing for a specific population I'm passionate about
             </Label>
           </div>
           <div className="flex items-center space-x-2">

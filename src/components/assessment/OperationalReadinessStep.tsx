@@ -20,7 +20,7 @@ export const OperationalReadinessStep = ({
       {/* Caregiving Experience */}
       <div className="space-y-4">
         <Label className="text-lg font-semibold">
-          Do you have experience in caregiving, healthcare, or social services?
+          Do you have experience in property management, real estate, or housing services?
         </Label>
         <RadioGroup
           value={answers.caregivingExperience}
@@ -47,7 +47,7 @@ export const OperationalReadinessStep = ({
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="licensed-professional" id="exp4" />
             <Label htmlFor="exp4" className="font-normal cursor-pointer">
-              Licensed professional
+              Experienced property manager
             </Label>
           </div>
         </RadioGroup>
@@ -109,7 +109,7 @@ export const OperationalReadinessStep = ({
               onCheckedChange={() => toggleArrayItem('supportTeam', 'primary-caregiver')}
             />
             <Label htmlFor="team1" className="font-normal cursor-pointer">
-              I plan to be the primary caregiver
+              I plan to be the primary operator
             </Label>
           </div>
           <div className="flex items-center space-x-2">
@@ -129,7 +129,7 @@ export const OperationalReadinessStep = ({
               onCheckedChange={() => toggleArrayItem('supportTeam', 'hire-caregivers')}
             />
             <Label htmlFor="team3" className="font-normal cursor-pointer">
-              I plan to hire professional caregivers
+              I plan to hire house managers/staff
             </Label>
           </div>
           <div className="flex items-center space-x-2">

@@ -15,7 +15,7 @@ export const MarketKnowledgeStep = ({ answers, updateAnswer, toggleArrayItem }: 
       {/* Licensing Familiarity */}
       <div className="space-y-4">
         <Label className="text-lg font-semibold">
-          How familiar are you with group home licensing requirements in your state?
+          How familiar are you with housing regulations for group homes in your state?
         </Label>
         <RadioGroup
           value={answers.licensingFamiliarity}
@@ -48,7 +48,7 @@ export const MarketKnowledgeStep = ({ answers, updateAnswer, toggleArrayItem }: 
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="licensed" id="license5" />
             <Label htmlFor="license5" className="font-normal cursor-pointer">
-              Already licensed or in licensing process
+              Already operating or in setup process
             </Label>
           </div>
         </RadioGroup>
@@ -78,7 +78,7 @@ export const MarketKnowledgeStep = ({ answers, updateAnswer, toggleArrayItem }: 
               onCheckedChange={() => toggleArrayItem('targetPopulations', 'seniors')}
             />
             <Label htmlFor="pop2" className="font-normal cursor-pointer">
-              Seniors/Elderly care
+              Seniors/Elderly housing
             </Label>
           </div>
           <div className="flex items-center space-x-2">

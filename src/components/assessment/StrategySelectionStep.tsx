@@ -1,10 +1,76 @@
 import { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AssessmentAnswers } from '@/types/assessment';
 import {
   Search, Home, BookOpen, FileText, TrendingUp
 } from 'lucide-react';
+
+// All 50 US States
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' },
+];
+
+// Popular states shown first (based on group home market size)
+const POPULAR_STATES = ['CA', 'TX', 'FL', 'GA', 'NC', 'AZ', 'OH', 'PA', 'NY'];
 
 interface StrategySelectionStepProps {
   answers: Partial<AssessmentAnswers>;
@@ -103,53 +169,32 @@ export const StrategySelectionStep = ({ answers, updateAnswer }: StrategySelecti
         <p className="text-sm text-muted-foreground">
           Regulations and reimbursement rates vary significantly by state
         </p>
-        <RadioGroup
+        <Select
           value={answers.targetState}
           onValueChange={(value) => updateAnswer('targetState', value)}
         >
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="CA" id="state1" />
-              <Label htmlFor="state1" className="font-normal cursor-pointer">California</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="TX" id="state2" />
-              <Label htmlFor="state2" className="font-normal cursor-pointer">Texas</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="FL" id="state3" />
-              <Label htmlFor="state3" className="font-normal cursor-pointer">Florida</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="NY" id="state4" />
-              <Label htmlFor="state4" className="font-normal cursor-pointer">New York</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="GA" id="state5" />
-              <Label htmlFor="state5" className="font-normal cursor-pointer">Georgia</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="AZ" id="state6" />
-              <Label htmlFor="state6" className="font-normal cursor-pointer">Arizona</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="NC" id="state7" />
-              <Label htmlFor="state7" className="font-normal cursor-pointer">North Carolina</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="PA" id="state8" />
-              <Label htmlFor="state8" className="font-normal cursor-pointer">Pennsylvania</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="OH" id="state9" />
-              <Label htmlFor="state9" className="font-normal cursor-pointer">Ohio</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="OTHER" id="state10" />
-              <Label htmlFor="state10" className="font-normal cursor-pointer">Other State</Label>
-            </div>
-          </div>
-        </RadioGroup>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select your state..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Popular States</SelectLabel>
+              {US_STATES.filter(state => POPULAR_STATES.includes(state.value)).map((state) => (
+                <SelectItem key={state.value} value={state.value}>
+                  {state.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>All States</SelectLabel>
+              {US_STATES.filter(state => !POPULAR_STATES.includes(state.value)).map((state) => (
+                <SelectItem key={state.value} value={state.value}>
+                  {state.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Property Status */}
@@ -237,7 +282,7 @@ export const StrategySelectionStep = ({ answers, updateAnswer }: StrategySelecti
                   Operating My Property
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Focus on licensing, setup, staffing, and getting your first residents
+                  Focus on setup, staffing, and getting your first residents
                 </p>
               </div>
             </div>
