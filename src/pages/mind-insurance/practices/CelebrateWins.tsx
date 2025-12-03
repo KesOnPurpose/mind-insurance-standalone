@@ -221,9 +221,9 @@ export default function CelebrateWins() {
   const selectedCelebration = VICTORY_CELEBRATIONS.find(c => c.value === victoryCelebration);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+    <div className="min-h-screen bg-mi-navy">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-mi-navy-light border-b border-mi-gold/20">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -231,18 +231,19 @@ export default function CelebrateWins() {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/mind-insurance/practices')}
+                className="text-gray-400 hover:text-white hover:bg-mi-navy"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <Trophy className="h-6 w-6 text-yellow-600" />
+                <h1 className="text-2xl font-bold flex items-center gap-2 text-white">
+                  <Trophy className="h-6 w-6 text-mi-gold" />
                   Celebrate Wins
                 </h1>
-                <p className="text-sm text-gray-600">Victory lap for today's achievements</p>
+                <p className="text-sm text-mi-gold">Victory lap for today's achievements</p>
               </div>
             </div>
-            <Badge variant="secondary" className="text-lg px-3 py-1">
+            <Badge className="text-lg px-3 py-1 bg-mi-gold/20 text-mi-gold border border-mi-gold/30">
               2 points
             </Badge>
           </div>
@@ -252,26 +253,26 @@ export default function CelebrateWins() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Victory Banner */}
-        <Card className="border-yellow-300 bg-gradient-to-r from-yellow-100 to-orange-100">
+        <Card className="border-mi-gold/30 bg-mi-gold/10">
           <CardContent className="pt-6 text-center">
             <div className="flex justify-center mb-4">
-              <Trophy className="h-12 w-12 text-yellow-600" />
+              <Trophy className="h-12 w-12 text-mi-gold" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Victory Lap Time!</h2>
-            <p className="text-gray-700">
+            <h2 className="text-xl font-bold text-white mb-2">Victory Lap Time!</h2>
+            <p className="text-gray-300">
               Champions celebrate progress, not just perfection
             </p>
           </CardContent>
         </Card>
 
         {/* Championship Win */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6">
-            <Label htmlFor="championship-win" className="text-lg font-semibold flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-600" />
+            <Label htmlFor="championship-win" className="text-lg font-semibold flex items-center gap-2 text-white">
+              <Trophy className="h-5 w-5 text-mi-gold" />
               Today's Championship Win
             </Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               What's your biggest victory today? Big or small - all progress counts!
             </p>
             <Textarea
@@ -279,19 +280,19 @@ export default function CelebrateWins() {
               value={championshipWin}
               onChange={(e) => setChampionshipWin(e.target.value)}
               placeholder="Today I accomplished..."
-              className="min-h-[100px]"
+              className="mi-textarea min-h-[100px] resize-none"
             />
           </CardContent>
         </Card>
 
         {/* Micro Victory */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6">
-            <Label htmlFor="micro-victory" className="text-lg font-semibold flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+            <Label htmlFor="micro-victory" className="text-lg font-semibold flex items-center gap-2 text-white">
+              <Sparkles className="h-5 w-5 text-mi-cyan" />
               Micro Victory
             </Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               What small win made you smile today?
             </p>
             <Textarea
@@ -299,19 +300,19 @@ export default function CelebrateWins() {
               value={microVictory}
               onChange={(e) => setMicroVictory(e.target.value)}
               placeholder="A small victory that matters..."
-              className="min-h-[100px]"
+              className="mi-textarea min-h-[100px] resize-none"
             />
           </CardContent>
         </Card>
 
         {/* Future Self Evidence */}
-        <Card className="border-blue-200 bg-blue-50/50">
+        <Card className="border-mi-cyan/30 bg-mi-cyan/10">
           <CardContent className="pt-6">
-            <Label htmlFor="future-self-evidence" className="text-lg font-semibold flex items-center gap-2">
-              <Star className="h-5 w-5 text-blue-600" />
+            <Label htmlFor="future-self-evidence" className="text-lg font-semibold flex items-center gap-2 text-white">
+              <Star className="h-5 w-5 text-mi-cyan" />
               Evidence of Identity Shift
             </Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               How does this victory prove your new identity?
             </p>
             <Textarea
@@ -319,19 +320,19 @@ export default function CelebrateWins() {
               value={futureSelfEvidence}
               onChange={(e) => setFutureSelfEvidence(e.target.value)}
               placeholder="This proves I am someone who..."
-              className="min-h-[100px]"
+              className="mi-textarea min-h-[100px] resize-none"
             />
           </CardContent>
         </Card>
 
         {/* Championship Gratitude */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6">
-            <Label htmlFor="championship-gratitude" className="text-lg font-semibold flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-600" />
+            <Label htmlFor="championship-gratitude" className="text-lg font-semibold flex items-center gap-2 text-white">
+              <Heart className="h-5 w-5 text-pink-400" />
               Championship Gratitude
             </Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               What are you grateful for today?
             </p>
             <Textarea
@@ -339,16 +340,16 @@ export default function CelebrateWins() {
               value={championshipGratitude}
               onChange={(e) => setChampionshipGratitude(e.target.value)}
               placeholder="I'm grateful for..."
-              className="min-h-[100px]"
+              className="mi-textarea min-h-[100px] resize-none"
             />
           </CardContent>
         </Card>
 
         {/* Victory Celebration */}
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+        <Card className="border-mi-gold/30 bg-mi-gold/10">
           <CardContent className="pt-6">
-            <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <Zap className="h-5 w-5 text-purple-600" />
+            <Label className="text-lg font-semibold flex items-center gap-2 mb-4 text-white">
+              <Zap className="h-5 w-5 text-mi-gold" />
               How Will You Celebrate This Win?
             </Label>
             <RadioGroup value={victoryCelebration} onValueChange={handleCelebrationSelect}>
@@ -357,13 +358,13 @@ export default function CelebrateWins() {
                   const Icon = celebration.icon;
                   return (
                     <div key={celebration.value} className="relative">
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border-2 hover:border-purple-400 transition-colors cursor-pointer">
-                        <RadioGroupItem value={celebration.value} id={celebration.value} />
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border-2 border-mi-gold/20 hover:border-mi-gold/50 transition-colors cursor-pointer bg-mi-navy">
+                        <RadioGroupItem value={celebration.value} id={celebration.value} className="border-mi-gold/50 text-mi-gold" />
                         <Label
                           htmlFor={celebration.value}
-                          className="flex items-center gap-3 cursor-pointer flex-1"
+                          className="flex items-center gap-3 cursor-pointer flex-1 text-gray-300"
                         >
-                          <Icon className="h-5 w-5 text-purple-600" />
+                          <Icon className="h-5 w-5 text-mi-gold" />
                           <span className="font-medium">{celebration.label}</span>
                           <span className="text-2xl ml-auto">{celebration.emoji}</span>
                         </Label>
@@ -377,12 +378,12 @@ export default function CelebrateWins() {
         </Card>
 
         {/* Motivational Quote */}
-        <Card className="bg-gradient-to-r from-indigo-100 to-purple-100">
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6 text-center">
-            <p className="text-gray-700 italic text-lg">
+            <p className="text-gray-300 italic text-lg">
               "Success is the sum of small efforts repeated day in and day out."
             </p>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-gray-400 mt-2">
               - Robert Collier
             </p>
           </CardContent>
@@ -401,7 +402,7 @@ export default function CelebrateWins() {
             size="lg"
             onClick={handleSubmit}
             disabled={!isFormValid() || loading}
-            className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+            className="mi-btn-gold"
           >
             {loading ? (
               'Saving Victory...'
@@ -415,7 +416,7 @@ export default function CelebrateWins() {
         </div>
       </div>
 
-      {/* Celebration Animation Overlay - Disabled (framer-motion not installed) */}
+      {/* Celebration Animation Overlay */}
       {showCelebration && selectedCelebration && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div className="text-8xl animate-bounce">

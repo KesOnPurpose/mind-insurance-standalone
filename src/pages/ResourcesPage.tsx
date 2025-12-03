@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,11 +12,13 @@ import {
   FileText,
   Download,
   ExternalLink,
-  Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  Calendar,
+  X
 } from 'lucide-react';
 import type { GHDocument, DocumentCategory } from '@/types/documents';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
 // Category display configuration
 const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; color: string }> = {
@@ -28,9 +31,30 @@ const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; color: string }
 };
 
 export default function ResourcesPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | DocumentCategory>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | DocumentCategory>(
+    (searchParams.get('category') as DocumentCategory) || 'all'
+  );
   const [sortBy, setSortBy] = useState<'name' | 'recent' | 'popular'>('name');
+
+  // Read week param from URL
+  const selectedWeek = searchParams.get('week');
+
+  // Sync URL params with state
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory !== 'all') params.set('category', selectedCategory);
+    if (searchQuery) params.set('search', searchQuery);
+    // Preserve week param if it exists
+    if (selectedWeek) params.set('week', selectedWeek);
+    setSearchParams(params, { replace: true });
+  }, [selectedCategory, searchQuery, selectedWeek, setSearchParams]);
+
+  // Handle category change from sidebar
+  const handleCategorySelect = (category: DocumentCategory | 'all') => {
+    setSelectedCategory(category);
+  };
 
   // Fetch all documents
   const { data: documents, isLoading } = useQuery({
@@ -65,11 +89,48 @@ export default function ResourcesPage() {
     },
   });
 
+  // Fetch document IDs linked to tactics in the selected week
+  const { data: weekDocumentIds, isLoading: isLoadingWeekDocs } = useQuery({
+    queryKey: ['documents-by-week', selectedWeek],
+    queryFn: async () => {
+      if (!selectedWeek) return null;
+
+      const { data, error } = await supabase
+        .from('gh_document_tactic_links')
+        .select(`
+          document_id,
+          gh_tactic_instructions!inner (
+            week_assignment
+          )
+        `)
+        .eq('gh_tactic_instructions.week_assignment', parseInt(selectedWeek));
+
+      if (error) throw error;
+      // Return unique document IDs
+      return [...new Set(data.map(d => d.document_id))];
+    },
+    enabled: !!selectedWeek,
+  });
+
+  // Handler to clear week filter
+  const clearWeekFilter = () => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.delete('week');
+      return newParams;
+    });
+  };
+
   // Filter and sort documents
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
 
     let filtered = documents;
+
+    // Filter by week (via tactic links)
+    if (selectedWeek && weekDocumentIds) {
+      filtered = filtered.filter(doc => weekDocumentIds.includes(doc.id));
+    }
 
     // Filter by search query
     if (searchQuery) {
@@ -100,7 +161,7 @@ export default function ResourcesPage() {
     });
 
     return filtered;
-  }, [documents, searchQuery, selectedCategory, sortBy]);
+  }, [documents, searchQuery, selectedCategory, sortBy, selectedWeek, weekDocumentIds]);
 
   // Group documents by category for category view
   const documentsByCategory = useMemo(() => {
@@ -150,15 +211,15 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <SidebarLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Resources</h1>
-          <p className="text-gray-600">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Resources</h1>
+          <p className="text-muted-foreground">
             Browse and download training materials, templates, and guides for your group home business
           </p>
-          <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
               {documents?.length || 0} Documents
@@ -166,6 +227,27 @@ export default function ResourcesPage() {
             <span>•</span>
             <span>{Object.keys(documentsByCategory).length} Categories</span>
           </div>
+
+          {/* Active Week Filter Indicator */}
+          {selectedWeek && (
+            <div className="flex items-center gap-2 mt-4">
+              <span className="text-sm text-muted-foreground">Filtered by:</span>
+              <Badge variant="secondary" className="flex items-center gap-1.5 pr-1">
+                <Calendar className="w-3 h-3" />
+                Week {selectedWeek}
+                <button
+                  onClick={clearWeekFilter}
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
+                  aria-label="Clear week filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+              {isLoadingWeekDocs && (
+                <span className="text-xs text-muted-foreground">Loading...</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -313,6 +395,6 @@ export default function ResourcesPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </SidebarLayout>
   );
 }

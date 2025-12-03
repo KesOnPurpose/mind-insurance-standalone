@@ -7,6 +7,7 @@
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { generateEmbedding } from './embedding-service.ts';
+import { expandForFTS, expandSearchTerms, POPULATION_SYNONYMS, BUSINESS_SYNONYMS, BEHAVIORAL_SYNONYMS } from './searchSynonyms.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -74,18 +75,33 @@ export async function hybridSearch(
   matchCount: number = 5
 ): Promise<KnowledgeChunk[]> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  
+
   // Determine table based on agent
-  const tableName = agent === 'nette' ? 'nette_knowledge_chunks' 
+  const tableName = agent === 'nette' ? 'nette_knowledge_chunks'
                   : agent === 'me' ? 'me_knowledge_chunks'
                   : 'mio_knowledge_chunks';
 
   console.log(`[RAG] Searching ${tableName} with filters:`, filters);
 
+  // Expand query with synonyms based on agent type
+  // Nette uses population + business synonyms
+  // MIO uses behavioral synonyms
+  const synonymDict = agent === 'mio'
+    ? BEHAVIORAL_SYNONYMS
+    : { ...POPULATION_SYNONYMS, ...BUSINESS_SYNONYMS };
+
+  const expandedQuery = expandForFTS(query, synonymDict);
+  const expandedTerms = expandSearchTerms(query, synonymDict);
+
+  console.log(`[RAG] Query expanded: "${query}" -> ${expandedTerms.length} terms`);
+  if (expandedTerms.length > 1) {
+    console.log(`[RAG] Expanded terms: ${expandedTerms.slice(0, 5).join(', ')}${expandedTerms.length > 5 ? '...' : ''}`);
+  }
+
   // Generate query embedding
   const queryEmbedding = await generateEmbedding(query);
 
-  // Perform vector search
+  // Perform vector search (uses original query for semantic matching)
   const vectorResults = await vectorSearch(
     supabase,
     tableName,
@@ -94,11 +110,11 @@ export async function hybridSearch(
     matchCount * 2 // Get more candidates for RRF
   );
 
-  // Perform FTS search
+  // Perform FTS search with expanded synonyms
   const ftsResults = await fullTextSearch(
     supabase,
     tableName,
-    query,
+    expandedQuery, // Use synonym-expanded query for FTS
     filters,
     matchCount * 2 // Get more candidates for RRF
   );

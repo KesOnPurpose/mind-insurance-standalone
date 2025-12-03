@@ -1,9 +1,11 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, MessageSquare, Map, Settings, BookOpen } from 'lucide-react';
+import { LogOut, MessageSquare, Map, Settings, BookOpen, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
+import { BottomNav } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,6 +13,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
+  const { canAccessAdminPanel } = useAccessControl();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,6 +50,16 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Button>
             </Link>
 
+            {/* Admin Link - Only visible to admin+ users */}
+            {canAccessAdminPanel && (
+              <Link to="/admin">
+                <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  <span>Admin</span>
+                </Button>
+              </Link>
+            )}
+
             {/* User Profile & Settings */}
             <div className="flex items-center gap-2">
               <Link to="/profile" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors">
@@ -71,10 +84,13 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* Main Content - pb-20 for mobile bottom nav space */}
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-20 sm:pb-6">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

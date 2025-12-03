@@ -396,7 +396,10 @@ export async function saveAssessmentResults(
     commitment_level: answers.commitmentLevel,
     timeline: mapTimelineToDB(answers.timeline),
 
+    // CRITICAL: Set both assessment_completed_at AND onboarding_step atomically
+    // This prevents the assessment loop bug where one succeeds and the other fails
     assessment_completed_at: new Date().toISOString(),
+    onboarding_step: 'assessment_complete',
     updated_at: new Date().toISOString()
   };
 

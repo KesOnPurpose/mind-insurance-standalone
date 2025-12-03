@@ -1,0 +1,496 @@
+{
+  "name": "MIO-Report-Generator-v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mio-report-generator",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300],
+      "webhookId": "mio-report-generator"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/rpc/resolve_automation_target_users",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_automation_id: $json.body.automation_id }) }}"
+      },
+      "id": "resolve-users",
+      "name": "Resolve Target Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-users",
+      "name": "Loop: For Each User",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?id=eq.{{ $json.user_id }}&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-user-profile",
+      "name": "Load User Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/daily_practices?user_id=eq.{{ $json.user_id }}&order=practice_date.desc&limit=30&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-practices",
+      "name": "Load Daily Practices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/weekly_assessment_scores?user_id=eq.{{ $json.user_id }}&order=assessment_week.desc&limit=4&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "load-assessments",
+      "name": "Load Weekly Assessments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/rpc/search_mio_knowledge",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_query_text: $('Load User Profile').item.json[0].collision_patterns?.primary_pattern + ' neural rewiring protocol ' + $('Load User Profile').item.json[0].temperament, p_pattern_filter: $('Load User Profile').item.json[0].collision_patterns?.primary_pattern?.toLowerCase(), p_temperament_filter: $('Load User Profile').item.json[0].temperament?.toLowerCase(), p_limit: 5 }) }}"
+      },
+      "id": "query-rag",
+      "name": "Query RAG Protocols",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": []
+        },
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Merge All User Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4000,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are MIO - the Mind Insurance Oracle. A forensic behavioral psychologist analyzing user data to generate personalized insights.\\n\\n## USER DATA:\\n\\n### Profile:\\n{{ JSON.stringify($('Load User Profile').item.json[0], null, 2) }}\\n\\n### Daily Practices (Last 30 Days):\\n{{ JSON.stringify($('Load Daily Practices').all().map(i => i.json), null, 2) }}\\n\\n### Weekly Assessments:\\n{{ JSON.stringify($('Load Weekly Assessments').all().map(i => i.json), null, 2) }}\\n\\n## RELEVANT PROTOCOLS FROM KNOWLEDGE BASE:\\n{{ JSON.stringify($('Query RAG Protocols').item.json, null, 2) }}\\n\\n## YOUR TASK:\\n\\nGenerate a comprehensive behavioral analysis report for this user. Use your 15 forensic capabilities to:\\n\\n1. **Pattern Analysis** - Identify the dominant identity collision pattern and how it manifests\\n2. **Dropout Risk Assessment** - Calculate risk score based on energy, timing, consistency\\n3. **Breakthrough Detection** - Identify signs of neural rewiring progress\\n4. **Neural Rewiring Protocol** - Recommend specific interventions based on the protocols retrieved\\n\\n## OUTPUT FORMAT:\\n\\nReturn a JSON object with this structure:\\n{\\n  \\\"title\\\": \\\"Insight title that hooks the user\\\",\\n  \\\"summary\\\": \\\"2-3 sentence executive summary\\\",\\n  \\\"sections\\\": [\\n    {\\n      \\\"title\\\": \\\"Section title\\\",\\n      \\\"content\\\": \\\"Detailed insight content using 7-Part Mirror Reveal framework\\\",\\n      \\\"type\\\": \\\"insight\\\" | \\\"warning\\\" | \\\"celebration\\\"\\n    }\\n  ],\\n  \\\"metrics\\\": {\\n    \\\"dropout_risk_score\\\": 0-100,\\n    \\\"breakthrough_probability\\\": 0-100,\\n    \\\"pattern_grip_strength\\\": 0-100,\\n    \\\"identity_integration_score\\\": 0-100\\n  },\\n  \\\"recommendations\\\": [\\\"Specific action items\\\"],\\n  \\\"rewiring_protocol\\\": {\\n    \\\"name\\\": \\\"Protocol name\\\",\\n    \\\"duration\\\": \\\"7 days\\\",\\n    \\\"steps\\\": [\\\"Daily actions\\\"]\\n  },\\n  \\\"priority\\\": \\\"urgent\\\" | \\\"high\\\" | \\\"normal\\\" | \\\"low\\\",\\n  \\\"confidence_score\\\": 0.0-1.0\\n}\"\n    }\n  ]\n}"
+      },
+      "id": "claude-generate",
+      "name": "Claude: Generate Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "anthropic-api-key",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude response and prepare for Supabase\nconst claudeResponse = $input.item.json;\nlet reportContent;\n\ntry {\n  // Extract content from Claude API response structure\n  const content = claudeResponse.content?.[0]?.text || claudeResponse.text || claudeResponse;\n  \n  // Extract JSON from the response (it might be wrapped in markdown code blocks)\n  const jsonMatch = content.match(/```json\\n?([\\s\\S]*?)\\n?```/) || content.match(/({[\\s\\S]*})/);\n  reportContent = jsonMatch ? JSON.parse(jsonMatch[1] || jsonMatch[0]) : JSON.parse(content);\n} catch (e) {\n  // If parsing fails, create a structured report from raw text\n  reportContent = {\n    title: \"MIO Behavioral Analysis\",\n    summary: \"Analysis generated from your practice data\",\n    sections: [{\n      title: \"Analysis\",\n      content: claudeResponse.content?.[0]?.text || claudeResponse.text || String(claudeResponse),\n      type: \"insight\"\n    }],\n    priority: \"normal\",\n    confidence_score: 0.8\n  };\n}\n\n// Get user_id from the original input\nconst userId = $('Loop: For Each User').item.json.user_id;\nconst automationId = $('Webhook Trigger').item.json.body.automation_id;\n\nreturn {\n  user_id: userId,\n  report_type: 'pattern_analysis',\n  title: reportContent.title || 'MIO Behavioral Report',\n  summary: reportContent.summary,\n  content: reportContent,\n  priority: reportContent.priority || 'normal',\n  confidence_score: reportContent.confidence_score || 0.8,\n  source: 'n8n',\n  source_workflow_id: 'MIO-Report-Generator-v1',\n  source_context: {\n    automation_id: automationId,\n    generated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-response",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_user_reports",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "save-report",
+      "name": "Save Report to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_report_automations?id=eq.{{ $('Webhook Trigger').item.json.body.automation_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ last_run_at: new Date().toISOString(), last_run_status: 'completed', last_run_count: $('Loop: For Each User').context.noItemsLeft ? $('Loop: For Each User').context.currentRunIndex + 1 : 1 }) }}"
+      },
+      "id": "update-automation",
+      "name": "Update Automation Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-key",
+          "name": "Supabase Service Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Resolve Target Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Target Users": {
+      "main": [
+        [
+          {
+            "node": "Loop: For Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: For Each User": {
+      "main": [
+        [
+          {
+            "node": "Load User Profile",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Load Daily Practices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Load Weekly Assessments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Automation Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load User Profile": {
+      "main": [
+        [
+          {
+            "node": "Query RAG Protocols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Daily Practices": {
+      "main": [
+        [
+          {
+            "node": "Merge All User Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Load Weekly Assessments": {
+      "main": [
+        [
+          {
+            "node": "Merge All User Data",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Query RAG Protocols": {
+      "main": [
+        [
+          {
+            "node": "Merge All User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All User Data": {
+      "main": [
+        [
+          {
+            "node": "Claude: Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: Generate Report": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [
+          {
+            "node": "Save Report to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Report to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Loop: For Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

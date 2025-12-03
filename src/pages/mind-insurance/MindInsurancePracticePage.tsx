@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Zap, Calendar, ChevronRight } from 'lucide-react';
+import { RefreshCw, Trophy, Zap, Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
 import { TimeWindowSection, type TimeWindow as TimeWindowType } from '@/components/mind-insurance/TimeWindowSection';
 import { PracticeCard } from '@/components/mind-insurance/PracticeCard';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 import type {
   PracticeType,
   DailyPractice,
@@ -44,13 +45,24 @@ const TIME_WINDOWS: Record<string, TimeWindowType> = {
 
 export default function MindInsurancePracticePage() {
   const navigate = useNavigate();
+  const { data: progressData } = useMindInsuranceProgress();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todaysPractices, setTodaysPractices] = useState<DailyPractice[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [streak, setStreak] = useState<PracticeStreak | null>(null);
   const [championshipLevel, setChampionshipLevel] = useState<ChampionshipLevel>('bronze');
+
+  // Get streak from hook (calculated from actual practice data)
+  const streak: PracticeStreak | null = progressData ? {
+    current_streak: progressData.currentStreak,
+    longest_streak: progressData.longestStreak,
+    user_id: '',
+    id: '',
+    last_practice_date: null,
+    created_at: '',
+    updated_at: ''
+  } : null;
 
   // Update current time every minute
   useEffect(() => {
@@ -101,18 +113,7 @@ export default function MindInsurancePracticePage() {
         setTodaysPractices(practices || []);
       }
 
-      // Load streak data
-      const { data: streakData, error: streakError } = await supabase
-        .from('practice_streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (streakError) {
-        console.error('Streak error:', streakError);
-      } else {
-        setStreak(streakData);
-      }
+      // Streak data comes from useMindInsuranceProgress hook (calculated from actual practice data)
 
       // Calculate championship level based on total points
       const totalPoints = (practices || []).reduce((sum, p) => sum + p.points_earned, 0);
@@ -213,106 +214,115 @@ export default function MindInsurancePracticePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-mi-navy">
         <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading practice dashboard...</p>
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-mi-cyan" />
+          <p className="text-gray-400">Loading practice dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Header Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Mind Insurance Practice
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Strengthen your mental championship daily
-            </p>
-          </div>
-
-          {/* Refresh Button */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="rounded-full"
-          >
-            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+    <div className="min-h-screen bg-mi-navy">
+      <div className="container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Back Button */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" className="gap-1.5 text-gray-300 hover:text-white hover:bg-mi-navy-light" onClick={() => navigate('/mind-insurance')}>
+            <ArrowLeft className="w-4 h-4" />
+            Back to Hub
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Today's Points */}
-          <Card className="overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Today's Points</p>
-                  <p className="text-2xl font-bold">
-                    {todaysPoints} / {maxPossiblePoints}
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(todaysPoints / maxPossiblePoints) * 100}%` }}
-                    />
+        {/* Header Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-mi-cyan">
+                Mind Insurance Practice
+              </h1>
+              <p className="text-gray-400 mt-1">
+                Strengthen your mental championship daily
+              </p>
+            </div>
+
+            {/* Refresh Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="rounded-full border-mi-cyan/30 text-mi-cyan hover:bg-mi-cyan/10"
+            >
+              <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Today's Points */}
+            <Card className="overflow-hidden bg-mi-navy-light border-mi-cyan/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Today's Points</p>
+                    <p className="text-2xl font-bold text-white">
+                      {todaysPoints} / {maxPossiblePoints}
+                    </p>
+                    <div className="w-full bg-mi-cyan/20 rounded-full h-2 mt-2">
+                      <div
+                        className="bg-mi-cyan h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(todaysPoints / maxPossiblePoints) * 100}%` }}
+                      />
+                    </div>
                   </div>
+                  <Trophy className="h-8 w-8 text-mi-gold" />
                 </div>
-                <Trophy className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Championship Level */}
-          <Card className="overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Championship Level</p>
-                  <Badge className={cn("mt-2", getChampionshipLevelStyles())}>
-                    {championshipLevel.toUpperCase()}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Keep pushing forward!
-                  </p>
+            {/* Championship Level */}
+            <Card className="overflow-hidden bg-mi-navy-light border-mi-gold/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Championship Level</p>
+                    <Badge className={cn("mt-2", getChampionshipLevelStyles())}>
+                      {championshipLevel.toUpperCase()}
+                    </Badge>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Keep pushing forward!
+                    </p>
+                  </div>
+                  <Zap className="h-8 w-8 text-mi-gold" />
                 </div>
-                <Zap className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Streak Counter */}
-          <Card className="overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Streak</p>
-                  <p className="text-2xl font-bold">
-                    {streak?.current_streak || 0} days
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Best: {streak?.longest_streak || 0} days
-                  </p>
+            {/* Streak Counter */}
+            <Card className="overflow-hidden bg-mi-navy-light border-mi-gold/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Current Streak</p>
+                    <p className="text-2xl font-bold text-mi-gold">
+                      {streak?.current_streak || 0} days
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Best: {streak?.longest_streak || 0} days
+                    </p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-mi-gold" />
                 </div>
-                <Calendar className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
 
-      {/* Time Windows */}
-      <div className="space-y-4">
-        {/* Championship Setup Window */}
-        <TimeWindowSection
+        {/* Time Windows */}
+        <div className="space-y-4">
+          {/* Championship Setup Window */}
+          <TimeWindowSection
           window={TIME_WINDOWS.CHAMPIONSHIP_SETUP}
           practices={getPracticesForWindow('CHAMPIONSHIP_SETUP').map(type => ({
             id: type,
@@ -378,33 +388,34 @@ export default function MindInsurancePracticePage() {
               onClick={() => handlePracticeClick(practiceType)}
             />
           ))}
-        </TimeWindowSection>
-      </div>
+          </TimeWindowSection>
+        </div>
 
-      {/* Quick Navigation */}
-      <Card className="border-primary/20">
-        <CardHeader>
-          <h3 className="font-semibold text-lg">Quick Actions</h3>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-between"
-            onClick={() => navigate('/mind-insurance')}
-          >
-            <span>View Progress Analytics</span>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-between"
-            onClick={() => navigate('/settings')}
-          >
-            <span>Practice Reminder Settings</span>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </CardContent>
-      </Card>
+        {/* Quick Navigation */}
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
+          <CardHeader>
+            <h3 className="font-semibold text-lg text-white">Quick Actions</h3>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-between text-gray-300 hover:text-white hover:bg-mi-navy"
+              onClick={() => navigate('/mind-insurance')}
+            >
+              <span>View Progress Analytics</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-between text-gray-300 hover:text-white hover:bg-mi-navy"
+              onClick={() => navigate('/settings')}
+            >
+              <span>Practice Reminder Settings</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

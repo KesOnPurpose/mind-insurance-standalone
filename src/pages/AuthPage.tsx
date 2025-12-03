@@ -8,10 +8,10 @@ const AuthPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if already logged in - go to chat (home screen)
   useEffect(() => {
     if (user) {
-      navigate('/dashboard', { replace: true });
+      navigate('/chat', { replace: true });
     }
   }, [user, navigate]);
 

@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const supabaseUrl = 'https://hpyodaugrkctagkrfofj.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://hpyodaugrkctagkrfofj.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+
+if (!supabaseServiceKey) {
+  throw new Error('SUPABASE_SERVICE_KEY environment variable is required');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

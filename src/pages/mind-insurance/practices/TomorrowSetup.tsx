@@ -181,14 +181,14 @@ export default function TomorrowSetup() {
   const canComplete = tomorrowGoal && morningRoutine && triggerPrevention && successVisualization && mindsetDeclaration;
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-mi-navy">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-mi-cyan/20 flex items-center justify-between">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold text-white">
             Tomorrow Setup
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-mi-cyan">
             {BASE_POINTS} points
           </p>
         </div>
@@ -197,6 +197,7 @@ export default function TomorrowSetup() {
           size="icon"
           onClick={() => navigate('/mind-insurance/practice')}
           aria-label="Close"
+          className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >
           <X className="h-5 w-5" />
         </Button>
@@ -206,9 +207,9 @@ export default function TomorrowSetup() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-2xl mx-auto">
           {alreadyCompleted && (
-            <Alert className="mb-6 bg-success/20 border-success">
-              <AlertDescription className="text-center">
-                <span className="font-semibold">✓ Already Completed Today</span>
+            <Alert className="mb-6 bg-mi-cyan/20 border-mi-cyan">
+              <AlertDescription className="text-center text-gray-300">
+                <span className="font-semibold text-mi-cyan">✓ Already Completed Today</span>
                 <br />
                 You've already completed this practice today. Come back tomorrow!
               </AlertDescription>
@@ -216,33 +217,33 @@ export default function TomorrowSetup() {
           )}
 
           {/* Title Card */}
-          <Card className="mb-6 bg-primary/10 border-primary">
+          <Card className="mb-6 bg-mi-cyan/10 border-mi-cyan/30">
             <CardHeader className="text-center">
               <div className="flex justify-center items-center gap-2 mb-2">
-                <Sunrise className="h-8 w-8 text-primary" />
-                <CardTitle className="text-xl">Championship Preparation</CardTitle>
+                <Sunrise className="h-8 w-8 text-mi-cyan" />
+                <CardTitle className="text-xl text-white">Championship Preparation</CardTitle>
               </div>
-              <CardDescription className="text-muted-foreground">
+              <CardDescription className="text-gray-400">
                 Champions prepare the night before
               </CardDescription>
             </CardHeader>
           </Card>
 
           {/* Form Card */}
-          <Card>
+          <Card className="bg-mi-navy-light border-mi-cyan/20">
             <CardHeader>
-              <CardTitle>Set Up Tomorrow for Success</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Set Up Tomorrow for Success</CardTitle>
+              <CardDescription className="text-gray-400">
                 Design your victory before it happens
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Tomorrow Goal */}
               <div>
-                <Label htmlFor="tomorrow-goal">
+                <Label htmlFor="tomorrow-goal" className="text-white">
                   What's your #1 priority for tomorrow?
                 </Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   The ONE thing that would make tomorrow a win
                 </p>
                 <Textarea
@@ -250,17 +251,17 @@ export default function TomorrowSetup() {
                   placeholder="Tomorrow's top priority is..."
                   value={tomorrowGoal}
                   onChange={(e) => setTomorrowGoal(e.target.value)}
-                  className="min-h-[80px]"
+                  className="mi-textarea min-h-[80px] resize-none"
                   disabled={loading || alreadyCompleted}
                 />
               </div>
 
               {/* Morning Routine */}
               <div>
-                <Label htmlFor="morning-routine">
+                <Label htmlFor="morning-routine" className="text-white">
                   What obstacles might you face?
                 </Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   Anticipate challenges before they happen
                 </p>
                 <Textarea
@@ -268,17 +269,17 @@ export default function TomorrowSetup() {
                   placeholder="Potential obstacles include..."
                   value={morningRoutine}
                   onChange={(e) => setMorningRoutine(e.target.value)}
-                  className="min-h-[80px]"
+                  className="mi-textarea min-h-[80px] resize-none"
                   disabled={loading || alreadyCompleted}
                 />
               </div>
 
               {/* Trigger Prevention */}
               <div>
-                <Label htmlFor="trigger-prevention">
+                <Label htmlFor="trigger-prevention" className="text-white">
                   How will you prevent or handle triggers?
                 </Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   Your plan to stay on track when challenges arise
                 </p>
                 <Textarea
@@ -286,17 +287,17 @@ export default function TomorrowSetup() {
                   placeholder="When triggers arise, I will..."
                   value={triggerPrevention}
                   onChange={(e) => setTriggerPrevention(e.target.value)}
-                  className="min-h-[80px]"
+                  className="mi-textarea min-h-[80px] resize-none"
                   disabled={loading || alreadyCompleted}
                 />
               </div>
 
               {/* Success Visualization */}
               <div>
-                <Label htmlFor="success-visualization">
+                <Label htmlFor="success-visualization" className="text-white">
                   Visualize tomorrow's success
                 </Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   See yourself winning before it happens
                 </p>
                 <Textarea
@@ -304,20 +305,20 @@ export default function TomorrowSetup() {
                   placeholder="I see myself tomorrow..."
                   value={successVisualization}
                   onChange={(e) => setSuccessVisualization(e.target.value)}
-                  className="min-h-[80px]"
+                  className="mi-textarea min-h-[80px] resize-none"
                   disabled={loading || alreadyCompleted}
                 />
               </div>
 
               {/* Mindset Declaration */}
-              <div className="bg-primary/10 border border-primary rounded-lg p-4">
+              <div className="bg-mi-gold/10 border border-mi-gold/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  <Label htmlFor="mindset-declaration" className="text-base font-semibold">
+                  <Trophy className="h-5 w-5 text-mi-gold" />
+                  <Label htmlFor="mindset-declaration" className="text-base font-semibold text-white">
                     Your Championship Mindset
                   </Label>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   How will you show up as a champion tomorrow?
                 </p>
                 <Textarea
@@ -325,16 +326,16 @@ export default function TomorrowSetup() {
                   placeholder="Tomorrow I will show up as a champion by..."
                   value={mindsetDeclaration}
                   onChange={(e) => setMindsetDeclaration(e.target.value)}
-                  className="min-h-[100px]"
+                  className="mi-textarea min-h-[100px] resize-none"
                   disabled={loading || alreadyCompleted}
                 />
               </div>
 
               {/* Evening Routine Checklist (Optional, UI only) */}
-              <Card className="bg-card">
+              <Card className="bg-mi-navy border-mi-cyan/20">
                 <CardHeader>
-                  <CardTitle className="text-base">Evening Routine Checklist</CardTitle>
-                  <CardDescription className="text-sm">
+                  <CardTitle className="text-base text-white">Evening Routine Checklist</CardTitle>
+                  <CardDescription className="text-sm text-gray-400">
                     Optional preparation steps (not tracked)
                   </CardDescription>
                 </CardHeader>
@@ -345,8 +346,9 @@ export default function TomorrowSetup() {
                       checked={clothesLaidOut}
                       onCheckedChange={(checked) => setClothesLaidOut(checked as boolean)}
                       disabled={loading || alreadyCompleted}
+                      className="border-mi-cyan/50 data-[state=checked]:bg-mi-cyan data-[state=checked]:border-mi-cyan"
                     />
-                    <Label htmlFor="clothes" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="clothes" className="text-sm font-normal cursor-pointer text-gray-300">
                       Lay out tomorrow's clothes
                     </Label>
                   </div>
@@ -356,8 +358,9 @@ export default function TomorrowSetup() {
                       checked={workspacePrepared}
                       onCheckedChange={(checked) => setWorkspacePrepared(checked as boolean)}
                       disabled={loading || alreadyCompleted}
+                      className="border-mi-cyan/50 data-[state=checked]:bg-mi-cyan data-[state=checked]:border-mi-cyan"
                     />
-                    <Label htmlFor="workspace" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="workspace" className="text-sm font-normal cursor-pointer text-gray-300">
                       Prepare workspace/materials
                     </Label>
                   </div>
@@ -367,8 +370,9 @@ export default function TomorrowSetup() {
                       checked={alarmSet}
                       onCheckedChange={(checked) => setAlarmSet(checked as boolean)}
                       disabled={loading || alreadyCompleted}
+                      className="border-mi-cyan/50 data-[state=checked]:bg-mi-cyan data-[state=checked]:border-mi-cyan"
                     />
-                    <Label htmlFor="alarm" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="alarm" className="text-sm font-normal cursor-pointer text-gray-300">
                       Set alarm for morning practice
                     </Label>
                   </div>
@@ -378,8 +382,9 @@ export default function TomorrowSetup() {
                       checked={calendarReviewed}
                       onCheckedChange={(checked) => setCalendarReviewed(checked as boolean)}
                       disabled={loading || alreadyCompleted}
+                      className="border-mi-cyan/50 data-[state=checked]:bg-mi-cyan data-[state=checked]:border-mi-cyan"
                     />
-                    <Label htmlFor="calendar" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="calendar" className="text-sm font-normal cursor-pointer text-gray-300">
                       Review tomorrow's calendar
                     </Label>
                   </div>
@@ -387,13 +392,13 @@ export default function TomorrowSetup() {
               </Card>
 
               {/* Motivational Quote */}
-              <Card className="bg-muted/50">
+              <Card className="bg-mi-navy border-mi-cyan/10">
                 <CardContent className="pt-6">
                   <blockquote className="text-center space-y-2">
-                    <p className="text-sm italic text-muted-foreground">
+                    <p className="text-sm italic text-gray-400">
                       "Give me six hours to chop down a tree and I will spend the first four sharpening the axe."
                     </p>
-                    <footer className="text-xs text-muted-foreground">
+                    <footer className="text-xs text-gray-500">
                       — Abraham Lincoln
                     </footer>
                   </blockquote>
@@ -411,9 +416,9 @@ export default function TomorrowSetup() {
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border">
+      <div className="px-6 py-4 border-t border-mi-cyan/20 bg-mi-navy-light">
         <Button
-          className="w-full"
+          className="w-full mi-btn-primary"
           size="lg"
           onClick={handleComplete}
           disabled={!canComplete || loading || alreadyCompleted}

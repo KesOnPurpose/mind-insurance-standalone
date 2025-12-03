@@ -80,15 +80,22 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   };
 
   // Update product based on current route - watches for navigation changes
+  // IMPORTANT: Order matters - check specific product routes BEFORE generic /chat route
   useEffect(() => {
     const path = location.pathname;
-    if (path.includes('/protect') || path.includes('/mind-insurance')) {
+
+    // Mind Insurance routes (check first - includes /mind-insurance/chat)
+    if (path.includes('/protect') || path.startsWith('/mind-insurance')) {
       setCurrentProductState('mind-insurance');
       localStorage.setItem('currentProduct', 'mind-insurance');
-    } else if (path.includes('/wealth') || path.includes('/me-')) {
+    }
+    // ME Wealth routes (includes /wealth/chat)
+    else if (path.startsWith('/wealth') || path.includes('/me-')) {
       setCurrentProductState('me-wealth');
       localStorage.setItem('currentProduct', 'me-wealth');
-    } else if (path.includes('/dashboard') || path.includes('/roadmap') || path.includes('/model-week') || path.includes('/chat')) {
+    }
+    // Grouphome routes (generic /chat goes here)
+    else if (path.includes('/dashboard') || path.includes('/roadmap') || path.includes('/model-week') || path === '/chat') {
       setCurrentProductState('grouphome');
       localStorage.setItem('currentProduct', 'grouphome');
     }

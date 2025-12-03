@@ -248,6 +248,178 @@ serve(async (req) => {
         break;
       }
 
+      case 'error_rate': {
+        // Query error tracking
+        let errorQuery = supabaseClient
+          .from('agent_errors')
+          .select('id, agent_type, severity, created_at')
+          .gte('created_at', timeFilter);
+
+        if (agent_type) errorQuery = errorQuery.eq('agent_type', agent_type);
+
+        let conversationQuery = supabaseClient
+          .from('agent_conversations')
+          .select('id, agent_type')
+          .gte('created_at', timeFilter);
+
+        if (agent_type) conversationQuery = conversationQuery.eq('agent_type', agent_type);
+
+        const [{ data: errors, error: errorError }, { data: conversations, error: convError }] = await Promise.all([
+          errorQuery,
+          conversationQuery
+        ]);
+
+        if (errorError) throw errorError;
+        if (convError) throw convError;
+
+        const totalRequests = conversations?.length || 0;
+        const totalErrors = errors?.length || 0;
+        const errorRate = totalRequests > 0 ? (totalErrors / totalRequests * 100) : 0;
+
+        // Calculate by agent
+        const byAgent: Record<string, any> = {};
+        ['nette', 'mio', 'me'].forEach(agent => {
+          const agentRequests = conversations?.filter(d => d.agent_type === agent).length || 0;
+          const agentErrors = errors?.filter(d => d.agent_type === agent).length || 0;
+          byAgent[agent] = {
+            total_requests: agentRequests,
+            total_errors: agentErrors,
+            error_rate: agentRequests > 0 ? (agentErrors / agentRequests * 100) : 0
+          };
+        });
+
+        // Calculate by severity
+        const bySeverity: Record<string, number> = {};
+        ['low', 'medium', 'high', 'critical'].forEach(severity => {
+          bySeverity[severity] = errors?.filter(e => e.severity === severity).length || 0;
+        });
+
+        result = {
+          overall_error_rate: errorRate,
+          total_requests: totalRequests,
+          total_errors: totalErrors,
+          by_agent: byAgent,
+          by_severity: bySeverity
+        };
+        break;
+      }
+
+      case 'user_engagement': {
+        // Query user engagement metrics
+        const dau7Query = supabaseClient
+          .from('agent_conversations')
+          .select('user_id')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+        const mau30Query = supabaseClient
+          .from('agent_conversations')
+          .select('user_id')
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        const practicesQuery = supabaseClient
+          .from('daily_practices')
+          .select('user_id, completed, practice_date')
+          .gte('practice_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+          .eq('completed', true);
+
+        const sessionsQuery = supabaseClient
+          .from('user_sessions')
+          .select('user_id, started_at')
+          .gte('started_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+        const [{ data: dauData }, { data: mauData }, { data: practicesData }, { data: sessionsData }] = await Promise.all([
+          dau7Query,
+          mau30Query,
+          practicesQuery,
+          sessionsQuery
+        ]);
+
+        // Calculate unique users
+        const dau = new Set(dauData?.map(d => d.user_id) || []).size;
+        const mau = new Set(mauData?.map(d => d.user_id) || []).size;
+        const dauMauRatio = mau > 0 ? (dau / mau * 100) : 0;
+
+        // Calculate weekly tactics completed (practices)
+        const weeklyTactics = practicesData?.length || 0;
+        const uniqueUsersPracticing = new Set(practicesData?.map(d => d.user_id) || []).size;
+        const avgTacticsPerUser = uniqueUsersPracticing > 0 ? (weeklyTactics / uniqueUsersPracticing) : 0;
+
+        // Calculate session frequency
+        const uniqueUsersWithSessions = new Set(sessionsData?.map(d => d.user_id) || []).size;
+        const totalSessions = sessionsData?.length || 0;
+        const avgSessionsPerWeek = uniqueUsersWithSessions > 0 ? (totalSessions / uniqueUsersWithSessions) : 0;
+
+        // Mock/default values for metrics that require more complex calculations
+        // These would be calculated from historical data in production
+        const avgPracticeStreak = 7; // Default placeholder
+        const userRetentionRate = 85; // Default placeholder
+        const timeToFirstAction = 3; // Default placeholder in minutes
+
+        result = {
+          daily_active_users: dau,
+          monthly_active_users: mau,
+          dau_mau_ratio: dauMauRatio,
+          tactics_completed_weekly: weeklyTactics,
+          avg_practice_streak_days: avgPracticeStreak,
+          user_retention_rate: userRetentionRate,
+          session_frequency: avgSessionsPerWeek,
+          time_to_first_action_minutes: timeToFirstAction,
+        };
+        break;
+      }
+
+      case 'feature_adoption': {
+        // Query feature usage stats
+        const { data: featureData, error: featureError } = await supabaseClient
+          .from('feature_usage')
+          .select('user_id, feature_name, feature_category, usage_count');
+
+        if (featureError) throw featureError;
+
+        // Get total registered users
+        const { data: profilesData, error: profilesError } = await supabaseClient
+          .from('user_profiles')
+          .select('id')
+          .gte('created_at', timeFilter);
+
+        if (profilesError) throw profilesError;
+
+        const totalUsers = profilesData?.length || 0;
+        const uniqueFeatureUsers = new Set(featureData?.map(d => d.user_id) || []).size;
+        const adoptionRate = totalUsers > 0 ? (uniqueFeatureUsers / totalUsers * 100) : 0;
+
+        // Calculate by feature
+        const byFeature: Record<string, any> = {};
+        const allFeatures = new Set(featureData?.map(d => d.feature_name) || []);
+        allFeatures.forEach(feature => {
+          const featureUsers = new Set(featureData?.filter(d => d.feature_name === feature).map(d => d.user_id) || []).size;
+          byFeature[feature] = {
+            unique_users: featureUsers,
+            adoption_rate: totalUsers > 0 ? (featureUsers / totalUsers * 100) : 0
+          };
+        });
+
+        // Calculate by category
+        const byCategory: Record<string, any> = {};
+        const allCategories = new Set(featureData?.map(d => d.feature_category) || []);
+        allCategories.forEach(category => {
+          const categoryUsers = new Set(featureData?.filter(d => d.feature_category === category).map(d => d.user_id) || []).size;
+          byCategory[category] = {
+            unique_users: categoryUsers,
+            adoption_rate: totalUsers > 0 ? (categoryUsers / totalUsers * 100) : 0
+          };
+        });
+
+        result = {
+          overall_adoption_rate: adoptionRate,
+          total_users: totalUsers,
+          users_with_feature_usage: uniqueFeatureUsers,
+          by_feature: byFeature,
+          by_category: byCategory
+        };
+        break;
+      }
+
       default:
         throw new Error(`Unknown metric type: ${metric_type}`);
     }

@@ -1,142 +1,158 @@
-import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Archive, Mic, Trophy, Lightbulb } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Shield, Trophy, Brain, Mic } from 'lucide-react';
+import { useVaultRecordings } from '@/hooks/useVaultRecordings';
+import { useVaultPractices } from '@/hooks/useVaultPractices';
+import { VaultStats } from '@/components/vault/VaultStats';
+import { RecordingList } from '@/components/vault/RecordingList';
+import { PatternList } from '@/components/vault/PatternList';
+import { VictoryList } from '@/components/vault/VictoryList';
 
 const VaultPage = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('recordings');
+
+  // Voice recordings from voice_recordings table
+  const {
+    recordings,
+    stats: recordingStats,
+    isLoading: recordingsLoading,
+    error: recordingsError,
+    deleteRecording,
+    isDeleting
+  } = useVaultRecordings();
+
+  // Patterns and victories from daily_practices table
+  const {
+    data: practicesData,
+    isLoading: practicesLoading,
+    error: practicesError
+  } = useVaultPractices();
+
+  const patterns = practicesData?.patterns || [];
+  const victories = practicesData?.victories || [];
+  const patternStats = practicesData?.patternStats || { caught: 0, total: 0, successRate: 0 };
+
+  const isLoading = recordingsLoading || practicesLoading;
+  const error = recordingsError || practicesError;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-mi-navy">
+        <div className="container mx-auto p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-gray-300 hover:text-white hover:bg-mi-navy-light" onClick={() => navigate('/mind-insurance')}>
+              <ArrowLeft className="w-4 h-4" />
+              Back to Hub
+            </Button>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-red-400">Error loading vault data. Please try again.</p>
+            <Button variant="outline" className="mt-4 border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Combined stats for the stats grid
+  const combinedStats = {
+    totalRecordings: recordingStats.totalRecordings,
+    totalDuration: recordingStats.totalDuration,
+    patternsCaught: patternStats.caught,
+    patternsTotal: patternStats.total,
+    victoriesCount: victories.length,
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 pt-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/mind-insurance/hub')}
-            className="mb-4 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="min-h-screen bg-mi-navy">
+      <div className="container mx-auto p-4 md:p-6 space-y-6">
+        {/* Back Button */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" className="gap-1.5 text-gray-300 hover:text-white hover:bg-mi-navy-light" onClick={() => navigate('/mind-insurance')}>
+            <ArrowLeft className="w-4 h-4" />
             Back to Hub
           </Button>
-
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Recording Vault
-          </h1>
-          <p className="text-gray-600">
-            Your personal archive of growth and achievements
-          </p>
         </div>
 
-        {/* Coming Soon Card */}
-        <Card className="border-purple-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-lg">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Archive className="h-6 w-6" />
-              Coming Soon
-            </CardTitle>
-            <CardDescription className="text-purple-100">
-              Your recording vault is being prepared for launch
-            </CardDescription>
-          </CardHeader>
+        {/* Page Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
+              <Shield className="w-8 h-8 text-mi-cyan" />
+              Recording Vault
+            </h1>
+            <p className="text-gray-400 mt-1">
+              Your recordings, patterns, and victories from practices
+            </p>
+          </div>
+        </div>
 
-          <CardContent className="p-8">
-            <div className="space-y-6">
-              {/* Feature Preview */}
-              <div className="bg-purple-50 rounded-lg p-6">
-                <h3 className="font-semibold text-lg mb-3 text-purple-900">
-                  What's Coming
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <Mic className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Voice Recording Archive</p>
-                      <p className="text-sm text-gray-600">
-                        All your practice sessions stored securely in one place
-                      </p>
-                    </div>
-                  </div>
+        {/* Stats Grid - Updated with patterns and victories */}
+        <VaultStats
+          stats={recordingStats}
+          patternStats={patternStats}
+          victoriesCount={victories.length}
+          isLoading={isLoading}
+        />
 
-                  <div className="flex gap-3">
-                    <Trophy className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Victory Collection</p>
-                      <p className="text-sm text-gray-600">
-                        Celebrate and revisit your breakthrough moments
-                      </p>
-                    </div>
-                  </div>
+        {/* Tabs: Recordings, Patterns, Victories */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap bg-mi-navy-light border border-mi-cyan/20">
+            <TabsTrigger value="recordings" className="gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300">
+              <Mic className="w-4 h-4" />
+              Recordings
+              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+                {recordings.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="patterns" className="gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300">
+              <Brain className="w-4 h-4" />
+              Patterns
+              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+                {patterns.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="victories" className="gap-1.5 data-[state=active]:bg-mi-gold data-[state=active]:text-white text-gray-300">
+              <Trophy className="w-4 h-4" />
+              Victories
+              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+                {victories.length}
+              </span>
+            </TabsTrigger>
+          </TabsList>
 
-                  <div className="flex gap-3">
-                    <Lightbulb className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Pattern Insights</p>
-                      <p className="text-sm text-gray-600">
-                        Discover trends and patterns across your recordings
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Recordings Tab */}
+          <TabsContent value="recordings" className="mt-4">
+            <RecordingList
+              recordings={recordings}
+              isLoading={recordingsLoading}
+              onDelete={deleteRecording}
+              isDeleting={isDeleting}
+              emptyMessage="Your voice recordings from Mind Insurance practices will appear here. Complete a practice with voice recording to get started."
+            />
+          </TabsContent>
 
-              {/* Main Description */}
-              <div className="text-center py-6">
-                <p className="text-gray-700 text-lg mb-6">
-                  Archive of your voice recordings, patterns, victories, and insights
-                </p>
+          {/* Patterns Tab */}
+          <TabsContent value="patterns" className="mt-4">
+            <PatternList
+              patterns={patterns}
+              isLoading={practicesLoading}
+            />
+          </TabsContent>
 
-                <div className="inline-flex items-center gap-2 text-purple-600 bg-purple-100 px-4 py-2 rounded-full">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  <span className="font-medium">In Development</span>
-                </div>
-              </div>
-
-              {/* Vault Preview */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white border border-purple-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">0</div>
-                  <p className="text-sm text-gray-600">Total Recordings</p>
-                </div>
-                <div className="bg-white border border-purple-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">0</div>
-                  <p className="text-sm text-gray-600">Victories Logged</p>
-                </div>
-              </div>
-
-              {/* Return Button */}
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={() => navigate('/mind-insurance/hub')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  Return to Hub
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer Note */}
-        <p className="text-center text-sm text-gray-500 mt-8">
-          Your vault is being built with care. Available soon!
-        </p>
+          {/* Victories Tab */}
+          <TabsContent value="victories" className="mt-4">
+            <VictoryList
+              victories={victories}
+              isLoading={practicesLoading}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

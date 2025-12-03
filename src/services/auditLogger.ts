@@ -32,7 +32,7 @@ export async function logAnalyticsView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'analytics_view',
-      target_type: 'analytics_data',
+      target_type: 'system',  // Analytics actions use 'system' target type
       target_id: section,
       details: metadata || {},
     });
@@ -67,7 +67,7 @@ export async function logDataExport(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: format === 'csv' ? 'export_csv' : 'export_json',
-      target_type: 'analytics_export',
+      target_type: 'system',  // Export actions use 'system' target type
       details: {
         format,
         filters,
@@ -105,7 +105,7 @@ export async function logFilterChange(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'filter_change',
-      target_type: 'analytics_filter',
+      target_type: 'system',  // Filter changes use 'system' target type
       target_id: section,
       details: {
         old_value: oldValue,
@@ -176,7 +176,7 @@ export async function logDashboardView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_dashboard',
-      target_type: 'dashboard',
+      target_type: 'system',  // Dashboard views use 'system' target type
       target_id: 'main',
       details: {
         time_range: timeRange,
@@ -214,7 +214,7 @@ export async function logCacheAnalyticsView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_cache_analytics',
-      target_type: 'cache_analytics',
+      target_type: 'system',  // Analytics views use 'system' target type
       target_id: agentType || 'all',
       details: {
         agent_type: agentType,
@@ -253,7 +253,7 @@ export async function logPerformanceMetricsView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_performance_metrics',
-      target_type: 'performance_metrics',
+      target_type: 'system',  // Performance metrics use 'system' target type
       target_id: agentType || 'all',
       details: {
         agent_type: agentType,
@@ -292,7 +292,7 @@ export async function logRAGQualityView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_rag_quality',
-      target_type: 'rag_quality',
+      target_type: 'system',  // RAG quality views use 'system' target type
       target_id: agentType || 'all',
       details: {
         agent_type: agentType,
@@ -329,8 +329,8 @@ export async function logHandoffAccuracyView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_handoff_accuracy',
-      target_type: 'handoff_accuracy',
-      target_id: 'system',
+      target_type: 'system',  // Handoff accuracy uses 'system' target type
+      target_id: 'handoff_accuracy',
       details: {
         time_range: timeRange,
         ...metadata,
@@ -367,7 +367,7 @@ export async function logUserAnalyticsView(
     await supabase.from('admin_audit_log').insert({
       admin_user_id: adminUserId,
       action_type: 'view_user_analytics',
-      target_type: 'user_analytics',
+      target_type: 'user',  // User analytics views use 'user' target type
       target_id: userId,
       details: {
         time_range: timeRange,

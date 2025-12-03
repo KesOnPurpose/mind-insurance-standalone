@@ -3,6 +3,8 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { ShieldCheck, Users, BarChart3, Settings, Activity } from 'lucide-react';
 import { AnalyticsDashboard } from '@/components/admin/analytics';
 import { Button } from '@/components/ui/button';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 // ============================================================================
 // ADMIN DASHBOARD
@@ -17,6 +19,7 @@ type DashboardView = 'analytics' | 'permissions';
 
 export default function AdminDashboard() {
   const { adminUser, isSuperAdmin } = useAdmin();
+  const { tier } = useAccessControl();
   const [view, setView] = useState<DashboardView>('analytics');
 
   if (!adminUser) {
@@ -24,52 +27,30 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <ShieldCheck className="h-12 w-12 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Admin Dashboard
-                </h1>
-                <p className="text-muted-foreground">
-                  Welcome back, {adminUser.role === 'super_admin' ? 'Super Admin' : adminUser.role}
-                </p>
-              </div>
-            </div>
-
-            {/* View Toggle */}
-            <div className="flex gap-2">
-              <Button
-                variant={view === 'analytics' ? 'default' : 'outline'}
-                onClick={() => setView('analytics')}
-              >
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Analytics
-              </Button>
-              <Button
-                variant={view === 'permissions' ? 'default' : 'outline'}
-                onClick={() => setView('permissions')}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Permissions
-              </Button>
-            </div>
-          </div>
-
-          {/* Role Badge */}
-          <div className="mt-4">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              isSuperAdmin
-                ? 'bg-purple-100 text-purple-800'
-                : 'bg-blue-100 text-blue-800'
-            }`}>
-              {adminUser.role.replace('_', ' ').toUpperCase()}
-            </span>
-          </div>
+    <SidebarLayout
+      mode="admin"
+      showHeader
+      headerTitle="Admin Dashboard"
+      headerSubtitle={`Welcome back, ${tier?.replace('_', ' ') || adminUser.role}`}
+      headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
+    >
+      <div className="space-y-6">
+        {/* View Toggle */}
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={view === 'analytics' ? 'default' : 'outline'}
+            onClick={() => setView('analytics')}
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Analytics
+          </Button>
+          <Button
+            variant={view === 'permissions' ? 'default' : 'outline'}
+            onClick={() => setView('permissions')}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Permissions
+          </Button>
         </div>
 
         {/* Content Area */}
@@ -113,7 +94,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-    </div>
+    </SidebarLayout>
   );
 }
 

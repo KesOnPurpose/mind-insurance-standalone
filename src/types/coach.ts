@@ -19,8 +19,8 @@ export const COACHES: Record<CoachType, Coach> = {
     title: 'Group Home Expert',
     description: 'Your educational guide and assessment expert. I conduct your readiness assessment, generate personalized roadmaps, and provide state-specific licensing guidance to get you started.',
     avatar: 'N',
-    color: 'hsl(187 85% 35%)', // Primary teal
-    gradient: 'linear-gradient(135deg, hsl(187 85% 35%), hsl(187 75% 45%))',
+    color: 'hsl(221 83% 53%)', // Primary blue (distinct from MIO's cyan)
+    gradient: 'linear-gradient(135deg, hsl(221 83% 53%), hsl(221 70% 60%))',
     personality: 'Warm and encouraging, patient educator, detail-oriented, and compliance-focused.',
     expertise: [
       'Comprehensive assessments',
@@ -36,8 +36,8 @@ export const COACHES: Record<CoachType, Coach> = {
     title: 'Mindset & Accountability Coach',
     description: 'I help you overcome mental blocks, stay accountable, and build the mindset needed for breakthrough success.',
     avatar: 'M',
-    color: 'hsl(35 95% 55%)', // Secondary amber
-    gradient: 'linear-gradient(135deg, hsl(35 95% 55%), hsl(35 95% 65%))',
+    color: '#05c3dd', // Mind Insurance cyan
+    gradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
     personality: 'Empathetic, motivating, and insightful. Helps with mindset shifts and accountability.',
     expertise: [
       'Mindset coaching',

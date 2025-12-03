@@ -16,17 +16,21 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
-  User
+  User,
+  Shield,
+  RefreshCw
 } from 'lucide-react';
 
 interface PersonalizationBadgeProps {
   totalTactics: number;           // Always 343 (total in database)
   filteredTactics: number;        // Current tactics shown (from filtering)
+  completedTactics?: number;      // Number of completed tactics (for progress display)
   strategy?: string;              // ownership_model value
   populations?: string[];         // target_populations array
   budget?: string;                // capital_available value
   immediatePriority?: string;     // immediate_priority value
   className?: string;
+  showProgress?: boolean;         // Show completion progress instead of filtering
 }
 
 // Strategy icon mapping
@@ -45,10 +49,14 @@ const getStrategyIcon = (strategy?: string) => {
 
 // Population icon mapping
 const getPopulationIcon = (population: string) => {
-  if (population.toLowerCase().includes('senior')) return <Users className="w-4 h-4" />;
-  if (population.toLowerCase().includes('mental')) return <Brain className="w-4 h-4" />;
-  if (population.toLowerCase().includes('child')) return <Baby className="w-4 h-4" />;
-  if (population.toLowerCase().includes('disability')) return <Heart className="w-4 h-4" />;
+  const lowerPop = population.toLowerCase();
+  if (lowerPop.includes('senior')) return <Users className="w-4 h-4" />;
+  if (lowerPop.includes('mental')) return <Brain className="w-4 h-4" />;
+  if (lowerPop.includes('child') || lowerPop.includes('youth')) return <Baby className="w-4 h-4" />;
+  if (lowerPop.includes('disability') || lowerPop.includes('developmental')) return <Heart className="w-4 h-4" />;
+  if (lowerPop.includes('veteran')) return <Shield className="w-4 h-4" />;
+  if (lowerPop.includes('reentry') || lowerPop.includes('returning')) return <RefreshCw className="w-4 h-4" />;
+  if (lowerPop.includes('substance')) return <Brain className="w-4 h-4" />;
   return <User className="w-4 h-4" />;
 };
 
@@ -99,17 +107,36 @@ const getFilteringColor = (filteredTactics: number, totalTactics: number) => {
   }
 };
 
+// Get progress color based on completion percentage
+const getProgressColor = (completed: number, total: number) => {
+  const percentage = (completed / total) * 100;
+
+  if (percentage >= 75) {
+    return 'text-green-600 dark:text-green-400'; // Almost done!
+  } else if (percentage >= 50) {
+    return 'text-blue-600 dark:text-blue-400'; // Halfway there
+  } else if (percentage >= 25) {
+    return 'text-amber-600 dark:text-amber-400'; // Getting started
+  } else {
+    return 'text-purple-600 dark:text-purple-400'; // Just beginning
+  }
+};
+
 export const PersonalizationBadge = ({
   totalTactics,
   filteredTactics,
+  completedTactics = 0,
   strategy,
   populations,
   budget,
   immediatePriority,
-  className = ''
+  className = '',
+  showProgress = false
 }: PersonalizationBadgeProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const filteringColor = getFilteringColor(filteredTactics, totalTactics);
+  const progressColor = getProgressColor(completedTactics, filteredTactics || totalTactics);
+  const progressPercent = filteredTactics > 0 ? Math.round((completedTactics / filteredTactics) * 100) : 0;
 
   return (
     <>
@@ -124,8 +151,10 @@ export const PersonalizationBadge = ({
                 Your Personalized Roadmap
               </h3>
             </div>
-            <div className={`text-sm font-medium ${filteringColor}`}>
-              Showing {filteredTactics} of {totalTactics} tactics
+            <div className={`text-sm font-medium ${showProgress ? progressColor : filteringColor}`}>
+              {showProgress
+                ? `${completedTactics}/${filteredTactics} completed (${progressPercent}%)`
+                : `Showing ${filteredTactics} of ${totalTactics} tactics`}
             </div>
           </div>
 
@@ -196,8 +225,10 @@ export const PersonalizationBadge = ({
                   Personalized Roadmap
                 </span>
               </div>
-              <span className={`text-xs font-medium ${filteringColor}`}>
-                {filteredTactics}/{totalTactics} tactics
+              <span className={`text-xs font-medium ${showProgress ? progressColor : filteringColor}`}>
+                {showProgress
+                  ? `${completedTactics}/${filteredTactics} done`
+                  : `${filteredTactics}/${totalTactics} tactics`}
               </span>
             </div>
 

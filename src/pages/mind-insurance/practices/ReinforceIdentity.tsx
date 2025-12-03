@@ -329,7 +329,7 @@ export default function ReinforceIdentity() {
   const recordingProgress = (recordingDuration / AUDIO_DURATIONS.IDENTITY_RECORDING) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-mi-navy">
       <div className="container max-w-4xl py-8 px-4 md:px-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -337,15 +337,15 @@ export default function ReinforceIdentity() {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/mind-insurance')}
-            className="shrink-0"
+            className="shrink-0 text-gray-400 hover:text-white hover:bg-mi-navy-light"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold">
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
               Reinforce Identity
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-mi-cyan">
               {POINTS_CONFIG[PRACTICE_TYPES.REINFORCE_IDENTITY]} points
             </p>
           </div>
@@ -354,10 +354,10 @@ export default function ReinforceIdentity() {
         {/* Main Content */}
         <div className="space-y-6">
           {/* Identity Statement Card */}
-          <Card>
+          <Card className="bg-mi-navy-light border-mi-cyan/20">
             <CardHeader>
-              <CardTitle>Write your I AM statement for today</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Write your I AM statement for today</CardTitle>
+              <CardDescription className="text-gray-400">
                 Make it personal, powerful, and slightly uncomfortable.
                 This statement should stretch your current identity.
               </CardDescription>
@@ -367,20 +367,20 @@ export default function ReinforceIdentity() {
                 placeholder="I am someone who..."
                 value={identityStatement}
                 onChange={(e) => setIdentityStatement(e.target.value)}
-                className="min-h-[120px] resize-none"
+                className="mi-textarea min-h-[120px] resize-none"
                 maxLength={500}
               />
-              <div className="text-xs text-muted-foreground mt-2 text-right">
+              <div className="text-xs text-gray-400 mt-2 text-right">
                 {identityStatement.length}/500 characters
               </div>
             </CardContent>
           </Card>
 
           {/* Voice Recording Card */}
-          <Card>
+          <Card className="bg-mi-navy-light border-mi-cyan/20">
             <CardHeader>
-              <CardTitle>Now speak it with conviction</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Now speak it with conviction</CardTitle>
+              <CardDescription className="text-gray-400">
                 Record yourself saying your I AM statement.
                 Minimum {AUDIO_DURATIONS.IDENTITY_RECORDING} seconds for full points.
               </CardDescription>
@@ -408,22 +408,22 @@ export default function ReinforceIdentity() {
                 {isRecording && (
                   <div className="w-full space-y-2">
                     <div className="text-center">
-                      <span className="text-2xl font-bold">{recordingDuration}s</span>
-                      <p className="text-sm text-muted-foreground">
+                      <span className="text-2xl font-bold text-white">{recordingDuration}s</span>
+                      <p className="text-sm text-gray-400">
                         {recordingDuration < AUDIO_DURATIONS.IDENTITY_RECORDING
                           ? `${AUDIO_DURATIONS.IDENTITY_RECORDING - recordingDuration}s until minimum`
                           : 'Minimum reached - tap stop when ready'}
                       </p>
                     </div>
-                    <Progress value={Math.min(recordingProgress, 100)} className="h-2" />
+                    <Progress value={Math.min(recordingProgress, 100)} className="h-2 bg-mi-navy [&>div]:bg-mi-cyan" />
                   </div>
                 )}
 
                 {/* Recording Complete */}
                 {hasRecording && !isRecording && (
-                  <Alert className="bg-success/10 border-success">
-                    <Check className="h-4 w-4 text-success" />
-                    <AlertDescription className="text-success">
+                  <Alert className="bg-mi-cyan/20 border-mi-cyan">
+                    <Check className="h-4 w-4 text-mi-cyan" />
+                    <AlertDescription className="text-mi-cyan">
                       Recording complete and ready to submit
                     </AlertDescription>
                   </Alert>
@@ -432,9 +432,9 @@ export default function ReinforceIdentity() {
 
               {/* Instructions */}
               {!isRecording && !hasRecording && (
-                <div className="bg-muted rounded-lg p-4 space-y-2">
-                  <p className="text-sm font-medium">Tips for a powerful recording:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
+                <div className="bg-mi-navy rounded-lg p-4 space-y-2 border border-mi-cyan/10">
+                  <p className="text-sm font-medium text-white">Tips for a powerful recording:</p>
+                  <ul className="text-sm text-gray-400 space-y-1">
                     <li>• Stand up straight and take a deep breath</li>
                     <li>• Speak clearly and with conviction</li>
                     <li>• Really feel the words as you say them</li>
@@ -456,7 +456,7 @@ export default function ReinforceIdentity() {
           {/* Submit Button */}
           <Button
             size="lg"
-            className="w-full"
+            className="w-full mi-btn-primary"
             onClick={handleComplete}
             disabled={!canComplete}
           >

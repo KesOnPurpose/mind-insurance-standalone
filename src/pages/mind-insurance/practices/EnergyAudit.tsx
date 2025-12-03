@@ -246,9 +246,9 @@ export default function EnergyAudit() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mi-navy">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-mi-navy-light border-b border-mi-cyan/20">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -256,15 +256,16 @@ export default function EnergyAudit() {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/mind-insurance/practices')}
+                className="text-gray-400 hover:text-white hover:bg-mi-navy"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">Energy Audit</h1>
-                <p className="text-sm text-gray-600">Optimize your energy management</p>
+                <h1 className="text-2xl font-bold text-white">Energy Audit</h1>
+                <p className="text-sm text-mi-cyan">Optimize your energy management</p>
               </div>
             </div>
-            <Badge variant="secondary" className="text-lg px-3 py-1">
+            <Badge className="text-lg px-3 py-1 bg-mi-cyan/20 text-mi-cyan border border-mi-cyan/30">
               4 points
             </Badge>
           </div>
@@ -274,16 +275,16 @@ export default function EnergyAudit() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Energy Level */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6">
-            <Label htmlFor="energy-level" className="text-lg font-semibold">
+            <Label htmlFor="energy-level" className="text-lg font-semibold text-white">
               Current Energy Level
             </Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               Rate your current energy on a scale from 1 (exhausted) to 10 (fully energized)
             </p>
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">1</span>
+              <span className="text-sm font-medium text-gray-400">1</span>
               <Slider
                 id="energy-level"
                 value={energyLevel}
@@ -291,10 +292,10 @@ export default function EnergyAudit() {
                 min={1}
                 max={10}
                 step={1}
-                className="flex-1"
+                className="flex-1 [&_[role=slider]]:bg-mi-cyan [&_[role=slider]]:border-mi-cyan [&_.bg-primary]:bg-mi-cyan"
               />
-              <span className="text-sm font-medium">10</span>
-              <Badge variant="outline" className="min-w-[3rem] justify-center">
+              <span className="text-sm font-medium text-gray-400">10</span>
+              <Badge className="min-w-[3rem] justify-center bg-mi-cyan/20 text-mi-cyan border border-mi-cyan/30">
                 {energyLevel[0]}
               </Badge>
             </div>
@@ -302,10 +303,10 @@ export default function EnergyAudit() {
         </Card>
 
         {/* Energy Drains */}
-        <Card className="border-red-200 bg-red-50/50">
+        <Card className="border-red-500/30 bg-red-950/30">
           <CardContent className="pt-6">
-            <h3 className="text-lg font-bold mb-2">⚡ Energy Drains</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg font-bold mb-2 text-white">⚡ Energy Drains</h3>
+            <p className="text-sm text-gray-400 mb-4">
               What's draining your energy right now? Select all that apply or add your own.
             </p>
 
@@ -315,7 +316,11 @@ export default function EnergyAudit() {
                 <Badge
                   key={drain}
                   variant={energyDrains.includes(drain) ? 'destructive' : 'outline'}
-                  className="cursor-pointer"
+                  className={`cursor-pointer ${
+                    energyDrains.includes(drain)
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'border-red-500/30 text-gray-300 hover:bg-red-500/20'
+                  }`}
                   onClick={() => toggleDrain(drain)}
                 >
                   {drain}
@@ -330,19 +335,20 @@ export default function EnergyAudit() {
                 value={customDrain}
                 onChange={(e) => setCustomDrain(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addCustomDrain()}
+                className="mi-input"
               />
-              <Button onClick={addCustomDrain} size="icon">
+              <Button onClick={addCustomDrain} size="icon" className="bg-mi-navy border border-mi-cyan/30 hover:bg-mi-cyan/20 text-gray-300">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Selected drains */}
             {energyDrains.length > 0 && (
-              <div className="border-t pt-3">
-                <p className="text-sm text-gray-600 mb-2">Selected drains:</p>
+              <div className="border-t border-red-500/20 pt-3">
+                <p className="text-sm text-gray-400 mb-2">Selected drains:</p>
                 <div className="flex flex-wrap gap-2">
                   {energyDrains.map((drain) => (
-                    <Badge key={drain} variant="destructive" className="pr-1">
+                    <Badge key={drain} variant="destructive" className="pr-1 bg-red-600">
                       {drain}
                       <button
                         onClick={() => removeDrain(drain)}
@@ -359,10 +365,10 @@ export default function EnergyAudit() {
         </Card>
 
         {/* Energy Boosters */}
-        <Card className="border-green-200 bg-green-50/50">
+        <Card className="border-mi-cyan/30 bg-mi-cyan/10">
           <CardContent className="pt-6">
-            <h3 className="text-lg font-bold mb-2">⚡ Energy Boosters</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg font-bold mb-2 text-white">⚡ Energy Boosters</h3>
+            <p className="text-sm text-gray-400 mb-4">
               What gives you energy? Select all that apply or add your own.
             </p>
 
@@ -371,9 +377,10 @@ export default function EnergyAudit() {
               {ENERGY_BOOSTERS_QUICK_PICKS.map((booster) => (
                 <Badge
                   key={booster}
-                  variant={energyBoosters.includes(booster) ? 'default' : 'outline'}
                   className={`cursor-pointer ${
-                    energyBoosters.includes(booster) ? 'bg-green-600 hover:bg-green-700' : ''
+                    energyBoosters.includes(booster)
+                      ? 'bg-mi-cyan hover:bg-mi-cyan/80 text-mi-navy'
+                      : 'bg-transparent border border-mi-cyan/30 text-gray-300 hover:bg-mi-cyan/20'
                   }`}
                   onClick={() => toggleBooster(booster)}
                 >
@@ -389,26 +396,27 @@ export default function EnergyAudit() {
                 value={customBooster}
                 onChange={(e) => setCustomBooster(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addCustomBooster()}
+                className="mi-input"
               />
-              <Button onClick={addCustomBooster} size="icon">
+              <Button onClick={addCustomBooster} size="icon" className="bg-mi-navy border border-mi-cyan/30 hover:bg-mi-cyan/20 text-gray-300">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Selected boosters */}
             {energyBoosters.length > 0 && (
-              <div className="border-t pt-3">
-                <p className="text-sm text-gray-600 mb-2">Selected boosters:</p>
+              <div className="border-t border-mi-cyan/20 pt-3">
+                <p className="text-sm text-gray-400 mb-2">Selected boosters:</p>
                 <div className="flex flex-wrap gap-2">
                   {energyBoosters.map((booster) => (
                     <Badge
                       key={booster}
-                      className="pr-1 bg-green-600 hover:bg-green-700"
+                      className="pr-1 bg-mi-cyan hover:bg-mi-cyan/80 text-mi-navy"
                     >
                       {booster}
                       <button
                         onClick={() => removeBooster(booster)}
-                        className="ml-2 hover:bg-green-800 rounded-full p-0.5"
+                        className="ml-2 hover:bg-mi-cyan/60 rounded-full p-0.5"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -421,13 +429,13 @@ export default function EnergyAudit() {
         </Card>
 
         {/* Commitments */}
-        <Card>
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
           <CardContent className="pt-6 space-y-6">
             <div>
-              <Label htmlFor="eliminate" className="text-base font-semibold">
+              <Label htmlFor="eliminate" className="text-base font-semibold text-white">
                 What will you ELIMINATE? 🗑️
               </Label>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-400 mb-2">
                 Choose one energy drain to remove from your life this week
               </p>
               <Textarea
@@ -436,14 +444,15 @@ export default function EnergyAudit() {
                 value={eliminateCommitment}
                 onChange={(e) => setEliminateCommitment(e.target.value)}
                 rows={3}
+                className="mi-textarea resize-none"
               />
             </div>
 
             <div>
-              <Label htmlFor="add" className="text-base font-semibold">
+              <Label htmlFor="add" className="text-base font-semibold text-white">
                 What will you ADD? ✨
               </Label>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-400 mb-2">
                 Choose one energy booster to incorporate this week
               </p>
               <Textarea
@@ -452,14 +461,15 @@ export default function EnergyAudit() {
                 value={addCommitment}
                 onChange={(e) => setAddCommitment(e.target.value)}
                 rows={3}
+                className="mi-textarea resize-none"
               />
             </div>
 
             <div>
-              <Label htmlFor="optimize" className="text-base font-semibold">
+              <Label htmlFor="optimize" className="text-base font-semibold text-white">
                 What will you OPTIMIZE? ⚙️
               </Label>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-400 mb-2">
                 Choose one existing routine or habit to improve
               </p>
               <Textarea
@@ -468,6 +478,7 @@ export default function EnergyAudit() {
                 value={optimizeCommitment}
                 onChange={(e) => setOptimizeCommitment(e.target.value)}
                 rows={3}
+                className="mi-textarea resize-none"
               />
             </div>
           </CardContent>
@@ -483,7 +494,7 @@ export default function EnergyAudit() {
         {/* Submit button */}
         <div className="pb-8">
           <Button
-            className="w-full"
+            className="w-full mi-btn-primary"
             size="lg"
             onClick={handleSubmit}
             disabled={loading || !isFormValid()}
