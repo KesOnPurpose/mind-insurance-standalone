@@ -47,7 +47,7 @@ async function sendEmailViaSMTP(
     connection: {
       hostname: smtpHost,
       port: smtpPort,
-      tls: true,
+      tls: smtpPort === 465, // Implicit TLS for port 465, STARTTLS for port 587
       auth: {
         username: smtpUser,
         password: smtpPass,
@@ -72,9 +72,15 @@ async function sendEmailViaSMTP(
 function generateInviteEmailHTML(
   fullName: string | null,
   magicLink: string,
-  appUrl: string
+  appUrl: string,
+  isExistingUser: boolean = false
 ): string {
   const name = fullName || 'there';
+  const actionText = isExistingUser ? 'Sign In to Mind Insurance' : 'Create Your Account';
+  const bodyText = isExistingUser
+    ? "You've been approved to access Mind Insurance! Click the button below to sign in and get started:"
+    : "You've been approved to access Mind Insurance! Click the button below to create your account and get started:";
+
   return `
 <!DOCTYPE html>
 <html>
@@ -91,12 +97,12 @@ function generateInviteEmailHTML(
   <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
     <p style="font-size: 18px; margin-top: 0;">Hi ${name},</p>
 
-    <p>You've been approved to access Mind Insurance! Click the button below to sign in and get started:</p>
+    <p>${bodyText}</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <a href="${magicLink}"
          style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-        Sign In to Mind Insurance
+        ${actionText}
       </a>
     </div>
 
@@ -121,15 +127,17 @@ function generateInviteEmailHTML(
 // Generate plain text version
 function generateInviteEmailText(
   fullName: string | null,
-  magicLink: string
+  magicLink: string,
+  isExistingUser: boolean = false
 ): string {
   const name = fullName || 'there';
+  const actionText = isExistingUser ? 'sign in' : 'create your account';
   return `
 Hi ${name},
 
 You've been approved to access Mind Insurance!
 
-Click this link to sign in and get started:
+Click this link to ${actionText} and get started:
 ${magicLink}
 
 This link will expire in 24 hours.
@@ -264,8 +272,27 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if user already exists and sync user_id if needed
+    const { data: existingAuthUser } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingAuthUser?.users?.find(u => u.email?.toLowerCase() === email);
+
+    if (existingUser && approvedUser.user_id === null) {
+      // User exists but user_id not linked - sync now
+      console.log(`Syncing existing user_id for: ${email}`);
+      await supabaseAdmin
+        .from('gh_approved_users')
+        .update({
+          user_id: existingUser.id,
+          last_access_at: existingUser.last_sign_in_at || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', approvedUser.id);
+
+      console.log(`Successfully synced user_id for: ${email}`);
+    }
+
     // Use the actual app URL
-    const appUrl = Deno.env.get('APP_URL') || 'https://mindhouse-prodigy.vercel.app';
+    const appUrl = Deno.env.get('APP_URL') || 'https://grouphome4newbies.com';
     const finalRedirectTo = payload.redirect_to || `${appUrl}/dashboard`;
 
     // Check if SMTP is configured for direct email sending
@@ -275,39 +302,72 @@ Deno.serve(async (req) => {
     const useDirectSMTP = smtpUser && smtpPass;
 
     if (useDirectSMTP && smtpUser && smtpPass) {
-      // Direct SMTP path - bypasses Supabase rate limits
+      // Direct SMTP path - bypasses Supabase rate limits and database trigger issues
       console.log(`Using direct SMTP for: ${email}`);
 
-      // Generate magic link without sending email
-      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: email,
-        options: {
-          redirectTo: finalRedirectTo,
-        },
-      });
+      // For NEW users: Don't create auth account - send signup link instead
+      // For EXISTING users: Send OTP magic link
+      let magicLink: string;
 
-      if (linkError) {
-        console.error('Error generating magic link:', linkError);
-        return new Response(
-          JSON.stringify({ error: `Failed to generate invite link: ${linkError.message}` }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
+      if (existingUser) {
+        // User exists - use admin.generateLink for existing user (doesn't trigger user creation)
+        console.log(`Generating magic link for existing user: ${email}`);
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: email,
+          options: {
+            redirectTo: finalRedirectTo,
+          },
+        });
 
-      // Get the magic link URL from the response
-      const magicLink = linkData.properties?.action_link;
-      if (!magicLink) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to generate magic link URL' }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
+        if (linkError) {
+          console.error('Error generating magic link for existing user:', linkError);
+          return new Response(
+            JSON.stringify({ error: `Failed to generate login link: ${linkError.message}` }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        const actionLink = linkData.properties?.action_link;
+        if (!actionLink) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to generate magic link URL for existing user' }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+        magicLink = actionLink;
+      } else {
+        // New user - send custom signup link (bypasses auth.users creation and trigger)
+        // User will self-register when they click the link
+        console.log(`Generating signup invitation link for new user: ${email}`);
+
+        // Generate a secure token for the invite
+        const inviteToken = crypto.randomUUID();
+
+        // Store invite token in approved_users notes for verification
+        const inviteData = {
+          token: inviteToken,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+        };
+
+        await supabaseAdmin
+          .from('gh_approved_users')
+          .update({
+            notes: approvedUser.notes
+              ? `${approvedUser.notes}\n[INVITE_TOKEN] ${JSON.stringify(inviteData)}`
+              : `[INVITE_TOKEN] ${JSON.stringify(inviteData)}`
+          })
+          .eq('id', approvedUser.id);
+
+        // Create signup link with pre-filled email and secure token
+        magicLink = `${appUrl}/auth/signup?email=${encodeURIComponent(email)}&token=${inviteToken}&redirect_to=${encodeURIComponent(finalRedirectTo)}`;
       }
 
       // Send email via SMTP
@@ -315,8 +375,8 @@ Deno.serve(async (req) => {
         await sendEmailViaSMTP(
           email,
           "You're Invited to Mind Insurance",
-          generateInviteEmailHTML(payload.full_name || approvedUser.full_name, magicLink, appUrl),
-          generateInviteEmailText(payload.full_name || approvedUser.full_name, magicLink)
+          generateInviteEmailHTML(payload.full_name || approvedUser.full_name, magicLink, appUrl, !!existingUser),
+          generateInviteEmailText(payload.full_name || approvedUser.full_name, magicLink, !!existingUser)
         );
       } catch (smtpError) {
         console.error('SMTP error:', smtpError);

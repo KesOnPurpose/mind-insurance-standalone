@@ -1,0 +1,37 @@
+<!-- Supabase Email Template: Invite User -->
+<!-- Copy and paste this into: Supabase Dashboard → Authentication → Email Templates → Invite user -->
+
+<!-- SUBJECT LINE -->
+You're Invited to Grouphomes4newbies
+
+<!-- BODY (HTML) -->
+<h2>Welcome to Grouphomes4newbies!</h2>
+
+<p>You've been invited to join our Mind Insurance platform — your partner in building a successful group home business.</p>
+
+<p>Click the button below to accept your invitation and get started:</p>
+
+<p>
+  <a href="{{ .ConfirmationURL }}" style="display: inline-block; background-color: #0066cc; color: white; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; margin: 16px 0;">
+    Accept Invitation
+  </a>
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Or copy and paste this link into your browser:<br>
+  <a href="{{ .ConfirmationURL }}" style="color: #0066cc; word-break: break-all;">{{ .ConfirmationURL }}</a>
+</p>
+
+<p style="color: #666; font-size: 14px; margin-top: 24px;">
+  This invitation link will expire in 24 hours for security purposes.
+</p>
+
+<hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
+
+<p style="color: #999; font-size: 12px;">
+  If you didn't expect this invitation, you can safely ignore this email.
+</p>
+
+<p style="color: #999; font-size: 12px;">
+  © 2025 Grouphomes4newbies. All rights reserved.
+</p>
