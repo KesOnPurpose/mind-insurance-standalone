@@ -97,7 +97,7 @@ BEGIN
         'nette',
         COALESCE(v_record.message->>'content', ''),
         COALESCE(v_record.next_message->>'content', ''),
-        v_record.session_id,
+        v_session_uuid,  -- Use UUID for session_id (same as id for uniqueness)
         (v_record.turn_number + 1) / 2,  -- Convert to conversation turn number
         v_record.created_at,
         v_response_time_ms,
@@ -160,7 +160,7 @@ BEGIN
         v_session_uuid, v_user_uuid, 'me',
         COALESCE(v_record.message->>'content', ''),
         COALESCE(v_record.next_message->>'content', ''),
-        v_record.session_id, (v_record.turn_number + 1) / 2,
+        v_session_uuid, (v_record.turn_number + 1) / 2,  -- Use UUID for session_id
         v_record.created_at, v_response_time_ms,
         false, false, false, false
       )
@@ -207,7 +207,7 @@ BEGIN
       'mio',
       'MIO conversation: ' || COALESCE(v_record.conversation_type, 'general'),
       'MIO session with ' || COALESCE(v_record.total_messages, 0) || ' messages',
-      'mio:' || v_record.id::TEXT,
+      v_session_uuid,  -- Use UUID for session_id
       COALESCE(v_record.conversation_turns, 1),
       COALESCE(v_record.started_at, v_record.created_at),
       1000,  -- Default response time for MIO
