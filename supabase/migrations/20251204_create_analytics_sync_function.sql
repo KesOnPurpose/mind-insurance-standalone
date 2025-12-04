@@ -26,6 +26,7 @@ DECLARE
   v_session_uuid UUID;
   v_user_uuid UUID;
   v_record RECORD;
+  v_response_time_ms INTEGER;
 BEGIN
   -- Calculate time filter
   IF p_full_sync THEN
@@ -68,18 +69,12 @@ BEGIN
       v_session_uuid := uuid_generate_v5(uuid_nil(), v_record.session_id || v_record.created_at::TEXT);
 
       -- Calculate response time (time between human message and AI response)
-      DECLARE
-        v_response_time_ms INTEGER;
-      BEGIN
-        v_response_time_ms := EXTRACT(MILLISECONDS FROM (v_record.next_created_at - v_record.created_at))::INTEGER;
-        -- Cap at reasonable max (30 seconds)
-        IF v_response_time_ms > 30000 THEN
-          v_response_time_ms := 30000;
-        END IF;
-        IF v_response_time_ms < 0 THEN
-          v_response_time_ms := 500; -- Default if timing is off
-        END IF;
-      END;
+      v_response_time_ms := GREATEST(0, LEAST(30000,
+        EXTRACT(EPOCH FROM (v_record.next_created_at - v_record.created_at))::INTEGER * 1000
+      ));
+      IF v_response_time_ms <= 0 THEN
+        v_response_time_ms := 500; -- Default if timing is off
+      END IF;
 
       -- Upsert into agent_conversations
       INSERT INTO agent_conversations (
@@ -149,13 +144,13 @@ BEGIN
 
       v_session_uuid := uuid_generate_v5(uuid_nil(), v_record.session_id || v_record.created_at::TEXT);
 
-      DECLARE
-        v_response_time_ms INTEGER;
-      BEGIN
-        v_response_time_ms := EXTRACT(MILLISECONDS FROM (v_record.next_created_at - v_record.created_at))::INTEGER;
-        IF v_response_time_ms > 30000 THEN v_response_time_ms := 30000; END IF;
-        IF v_response_time_ms < 0 THEN v_response_time_ms := 500; END IF;
-      END;
+      -- Calculate response time
+      v_response_time_ms := GREATEST(0, LEAST(30000,
+        EXTRACT(EPOCH FROM (v_record.next_created_at - v_record.created_at))::INTEGER * 1000
+      ));
+      IF v_response_time_ms <= 0 THEN
+        v_response_time_ms := 500;
+      END IF;
 
       INSERT INTO agent_conversations (
         id, user_id, agent_type, user_message, agent_response,
