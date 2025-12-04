@@ -102,9 +102,7 @@ export function RecordingCard({ recording, onDelete, isDeleting }: RecordingCard
                 variant="outline"
                 size="icon"
                 onClick={handleTogglePlay}
-                className={`shrink-0 h-12 w-12 rounded-full bg-mi-navy border-mi-cyan/40 ${
-                  isPlaying ? 'bg-mi-cyan/20 border-mi-cyan text-mi-cyan' : 'text-mi-cyan hover:text-white hover:border-mi-cyan hover:bg-mi-cyan/10'
-                }`}
+                className={`shrink-0 h-12 w-12 rounded-full mi-play-btn ${isPlaying ? 'playing' : ''}`}
               >
                 {isPlaying ? (
                   <Pause className="h-5 w-5" />

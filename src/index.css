@@ -202,6 +202,25 @@ All colors MUST be HSL.
     @apply transition-all duration-200 rounded-md;
   }
 
+  /* Play Button Style for Recording Vault */
+  .mi-play-btn {
+    background-color: #0A1628 !important;
+    border-color: rgba(5, 195, 221, 0.4) !important;
+    color: #05c3dd !important;
+  }
+
+  .mi-play-btn:hover {
+    background-color: rgba(5, 195, 221, 0.1) !important;
+    border-color: #05c3dd !important;
+    color: white !important;
+  }
+
+  .mi-play-btn.playing {
+    background-color: rgba(5, 195, 221, 0.2) !important;
+    border-color: #05c3dd !important;
+    color: #05c3dd !important;
+  }
+
   /* Progress Bar Styles */
   .mi-progress-track {
     @apply bg-[#0A1628] rounded-full overflow-hidden;
