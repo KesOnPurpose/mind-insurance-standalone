@@ -15,10 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { TimeRange } from '@/types/adminAnalytics';
-import { RefreshCcw, Calendar } from 'lucide-react';
+import { RefreshCcw, Calendar, Database, Loader2, ChevronDown } from 'lucide-react';
 import { useCanExportAnalytics } from '@/contexts/AdminContext';
-import { useDashboardKPIs } from '@/services/adminAnalyticsService';
+import { useDashboardKPIs, useSyncAnalytics } from '@/services/adminAnalyticsService';
+import { useToast } from '@/hooks/use-toast';
 
 // ============================================================================
 // ANALYTICS DASHBOARD COMPONENT
@@ -37,12 +44,38 @@ export const AnalyticsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
   const [refreshKey, setRefreshKey] = useState(0);
   const canExport = useCanExportAnalytics();
+  const { toast } = useToast();
 
   // Fetch KPI data for export functionality
   const { data: kpiData } = useDashboardKPIs(timeRange);
 
+  // Sync analytics mutation
+  const syncMutation = useSyncAnalytics();
+
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleSync = async (fullSync: boolean = false) => {
+    const result = await syncMutation.mutateAsync({
+      fullSync,
+      sinceHours: fullSync ? undefined : 168, // 7 days for incremental
+    });
+
+    if (result.success) {
+      toast({
+        title: 'Analytics Synced',
+        description: `Synced ${result.nette_synced} Nette, ${result.mio_synced} MIO, ${result.me_synced} ME conversations (${result.total} total)`,
+      });
+      // Trigger a refresh after successful sync
+      handleRefresh();
+    } else {
+      toast({
+        title: 'Sync Failed',
+        description: result.error || 'Failed to sync analytics data',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getTimeRangeLabel = (range: TimeRange) => {
@@ -85,6 +118,34 @@ export const AnalyticsDashboard: React.FC = () => {
               <SelectItem value="30d">Last 30 Days</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Sync Data Button with Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="default"
+                disabled={syncMutation.isPending}
+                className="w-full sm:w-auto bg-primary"
+              >
+                {syncMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="mr-2 h-4 w-4" />
+                )}
+                {syncMutation.isPending ? 'Syncing...' : 'Sync Data'}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleSync(false)}>
+                Quick Sync (Last 7 Days)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSync(true)}>
+                Full Sync (All Data)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Refresh Button */}
           <Button

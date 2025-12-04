@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { useCanReadAnalytics, useCanExportAnalytics, useAdmin } from '@/contexts/AdminContext';
 import {
   getCachedMetric,
@@ -483,25 +483,32 @@ export async function getDashboardKPIs(
       }),
       callAnalyticsEndpoint<ConversationVolumeResponse>({
         metric_type: 'conversation_volume',
-        time_range: '24h', // Daily active users
+        time_range: timeRange, // Use selected time range
       }),
     ]);
 
     // Calculate system health score (weighted average)
-    const cacheScore = cacheData.result.overall_rate;
-    const responseScore = Math.max(0, 100 - (responseData.result.overall_avg_ms / 20)); // 2000ms = 0 score
-    const ragScore = parseFloat(ragData.result.overall_avg_similarity) * 100;
-    const handoffScore = parseFloat(handoffData.result.overall_avg_confidence) * 100;
+    const cacheScore = cacheData.result.overall_rate || 0;
+    const responseScore = responseData.result.overall_avg_ms
+      ? Math.max(0, 100 - (responseData.result.overall_avg_ms / 20)) // 2000ms = 0 score
+      : 50; // Default to 50 if no data
+    const ragScore = ragData.result.overall_avg_similarity
+      ? parseFloat(ragData.result.overall_avg_similarity) * 100
+      : 0;
+    const handoffScore = handoffData.result.overall_avg_confidence
+      ? parseFloat(handoffData.result.overall_avg_confidence) * 100
+      : 0;
 
     const system_health_score = (cacheScore * 0.25 + responseScore * 0.35 + ragScore * 0.25 + handoffScore * 0.15);
 
-    // Get unique users from today's conversations (simplified - would need user_id in real implementation)
-    const daily_active_users = Math.floor(volumeData.result.total_conversations / 3); // Estimate 3 conversations per user
+    // Get unique users from conversations (use unique_users if available, otherwise estimate)
+    const daily_active_users = volumeData.result.unique_users
+      ?? Math.floor((volumeData.result.total_conversations || 0) / 3);
 
-    // Get real error rate from error tracking
+    // Get real error rate from error tracking using selected time range
     const errorData = await callAnalyticsEndpoint<{ overall_error_rate: number }>({
       metric_type: 'error_rate',
-      time_range: '24h',
+      time_range: timeRange, // Use selected time range
     });
 
     const result: DashboardKPIs = {
@@ -909,5 +916,79 @@ export function useUserEngagement(
     staleTime: 60000, // 1 minute
     refetchInterval: 300000, // Refresh every 5 minutes
     ...options,
+  });
+}
+
+// ============================================================================
+// ANALYTICS SYNC FUNCTIONS
+// ============================================================================
+
+export interface SyncAnalyticsResult {
+  success: boolean;
+  nette_synced: number;
+  mio_synced: number;
+  me_synced: number;
+  total: number;
+  cache_invalidated?: boolean;
+  error?: string;
+  synced_at?: string;
+}
+
+/**
+ * Trigger analytics sync
+ * Calls the sync-analytics edge function to populate agent_conversations
+ * from chat history tables (nette_chat_histories, me_chat_histories, mio_conversations)
+ */
+export async function triggerAnalyticsSync(
+  fullSync: boolean = false,
+  sinceHours: number = 24
+): Promise<SyncAnalyticsResult> {
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !sessionData?.session) {
+      throw new Error('Authentication required to sync analytics');
+    }
+
+    const response = await supabase.functions.invoke('sync-analytics', {
+      body: {
+        full_sync: fullSync,
+        since_hours: sinceHours,
+      },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to sync analytics');
+    }
+
+    return response.data as SyncAnalyticsResult;
+  } catch (error) {
+    console.error('[Analytics Service] Error triggering sync:', error);
+    return {
+      success: false,
+      nette_synced: 0,
+      mio_synced: 0,
+      me_synced: 0,
+      total: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Hook to trigger analytics sync with mutation
+ */
+export function useSyncAnalytics() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ fullSync, sinceHours }: { fullSync?: boolean; sinceHours?: number } = {}) =>
+      triggerAnalyticsSync(fullSync, sinceHours),
+    onSuccess: (data) => {
+      if (data.success) {
+        // Invalidate all analytics queries to refresh with new data
+        queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      }
+    },
   });
 }
