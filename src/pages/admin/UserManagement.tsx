@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAccessControl, UserTier, TIER_HIERARCHY } from '@/hooks/useAccessControl';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Button } from '@/components/ui/button';
@@ -99,6 +100,7 @@ const TIER_COLORS: Record<NonNullable<UserTier>, string> = {
 
 export default function UserManagement() {
   const { tier: currentUserTier, isAdmin, isSuperAdmin, isOwner } = useAccessControl();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [users, setUsers] = useState<ApprovedUser[]>([]);
@@ -139,6 +141,9 @@ export default function UserManagement() {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Status sync state
+  const [isSyncingUserIds, setIsSyncingUserIds] = useState(false);
 
   // Fetch users using RPC function (bypasses RLS)
   const fetchUsers = async () => {
@@ -181,10 +186,28 @@ export default function UserManagement() {
   }, [users, searchQuery, filterTier, filterStatus]);
 
   // Check if current user can modify target tier
-  const canModifyTier = (targetTier: UserTier): boolean => {
+  const canModifyTier = (targetTier: UserTier, targetUserEmail?: string): boolean => {
     if (!currentUserTier || !targetTier) return false;
+
+    // Owners can modify anyone (including themselves)
     if (isOwner) return true;
+
+    // Check if trying to edit themselves
+    const isEditingSelf = targetUserEmail && user?.email &&
+                          targetUserEmail.toLowerCase() === user.email.toLowerCase();
+
+    // Admins (non-super admins) cannot edit themselves
+    if (isAdmin && !isSuperAdmin && isEditingSelf) return false;
+
+    // Admins cannot modify super_admin or owner tiers
+    if (isAdmin && !isSuperAdmin && (targetTier === 'super_admin' || targetTier === 'owner')) {
+      return false;
+    }
+
+    // Cannot modify owner tier unless you are owner
     if (targetTier === 'owner') return false;
+
+    // Must be higher tier to modify
     return TIER_HIERARCHY[currentUserTier] > TIER_HIERARCHY[targetTier];
   };
 
@@ -547,6 +570,35 @@ export default function UserManagement() {
     }
   };
 
+  // Manual sync all user_ids (fixes stale status badges)
+  const handleSyncAllUserIds = async () => {
+    setIsSyncingUserIds(true);
+    try {
+      const { data, error } = await supabase.rpc('gh_admin_sync_all_user_ids');
+
+      if (error) throw error;
+
+      const syncCount = data?.length || 0;
+
+      toast({
+        title: 'Status Sync Complete',
+        description: `${syncCount} user status${syncCount !== 1 ? 'es' : ''} updated`,
+      });
+
+      // Refresh table to show updated statuses
+      fetchUsers();
+    } catch (error) {
+      console.error('Error syncing user IDs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sync user statuses',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSyncingUserIds(false);
+    }
+  };
+
   // Bulk add users using RPC function (bypasses RLS)
   // Parse CSV data (from paste or file upload)
   const handleParseCsv = () => {
@@ -857,6 +909,16 @@ export default function UserManagement() {
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncAllUserIds}
+                disabled={isSyncingUserIds}
+              >
+                {isSyncingUserIds && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Sync Statuses
+              </Button>
               <Dialog open={isBulkDialogOpen} onOpenChange={(open) => {
                 setIsBulkDialogOpen(open);
                 if (!open) resetCsvImport();
@@ -1085,7 +1147,7 @@ export default function UserManagement() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {TIER_OPTIONS.filter(t => canModifyTier(t.value) || t.value === 'user').map(t => (
+                          {TIER_OPTIONS.filter(t => canModifyTier(t.value, formData.email) || t.value === 'user').map(t => (
                             <SelectItem key={t.value} value={t.value}>
                               {t.label}
                             </SelectItem>
@@ -1314,7 +1376,7 @@ export default function UserManagement() {
                                   </>
                                 )}
                               </DropdownMenuItem>
-                              {isSuperAdmin && canModifyTier(user.tier) && (
+                              {isSuperAdmin && canModifyTier(user.tier, user.email) && (
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteUser(user)}
                                   className="text-destructive"
@@ -1360,7 +1422,7 @@ export default function UserManagement() {
                 onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))}
               />
             </div>
-            {canModifyTier(selectedUser?.tier || null) && (
+            {canModifyTier(selectedUser?.tier || null, selectedUser?.email) && (
               <div>
                 <Label>Access Tier</Label>
                 <Select
@@ -1371,7 +1433,7 @@ export default function UserManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TIER_OPTIONS.filter(t => canModifyTier(t.value) || t.value === selectedUser?.tier).map(t => (
+                    {TIER_OPTIONS.filter(t => canModifyTier(t.value, selectedUser?.email) || t.value === selectedUser?.tier).map(t => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}
                       </SelectItem>

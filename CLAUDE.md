@@ -135,6 +135,20 @@ After ANY UI changes:
 
 ## Supabase Configuration
 
+### CRITICAL: SHARED DATABASE WARNING
+
+**This database is shared between TWO applications:**
+- **Grouphomes4newbies** (this app) - grouphome4newbies.com
+- **Mind Insurance** - Mental wellness/challenge app
+
+**ANY database changes (triggers, migrations, schema) must be compatible with BOTH apps.**
+
+**BEFORE making database changes:**
+1. Read `DATABASE-CONFIG.md` in this repo
+2. Check if change affects the `handle_new_user()` trigger
+3. Ensure all new columns have DEFAULTs
+4. Test that user creation still works for BOTH apps
+
 **Project URL**: `https://hpyodaugrkctagkrfofj.supabase.co`
 
 **Environment Variables** (in `.env.local`):
@@ -147,6 +161,12 @@ VITE_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ
 ```
+
+### Database Documentation
+
+**Read these before making database changes:**
+- `DATABASE-CONFIG.md` - Working trigger config, shared database rules
+- `supabase/migrations/` - Migration history
 
 ---
 

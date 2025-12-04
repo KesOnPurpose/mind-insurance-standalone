@@ -11,7 +11,8 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
-  AlertTriangle
+  AlertTriangle,
+  Calendar
 } from 'lucide-react';
 import { TacticWithProgress } from '@/types/tactic';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ interface Week1ChecklistProps {
   onTacticClick?: (tacticId: string) => void;  // Optional - for backward compatibility
   onStartTactic?: (tacticId: string) => void;
   onCompleteTactic?: (tacticId: string) => void;
+  onSchedule?: (tacticId: string, tacticName: string, durationMinutes: number | null, category: string) => void;
   isExpanded?: boolean;
 }
 
@@ -46,6 +48,7 @@ export function Week1Checklist({
   onTacticClick,
   onStartTactic,
   onCompleteTactic,
+  onSchedule,
   isExpanded: initialExpanded = true
 }: Week1ChecklistProps) {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
@@ -214,6 +217,25 @@ export function Week1Checklist({
                               <Badge variant="destructive" className="text-xs shrink-0">
                                 Critical
                               </Badge>
+                            )}
+                            {onSchedule && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSchedule(
+                                    tactic.tactic_id,
+                                    tactic.tactic_name,
+                                    tactic.duration_minutes_realistic ?? null,
+                                    tactic.category
+                                  );
+                                }}
+                                className="h-6 px-2 text-xs border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 shrink-0"
+                              >
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Schedule
+                              </Button>
                             )}
                           </div>
 

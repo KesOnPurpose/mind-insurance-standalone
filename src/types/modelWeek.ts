@@ -1,3 +1,20 @@
+// Activity types for calendar entries (Google Calendar-like categories)
+export type ActivityType =
+  | 'work'
+  | 'routine'
+  | 'fitness'
+  | 'connection'
+  | 'church'
+  | 'date_night'
+  | 'eat'
+  | 'business'
+  | 'sleep'
+  | 'fun'
+  | 'relax'
+  | 'strategic'
+  | 'tactic'  // Linked mentorship tactic
+  | 'custom';
+
 export interface TimeSlot {
   id: string;
   startTime: string; // HH:mm format
@@ -5,6 +22,10 @@ export interface TimeSlot {
   tacticId?: string;
   tacticName?: string;
   notes?: string;
+  // New fields for activity customization
+  activityType?: ActivityType;
+  customColor?: string; // Hex color for custom activity type
+  title?: string; // Custom title for the block
 }
 
 export interface DaySchedule {

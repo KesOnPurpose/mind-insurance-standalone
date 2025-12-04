@@ -17,10 +17,16 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
 import { Badge } from '@/components/ui/badge';
 
-const ADMIN_NAV_ITEMS = [
+const ADMIN_NAV_ITEMS: Array<{
+  title: string;
+  href: string;
+  icon: any;
+  description: string;
+  requiredTier?: 'admin' | 'super_admin' | 'owner';
+}> = [
   {
     title: 'Dashboard',
     href: '/admin',
@@ -44,25 +50,28 @@ const ADMIN_NAV_ITEMS = [
     href: '/admin/protocols',
     icon: Calendar,
     description: 'Coach protocols',
+    requiredTier: 'super_admin',
   },
   {
     title: 'MIO Reports',
     href: '/admin/reports',
     icon: Brain,
     description: 'Mind Insurance Oracle',
+    requiredTier: 'super_admin',
   },
   {
     title: 'Knowledge Base',
     href: '/admin/knowledge-base',
     icon: BookOpen,
     description: 'KB management',
+    requiredTier: 'super_admin',
   },
 ];
 
 export function AdminPanel() {
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { tier, isOwner, isSuperAdmin, isAdmin } = useAccessControl();
+  const { tier, isOwner, isSuperAdmin, isAdmin, hasTierAccess } = useAccessControl();
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -76,6 +85,12 @@ export function AdminPanel() {
       setOpenMobile(false);
     }
   };
+
+  // Filter navigation items based on user's tier
+  const visibleNavItems = ADMIN_NAV_ITEMS.filter(item => {
+    if (!item.requiredTier) return true; // No tier requirement
+    return hasTierAccess(item.requiredTier);
+  });
 
   return (
     <div className="space-y-4">
@@ -100,7 +115,7 @@ export function AdminPanel() {
 
       {/* Navigation Items */}
       <SidebarMenu>
-        {ADMIN_NAV_ITEMS.map((item) => (
+        {visibleNavItems.map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild

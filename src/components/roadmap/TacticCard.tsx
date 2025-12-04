@@ -17,7 +17,8 @@ import {
   Quote,
   Link2,
   ListChecks,
-  Save
+  Save,
+  Calendar
 } from 'lucide-react';
 import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
@@ -36,11 +37,12 @@ interface TacticCardProps {
   onStart: (tacticId: string) => void;
   onComplete: (tacticId: string, notes?: string, profileUpdates?: Partial<BusinessProfile>) => void;
   onSaveNotes?: (tacticId: string, notes: string) => void;
+  onSchedule?: (tacticId: string, tacticName: string, durationMinutes: number | null, category: string) => void;
   showEnrichedFields?: boolean; // Toggle for new enriched field display
   tacticNameMap?: Record<string, string>; // Map of tactic IDs to names for prerequisite display
 }
 
-export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnrichedFields = true, tacticNameMap = {} }: TacticCardProps) {
+export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, onSchedule, showEnrichedFields = true, tacticNameMap = {} }: TacticCardProps) {
   const [notes, setNotes] = useState(tactic.notes || '');
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
@@ -80,6 +82,22 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
   const hasPrerequisiteInfo = 'can_start' in tactic;
   const canStart = hasPrerequisiteInfo ? (tactic as TacticWithPrerequisites).can_start : true;
   const blockingPrereqs = hasPrerequisiteInfo ? (tactic as TacticWithPrerequisites).blocking_prerequisites : [];
+
+  // Check if this is a mentorship tactic (can be scheduled to Model Week)
+  const isMentorshipTactic = tactic.tactic_source === 'mentorship' || tactic.tactic_id.startsWith('M');
+
+  // Handle schedule button click
+  const handleScheduleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening detail modal
+    if (onSchedule) {
+      onSchedule(
+        tactic.tactic_id,
+        tactic.tactic_name,
+        tactic.duration_minutes_realistic ?? null,
+        tactic.category
+      );
+    }
+  };
 
   return (
     <>
@@ -128,9 +146,31 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, showEnric
                 </TooltipProvider>
               )}
             </div>
-            <Badge className={`${getCategoryColor(tactic.category)} whitespace-nowrap flex-shrink-0`}>
-              {tactic.category}
-            </Badge>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge className={`${getCategoryColor(tactic.category)} whitespace-nowrap`}>
+                {tactic.category}
+              </Badge>
+              {isMentorshipTactic && onSchedule && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleScheduleClick}
+                        className="h-7 px-2 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline ml-1 text-xs">Schedule</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Add to Model Week</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">

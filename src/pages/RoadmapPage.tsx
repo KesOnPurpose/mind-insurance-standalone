@@ -29,6 +29,7 @@ import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, useSaveNotes, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { TacticCard } from '@/components/roadmap/TacticCard';
 import { Week1Checklist } from '@/components/roadmap/Week1Checklist';
+import { QuickScheduleModal, ScheduleTacticData } from '@/components/roadmap/QuickScheduleModal';
 import { TacticWithProgress, WeekSummary } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,6 +57,7 @@ export default function RoadmapPage() {
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showSkipAssessmentModal, setShowSkipAssessmentModal] = useState(false);
+  const [scheduleModalTactic, setScheduleModalTactic] = useState<ScheduleTacticData | null>(null);
   const tacticRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const {
@@ -89,6 +91,16 @@ export default function RoadmapPage() {
   // Handle successful strategy update
   const handleStrategyUpdateSuccess = () => {
     window.location.reload();
+  };
+
+  // Handle schedule tactic button click
+  const handleScheduleTactic = (tacticId: string, tacticName: string, durationMinutes: number | null, category: string) => {
+    setScheduleModalTactic({
+      tacticId,
+      tacticName,
+      durationMinutes,
+      category,
+    });
   };
 
   // Check if strategy profile is incomplete
@@ -616,6 +628,7 @@ export default function RoadmapPage() {
                     profileUpdates: {}
                   });
                 }}
+                onSchedule={handleScheduleTactic}
               />
             )}
 
@@ -702,6 +715,7 @@ export default function RoadmapPage() {
                                     notes
                                   });
                                 }}
+                                onSchedule={handleScheduleTactic}
                                 onComplete={async (id, notes, profileUpdates) => {
                                   if (!user?.id) return;
 
@@ -814,6 +828,7 @@ export default function RoadmapPage() {
                                   notes
                                 });
                               }}
+                              onSchedule={handleScheduleTactic}
                               onComplete={async (id, notes, profileUpdates) => {
                                 if (!user?.id) return;
 
@@ -894,6 +909,13 @@ export default function RoadmapPage() {
           userId={user.id}
         />
       )}
+
+      {/* Quick Schedule Modal for adding tactics to Model Week */}
+      <QuickScheduleModal
+        open={!!scheduleModalTactic}
+        onClose={() => setScheduleModalTactic(null)}
+        tactic={scheduleModalTactic}
+      />
       </div>
     </SidebarLayout>
   );

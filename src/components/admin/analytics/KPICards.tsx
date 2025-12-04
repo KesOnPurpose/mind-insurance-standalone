@@ -62,13 +62,25 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
     );
   }
 
+  // Safely access KPI values with defaults for null/undefined
+  const safeKpis = {
+    total_conversations_today: kpis.total_conversations_today ?? 0,
+    cache_efficiency: kpis.cache_efficiency ?? 0,
+    avg_response_time_ms: kpis.avg_response_time_ms ?? 0,
+    daily_active_users: kpis.daily_active_users ?? 0,
+    error_rate: kpis.error_rate ?? 0,
+    system_health_score: kpis.system_health_score ?? 0,
+    ai_quality_score: kpis.ai_quality_score ?? 0,
+    routing_accuracy: kpis.routing_accuracy ?? 0,
+  };
+
   // Calculate cost savings estimate (cached requests save ~$0.002 per request)
   const costSavings = Math.round(
-    (kpis.total_conversations_today * (kpis.cache_efficiency / 100) * 0.002)
+    (safeKpis.total_conversations_today * (safeKpis.cache_efficiency / 100) * 0.002)
   );
 
   // Calculate uptime percentage (simplified - would need actual error tracking)
-  const uptime = 100 - kpis.error_rate;
+  const uptime = 100 - safeKpis.error_rate;
 
   return (
     <>
@@ -80,7 +92,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {kpis.total_conversations_today.toLocaleString()}
+            {safeKpis.total_conversations_today.toLocaleString()}
           </div>
           <p className="text-xs text-muted-foreground">
             Today's conversation volume
@@ -96,12 +108,12 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {kpis.cache_efficiency.toFixed(1)}%
+            {safeKpis.cache_efficiency.toFixed(1)}%
           </div>
           <p className="text-xs text-muted-foreground">
-            {kpis.cache_efficiency >= 80 ? (
+            {safeKpis.cache_efficiency >= 80 ? (
               <span className="text-green-600">Excellent performance</span>
-            ) : kpis.cache_efficiency >= 60 ? (
+            ) : safeKpis.cache_efficiency >= 60 ? (
               <span className="text-yellow-600">Good performance</span>
             ) : (
               <span className="text-red-600">Needs optimization</span>
@@ -118,12 +130,12 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {kpis.avg_response_time_ms.toFixed(0)}ms
+            {safeKpis.avg_response_time_ms.toFixed(0)}ms
           </div>
           <p className="text-xs text-muted-foreground">
-            {kpis.avg_response_time_ms < 1000 ? (
+            {safeKpis.avg_response_time_ms < 1000 ? (
               <span className="text-green-600">Fast responses</span>
-            ) : kpis.avg_response_time_ms < 2000 ? (
+            ) : safeKpis.avg_response_time_ms < 2000 ? (
               <span className="text-yellow-600">Acceptable speed</span>
             ) : (
               <span className="text-red-600">Slow responses</span>
@@ -140,7 +152,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {kpis.daily_active_users.toLocaleString()}
+            {safeKpis.daily_active_users.toLocaleString()}
           </div>
           <p className="text-xs text-muted-foreground">
             Daily active participants
@@ -156,12 +168,12 @@ export const KPICards: React.FC<KPICardsProps> = ({ timeRange }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {kpis.error_rate.toFixed(2)}%
+            {safeKpis.error_rate.toFixed(2)}%
           </div>
           <p className="text-xs text-muted-foreground">
-            {kpis.error_rate < 1 ? (
+            {safeKpis.error_rate < 1 ? (
               <span className="text-green-600">Excellent reliability</span>
-            ) : kpis.error_rate < 5 ? (
+            ) : safeKpis.error_rate < 5 ? (
               <span className="text-yellow-600">Monitor closely</span>
             ) : (
               <span className="text-red-600">Action required</span>

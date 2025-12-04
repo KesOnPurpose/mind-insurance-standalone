@@ -27,43 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-
-        // Sync user_id to gh_approved_users if needed (fixes stale status badges)
-        if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            // First check if user_id needs syncing (to avoid 403 on RLS policy check)
-            const { data: existingRecord } = await supabase
-              .from('gh_approved_users')
-              .select('user_id')
-              .eq('email', session.user.email?.toLowerCase() || '')
-              .maybeSingle();
-
-            // Only update if record exists and user_id is null
-            if (existingRecord && existingRecord.user_id === null) {
-              const { error } = await supabase
-                .from('gh_approved_users')
-                .update({
-                  user_id: session.user.id,
-                  last_access_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
-                })
-                .eq('email', session.user.email?.toLowerCase() || '');
-
-              if (error) {
-                console.error('[AuthContext] Failed to sync user_id:', error);
-              } else {
-                console.log('[AuthContext] Synced user_id for:', session.user.email);
-              }
-            }
-          } catch (error) {
-            // Silently ignore - this is a non-critical enhancement
-            console.debug('[AuthContext] User sync skipped:', error);
-          }
-        }
       }
     );
 
