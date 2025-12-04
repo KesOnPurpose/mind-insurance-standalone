@@ -145,20 +145,27 @@ All colors MUST be HSL.
 
 @layer components {
   /* Dark Input Styles for Mind Insurance */
+  /* Using !important to override ShadCN's bg-background and text-foreground defaults */
   .mi-input {
-    @apply bg-[#0A1628] border-[#05c3dd]/30 text-white placeholder:text-gray-500 rounded-md;
+    background-color: #0A1628 !important;
+    color: white !important;
+    @apply border-[#05c3dd]/30 placeholder:text-gray-500 rounded-md;
     @apply focus:ring-2 focus:ring-[#05c3dd] focus:border-[#05c3dd] focus:outline-none;
     @apply transition-all duration-200;
   }
 
   .mi-textarea {
-    @apply bg-[#0A1628] border-[#05c3dd]/30 text-white placeholder:text-gray-500 rounded-md;
+    background-color: #0A1628 !important;
+    color: white !important;
+    @apply border-[#05c3dd]/30 placeholder:text-gray-500 rounded-md;
     @apply focus:ring-2 focus:ring-[#05c3dd] focus:border-[#05c3dd] focus:outline-none;
     @apply min-h-[100px] transition-all duration-200;
   }
 
   .mi-select {
-    @apply bg-[#0A1628] border-[#05c3dd]/30 text-white rounded-md;
+    background-color: #0A1628 !important;
+    color: white !important;
+    @apply border-[#05c3dd]/30 rounded-md;
     @apply focus:ring-2 focus:ring-[#05c3dd] focus:border-[#05c3dd] focus:outline-none;
   }
 
@@ -177,6 +184,11 @@ All colors MUST be HSL.
   .mi-btn-primary {
     @apply bg-[#05c3dd] hover:bg-[#0099aa] text-white font-medium;
     @apply transition-all duration-200 rounded-md;
+    box-shadow: 0 0 20px rgba(5, 195, 221, 0.5), 0 0 40px rgba(5, 195, 221, 0.3);
+  }
+
+  .mi-btn-primary:hover {
+    box-shadow: 0 0 25px rgba(5, 195, 221, 0.7), 0 0 50px rgba(5, 195, 221, 0.4);
   }
 
   .mi-btn-outline {

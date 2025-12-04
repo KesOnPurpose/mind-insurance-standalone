@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
 // Constants
-const PRACTICE_TYPE = 'TOMORROW_SETUP';
+const PRACTICE_TYPE = 'T2'; // T2 for Tomorrow Setup in PROTECT methodology
 const BASE_POINTS = 2;
 
 export default function TomorrowSetup() {

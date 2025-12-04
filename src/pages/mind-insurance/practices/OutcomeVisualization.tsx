@@ -14,15 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { PracticeData } from '@/types/practices';
 import { createPractice, updatePractice, getTodayPractices, isWithinTimeWindow, calculatePracticePoints } from '@/services/practiceService';
 import { toast } from 'sonner';
-
-// Background audio options
-const BACKGROUND_AUDIO_OPTIONS = [
-  { value: 'relaxing-meditation-1', label: 'Relaxing Meditation 1', url: '/audio/meditation-1.mp3', icon: '🎵' },
-  { value: 'relaxing-meditation-2', label: 'Relaxing Meditation 2', url: '/audio/meditation-2.mp3', icon: '🎶' },
-  { value: 'relaxing-meditation-3', label: 'Relaxing Meditation 3', url: '/audio/meditation-3.mp3', icon: '🎼' },
-  { value: 'relaxing-meditation-4', label: 'Relaxing Meditation 4', url: '/audio/meditation-4.mp3', icon: '🎹' },
-  { value: 'silence', label: 'Silence', url: null, icon: '🔇' }
-];
+import { BACKGROUND_AUDIO_OPTIONS } from '@/constants/protect';
 
 const MEDITATION_DURATION = 60; // 60 seconds meditation
 
@@ -198,8 +190,8 @@ export default function OutcomeVisualization() {
         toast.success(`Practice completed! You earned ${points} points`);
       }
 
-      // Navigate back to practice hub
-      navigate('/mind-insurance');
+      // Navigate back to practice page
+      navigate('/mind-insurance/practice');
     } catch (err: any) {
       setError(err.message || 'An error occurred while saving your practice');
       toast.error('Failed to save practice');
@@ -230,7 +222,7 @@ export default function OutcomeVisualization() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/mind-insurance')}
+              onClick={() => navigate('/mind-insurance/practice')}
               aria-label="Close"
               className="text-gray-400 hover:text-white hover:bg-mi-navy"
             >

@@ -19,7 +19,9 @@ import {
   ArrowLeft,
   RefreshCw,
   DollarSign,
-  Handshake
+  Handshake,
+  Clock,
+  Globe
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,6 +105,7 @@ export function SettingsPage() {
     targetState: '',
     propertyStatus: '',
     immediatePriority: '',
+    timezone: '',
   });
 
   const [originalData, setOriginalData] = useState({
@@ -110,29 +113,48 @@ export function SettingsPage() {
     targetState: '',
     propertyStatus: '',
     immediatePriority: '',
+    timezone: '',
   });
+
+  // Common US timezones for Mind Insurance practice scheduling
+  const TIMEZONE_OPTIONS = [
+    { value: 'America/New_York', label: 'Eastern Time (ET)', offset: 'UTC-5/4' },
+    { value: 'America/Chicago', label: 'Central Time (CT)', offset: 'UTC-6/5' },
+    { value: 'America/Denver', label: 'Mountain Time (MT)', offset: 'UTC-7/6' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)', offset: 'UTC-8/7' },
+    { value: 'America/Phoenix', label: 'Arizona (No DST)', offset: 'UTC-7' },
+    { value: 'America/Anchorage', label: 'Alaska Time (AKT)', offset: 'UTC-9/8' },
+    { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)', offset: 'UTC-10' },
+  ];
 
   // Fetch current settings
   useEffect(() => {
     const fetchSettings = async () => {
       if (!user?.id) return;
 
-      const { data, error } = await supabase
+      // Fetch from user_onboarding
+      const { data: onboardingData, error: onboardingError } = await supabase
         .from('user_onboarding')
         .select('ownership_model, target_state, property_status, immediate_priority')
         .eq('user_id', user.id)
         .single();
 
-      if (data && !error) {
-        const settings = {
-          ownershipModel: data.ownership_model || '',
-          targetState: data.target_state || '',
-          propertyStatus: data.property_status || '',
-          immediatePriority: data.immediate_priority || '',
-        };
-        setFormData(settings);
-        setOriginalData(settings);
-      }
+      // Fetch timezone from user_profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .single();
+
+      const settings = {
+        ownershipModel: onboardingData?.ownership_model || '',
+        targetState: onboardingData?.target_state || '',
+        propertyStatus: onboardingData?.property_status || '',
+        immediatePriority: onboardingData?.immediate_priority || '',
+        timezone: profileData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+      };
+      setFormData(settings);
+      setOriginalData(settings);
       setIsLoading(false);
     };
 
@@ -152,7 +174,8 @@ export function SettingsPage() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      // Update user_onboarding
+      const { error: onboardingError } = await supabase
         .from('user_onboarding')
         .update({
           ownership_model: formData.ownershipModel,
@@ -163,12 +186,23 @@ export function SettingsPage() {
         })
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (onboardingError) throw onboardingError;
+
+      // Update timezone in user_profiles
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({
+          timezone: formData.timezone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
 
       setOriginalData(formData);
       toast({
         title: 'Settings Saved',
-        description: 'Your strategy preferences have been updated. Refresh to see changes in your roadmap.',
+        description: 'Your preferences have been updated. Timezone affects Mind Insurance practice windows.',
       });
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -332,6 +366,82 @@ export function SettingsPage() {
               Retake Assessment
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Timezone Settings - For Mind Insurance Practice Windows */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-mi-cyan" />
+            Timezone Settings
+          </CardTitle>
+          <CardDescription>
+            Your timezone determines when Mind Insurance practice windows are available
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-mi-navy-light/10 rounded-lg p-4 border border-mi-cyan/20">
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-mi-cyan mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-slate-700">Practice Time Windows</p>
+                <ul className="text-slate-600 mt-1 space-y-1">
+                  <li>Championship Setup: 3am - 10am</li>
+                  <li>NASCAR Pit Stop: 10am - 3pm</li>
+                  <li>Victory Lap: 3pm - 10pm</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <RadioGroup
+            value={formData.timezone}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}
+          >
+            <div className="space-y-2">
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <div key={tz.value} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50">
+                  <RadioGroupItem value={tz.value} id={`tz-${tz.value}`} />
+                  <div className="flex-1">
+                    <Label htmlFor={`tz-${tz.value}`} className="font-medium cursor-pointer">
+                      {tz.label}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{tz.offset}</p>
+                  </div>
+                  {formData.timezone === tz.value && (
+                    <Badge variant="secondary" className="text-xs">Current</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </RadioGroup>
+
+          {/* Auto-detect button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              const match = TIMEZONE_OPTIONS.find(tz => tz.value === detected);
+              if (match) {
+                setFormData(prev => ({ ...prev, timezone: detected }));
+                toast({
+                  title: 'Timezone Detected',
+                  description: `Set to ${match.label}`,
+                });
+              } else {
+                toast({
+                  title: 'Timezone Not Found',
+                  description: `Your timezone (${detected}) is not in our list. Please select manually.`,
+                  variant: 'destructive',
+                });
+              }
+            }}
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            Auto-detect My Timezone
+          </Button>
         </CardContent>
       </Card>
 

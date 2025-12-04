@@ -345,7 +345,7 @@ export default function ChampionshipPage() {
           <Button
             onClick={() => navigate('/mind-insurance')}
             variant="outline"
-            className="border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10"
+            className="bg-mi-navy border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10 hover:border-mi-cyan"
           >
             Back to Hub
           </Button>

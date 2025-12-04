@@ -76,15 +76,21 @@ export default function MindInsuranceHub() {
     if (!user?.id) return;
 
     const { data, error } = await supabase
-      .from('mio_insights')
-      .select('title, insight_type, delivered_at, read_at')
+      .from('mio_user_reports')
+      .select('title, report_type, display_status, created_at')
       .eq('user_id', user.id)
-      .order('delivered_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (!error && data) {
-      setLatestInsight(data);
+      // Map to expected format for backward compatibility
+      setLatestInsight({
+        title: data.title,
+        insight_type: data.report_type,
+        delivered_at: data.created_at,
+        read_at: data.display_status === 'read' ? data.created_at : null
+      });
     }
   };
 

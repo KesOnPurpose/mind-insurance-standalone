@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
 // Constants
-const PRACTICE_TYPE = 'PATTERN_CHECK';
+const PRACTICE_TYPE = 'P'; // P for Pattern Check in PROTECT methodology
 const BASE_POINTS = 4;
 
 const COLLISION_TYPES = [

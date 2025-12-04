@@ -19,13 +19,12 @@ import {
   getTodayPractices,
   isWithinTimeWindow
 } from '@/services/practiceService';
-// Voice recording service temporarily disabled - needs to be created
-// import {
-//   AudioRecorder,
-//   uploadAudioToStorage,
-//   saveVoiceRecording,
-//   sendAudioForTranscription
-// } from '@/services/voiceRecordingService';
+import {
+  AudioRecorder,
+  uploadAudioToStorage,
+  saveVoiceRecording,
+  sendAudioForTranscription
+} from '@/services/voiceRecordingService';
 import { PRACTICE_TYPES, POINTS_CONFIG, AUDIO_DURATIONS, TIME_WINDOWS } from '@/constants/protect';
 import type { DailyPractice } from '@/types/practices';
 import { useToast } from '@/hooks/use-toast';
@@ -50,14 +49,13 @@ export default function ReinforceIdentity() {
   const [existingPractice, setExistingPractice] = useState<DailyPractice | null>(null);
 
   // Refs
-  // Voice recording temporarily disabled - service needs to be created
-  const audioRecorderRef = useRef<any | null>(null);
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const recordingDataRef = useRef<{ blob: Blob; duration: number } | null>(null);
 
   // Initialize audio recorder on mount
   useEffect(() => {
-    // audioRecorderRef.current = new AudioRecorder();
+    audioRecorderRef.current = new AudioRecorder();
 
     // Load existing practice if any
     loadExistingPractice();
@@ -269,17 +267,26 @@ export default function ReinforceIdentity() {
         throw new Error('User not authenticated');
       }
 
-      // Voice recording temporarily disabled - service needs to be created
-      // Upload would happen here
-      // const { publicUrl, path } = await uploadAudioToStorage(user.id, recordingDataRef.current.blob);
-      // const voiceRecording = await saveVoiceRecording(user.id, publicUrl, recordingDataRef.current.duration, existingPractice?.id, 'identity');
-      // sendAudioForTranscription(recordingDataRef.current.blob, user.id, voiceRecording.id);
+      // Upload voice recording to Supabase Storage
+      const { publicUrl } = await uploadAudioToStorage(user.id, recordingDataRef.current.blob);
+
+      // Save recording metadata to database
+      const voiceRecording = await saveVoiceRecording(
+        user.id,
+        publicUrl,
+        recordingDataRef.current.duration,
+        existingPractice?.id,
+        'identity'
+      );
+
+      // Send audio for transcription (fire and forget - non-blocking)
+      sendAudioForTranscription(recordingDataRef.current.blob, user.id, voiceRecording.id);
 
       // Prepare practice data
       const practiceData = {
         identity_statement: identityStatement.trim(),
-        recording_id: undefined, // Would be voiceRecording.id
-        recording_duration: recordingDataRef.current?.duration || 0,
+        recording_id: voiceRecording.id,
+        recording_duration: recordingDataRef.current.duration,
       };
 
       // Get today's date in user's timezone
@@ -313,8 +320,8 @@ export default function ReinforceIdentity() {
         description: `You earned ${pointsEarned} points`,
       });
 
-      // Navigate back to hub
-      navigate('/mind-insurance');
+      // Navigate back to practice page
+      navigate('/mind-insurance/practice');
 
     } catch (err: any) {
       setError(err.message || 'An error occurred while saving your practice');
@@ -336,7 +343,7 @@ export default function ReinforceIdentity() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/mind-insurance')}
+            onClick={() => navigate('/mind-insurance/practice')}
             className="shrink-0 text-gray-400 hover:text-white hover:bg-mi-navy-light"
           >
             <ArrowLeft className="h-5 w-5" />

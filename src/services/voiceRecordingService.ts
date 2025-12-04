@@ -106,7 +106,7 @@ export async function sendAudioForTranscription(
   recordingId: string
 ): Promise<void> {
   try {
-    const N8N_WEBHOOK_URL = 'https://purposewaze.app.n8n.cloud/webhook/audioreceiver';
+    const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/audioreceiver';
 
     // Create FormData for multipart upload
     const formData = new FormData();

@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Constants
-const PRACTICE_TYPE = 'TRIGGER_RESET';
+const PRACTICE_TYPE = 'T'; // T for Trigger Reset in PROTECT methodology
 const BASE_POINTS = 2;
 
 const RESET_METHODS = [
@@ -88,7 +88,7 @@ export default function TriggerReset() {
 
       // Check for existing practice today
       const { data: existingPractices } = await supabase
-        .from('practice_entries')
+        .from('daily_practices')
         .select('*')
         .eq('user_id', userId)
         .eq('practice_date', practiceDate)
@@ -109,7 +109,7 @@ export default function TriggerReset() {
         const oldPoints = existingPractice.points_earned || 0;
 
         await supabase
-          .from('practice_entries')
+          .from('daily_practices')
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
@@ -123,7 +123,7 @@ export default function TriggerReset() {
         const pointsDifference = BASE_POINTS - oldPoints;
         if (pointsDifference > 0) {
           await supabase.rpc('increment_user_points', {
-            user_id: userId,
+            user_id_input: userId,
             points_to_add: pointsDifference
           });
         }
@@ -132,7 +132,7 @@ export default function TriggerReset() {
       } else {
         // Create new practice
         await supabase
-          .from('practice_entries')
+          .from('daily_practices')
           .insert({
             user_id: userId,
             practice_date: practiceDate,
@@ -146,7 +146,7 @@ export default function TriggerReset() {
 
         // Update user points
         await supabase.rpc('increment_user_points', {
-          user_id: userId,
+          user_id_input: userId,
           points_to_add: BASE_POINTS
         });
 
