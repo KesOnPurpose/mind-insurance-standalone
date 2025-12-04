@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { GlossaryTooltip } from "@/components/protocol/GlossaryTooltip";
 import { useMemo, useCallback } from "react";
 import { sanitizeAIResponse } from "@/utils/sanitizeResponse";
+import { useProduct } from "@/contexts/ProductContext";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -14,6 +15,8 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMessageProps) => {
+  const { currentProduct } = useProduct();
+  const isMindInsurance = currentProduct === 'mind-insurance';
   const coach = COACHES[coachType];
   const isUser = role === "user";
 
@@ -84,7 +87,13 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
 
       <Card
         className={`p-4 max-w-[80%] ${
-          isUser ? "bg-primary text-primary-foreground" : "bg-card"
+          isUser
+            ? isMindInsurance
+              ? "bg-[#05c3dd] text-white"
+              : "bg-primary text-primary-foreground"
+            : isMindInsurance
+              ? "bg-[#132337] border border-[#05c3dd]/20 text-white"
+              : "bg-card"
         }`}
       >
         {!isUser && (
@@ -92,13 +101,19 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
             <span className="text-xs font-semibold" style={{ color: coach.color }}>
               {coach.name}
             </span>
-            <span className="text-xs text-muted-foreground">• {coach.title}</span>
+            <span className={`text-xs ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>• {coach.title}</span>
           </div>
         )}
         {renderContent()}
         <span
           className={`text-xs mt-2 block ${
-            isUser ? "text-primary-foreground/70" : "text-muted-foreground"
+            isUser
+              ? isMindInsurance
+                ? "text-white/70"
+                : "text-primary-foreground/70"
+              : isMindInsurance
+                ? "text-gray-400"
+                : "text-muted-foreground"
           }`}
         >
           {timestamp.toLocaleTimeString([], {

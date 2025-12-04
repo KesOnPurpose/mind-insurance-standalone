@@ -273,7 +273,7 @@ function ChatPageContent() {
       role: "user",
       content: messageText,
       timestamp: new Date(),
-      coachType: 'nette'
+      coachType: selectedCoach
     };
 
     // CRITICAL FIX: Store in ref BEFORE any state changes
@@ -290,7 +290,7 @@ function ChatPageContent() {
     setActiveConversation(newConversationId);
 
     // Create conversation metadata for sidebar (async, doesn't block)
-    await addConversation(newConversationId, messageText, 'nette');
+    await addConversation(newConversationId, messageText, selectedCoach);
 
     console.log('[Conversation] Started new conversation from welcome:', newConversationId);
 
@@ -309,7 +309,7 @@ function ChatPageContent() {
         body: JSON.stringify({
           user_id: user.id,
           message: messageText,
-          agent: 'nette',
+          agent: selectedCoach,
           conversation_id: newConversationId,
         }),
       });
@@ -324,9 +324,9 @@ function ChatPageContent() {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response || "I'm here to help you with your group home journey. Let me know what you'd like to explore.",
+        content: data.response || "I'm here to help you. Let me know what you'd like to explore.",
         timestamp: new Date(),
-        coachType: 'nette'
+        coachType: selectedCoach
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -336,7 +336,7 @@ function ChatPageContent() {
       pendingMessagesRef.current = [];
 
       // Update conversation metadata with AI response preview
-      await updateConversation(newConversationId, aiMessage.content, 'nette');
+      await updateConversation(newConversationId, aiMessage.content, selectedCoach);
 
       setIsTyping(false);
     } catch (error) {
