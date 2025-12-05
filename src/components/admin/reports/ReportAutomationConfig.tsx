@@ -108,6 +108,9 @@ export function ReportAutomationConfig() {
   const [editingAutomation, setEditingAutomation] = useState<MIOReportAutomation | null>(null);
   const [userCount, setUserCount] = useState<number | null>(null);
 
+  // Default webhook URL for MIO Report Generator
+  const DEFAULT_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
+
   // Form state
   const [formData, setFormData] = useState<AutomationFormData>({
     name: '',
@@ -116,7 +119,7 @@ export function ReportAutomationConfig() {
     target_config: {},
     schedule_type: 'manual',
     schedule_config: { time: '09:00' },
-    n8n_webhook_url: '',
+    n8n_webhook_url: DEFAULT_WEBHOOK_URL,
   });
 
   // Fetch automations on mount
@@ -297,7 +300,7 @@ export function ReportAutomationConfig() {
       target_config: {},
       schedule_type: 'manual',
       schedule_config: { time: '09:00' },
-      n8n_webhook_url: '',
+      n8n_webhook_url: DEFAULT_WEBHOOK_URL,
     });
     setUserCount(null);
   };
