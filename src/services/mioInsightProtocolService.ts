@@ -31,21 +31,19 @@ import type {
 export async function getActiveInsightProtocol(
   userId: string
 ): Promise<MIOInsightProtocolWithProgress | null> {
-  const { data: protocol, error } = await supabase
-    .from('mio_weekly_protocols')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .eq('muted_by_coach', false)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  // Use RPC function with SECURITY DEFINER to bypass RLS issues
+  const { data: rpcResult, error: rpcError } = await supabase
+    .rpc('get_active_mio_protocol', { p_user_id: userId });
 
-  if (error || !protocol) {
-    if (error?.code !== 'PGRST116') {
-      // Not a "no rows" error
-      console.error('Error fetching active protocol:', error);
-    }
+  if (rpcError) {
+    console.error('Error fetching active protocol via RPC:', rpcError);
+    return null;
+  }
+
+  // RPC returns array, get first result
+  const protocol = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+
+  if (!protocol) {
     return null;
   }
 
@@ -79,34 +77,38 @@ export async function getActiveInsightProtocol(
 export async function getProtocolById(
   protocolId: string
 ): Promise<MIOInsightProtocolWithProgress | null> {
-  const { data: protocol, error } = await supabase
-    .from('mio_weekly_protocols')
-    .select('*')
-    .eq('id', protocolId)
-    .single();
+  // Use RPC function with SECURITY DEFINER to bypass RLS issues
+  const { data: rpcResult, error: rpcError } = await supabase
+    .rpc('get_protocol_with_progress', { p_protocol_id: protocolId });
 
-  if (error || !protocol) {
-    console.error('Error fetching protocol:', error);
+  if (rpcError) {
+    console.error('Error fetching protocol via RPC:', rpcError);
     return null;
   }
 
-  const { data: completions } = await supabase
-    .from('mio_protocol_completions')
-    .select('*')
-    .eq('protocol_id', protocolId)
-    .order('day_number', { ascending: true });
+  if (!rpcResult) {
+    return null;
+  }
+
+  // RPC returns { protocol, completions } structure
+  const protocol = rpcResult.protocol;
+  const completions = rpcResult.completions || [];
+
+  if (!protocol) {
+    return null;
+  }
 
   const dayTasks = protocol.day_tasks as MIOInsightDayTask[];
   const currentDay = protocol.current_day || 1;
-  const todayTask = dayTasks.find((t) => t.day === currentDay);
-  const todayCompletion = completions?.find(
-    (c) => c.day_number === currentDay && !c.was_skipped
+  const todayTask = dayTasks.find((t: MIOInsightDayTask) => t.day === currentDay);
+  const todayCompletion = completions.find(
+    (c: MIOProtocolCompletion) => c.day_number === currentDay && !c.was_skipped
   );
 
   return {
     ...protocol,
     day_tasks: dayTasks,
-    completions: (completions || []) as MIOProtocolCompletion[],
+    completions: completions as MIOProtocolCompletion[],
     today_task: todayTask,
     is_today_completed: !!todayCompletion,
   } as MIOInsightProtocolWithProgress;
