@@ -575,3 +575,47 @@ export interface TodayProtocolTask {
   days_completed: number;
   insight_summary: string;
 }
+
+// =============================================
+// Protocol Journal / Reflection Types (Phase 28)
+// =============================================
+
+/**
+ * Structured reflection data for protocol day completions
+ * Stored in mio_protocol_completions.response_data (JSONB)
+ */
+export interface ProtocolReflection {
+  // Core fields (always present when user writes reflection)
+  reflection_text: string;
+  submitted_at: string;
+
+  // Engagement metrics
+  word_count?: number;
+  time_spent_writing_seconds?: number;
+
+  // Task-specific structured data (when applicable)
+  moments_captured?: string[];    // For "list X moments" type tasks
+  trigger_identified?: string;    // For "identify your trigger" tasks
+  pattern_noticed?: string;       // For awareness tasks
+  insight_gained?: string;        // For reflection tasks
+
+  // Self-assessment (optional)
+  difficulty_rating?: 1 | 2 | 3 | 4 | 5;    // "How hard was today's task?"
+  confidence_rating?: 1 | 2 | 3 | 4 | 5;    // "How confident do you feel?"
+  energy_after?: 1 | 2 | 3 | 4 | 5;         // "How do you feel after completing?"
+}
+
+/**
+ * Journal entry for display (combined completion + reflection data)
+ */
+export interface ProtocolJournalEntry {
+  id: string;
+  protocol_id: string;
+  protocol_title: string;
+  day_number: number;
+  day_theme: string;
+  task_title: string;
+  reflection: ProtocolReflection | null;
+  completed_at: string;
+  was_skipped: boolean;
+}

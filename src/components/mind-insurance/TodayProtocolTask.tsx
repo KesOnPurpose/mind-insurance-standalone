@@ -1,15 +1,17 @@
 /**
  * TodayProtocolTask Component
  * Phase 27: Daily protocol task display for MindInsuranceHub
+ * Phase 28: Added journal/reflection capture before completion
  *
  * Features:
  * - Persistent button showing current day's task
  * - Modal with full instructions on first open
+ * - Journal textarea for reflections (Phase 28)
  * - "Mark Complete" functionality
  * - Progress indicator (Day X of 7)
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -31,9 +33,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
+import type { TodayProtocolTask as TodayProtocolTaskType, ProtocolReflection } from '@/types/protocol';
 import { completeProtocolDay } from '@/services/mioInsightProtocolService';
 import { toast } from 'sonner';
+import { ProtocolJournalInput } from './ProtocolJournalInput';
 
 interface TodayProtocolTaskProps {
   task: TodayProtocolTaskType;
@@ -49,27 +52,53 @@ export function TodayProtocolTask({
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(showOnMount);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [reflectionText, setReflectionText] = useState('');
+  const modalOpenTimeRef = useRef<number>(Date.now());
 
   const progressPercent = (task.days_completed / 7) * 100;
+
+  // Reset reflection and track time when modal opens
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    modalOpenTimeRef.current = Date.now();
+  };
 
   const handleComplete = async () => {
     setIsCompleting(true);
 
+    // Build reflection data if user wrote something
+    const responseData: ProtocolReflection | undefined = reflectionText.trim()
+      ? {
+          reflection_text: reflectionText.trim(),
+          submitted_at: new Date().toISOString(),
+          word_count: reflectionText.trim().split(/\s+/).length,
+          time_spent_writing_seconds: Math.floor(
+            (Date.now() - modalOpenTimeRef.current) / 1000
+          ),
+        }
+      : undefined;
+
     const result = await completeProtocolDay({
       protocol_id: task.protocol_id,
       day_number: task.day_number,
+      response_data: responseData,
+      notes: reflectionText.trim() || undefined,
     });
 
     setIsCompleting(false);
 
     if (result.success) {
+      const hasReflection = !!reflectionText.trim();
       toast.success(`Day ${task.day_number} complete!`, {
         description:
           result.protocol_completed
             ? '🎉 Protocol completed! Amazing work!'
+            : hasReflection
+            ? `Great reflection! ${7 - task.day_number} days to go`
             : `${7 - task.day_number} days to go`,
       });
       setIsModalOpen(false);
+      setReflectionText(''); // Reset for next time
       onComplete?.();
     } else {
       toast.error('Failed to complete task', {
@@ -96,7 +125,7 @@ export function TodayProtocolTask({
               ? 'bg-emerald-500/10 border-emerald-500/30'
               : 'bg-gradient-to-r from-cyan-500/10 to-blue-600/10 border-cyan-500/30'
           }`}
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenModal}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -225,6 +254,18 @@ export function TodayProtocolTask({
                 "{task.insight_summary}"
               </p>
             </div>
+
+            {/* Journal Input (Phase 28) */}
+            {!task.is_completed && (
+              <div className="pt-4 border-t border-slate-800">
+                <ProtocolJournalInput
+                  value={reflectionText}
+                  onChange={setReflectionText}
+                  successCriteria={task.task.success_criteria}
+                  maxWords={500}
+                />
+              </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -298,22 +339,49 @@ export function ProtocolTaskModal({
 }: ProtocolTaskModalProps) {
   const navigate = useNavigate();
   const [isCompleting, setIsCompleting] = useState(false);
+  const [reflectionText, setReflectionText] = useState('');
+  const modalOpenTimeRef = useRef<number>(Date.now());
+
+  // Reset reflection and track time when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      modalOpenTimeRef.current = Date.now();
+      setReflectionText('');
+    }
+  }, [isOpen]);
 
   const handleComplete = async () => {
     setIsCompleting(true);
 
+    // Build reflection data if user wrote something
+    const responseData: ProtocolReflection | undefined = reflectionText.trim()
+      ? {
+          reflection_text: reflectionText.trim(),
+          submitted_at: new Date().toISOString(),
+          word_count: reflectionText.trim().split(/\s+/).length,
+          time_spent_writing_seconds: Math.floor(
+            (Date.now() - modalOpenTimeRef.current) / 1000
+          ),
+        }
+      : undefined;
+
     const result = await completeProtocolDay({
       protocol_id: task.protocol_id,
       day_number: task.day_number,
+      response_data: responseData,
+      notes: reflectionText.trim() || undefined,
     });
 
     setIsCompleting(false);
 
     if (result.success) {
+      const hasReflection = !!reflectionText.trim();
       toast.success(`Day ${task.day_number} complete!`, {
         description:
           result.protocol_completed
             ? '🎉 Protocol completed! Amazing work!'
+            : hasReflection
+            ? `Great reflection! ${7 - task.day_number} days to go`
             : `${7 - task.day_number} days to go`,
       });
       onClose();
@@ -404,6 +472,18 @@ export function ProtocolTaskModal({
                   </div>
                 )}
               </div>
+
+              {/* Journal Input (Phase 28) */}
+              {!task.is_completed && (
+                <div className="pt-4 border-t border-slate-800">
+                  <ProtocolJournalInput
+                    value={reflectionText}
+                    onChange={setReflectionText}
+                    successCriteria={task.task.success_criteria}
+                    maxWords={500}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Actions */}
