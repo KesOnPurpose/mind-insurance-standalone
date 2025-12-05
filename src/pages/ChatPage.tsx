@@ -604,7 +604,7 @@ function ChatPageContent() {
             <div className="max-w-4xl mx-auto">
               {/* Active Conversation Indicator */}
               {activeConversationId && messages.length > 0 && (
-                <div className="text-xs text-muted-foreground text-center mb-2">
+                <div className={`text-xs text-center mb-2 ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
                   Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
                 </div>
               )}
@@ -615,7 +615,7 @@ function ChatPageContent() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                   placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                  className="flex-1"
+                  className={`flex-1 ${isMindInsurance ? 'mi-input' : ''}`}
                   disabled={isTyping || isLoadingHistory}
                 />
                 <Button
@@ -628,7 +628,7 @@ function ChatPageContent() {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
+              <p className={`text-xs mt-2 text-center ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
                 Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
               </p>
             </div>

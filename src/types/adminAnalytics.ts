@@ -168,8 +168,25 @@ export interface DashboardKPIs {
   routing_accuracy: number; // percentage
   daily_active_users: number;
   total_conversations_today: number;
+  total_conversations_all_time: number; // All synced conversations
+  conversations_by_agent: Record<string, number>; // Breakdown by agent type
   avg_response_time_ms: number;
   error_rate: number; // percentage
+  // New fields from multi-source analytics
+  total_messages?: number; // Total messages across all sources
+  verified_users?: number; // Users with verified IDs (from MIO)
+  data_source?: 'multi_source' | 'agent_conversations'; // Data source indicator
+}
+
+// Top Users Leaderboard Data
+export interface TopUserData {
+  user_id: string;
+  email: string | null;
+  full_name: string | null;
+  total_conversations: number;
+  favorite_agent: AgentType;
+  last_active: string;
+  engagement_level: 'high' | 'medium' | 'low';
 }
 
 // Time series data point for charts

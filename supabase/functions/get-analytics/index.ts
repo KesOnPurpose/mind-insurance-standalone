@@ -442,6 +442,264 @@ serve(async (req) => {
         break;
       }
 
+      case 'conversation_volume_multi_source': {
+        // ============================================================================
+        // MULTI-SOURCE CONVERSATION VOLUME
+        // ============================================================================
+        // Queries chat data directly from source tables instead of agent_conversations
+        // This provides accurate counts even when sync hasn't run
+        // ============================================================================
+
+        // Query nette_chat_histories (count messages)
+        const { count: netteMessageCount, error: netteError } = await supabaseClient
+          .from('nette_chat_histories')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', timeFilter);
+
+        if (netteError) console.error('[Analytics] Nette query error:', netteError);
+
+        // Get unique Nette sessions
+        const { data: netteSessions } = await supabaseClient
+          .from('nette_chat_histories')
+          .select('session_id')
+          .gte('created_at', timeFilter);
+        const uniqueNetteSessions = new Set(netteSessions?.map(s => s.session_id) || []).size;
+
+        // Query me_chat_histories (count messages)
+        const { count: meMessageCount, error: meError } = await supabaseClient
+          .from('me_chat_histories')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', timeFilter);
+
+        if (meError) console.error('[Analytics] ME query error:', meError);
+
+        // Get unique ME sessions
+        const { data: meSessions } = await supabaseClient
+          .from('me_chat_histories')
+          .select('session_id')
+          .gte('created_at', timeFilter);
+        const uniqueMeSessions = new Set(meSessions?.map(s => s.session_id) || []).size;
+
+        // Query mio_conversations (these have REAL user_ids!)
+        const { data: mioData, error: mioError } = await supabaseClient
+          .from('mio_conversations')
+          .select('user_id, total_messages, created_at')
+          .gte('created_at', timeFilter);
+
+        if (mioError) console.error('[Analytics] MIO query error:', mioError);
+
+        // MIO is the only reliable source for real user IDs
+        const uniqueMioUsers = new Set(mioData?.map(m => m.user_id).filter(Boolean) || []);
+        const mioConversationCount = mioData?.length || 0;
+        const mioMessageCount = mioData?.reduce((sum, m) => sum + (m.total_messages || 0), 0) || 0;
+
+        // Calculate daily breakdown from MIO (has timestamps)
+        const byDay: Record<string, number> = {};
+        mioData?.forEach(m => {
+          const day = m.created_at?.split('T')[0];
+          if (day) {
+            byDay[day] = (byDay[day] || 0) + 1;
+          }
+        });
+
+        // Total messages across all sources
+        const totalMessages = (netteMessageCount || 0) + (meMessageCount || 0) + mioMessageCount;
+        // Total sessions/conversations
+        const totalConversations = uniqueNetteSessions + uniqueMeSessions + mioConversationCount;
+
+        result = {
+          total_messages: totalMessages,
+          total_conversations: totalConversations,
+          nette: {
+            messages: netteMessageCount || 0,
+            sessions: uniqueNetteSessions,
+          },
+          me: {
+            messages: meMessageCount || 0,
+            sessions: uniqueMeSessions,
+          },
+          mio: {
+            conversations: mioConversationCount,
+            messages: mioMessageCount,
+            unique_users: uniqueMioUsers.size,
+          },
+          // Only MIO has reliable user data
+          unique_users_verified: uniqueMioUsers.size,
+          active_sessions_total: uniqueNetteSessions + uniqueMeSessions + mioConversationCount,
+          by_agent: {
+            nette: uniqueNetteSessions,
+            me: uniqueMeSessions,
+            mio: mioConversationCount,
+          },
+          by_day: byDay,
+          data_quality_note: 'Nette/ME show session counts. Only MIO has verified user_ids.',
+        };
+        break;
+      }
+
+      case 'top_users': {
+        // ============================================================================
+        // TOP USERS LEADERBOARD (Using MIO data for real users)
+        // ============================================================================
+        // MIO is the only source with verified user_ids that link to auth.users
+        // Nette/ME use random session UUIDs, not real user IDs
+        // ============================================================================
+
+        // Get MIO conversations (these have REAL user_ids!)
+        const { data: mioConversations, error: mioError } = await supabaseClient
+          .from('mio_conversations')
+          .select('user_id, conversation_type, total_messages, created_at')
+          .gte('created_at', timeFilter)
+          .not('user_id', 'is', null);
+
+        if (mioError) throw mioError;
+
+        if (!mioConversations || mioConversations.length === 0) {
+          // Fallback: Show message about no verified user data
+          result = {
+            users: [],
+            total_conversations: 0,
+            note: 'No MIO conversations found with verified user IDs. Nette/ME use session IDs, not user IDs.'
+          };
+          break;
+        }
+
+        // Aggregate MIO conversations by user
+        const userStats = new Map<string, {
+          total: number;
+          totalMessages: number;
+          lastActive: string;
+          conversationTypes: Record<string, number>;
+        }>();
+
+        mioConversations.forEach((conv) => {
+          const userId = conv.user_id;
+          const existing = userStats.get(userId) || {
+            total: 0,
+            totalMessages: 0,
+            lastActive: conv.created_at,
+            conversationTypes: {},
+          };
+
+          existing.total++;
+          existing.totalMessages += conv.total_messages || 0;
+
+          const convType = conv.conversation_type || 'general';
+          existing.conversationTypes[convType] = (existing.conversationTypes[convType] || 0) + 1;
+
+          if (new Date(conv.created_at) > new Date(existing.lastActive)) {
+            existing.lastActive = conv.created_at;
+          }
+
+          userStats.set(userId, existing);
+        });
+
+        // Get user profiles for emails/names
+        const userIds = Array.from(userStats.keys());
+
+        // Try user_profiles first
+        const { data: profilesData } = await supabaseClient
+          .from('user_profiles')
+          .select('id, email, full_name')
+          .in('id', userIds);
+
+        // Also check gh_approved_users for user info
+        const { data: approvedUsersData } = await supabaseClient
+          .from('gh_approved_users')
+          .select('user_id, email, full_name')
+          .in('user_id', userIds);
+
+        // Fetch from Supabase Auth admin API
+        const authUsersResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/auth/v1/admin/users`,
+          {
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+            },
+          }
+        );
+        const authUsersData = authUsersResponse.ok ? await authUsersResponse.json() : { users: [] };
+
+        // Merge data: priority order is user_profiles > gh_approved_users > auth.users
+        const profileMap = new Map<string, { email: string | null; full_name: string | null }>();
+
+        // First add auth.users data (lowest priority)
+        (authUsersData.users || []).forEach((u: { id: string; email?: string; user_metadata?: { full_name?: string } }) => {
+          if (userIds.includes(u.id)) {
+            profileMap.set(u.id, {
+              email: u.email || null,
+              full_name: u.user_metadata?.full_name || null
+            });
+          }
+        });
+
+        // Then add gh_approved_users data
+        (approvedUsersData || []).forEach(p => {
+          const existing = profileMap.get(p.user_id);
+          profileMap.set(p.user_id, {
+            email: p.email || existing?.email || null,
+            full_name: p.full_name || existing?.full_name || null
+          });
+        });
+
+        // Finally overlay user_profiles data (highest precedence)
+        (profilesData || []).forEach(p => {
+          const existing = profileMap.get(p.id);
+          profileMap.set(p.id, {
+            email: p.email || existing?.email || null,
+            full_name: p.full_name || existing?.full_name || null
+          });
+        });
+
+        // Calculate average for engagement levels
+        const allTotals = Array.from(userStats.values()).map(s => s.total);
+        const avgTotal = allTotals.length > 0
+          ? allTotals.reduce((a, b) => a + b, 0) / allTotals.length
+          : 0;
+
+        // Convert to array and sort by total conversations
+        const topUsers = Array.from(userStats.entries())
+          .map(([userId, stats]) => {
+            const profile = profileMap.get(userId);
+
+            // Determine most common conversation type
+            const favoriteType = Object.entries(stats.conversationTypes)
+              .sort(([, a], [, b]) => b - a)[0]?.[0] || 'general';
+
+            // Determine engagement level
+            let engagementLevel: 'high' | 'medium' | 'low' = 'medium';
+            if (stats.total >= avgTotal * 1.5) {
+              engagementLevel = 'high';
+            } else if (stats.total < avgTotal * 0.5) {
+              engagementLevel = 'low';
+            }
+
+            return {
+              user_id: userId,
+              email: profile?.email || null,
+              full_name: profile?.full_name || null,
+              total_conversations: stats.total,
+              total_messages: stats.totalMessages,
+              favorite_agent: 'mio', // All from MIO
+              favorite_conversation_type: favoriteType,
+              last_active: stats.lastActive,
+              engagement_level: engagementLevel,
+            };
+          })
+          .sort((a, b) => b.total_conversations - a.total_conversations)
+          .slice(0, 10); // Top 10
+
+        result = {
+          users: topUsers,
+          total_conversations: mioConversations.length,
+          unique_users: userStats.size,
+          data_source: 'mio_conversations',
+          note: 'Only MIO has verified user IDs. Nette/ME use session UUIDs.',
+        };
+        break;
+      }
+
       default:
         throw new Error(`Unknown metric type: ${metric_type}`);
     }

@@ -52,10 +52,15 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
 
   // Render content with or without glossary tooltips
   const renderContent = () => {
+    // Mind Insurance specific prose styling for better contrast
+    const miProseClasses = isMindInsurance
+      ? "prose-headings:text-[#05c3dd] prose-strong:text-white prose-p:text-gray-100 prose-li:text-gray-100 prose-a:text-[#05c3dd]"
+      : "";
+
     // For user messages or assistant messages without glossary markup, use ReactMarkdown
     if (isUser || !hasGlossaryMarkup) {
       return (
-        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+        <div className={`text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert ${miProseClasses}`}>
           <ReactMarkdown>{displayContent}</ReactMarkdown>
         </div>
       );
@@ -64,7 +69,7 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
     // For assistant messages with glossary markup, use GlossaryTooltip
     // Note: GlossaryTooltip handles the raw text, so we pass the content directly
     return (
-      <div className="text-sm leading-relaxed">
+      <div className={`text-sm leading-relaxed ${isMindInsurance ? 'text-gray-100' : ''}`}>
         <GlossaryTooltip
           text={displayContent}
           glossaryTerms={extractedTerms}

@@ -35,6 +35,45 @@ interface FunnelData {
   totalSignups: number;
 }
 
+// Helper function to batch large queries to avoid URL length limits
+async function batchQuery<T>(
+  userIds: string[],
+  queryFn: (batchIds: string[]) => Promise<T[]>
+): Promise<T[]> {
+  const BATCH_SIZE = 50; // Safe batch size to avoid URL limits
+  const results: T[] = [];
+
+  for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+    const batchIds = userIds.slice(i, i + BATCH_SIZE);
+    const batchResults = await queryFn(batchIds);
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
+// Helper function to batch count queries
+async function batchCountQuery(
+  userIds: string[],
+  tableName: 'user_onboarding',
+  notNullColumn: string
+): Promise<number> {
+  const BATCH_SIZE = 50;
+  let totalCount = 0;
+
+  for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+    const batchIds = userIds.slice(i, i + BATCH_SIZE);
+    const { count } = await supabase
+      .from(tableName)
+      .select('user_id', { count: 'exact', head: true })
+      .in('user_id', batchIds)
+      .not(notNullColumn, 'is', null);
+    totalCount += count || 0;
+  }
+
+  return totalCount;
+}
+
 // Fetch funnel data from Supabase
 async function fetchFunnelData(timeRange: TimeRange): Promise<FunnelData> {
   try {
@@ -81,35 +120,34 @@ async function fetchFunnelData(timeRange: TimeRange): Promise<FunnelData> {
     const userIds = users?.map(u => u.id) || [];
 
     // Count users who completed assessment (user_onboarding.assessment_completed_at IS NOT NULL)
-    const { count: assessmentCount } = await supabase
-      .from('user_onboarding')
-      .select('user_id', { count: 'exact', head: true })
-      .in('user_id', userIds)
-      .not('assessment_completed_at', 'is', null);
+    // Use batched query to avoid URL length limits
+    const assessmentCount = await batchCountQuery(userIds, 'user_onboarding', 'assessment_completed_at');
 
-    // Count users with at least one agent conversation
-    const { data: conversationUsers } = await supabase
-      .from('agent_conversations')
-      .select('user_id')
-      .in('user_id', userIds);
+    // Count users with at least one agent conversation (batched)
+    const conversationUsers = await batchQuery(userIds, async (batchIds) => {
+      const { data } = await supabase
+        .from('agent_conversations')
+        .select('user_id')
+        .in('user_id', batchIds);
+      return data || [];
+    });
 
-    const uniqueConversationUsers = new Set(conversationUsers?.map(c => c.user_id) || []).size;
+    const uniqueConversationUsers = new Set(conversationUsers.map(c => c.user_id)).size;
 
-    // Count users who completed at least one tactic (daily_practices.completed = true)
-    const { data: tacticUsers } = await supabase
-      .from('daily_practices')
-      .select('user_id')
-      .in('user_id', userIds)
-      .eq('completed', true);
+    // Count users who completed at least one tactic (daily_practices.completed = true) (batched)
+    const tacticUsers = await batchQuery(userIds, async (batchIds) => {
+      const { data } = await supabase
+        .from('daily_practices')
+        .select('user_id')
+        .in('user_id', batchIds)
+        .eq('completed', true);
+      return data || [];
+    });
 
-    const uniqueTacticUsers = new Set(tacticUsers?.map(t => t.user_id) || []).size;
+    const uniqueTacticUsers = new Set(tacticUsers.map(t => t.user_id)).size;
 
     // Count users who completed Week 1 (user_onboarding.week_1_completed_at IS NOT NULL)
-    const { count: week1Count } = await supabase
-      .from('user_onboarding')
-      .select('user_id', { count: 'exact', head: true })
-      .in('user_id', userIds)
-      .not('week_1_completed_at', 'is', null);
+    const week1Count = await batchCountQuery(userIds, 'user_onboarding', 'week_1_completed_at');
 
     // Build funnel stages
     const stages: FunnelStage[] = [

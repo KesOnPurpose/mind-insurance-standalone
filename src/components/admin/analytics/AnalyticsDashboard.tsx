@@ -6,6 +6,7 @@ import { AgentComparisonTable } from './AgentComparisonTable';
 import { ExportButtons } from './ExportButtons';
 import { UserEngagementMetrics } from './UserEngagementMetrics';
 import { ConversionFunnel } from './ConversionFunnel';
+import { TopUsersLeaderboard } from './TopUsersLeaderboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -194,6 +195,9 @@ export const AnalyticsDashboard: React.FC = () => {
           <UserEngagementMetrics timeRange={timeRange} />
         </div>
       </div>
+
+      {/* Top Users Leaderboard Section */}
+      <TopUsersLeaderboard timeRange={timeRange} limit={10} />
 
       {/* Conversion Funnel Section */}
       <div className="space-y-4">

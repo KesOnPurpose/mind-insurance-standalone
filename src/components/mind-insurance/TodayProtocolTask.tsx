@@ -122,8 +122,8 @@ export function TodayProtocolTask({
         <Card
           className={`p-4 cursor-pointer transition-all hover:border-cyan-500/50 ${
             task.is_completed
-              ? 'bg-emerald-500/10 border-emerald-500/30'
-              : 'bg-gradient-to-r from-cyan-500/10 to-blue-600/10 border-cyan-500/30'
+              ? 'bg-mi-navy-light border-emerald-500/30'
+              : 'bg-mi-navy-light border-cyan-500/30'
           }`}
           onClick={handleOpenModal}
         >

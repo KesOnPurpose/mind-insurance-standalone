@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain, Sparkles } from 'lucide-react';
+import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain, Sparkles, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +27,7 @@ export default function MindInsuranceHub() {
     total: 7,
     points: 0
   });
-  const [latestInsight, setLatestInsight] = useState<any | null>(null);
+  const [hasCoachContent, setHasCoachContent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [protocolTask, setProtocolTask] = useState<TodayProtocolTaskType | null>(null);
   const [showProtocolModal, setShowProtocolModal] = useState(false);
@@ -42,7 +42,7 @@ export default function MindInsuranceHub() {
   useEffect(() => {
     if (user?.id) {
       fetchDailyStatus();
-      fetchLatestInsight();
+      fetchCoachContent();
       fetchProtocolTask();
     }
   }, [user]);
@@ -97,25 +97,19 @@ export default function MindInsuranceHub() {
   };
 
 
-  const fetchLatestInsight = async () => {
+  const fetchCoachContent = async () => {
     if (!user?.id) return;
 
+    // Check if there's any active coach protocol for this user
     const { data, error } = await supabase
-      .from('mio_user_reports')
-      .select('title, report_type, display_status, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+      .from('coach_protocols')
+      .select('id')
+      .eq('status', 'published')
       .limit(1)
       .maybeSingle();
 
     if (!error && data) {
-      // Map to expected format for backward compatibility
-      setLatestInsight({
-        title: data.title,
-        insight_type: data.report_type,
-        delivered_at: data.created_at,
-        read_at: data.display_status === 'read' ? data.created_at : null
-      });
+      setHasCoachContent(true);
     }
   };
 
@@ -246,28 +240,25 @@ export default function MindInsuranceHub() {
           </Card>
         </div>
 
-        {/* Latest Insight */}
-        {latestInsight && (
-          <Card className="p-6 bg-mi-navy-light border-mi-cyan/30">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-mi-cyan" />
-                Latest Insight
-              </h3>
-              <div>
-                <p className="font-medium text-white">{latestInsight.title}</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  {latestInsight.read_at ? 'Read' : 'Unread'} •
-                  {new Date(latestInsight.delivered_at).toLocaleDateString()}
-                </p>
+        {/* Coach Content Available Banner (only shows when coach has assigned content) */}
+        {hasCoachContent && (
+          <Card
+            className="p-4 bg-mi-navy-light border-amber-500/30 cursor-pointer hover:border-amber-500/50 transition-all"
+            onClick={() => navigate('/mind-insurance/insights')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-white">Coach Content Available</p>
+                  <p className="text-sm text-gray-400">New expert-curated content for you</p>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/mind-insurance/insights')}
-                className="w-full border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10"
-              >
-                View Insights
-              </Button>
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30">
+                New
+              </Badge>
             </div>
           </Card>
         )}

@@ -6,7 +6,7 @@ import {
   CheckCircle,
   Circle,
   Play,
-  GraduationCap,
+  Megaphone,
   DollarSign,
   TrendingUp,
   ChevronDown,
@@ -18,12 +18,12 @@ import { TacticWithProgress } from '@/types/tactic';
 import { useState } from 'react';
 import { getCategoryColor } from '@/config/categories';
 import { TacticDetailModal } from './TacticDetailModal';
-import { M013AggregatorCard } from './M013AggregatorCard';
+import { M020AggregatorCard } from './M020AggregatorCard';
 
-interface Week1ChecklistProps {
+interface Week2ChecklistProps {
   tactics: TacticWithProgress[];
   progressData: any[];
-  onTacticClick?: (tacticId: string) => void;  // Optional - for backward compatibility
+  onTacticClick?: (tacticId: string) => void;
   onStartTactic?: (tacticId: string) => void;
   onCompleteTactic?: (tacticId: string) => void;
   onSchedule?: (tacticId: string, tacticName: string, durationMinutes: number | null, category: string) => void;
@@ -31,18 +31,18 @@ interface Week1ChecklistProps {
 }
 
 /**
- * Week1Checklist - Nette's Mentorship Lesson 1 Progress Tracker
+ * Week2Checklist - Nette's Mentorship Lesson 2 Progress Tracker
  *
- * Displays all 13 Lesson 1 mentorship tactics (M001-M013) with:
- * - Overall progress bar showing X/13 completed
+ * Displays all 7 Lesson 2 mentorship tactics (M014-M020) with:
+ * - Overall progress bar showing X/6 completed (excluding M020 aggregator)
  * - Visual distinction between critical path and regular tactics
- * - Grouped by mentorship category (Legal Foundation, Business Setup, etc.)
+ * - Grouped by mentorship category (Referral Building)
  * - Quick status icons (completed, in_progress, not_started)
  * - Estimated time and cost for each tactic
  *
- * Purpose: Give users a focused view of Nette's Lesson 1 curriculum with clear progress tracking
+ * Purpose: Give users a focused view of Nette's Lesson 2 curriculum - Building Your Referral Pipeline
  */
-export function Week1Checklist({
+export function Week2Checklist({
   tactics,
   progressData,
   onTacticClick,
@@ -50,47 +50,47 @@ export function Week1Checklist({
   onCompleteTactic,
   onSchedule,
   isExpanded: initialExpanded = true
-}: Week1ChecklistProps) {
+}: Week2ChecklistProps) {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const [selectedTactic, setSelectedTactic] = useState<TacticWithProgress | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Separate M013 from M001-M012
-  const m013Tactic = tactics.find(t => t.tactic_id === 'M013');
-  const m001ToM012 = tactics.filter(t =>
+  // Separate M020 (aggregator) from M014-M019
+  const m020Tactic = tactics.find(t => t.tactic_id === 'M020');
+  const m014ToM019 = tactics.filter(t =>
     t.tactic_id.startsWith('M') &&
-    t.week_assignment === 1 &&
-    t.tactic_id !== 'M013' // Exclude M013 from regular list
+    t.mentorship_week === 2 &&
+    t.tactic_id !== 'M020' // Exclude M020 from regular list
   ).sort((a, b) => a.tactic_id.localeCompare(b.tactic_id));
 
-  // Calculate progress (excluding M013)
-  const totalTactics = m001ToM012.length; // Should be 12
-  const completedTactics = m001ToM012.filter(t => t.status === 'completed').length;
-  const inProgressTactics = m001ToM012.filter(t => t.status === 'in_progress').length;
+  // Calculate progress (excluding M020)
+  const totalTactics = m014ToM019.length; // Should be 6
+  const completedTactics = m014ToM019.filter(t => t.status === 'completed').length;
+  const inProgressTactics = m014ToM019.filter(t => t.status === 'in_progress').length;
   const progressPercentage = totalTactics > 0 ? Math.round((completedTactics / totalTactics) * 100) : 0;
 
-  // Calculate time and cost (M001-M012 only)
-  const totalEstimatedTime = m001ToM012.reduce((sum, t) => {
+  // Calculate time and cost (M014-M019 only)
+  const totalEstimatedTime = m014ToM019.reduce((sum, t) => {
     const hours = parseFloat(t.estimated_time?.replace(/[^\d.]/g, '') || '0');
     return sum + hours;
   }, 0);
 
-  const totalCostRange = m001ToM012.reduce((acc, t) => {
+  const totalCostRange = m014ToM019.reduce((acc, t) => {
     return {
       min: acc.min + (t.cost_min_usd || 0),
       max: acc.max + (t.cost_max_usd || 0)
     };
   }, { min: 0, max: 0 });
 
-  // Group tactics by mentorship category (M001-M012 only)
-  const tacticsByCategory = m001ToM012.reduce((acc, tactic) => {
+  // Group tactics by mentorship category (M014-M019 only)
+  const tacticsByCategory = m014ToM019.reduce((acc, tactic) => {
     const category = tactic.mentorship_category || 'Other';
     if (!acc[category]) acc[category] = [];
     acc[category].push(tactic);
     return acc;
   }, {} as Record<string, TacticWithProgress[]>);
 
-  const categoryOrder = ['Legal Foundation', 'Business Setup', 'Population Selection', 'Revenue Strategy', 'Implementation'];
+  const categoryOrder = ['Referral Building'];
   const sortedCategories = Object.keys(tacticsByCategory).sort((a, b) => {
     const aIndex = categoryOrder.indexOf(a);
     const bIndex = categoryOrder.indexOf(b);
@@ -109,14 +109,13 @@ export function Week1Checklist({
   };
 
   if (totalTactics === 0) {
-    // Show informative message instead of silently returning null
     return (
       <Card className="border-2 border-amber-200 bg-amber-50">
         <div className="p-6 text-center">
           <AlertTriangle className="w-12 h-12 text-amber-600 mx-auto mb-3" />
-          <h3 className="font-semibold text-amber-900 mb-2">No Lesson 1 Mentorship Tactics Found</h3>
+          <h3 className="font-semibold text-amber-900 mb-2">No Lesson 2 Mentorship Tactics Found</h3>
           <p className="text-sm text-amber-700 mb-4">
-            Lesson 1 mentorship tactics (M001-M013) are not currently available in your roadmap.
+            Lesson 2 mentorship tactics (M014-M020) are not currently available in your roadmap.
             This could be due to filtering or database issues.
           </p>
           <Button
@@ -134,22 +133,22 @@ export function Week1Checklist({
 
   return (
     <>
-    <Card className="overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
+    <Card className="overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
       {/* Header */}
       <div
-        className="p-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white cursor-pointer"
+        className="p-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-6 h-6" />
+            <Megaphone className="w-6 h-6" />
             <div>
-              <h3 className="font-semibold text-lg">Nette's Mentorship - Lesson 1</h3>
-              <p className="text-sm text-purple-100">Mastering the Unlicensed Group Home Business Model for Success</p>
+              <h3 className="font-semibold text-lg">Nette's Mentorship - Lesson 2</h3>
+              <p className="text-sm text-orange-100">Building Your Referral Pipeline: Strategies for Success Before Opening Your Business</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-white text-purple-700 font-semibold">
+            <Badge variant="secondary" className="bg-white text-orange-700 font-semibold">
               {completedTactics}/{totalTactics} Complete
             </Badge>
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -160,9 +159,9 @@ export function Week1Checklist({
         <div className="space-y-2">
           <Progress
             value={progressPercentage}
-            className="h-3 bg-purple-200"
+            className="h-3 bg-orange-200"
           />
-          <div className="flex justify-between text-xs text-purple-100">
+          <div className="flex justify-between text-xs text-orange-100">
             <span className="flex items-center gap-1">
               <DollarSign className="w-3 h-3" />
               ${totalCostRange.min}-${totalCostRange.max} investment
@@ -182,7 +181,7 @@ export function Week1Checklist({
         <div className="p-4 space-y-4">
           {sortedCategories.map(category => (
             <div key={category} className="space-y-2">
-              <h4 className="text-sm font-semibold text-purple-900 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-orange-900 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 {category}
               </h4>
@@ -231,7 +230,7 @@ export function Week1Checklist({
                                     tactic.category
                                   );
                                 }}
-                                className="h-6 px-2 text-xs border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 shrink-0"
+                                className="h-6 px-2 text-xs border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950/50 shrink-0"
                               >
                                 <Calendar className="w-3 h-3 mr-1" />
                                 Schedule
@@ -270,12 +269,12 @@ export function Week1Checklist({
             </div>
           ))}
 
-          {/* M013 Master Checklist - Place at TOP */}
-          {m013Tactic && (
+          {/* M020 Master Checklist */}
+          {m020Tactic && (
             <div className="mb-4">
-              <M013AggregatorCard
-                m013Tactic={m013Tactic}
-                week1Tactics={m001ToM012}
+              <M020AggregatorCard
+                m020Tactic={m020Tactic}
+                lesson2Tactics={m014ToM019}
                 onStartTactic={onStartTactic}
                 onCompleteTactic={onCompleteTactic}
               />
@@ -284,31 +283,31 @@ export function Week1Checklist({
 
           {/* Call to Action */}
           {completedTactics === 0 && (
-            <div className="mt-4 p-3 bg-purple-100 rounded-lg border-2 border-purple-300">
-              <p className="text-sm text-purple-900">
-                <strong>🚀 Ready to start?</strong> Begin with{' '}
+            <div className="mt-4 p-3 bg-orange-100 rounded-lg border-2 border-orange-300">
+              <p className="text-sm text-orange-900">
+                <strong>Ready to build your pipeline?</strong> Begin with{' '}
                 <button
                   onClick={() => {
-                    const firstTactic = m001ToM012.find(t => t.is_critical_path && t.status === 'not_started');
+                    const firstTactic = m014ToM019.find(t => t.is_critical_path && t.status === 'not_started');
                     if (firstTactic) {
                       setSelectedTactic(firstTactic);
                       setShowDetailModal(true);
                     }
                   }}
-                  className="underline font-semibold hover:text-purple-700"
+                  className="underline font-semibold hover:text-orange-700"
                 >
-                  M001: Understanding the Unlicensed Model
+                  M014: Pre-Launch Marketing Strategy
                 </button>
-                {' '}– the foundation of your entire business.
+                {' '}to start building awareness.
               </p>
             </div>
           )}
 
           {completedTactics > 0 && completedTactics < totalTactics && (
-            <div className="mt-4 p-3 bg-blue-100 rounded-lg border-2 border-blue-300">
-              <p className="text-sm text-blue-900">
-                <strong>💪 Keep going!</strong> You've completed {completedTactics} of {totalTactics} tactics.{' '}
-                {totalTactics - completedTactics} more to master Lesson 1.
+            <div className="mt-4 p-3 bg-yellow-100 rounded-lg border-2 border-yellow-300">
+              <p className="text-sm text-yellow-900">
+                <strong>Keep marketing!</strong> You've completed {completedTactics} of {totalTactics} tactics.{' '}
+                {totalTactics - completedTactics} more to build your referral pipeline.
               </p>
             </div>
           )}
@@ -316,7 +315,7 @@ export function Week1Checklist({
           {completedTactics === totalTactics && (
             <div className="mt-4 p-3 bg-green-100 rounded-lg border-2 border-green-300">
               <p className="text-sm text-green-900">
-                <strong>🎉 Lesson 1 Complete!</strong> You've mastered the foundations. Ready for Lesson 2?
+                <strong>Lesson 2 Complete!</strong> Your referral pipeline is ready. Time for Lesson 3: Leadership!
               </p>
             </div>
           )}
