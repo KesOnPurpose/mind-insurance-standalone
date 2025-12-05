@@ -2,12 +2,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain } from 'lucide-react';
+import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
+import { TodayProtocolTask, ProtocolTaskModal } from '@/components/mind-insurance/TodayProtocolTask';
+import { getTodayProtocolTask } from '@/services/mioInsightProtocolService';
+import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -26,6 +29,8 @@ export default function MindInsuranceHub() {
   });
   const [latestInsight, setLatestInsight] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [protocolTask, setProtocolTask] = useState<TodayProtocolTaskType | null>(null);
+  const [showProtocolModal, setShowProtocolModal] = useState(false);
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -38,8 +43,28 @@ export default function MindInsuranceHub() {
     if (user?.id) {
       fetchDailyStatus();
       fetchLatestInsight();
+      fetchProtocolTask();
     }
   }, [user]);
+
+  const fetchProtocolTask = async () => {
+    if (!user?.id) return;
+
+    const task = await getTodayProtocolTask(user.id);
+    setProtocolTask(task);
+
+    // Show modal on first open of day if there's an incomplete task
+    if (task && !task.is_completed) {
+      const lastShownKey = `mio_protocol_modal_${user.id}`;
+      const today = new Date().toISOString().split('T')[0];
+      const lastShown = localStorage.getItem(lastShownKey);
+
+      if (lastShown !== today) {
+        setShowProtocolModal(true);
+        localStorage.setItem(lastShownKey, today);
+      }
+    }
+  };
 
   // Update loading state when progress data loads
   useEffect(() => {
@@ -173,6 +198,27 @@ export default function MindInsuranceHub() {
             </Button>
           </div>
         </Card>
+
+        {/* Today's Protocol Task (if active) */}
+        {protocolTask && (
+          <TodayProtocolTask
+            task={protocolTask}
+            onComplete={fetchProtocolTask}
+          />
+        )}
+
+        {/* Protocol Task Modal (first open of day) */}
+        {protocolTask && (
+          <ProtocolTaskModal
+            task={protocolTask}
+            isOpen={showProtocolModal}
+            onClose={() => setShowProtocolModal(false)}
+            onComplete={() => {
+              setShowProtocolModal(false);
+              fetchProtocolTask();
+            }}
+          />
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

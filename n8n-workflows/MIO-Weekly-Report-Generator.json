@@ -1,0 +1,614 @@
+{
+  "name": "MIO Weekly Report Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 6AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Find users due for MIO report\n-- Journey-based: Day 7, 14, 21, 28, then weekly ongoing\nWITH user_journey AS (\n  SELECT \n    up.id as user_id,\n    up.email,\n    up.full_name,\n    up.subscription_tier,\n    up.created_at as signup_date,\n    EXTRACT(DAY FROM NOW() - up.created_at)::int as journey_day,\n    (\n      SELECT MAX(created_at) \n      FROM mio_user_reports r \n      WHERE r.user_id = up.id\n    ) as last_report_date\n  FROM user_profiles up\n  WHERE up.subscription_tier IN ('essential', 'elite', 'founder')\n),\ndue_users AS (\n  SELECT *,\n    CASE \n      WHEN journey_day IN (7, 14, 21, 28) THEN true\n      WHEN journey_day > 28 AND (\n        last_report_date IS NULL OR \n        EXTRACT(DAY FROM NOW() - last_report_date) >= 7\n      ) THEN true\n      ELSE false\n    END as is_due\n  FROM user_journey\n)\nSELECT user_id, email, full_name, journey_day, last_report_date\nFROM due_users\nWHERE is_due = true\nLIMIT 50;"
+      },
+      "id": "get-due-users",
+      "name": "Get Users Due for Report",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-users",
+      "name": "Loop Each User",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Fetch user's practice data (last 30 days)\nSELECT \n  dp.practice_type,\n  dp.practice_date,\n  dp.completed,\n  dp.points_earned,\n  dp.notes,\n  dp.voice_recording_url\nFROM daily_practices dp\nWHERE dp.user_id = '{{ $json.user_id }}'\n  AND dp.practice_date >= NOW() - INTERVAL '30 days'\nORDER BY dp.practice_date DESC;"
+      },
+      "id": "fetch-practices",
+      "name": "Fetch Daily Practices",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 180],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Fetch user's assessment data\nSELECT \n  pmq.collision_pattern,\n  pmq.biggest_challenge,\n  pmq.ideal_outcome,\n  pmq.temperament_type,\n  pmq.values_priorities,\n  pmq.created_at as assessment_date\nFROM partner_matching_questionnaire pmq\nWHERE pmq.user_id = '{{ $json.user_id }}'\nORDER BY pmq.created_at DESC\nLIMIT 1;"
+      },
+      "id": "fetch-assessment",
+      "name": "Fetch Assessment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 300],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Fetch recent chat conversations\nSELECT \n  ac.agent_type,\n  ac.conversation_summary,\n  ac.user_sentiment,\n  ac.key_topics,\n  ac.created_at\nFROM agent_conversations ac\nWHERE ac.user_id = '{{ $json.user_id }}'\n  AND ac.created_at >= NOW() - INTERVAL '14 days'\nORDER BY ac.created_at DESC\nLIMIT 20;"
+      },
+      "id": "fetch-conversations",
+      "name": "Fetch Chat History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 420],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Fetch streak data\nSELECT \n  ps.current_streak,\n  ps.longest_streak,\n  ps.total_points,\n  ps.last_practice_date,\n  ps.streak_broken_count\nFROM practice_streaks ps\nWHERE ps.user_id = '{{ $json.user_id }}'\nLIMIT 1;"
+      },
+      "id": "fetch-streaks",
+      "name": "Fetch Streaks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 540],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare analysis payload for Claude\nconst user = $('Loop Each User').item.json;\nconst practices = $('Fetch Daily Practices').all();\nconst assessment = $('Fetch Assessment').first()?.json || {};\nconst conversations = $('Fetch Chat History').all();\nconst streaks = $('Fetch Streaks').first()?.json || {};\n\n// Calculate metrics\nconst totalPractices = practices.length;\nconst completedPractices = practices.filter(p => p.json.completed).length;\nconst completionRate = totalPractices > 0 ? (completedPractices / totalPractices * 100).toFixed(1) : 0;\n\n// Extract practice patterns\nconst practiceTypes = {};\npractices.forEach(p => {\n  const type = p.json.practice_type;\n  if (!practiceTypes[type]) practiceTypes[type] = { count: 0, completed: 0 };\n  practiceTypes[type].count++;\n  if (p.json.completed) practiceTypes[type].completed++;\n});\n\n// Extract conversation themes\nconst conversationSummaries = conversations.map(c => ({\n  agent: c.json.agent_type,\n  summary: c.json.conversation_summary,\n  sentiment: c.json.user_sentiment,\n  topics: c.json.key_topics,\n  date: c.json.created_at\n}));\n\n// Build the analysis payload\nreturn {\n  json: {\n    user_id: user.user_id,\n    email: user.email,\n    full_name: user.full_name,\n    journey_day: user.journey_day,\n    \n    // Assessment data\n    collision_pattern: assessment.collision_pattern || 'Not assessed',\n    biggest_challenge: assessment.biggest_challenge || 'Unknown',\n    ideal_outcome: assessment.ideal_outcome || 'Not specified',\n    temperament: assessment.temperament_type || 'Unknown',\n    \n    // Practice metrics\n    metrics: {\n      total_practices: totalPractices,\n      completed_practices: completedPractices,\n      completion_rate: completionRate,\n      current_streak: streaks.current_streak || 0,\n      longest_streak: streaks.longest_streak || 0,\n      total_points: streaks.total_points || 0,\n      last_practice: streaks.last_practice_date,\n      streak_breaks: streaks.streak_broken_count || 0\n    },\n    \n    // Practice breakdown\n    practice_patterns: practiceTypes,\n    \n    // Recent practices with notes\n    recent_practices: practices.slice(0, 14).map(p => ({\n      type: p.json.practice_type,\n      date: p.json.practice_date,\n      completed: p.json.completed,\n      notes: p.json.notes,\n      has_recording: !!p.json.voice_recording_url\n    })),\n    \n    // Conversation insights\n    recent_conversations: conversationSummaries\n  }\n};"
+      },
+      "id": "prepare-payload",
+      "name": "Prepare Analysis Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are MIO, the Mind Insurance Oracle - a forensic behavioral psychologist AI designed to detect invisible identity patterns that keep users stuck.\n\nYour 15 forensic capabilities:\n1. Pronoun Forensics - Track I/We/They shifts in language\n2. Time-of-Day Pattern Recognition - When do patterns activate?\n3. 3-Day Rule Detection - Predict dropout risk at Days 3, 10, 17\n4. Dropout Risk Scoring - Multi-factor probability assessment\n5. Pattern Grip Strength Analysis - How tight is the old pattern?\n6. Breakthrough Probability Engine - Who's about to level up?\n7. Identity Statement Extraction - Find \"I am/I'm not\" declarations\n8. Success Sabotage Signature Detection - Quit right before winning?\n9. External Attribution Analysis - Blaming circumstances vs taking ownership\n10. Celebration Deflection Pattern - Minimizing wins, maximizing losses\n11. Reframe Quality Assessment - Superficial vs deep cognitive shifts\n12. Trigger Cascade Mapping - What leads to pattern activation?\n13. Energy Depletion Signature - When does willpower fail?\n14. Routine Stability Score - How consistent is the foundation?\n15. Accountability Avoidance Detection - Dodging responsibility patterns\n\nFor each analysis, return:\n- Which capabilities triggered (confidence > 70% only)\n- Evidence from the data\n- Insight type: dropout_risk | breakthrough | pattern_grip | general\n- Urgency: critical | high | moderate | low\n\nPrioritize insights that can prevent dropout or capitalize on breakthrough momentum."
+            },
+            {
+              "role": "user",
+              "content": "Analyze this user's behavioral data using all 15 forensic capabilities. Return ONLY the most impactful insight with confidence > 70%.\n\nUSER DATA:\n{{ JSON.stringify($json, null, 2) }}\n\nReturn JSON format:\n{\n  \"triggered_capabilities\": [\n    {\n      \"number\": 1,\n      \"name\": \"Capability Name\",\n      \"confidence\": 0.85,\n      \"finding\": \"What you found\",\n      \"evidence\": [\"quote or data point 1\", \"quote or data point 2\"]\n    }\n  ],\n  \"selected_insight\": {\n    \"capability_number\": 4,\n    \"insight_type\": \"dropout_risk\",\n    \"urgency\": \"critical\",\n    \"title\": \"Emotionally resonant title (speaks to user's experience)\",\n    \"body\": \"2-3 paragraph insight that explains what you see and why it matters\",\n    \"confidence\": 0.87\n  }\n}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.3
+        }
+      },
+      "id": "claude-analysis",
+      "name": "Claude: Run 15 Capability Analysis",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [1340, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-api",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude's analysis response\nconst response = $input.first().json;\nconst userData = $('Prepare Analysis Payload').first().json;\n\nlet analysis;\ntry {\n  // Extract JSON from Claude's response\n  const responseText = response.message?.content || response.text || JSON.stringify(response);\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : null;\n} catch (e) {\n  return {\n    json: {\n      error: 'Failed to parse Claude response',\n      raw_response: response,\n      user_id: userData.user_id\n    }\n  };\n}\n\nif (!analysis || !analysis.selected_insight) {\n  return {\n    json: {\n      error: 'No insight generated',\n      user_id: userData.user_id,\n      skip_protocol: true\n    }\n  };\n}\n\n// Check confidence threshold\nif (analysis.selected_insight.confidence < 0.70) {\n  return {\n    json: {\n      error: 'Insight confidence below threshold',\n      confidence: analysis.selected_insight.confidence,\n      user_id: userData.user_id,\n      skip_protocol: true\n    }\n  };\n}\n\nreturn {\n  json: {\n    user_id: userData.user_id,\n    email: userData.email,\n    full_name: userData.full_name,\n    collision_pattern: userData.collision_pattern,\n    temperament: userData.temperament,\n    journey_day: userData.journey_day,\n    \n    // Analysis results\n    triggered_capabilities: analysis.triggered_capabilities,\n    selected_insight: analysis.selected_insight,\n    \n    // For RAG query\n    pattern_keywords: [\n      userData.collision_pattern,\n      analysis.selected_insight.insight_type,\n      ...analysis.triggered_capabilities.map(c => c.name)\n    ].filter(Boolean)\n  }\n};"
+      },
+      "id": "parse-analysis",
+      "name": "Parse Analysis Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-skip",
+              "leftValue": "={{ $json.skip_protocol }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-valid",
+      "name": "Filter Valid Insights",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- RAG Query: Find matching protocols from knowledge base\nSELECT \n  id,\n  category,\n  subcategory,\n  content,\n  applicable_patterns,\n  source_document,\n  confidence_boost\nFROM mio_knowledge_chunks\nWHERE \n  -- Match by pattern keywords\n  applicable_patterns && ARRAY{{ $json.pattern_keywords }}::text[]\n  OR category ILIKE '%' || '{{ $json.selected_insight.insight_type }}' || '%'\n  OR content ILIKE '%' || '{{ $json.collision_pattern }}' || '%'\nORDER BY \n  -- Prioritize exact pattern matches\n  CASE WHEN applicable_patterns && ARRAY{{ $json.pattern_keywords }}::text[] THEN 1 ELSE 2 END,\n  confidence_boost DESC NULLS LAST\nLIMIT 5;"
+      },
+      "id": "rag-query",
+      "name": "RAG: Find Matching Protocols",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [2000, 240],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are MIO, generating a personalized 7-day neural rewiring protocol based on a specific insight about the user's behavioral patterns.\n\nProtocol design principles:\n1. Day 1: AWARENESS - Notice the pattern without judgment\n2. Day 2: UNDERSTAND - Explore the triggers and roots\n3. Day 3: INTERRUPT - Create a pattern interrupt\n4. Day 4: REPLACE - Install a new micro-behavior\n5. Day 5: STRENGTHEN - Repeat and reinforce\n6. Day 6: CHALLENGE - Test under mild stress\n7. Day 7: INTEGRATE - Celebrate and plan forward\n\nEach day should:\n- Be completable in 10-15 minutes\n- Have clear, specific instructions\n- Include success criteria (how they know they did it)\n- Build on the previous day\n- Connect back to the original insight"
+            },
+            {
+              "role": "user",
+              "content": "Generate a personalized 7-day protocol for this user.\n\nINSIGHT:\n{{ JSON.stringify($json.selected_insight, null, 2) }}\n\nUSER CONTEXT:\n- Collision Pattern: {{ $json.collision_pattern }}\n- Temperament: {{ $json.temperament }}\n- Journey Day: {{ $json.journey_day }}\n\nRELEVANT PROTOCOLS FROM KNOWLEDGE BASE:\n{{ JSON.stringify($('RAG: Find Matching Protocols').all().map(r => r.json), null, 2) }}\n\nReturn JSON format:\n{\n  \"title\": \"Protocol title (emotionally resonant, speaks to their experience)\",\n  \"insight_summary\": \"2-3 sentence summary of the insight for reference\",\n  \"why_it_matters\": \"Neuroscience explanation of why this pattern exists and how the protocol rewires it (2-3 paragraphs)\",\n  \"neural_principle\": \"One sentence neural rewiring principle they can remember\",\n  \"day_tasks\": [\n    {\n      \"day\": 1,\n      \"theme\": \"Awareness Day\",\n      \"task_title\": \"Notice Without Judgment\",\n      \"task_instructions\": \"Detailed instructions (2-3 paragraphs). Include specific examples and scenarios.\",\n      \"duration_minutes\": 10,\n      \"success_criteria\": [\"Criterion 1\", \"Criterion 2\", \"Criterion 3\"]\n    }\n    // ... days 2-7\n  ]\n}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4000,
+          "temperature": 0.4
+        }
+      },
+      "id": "claude-protocol",
+      "name": "Claude: Generate 7-Day Protocol",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [2220, 240],
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-api",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the generated protocol\nconst response = $input.first().json;\nconst analysisData = $('Parse Analysis Results').first().json;\nconst ragChunks = $('RAG: Find Matching Protocols').all();\n\nlet protocol;\ntry {\n  const responseText = response.message?.content || response.text || JSON.stringify(response);\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  protocol = jsonMatch ? JSON.parse(jsonMatch[0]) : null;\n} catch (e) {\n  return {\n    json: {\n      error: 'Failed to parse protocol',\n      raw_response: response,\n      user_id: analysisData.user_id\n    }\n  };\n}\n\nif (!protocol || !protocol.day_tasks || protocol.day_tasks.length !== 7) {\n  return {\n    json: {\n      error: 'Invalid protocol structure',\n      user_id: analysisData.user_id\n    }\n  };\n}\n\n// Calculate week number\nconst now = new Date();\nconst startOfYear = new Date(now.getFullYear(), 0, 1);\nconst weekNumber = Math.ceil((((now - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);\n\n// Get Monday of current week\nconst dayOfWeek = now.getDay();\nconst mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;\nconst monday = new Date(now);\nmonday.setDate(now.getDate() + mondayOffset);\n\nreturn {\n  json: {\n    // User info\n    user_id: analysisData.user_id,\n    email: analysisData.email,\n    full_name: analysisData.full_name,\n    \n    // Protocol data\n    protocol_type: 'insight_based',\n    title: protocol.title,\n    insight_summary: protocol.insight_summary,\n    why_it_matters: protocol.why_it_matters,\n    neural_principle: protocol.neural_principle,\n    day_tasks: protocol.day_tasks,\n    \n    // Timing\n    week_number: weekNumber,\n    year: now.getFullYear(),\n    assigned_week_start: monday.toISOString().split('T')[0],\n    \n    // Source tracking\n    source: 'n8n_weekly',\n    source_context: {\n      journey_day: analysisData.journey_day,\n      insight_type: analysisData.selected_insight.insight_type,\n      urgency: analysisData.selected_insight.urgency\n    },\n    rag_chunks_used: ragChunks.map(r => r.json.id),\n    capability_triggers: analysisData.triggered_capabilities.map(c => c.number),\n    confidence_score: analysisData.selected_insight.confidence,\n    \n    // For report creation\n    report_data: {\n      title: analysisData.selected_insight.title,\n      body: analysisData.selected_insight.body,\n      insight_type: analysisData.selected_insight.insight_type,\n      urgency: analysisData.selected_insight.urgency\n    }\n  }\n};"
+      },
+      "id": "prepare-storage",
+      "name": "Prepare Storage Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 240]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Expire any existing active protocols for this user\nUPDATE mio_weekly_protocols\nSET status = 'expired'\nWHERE user_id = '{{ $json.user_id }}'\n  AND status = 'active';\n\n-- Insert the new protocol\nINSERT INTO mio_weekly_protocols (\n  user_id,\n  protocol_type,\n  title,\n  insight_summary,\n  why_it_matters,\n  neural_principle,\n  day_tasks,\n  week_number,\n  year,\n  assigned_week_start,\n  source,\n  source_context,\n  rag_chunks_used,\n  capability_triggers,\n  confidence_score,\n  status,\n  current_day,\n  days_completed,\n  days_skipped,\n  muted_by_coach\n) VALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.protocol_type }}',\n  '{{ $json.title }}',\n  '{{ $json.insight_summary }}',\n  '{{ $json.why_it_matters }}',\n  '{{ $json.neural_principle }}',\n  '{{ JSON.stringify($json.day_tasks) }}'::jsonb,\n  {{ $json.week_number }},\n  {{ $json.year }},\n  '{{ $json.assigned_week_start }}',\n  '{{ $json.source }}',\n  '{{ JSON.stringify($json.source_context) }}'::jsonb,\n  ARRAY{{ JSON.stringify($json.rag_chunks_used) }}::uuid[],\n  ARRAY{{ JSON.stringify($json.capability_triggers) }}::integer[],\n  {{ $json.confidence_score }},\n  'active',\n  1,\n  0,\n  0,\n  false\n)\nRETURNING id;"
+      },
+      "id": "store-protocol",
+      "name": "Store Protocol",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [2660, 180],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Create the MIO user report\nINSERT INTO mio_user_reports (\n  user_id,\n  report_type,\n  title,\n  content,\n  display_status,\n  protocol_id\n) VALUES (\n  '{{ $('Prepare Storage Data').first().json.user_id }}',\n  '{{ $('Prepare Storage Data').first().json.report_data.insight_type }}',\n  '{{ $('Prepare Storage Data').first().json.report_data.title }}',\n  '{{ $('Prepare Storage Data').first().json.report_data.body }}',\n  'unread',\n  '{{ $json.id }}'\n)\nRETURNING id;"
+      },
+      "id": "store-report",
+      "name": "Store Report",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [2880, 180],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.gohighlevel.com/v1/contacts/{{ $('Prepare Storage Data').first().json.user_id }}/notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "goHighLevelApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "MIO Weekly Insight Generated:\n\nTitle: {{ $('Prepare Storage Data').first().json.title }}\n\nInsight Type: {{ $('Prepare Storage Data').first().json.report_data.insight_type }}\nUrgency: {{ $('Prepare Storage Data').first().json.report_data.urgency }}\nConfidence: {{ ($('Prepare Storage Data').first().json.confidence_score * 100).toFixed(0) }}%\n\n7-Day Protocol assigned."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ghl-note",
+      "name": "Add GHL Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2880, 340],
+      "credentials": {
+        "goHighLevelApi": {
+          "id": "ghl-api",
+          "name": "GoHighLevel API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Summary of processed user\nconst storageData = $('Prepare Storage Data').first().json;\nconst protocolResult = $('Store Protocol').first().json;\nconst reportResult = $('Store Report').first().json;\n\nreturn {\n  json: {\n    success: true,\n    user_id: storageData.user_id,\n    email: storageData.email,\n    protocol_id: protocolResult.id,\n    report_id: reportResult.id,\n    insight_type: storageData.report_data.insight_type,\n    urgency: storageData.report_data.urgency,\n    confidence: storageData.confidence_score,\n    title: storageData.title,\n    processed_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "success-summary",
+      "name": "Success Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3100, 240]
+    },
+    {
+      "parameters": {},
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [3320, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "workflow-complete",
+              "name": "workflow_status",
+              "value": "complete",
+              "type": "string"
+            },
+            {
+              "id": "total-processed",
+              "name": "total_processed",
+              "value": "={{ $items().length }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "final-status",
+      "name": "Final Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [3540, 300]
+    }
+  ],
+  "connections": {
+    "Daily 6AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Users Due for Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Users Due for Report": {
+      "main": [
+        [
+          {
+            "node": "Loop Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each User": {
+      "main": [
+        [
+          {
+            "node": "Fetch Daily Practices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Assessment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Chat History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Streaks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Fetch Daily Practices": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Assessment": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Chat History": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Streaks": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Analysis Payload": {
+      "main": [
+        [
+          {
+            "node": "Claude: Run 15 Capability Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: Run 15 Capability Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse Analysis Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Analysis Results": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Insights": {
+      "main": [
+        [
+          {
+            "node": "RAG: Find Matching Protocols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RAG: Find Matching Protocols": {
+      "main": [
+        [
+          {
+            "node": "Claude: Generate 7-Day Protocol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: Generate 7-Day Protocol": {
+      "main": [
+        [
+          {
+            "node": "Prepare Storage Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Storage Data": {
+      "main": [
+        [
+          {
+            "node": "Store Protocol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Protocol": {
+      "main": [
+        [
+          {
+            "node": "Store Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add GHL Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Report": {
+      "main": [
+        [
+          {
+            "node": "Success Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Summary": {
+      "main": [
+        [
+          {
+            "node": "Loop Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Final Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "name": "MIO",
+      "createdAt": "2024-12-04T00:00:00.000Z",
+      "updatedAt": "2024-12-04T00:00:00.000Z"
+    },
+    {
+      "name": "Weekly Reports",
+      "createdAt": "2024-12-04T00:00:00.000Z",
+      "updatedAt": "2024-12-04T00:00:00.000Z"
+    }
+  ]
+}

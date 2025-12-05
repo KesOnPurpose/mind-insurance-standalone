@@ -46,6 +46,8 @@ import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePract
 import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
 import WeeklyInsightsPage from "./pages/mind-insurance/WeeklyInsightsPage";
 import VaultPage from "./pages/mind-insurance/VaultPage";
+import InsightRevealPage from "./pages/mind-insurance/InsightRevealPage";
+import ProtocolDetailPage from "./pages/mind-insurance/ProtocolDetailPage";
 import PatternCheck from "./pages/mind-insurance/practices/PatternCheck";
 import ReinforceIdentity from "./pages/mind-insurance/practices/ReinforceIdentity";
 import OutcomeVisualization from "./pages/mind-insurance/practices/OutcomeVisualization";
@@ -102,6 +104,8 @@ const App = () => {
                       <Route path="/mind-insurance/championship" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/insights" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><WeeklyInsightsPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/vault" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><VaultPage /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/insight/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><InsightRevealPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/protocol/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><ProtocolDetailPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
                       {/* Mind Insurance Practice Routes */}
                       <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AccessGate><AssessmentGuard><SidebarLayout><PatternCheck /></SidebarLayout></AssessmentGuard></AccessGate></ProtectedRoute>} />
