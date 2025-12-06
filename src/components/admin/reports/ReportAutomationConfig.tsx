@@ -61,6 +61,9 @@ interface MIOReportAutomation {
   next_run_at: string | null;
   created_at: string;
   updated_at: string;
+  // Phase 2: Journey-aware targeting
+  journey_mode: 'immediate' | 'milestone' | null;
+  milestone_days: number[] | null;
 }
 
 interface AutomationFormData {
@@ -71,6 +74,9 @@ interface AutomationFormData {
   schedule_type: 'manual' | 'daily' | 'weekly' | 'event_based';
   schedule_config: Record<string, any>;
   n8n_webhook_url: string;
+  // Phase 2: Journey-aware targeting
+  journey_mode: 'immediate' | 'milestone';
+  milestone_days: number[];
 }
 
 const SCHEDULE_TYPE_CONFIG = {
@@ -97,6 +103,26 @@ const DAYS_OF_WEEK = [
   { value: '6', label: 'Saturday' },
 ];
 
+// Phase 2: Journey mode configuration
+const JOURNEY_MODE_CONFIG = {
+  immediate: {
+    label: 'Immediate',
+    description: 'Run for all users in target group right now',
+  },
+  milestone: {
+    label: 'At Milestones',
+    description: 'Only run for users at specific journey milestones (Day 7, 14, 21, 28)',
+  },
+};
+
+const MILESTONE_DAY_OPTIONS = [
+  { value: 7, label: 'Day 7', description: 'End of Week 1' },
+  { value: 14, label: 'Day 14', description: 'End of Week 2' },
+  { value: 21, label: 'Day 21', description: 'End of Week 3' },
+  { value: 28, label: 'Day 28', description: 'End of Week 4' },
+  { value: 30, label: 'Day 30', description: 'Month Complete' },
+];
+
 export function ReportAutomationConfig() {
   const { toast } = useToast();
 
@@ -120,6 +146,9 @@ export function ReportAutomationConfig() {
     schedule_type: 'manual',
     schedule_config: { time: '09:00' },
     n8n_webhook_url: DEFAULT_WEBHOOK_URL,
+    // Phase 2: Journey mode defaults
+    journey_mode: 'immediate',
+    milestone_days: [7, 14, 21, 28],
   });
 
   // Fetch automations on mount
@@ -166,6 +195,9 @@ export function ReportAutomationConfig() {
         schedule_config: formData.schedule_config,
         n8n_webhook_url: formData.n8n_webhook_url || null,
         is_active: true,
+        // Phase 2: Journey mode fields
+        journey_mode: formData.journey_mode,
+        milestone_days: formData.milestone_days,
       });
 
       if (error) throw error;
@@ -197,6 +229,9 @@ export function ReportAutomationConfig() {
           schedule_type: formData.schedule_type,
           schedule_config: formData.schedule_config,
           n8n_webhook_url: formData.n8n_webhook_url || null,
+          // Phase 2: Journey mode fields
+          journey_mode: formData.journey_mode,
+          milestone_days: formData.milestone_days,
         })
         .eq('id', editingAutomation.id);
 
@@ -267,6 +302,9 @@ export function ReportAutomationConfig() {
           target_type: automation.target_type,
           target_config: automation.target_config,
           triggered_by: 'admin_manual',
+          // Phase 2: Journey mode parameters
+          journey_mode: automation.journey_mode || 'immediate',
+          milestone_days: automation.milestone_days || [7, 14, 21, 28],
         }),
       });
 
@@ -301,6 +339,9 @@ export function ReportAutomationConfig() {
       schedule_type: 'manual',
       schedule_config: { time: '09:00' },
       n8n_webhook_url: DEFAULT_WEBHOOK_URL,
+      // Phase 2: Reset journey mode
+      journey_mode: 'immediate',
+      milestone_days: [7, 14, 21, 28],
     });
     setUserCount(null);
   };
@@ -315,6 +356,9 @@ export function ReportAutomationConfig() {
       schedule_type: automation.schedule_type,
       schedule_config: automation.schedule_config || { time: '09:00' },
       n8n_webhook_url: automation.n8n_webhook_url || '',
+      // Phase 2: Load journey mode from automation
+      journey_mode: automation.journey_mode || 'immediate',
+      milestone_days: automation.milestone_days || [7, 14, 21, 28],
     });
   };
 
@@ -406,6 +450,11 @@ export function ReportAutomationConfig() {
                       <Badge variant="outline">
                         {SCHEDULE_TYPE_CONFIG[automation.schedule_type].label}
                       </Badge>
+                      {automation.journey_mode === 'milestone' && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                          Milestones: {(automation.milestone_days || [7, 14, 21, 28]).map(d => `D${d}`).join(', ')}
+                        </Badge>
+                      )}
                     </div>
 
                     {automation.description && (
@@ -564,6 +613,81 @@ export function ReportAutomationConfig() {
                 Estimated target: <strong>{userCount}</strong> user{userCount !== 1 ? 's' : ''}
               </div>
             )}
+
+            {/* Phase 2: Journey Mode Selection */}
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+              <div className="space-y-2">
+                <Label>Journey Mode</Label>
+                <p className="text-xs text-muted-foreground">
+                  Control when reports are generated based on user journey progress
+                </p>
+                <Select
+                  value={formData.journey_mode}
+                  onValueChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      journey_mode: v as 'immediate' | 'milestone',
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(JOURNEY_MODE_CONFIG).map(([mode, config]) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div className="flex flex-col">
+                          <span>{config.label}</span>
+                          <span className="text-xs text-muted-foreground">{config.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Milestone Days Picker - only shown when milestone mode selected */}
+              {formData.journey_mode === 'milestone' && (
+                <div className="space-y-2">
+                  <Label>Milestone Days</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select which journey milestones trigger report generation
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MILESTONE_DAY_OPTIONS.map((option) => {
+                      const isSelected = formData.milestone_days.includes(option.value);
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            const newDays = isSelected
+                              ? formData.milestone_days.filter((d) => d !== option.value)
+                              : [...formData.milestone_days, option.value].sort((a, b) => a - b);
+                            setFormData({ ...formData, milestone_days: newDays });
+                          }}
+                          className={`px-3 py-2 rounded-md border text-sm transition-colors ${
+                            isSelected
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background hover:bg-muted border-input'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center">
+                            <span className="font-medium">{option.label}</span>
+                            <span className="text-xs opacity-70">{option.description}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {formData.milestone_days.length === 0 && (
+                    <p className="text-xs text-amber-600">
+                      Select at least one milestone day
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Schedule Type */}
             <div className="space-y-2">
