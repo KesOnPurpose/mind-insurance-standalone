@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,7 +8,17 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Answer {
   questionId: string;
@@ -16,18 +26,138 @@ interface Answer {
   points: Record<string, number>;
 }
 
+// LocalStorage key for avatar assessment progress
+const AVATAR_STORAGE_KEY = 'avatar_assessment_progress';
+
+interface SavedProgress {
+  currentStep: number;
+  answers: Answer[];
+  userId?: string;
+  timestamp: string;
+}
+
+// Helper functions for localStorage persistence
+const saveProgress = (currentStep: number, answers: Answer[], userId?: string) => {
+  try {
+    const progress: SavedProgress = {
+      currentStep,
+      answers,
+      userId,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(progress));
+  } catch (error) {
+    console.error('Failed to save avatar assessment progress:', error);
+  }
+};
+
+const loadProgress = (userId?: string): SavedProgress | null => {
+  try {
+    const stored = localStorage.getItem(AVATAR_STORAGE_KEY);
+    if (!stored) return null;
+
+    const progress = JSON.parse(stored) as SavedProgress;
+
+    // Validate the loaded data
+    if (!Array.isArray(progress.answers) || typeof progress.currentStep !== 'number') {
+      return null;
+    }
+
+    // Check if progress belongs to current user (or is for guest)
+    if (userId && progress.userId && progress.userId !== userId) {
+      return null;
+    }
+
+    // Check if progress is older than 7 days
+    const savedTime = new Date(progress.timestamp);
+    const now = new Date();
+    const daysDiff = (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysDiff > 7) {
+      clearProgress();
+      return null;
+    }
+
+    return progress;
+  } catch (error) {
+    console.error('Failed to load avatar assessment progress:', error);
+    return null;
+  }
+};
+
+const clearProgress = () => {
+  try {
+    localStorage.removeItem(AVATAR_STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear avatar assessment progress:', error);
+  }
+};
+
+const getTimeAgo = (timestamp: string): string => {
+  const savedTime = new Date(timestamp);
+  const now = new Date();
+  const minutesAgo = Math.floor((now.getTime() - savedTime.getTime()) / (1000 * 60));
+
+  if (minutesAgo < 1) return 'just now';
+  if (minutesAgo === 1) return '1 minute ago';
+  if (minutesAgo < 60) return `${minutesAgo} minutes ago`;
+
+  const hoursAgo = Math.floor(minutesAgo / 60);
+  if (hoursAgo === 1) return '1 hour ago';
+  if (hoursAgo < 24) return `${hoursAgo} hours ago`;
+
+  const daysAgo = Math.floor(hoursAgo / 24);
+  if (daysAgo === 1) return '1 day ago';
+  return `${daysAgo} days ago`;
+};
+
 export default function AvatarAssessmentPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedProgressInfo, setSavedProgressInfo] = useState<{ timeAgo?: string }>({});
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Assessment questions from identity_collision_questions.txt
+  // Check for saved progress on component mount
+  useEffect(() => {
+    const progress = loadProgress(user?.id);
+    if (progress && progress.answers.length > 0) {
+      setSavedProgressInfo({ timeAgo: getTimeAgo(progress.timestamp) });
+      setShowResumeDialog(true);
+    }
+  }, [user?.id]);
+
+  // Auto-save progress whenever answers or step changes
+  useEffect(() => {
+    if (answers.length > 0 && !isSubmitting) {
+      saveProgress(currentStep, answers, user?.id);
+    }
+  }, [answers, currentStep, user?.id, isSubmitting]);
+
+  const handleResume = () => {
+    const progress = loadProgress(user?.id);
+    if (progress) {
+      setAnswers(progress.answers);
+      setCurrentStep(progress.currentStep);
+    }
+    setShowResumeDialog(false);
+  };
+
+  const handleStartFresh = () => {
+    clearProgress();
+    setShowResumeDialog(false);
+    setCurrentStep(0);
+    setAnswers([]);
+  };
+
+  // Assessment questions - DEEP pattern analysis and temperament
+  // Note: Basic pattern detection moved to Identity Collision Assessment (quick version)
+  // This assessment goes deeper into pattern history and determines temperament
   const assessmentSteps = [
     {
-      title: 'Pattern Confirmation',
+      title: 'Deep Pattern Analysis',
       questions: [
         {
           id: 'q1',
@@ -41,31 +171,6 @@ export default function AvatarAssessmentPage() {
         },
         {
           id: 'q2',
-          text: 'The feeling that shows up MOST often when you\'re trying to level up is:',
-          options: [
-            { value: 'A', label: 'Guilt or fear that "people like me don\'t do that"', points: { past_prison: 3 } },
-            { value: 'B', label: 'Exhaustion or overwhelm that makes execution impossible', points: { success_sabotage: 3 } },
-            { value: 'C', label: 'Emptiness or dissatisfaction despite objective progress', points: { compass_crisis: 3 } },
-            { value: 'D', label: 'Excitement and genuine motivation', points: {} }
-          ]
-        },
-        {
-          id: 'q3',
-          text: 'The voice in your head most often says:',
-          options: [
-            { value: 'A', label: 'Remember who you really are" or "Don\'t get too big for your britches', points: { past_prison: 3 } },
-            { value: 'B', label: 'You\'re too tired" or "This is too much', points: { success_sabotage: 3 } },
-            { value: 'C', label: 'Everyone else is ahead" or "What\'s the point?', points: { compass_crisis: 3 } },
-            { value: 'D', label: 'You\'ve got this" or "Let\'s go', points: {} }
-          ]
-        }
-      ]
-    },
-    {
-      title: 'Pattern History',
-      questions: [
-        {
-          id: 'q4',
           text: 'If you\'re honest, you\'ve repeated this pattern before:',
           options: [
             { value: 'A', label: 'Building something good, then blowing it up or walking away right before breakthrough', points: { past_prison: 3 } },
@@ -75,7 +180,7 @@ export default function AvatarAssessmentPage() {
           ]
         },
         {
-          id: 'q5',
+          id: 'q3',
           text: 'When you hit a wall or crisis point, the real issue underneath is usually:',
           options: [
             { value: 'A', label: 'Fear of betraying my roots or becoming someone my past self wouldn\'t recognize', points: { past_prison: 3 } },
@@ -87,10 +192,10 @@ export default function AvatarAssessmentPage() {
       ]
     },
     {
-      title: 'Temperament',
+      title: 'Your Temperament',
       questions: [
         {
-          id: 'q6',
+          id: 'q4',
           text: 'When facing a challenge, you naturally:',
           options: [
             { value: 'A', label: 'Attack it head-on with intensity and determination', points: { warrior: 3 } },
@@ -100,13 +205,23 @@ export default function AvatarAssessmentPage() {
           ]
         },
         {
-          id: 'q7',
+          id: 'q5',
           text: 'Your greatest strength is:',
           options: [
             { value: 'A', label: 'Your ability to push through obstacles and compete', points: { warrior: 2 } },
             { value: 'B', label: 'Your wisdom and ability to see deeper meanings', points: { sage: 2 } },
             { value: 'C', label: 'Your ability to build systems and create structure', points: { builder: 2 } },
             { value: 'D', label: 'Your ability to connect with and inspire others', points: { connector: 2 } }
+          ]
+        },
+        {
+          id: 'q6',
+          text: 'When you\'re stressed, you tend to:',
+          options: [
+            { value: 'A', label: 'Get aggressive or competitive', points: { warrior: 2 } },
+            { value: 'B', label: 'Withdraw and overthink', points: { sage: 2 } },
+            { value: 'C', label: 'Focus on tasks and systems to regain control', points: { builder: 2 } },
+            { value: 'D', label: 'Seek support from others or distract through socializing', points: { connector: 2 } }
           ]
         }
       ]
@@ -186,10 +301,10 @@ export default function AvatarAssessmentPage() {
       const scores = calculateScores();
       const { primaryPattern, temperament } = determineavatarType(scores);
       
-      // Save to database
+      // Save to database - use upsert to allow retaking assessment
       const { error } = await supabase
         .from('avatar_assessments')
-        .insert({
+        .upsert({
           user_id: user.id,
           avatar_type: `${primaryPattern}_${temperament}`,
           primary_pattern: primaryPattern,
@@ -203,16 +318,38 @@ export default function AvatarAssessmentPage() {
             builder: scores.builder,
             connector: scores.connector
           },
-          completed_at: new Date().toISOString()
-        });
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
       
       if (error) throw error;
-      
+
+      // Also update user_profiles with the new avatar data
+      await supabase
+        .from('user_profiles')
+        .update({
+          avatar_type: `${primaryPattern}_${temperament}`,
+          temperament: temperament,
+          collision_patterns: {
+            primary_pattern: primaryPattern,
+            past_prison_score: scores.past_prison,
+            success_sabotage_score: scores.success_sabotage,
+            compass_crisis_score: scores.compass_crisis,
+            sub_patterns: {}
+          },
+          assessment_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      // Clear localStorage after successful submission
+      clearProgress();
+
       toast({
         title: 'Assessment Complete! 🎯',
-        description: 'Your avatar profile has been created.',
+        description: 'Your avatar profile has been updated.',
       });
-      
+
       navigate('/dashboard');
       
     } catch (error) {
@@ -231,6 +368,29 @@ export default function AvatarAssessmentPage() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      {/* Resume Progress Dialog */}
+      <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Resume Your Assessment?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              We found a saved assessment from {savedProgressInfo.timeAgo}. Would you like to continue where you left off or start fresh?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleStartFresh}>
+              Start Fresh
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleResume}>
+              Resume Progress
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="max-w-2xl mx-auto py-8">
         {/* Header */}
         <div className="mb-8">

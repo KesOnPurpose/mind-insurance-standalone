@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Trophy, Brain, Mic } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, Brain, Mic, ClipboardCheck } from 'lucide-react';
 import { useVaultRecordings } from '@/hooks/useVaultRecordings';
 import { useVaultPractices } from '@/hooks/useVaultPractices';
+import { useVaultAssessments } from '@/hooks/useVaultAssessments';
 import { VaultStats } from '@/components/vault/VaultStats';
 import { RecordingList } from '@/components/vault/RecordingList';
 import { PatternList } from '@/components/vault/PatternList';
 import { VictoryList } from '@/components/vault/VictoryList';
+import { AssessmentList } from '@/components/vault/AssessmentList';
 
 const VaultPage = () => {
   const navigate = useNavigate();
@@ -31,11 +33,18 @@ const VaultPage = () => {
     error: practicesError
   } = useVaultPractices();
 
+  // Assessments from various assessment tables
+  const {
+    data: assessmentsData,
+    isLoading: assessmentsLoading,
+  } = useVaultAssessments();
+
   const patterns = practicesData?.patterns || [];
   const victories = practicesData?.victories || [];
   const patternStats = practicesData?.patternStats || { caught: 0, total: 0, successRate: 0 };
+  const assessments = assessmentsData?.assessments || [];
 
-  const isLoading = recordingsLoading || practicesLoading;
+  const isLoading = recordingsLoading || practicesLoading || assessmentsLoading;
   const error = recordingsError || practicesError;
 
   if (error) {
@@ -124,6 +133,13 @@ const VaultPage = () => {
                 {victories.length}
               </span>
             </TabsTrigger>
+            <TabsTrigger value="assessments" className="gap-1.5 data-[state=active]:bg-purple-500 data-[state=active]:text-white text-gray-300">
+              <ClipboardCheck className="w-4 h-4" />
+              Assessments
+              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+                {assessments.length}
+              </span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Recordings Tab */}
@@ -150,6 +166,14 @@ const VaultPage = () => {
             <VictoryList
               victories={victories}
               isLoading={practicesLoading}
+            />
+          </TabsContent>
+
+          {/* Assessments Tab */}
+          <TabsContent value="assessments" className="mt-4">
+            <AssessmentList
+              assessments={assessments}
+              isLoading={assessmentsLoading}
             />
           </TabsContent>
         </Tabs>
