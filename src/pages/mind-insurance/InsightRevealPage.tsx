@@ -1,19 +1,21 @@
 /**
  * InsightRevealPage
  * Phase 27: Full-screen "Insight Reveal" experience
+ * Phase 29: Added swipeable 4-part card UI for mobile-friendly insight reveal
  *
  * This page creates a ritual moment when MIO delivers a new weekly insight.
- * Users see:
- * 1. The insight title (emotionally resonant)
- * 2. "Why This Matters" (neuroscience explanation)
- * 3. 7-day protocol preview (all days visible)
- * 4. "Start Day 1" CTA
+ * Users see (swipeable cards):
+ * 1. The Pattern - What MIO detected
+ * 2. Why It Happens - Accessible neuroscience
+ * 3. Your Protocol - 7-day plan preview
+ * 4. The Question - Perspective shift
+ * 5. "Start Day 1" CTA
  */
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Brain, Calendar, ChevronDown, ChevronUp, Play, Clock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Brain, Calendar, ChevronDown, ChevronUp, Play, Clock, CheckCircle2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,9 @@ import {
   startProtocol,
 } from '@/services/mioInsightProtocolService';
 import type { MIOInsightProtocolWithProgress, MIOInsightDayTask } from '@/types/protocol';
+import { SwipeableInsightCards } from '@/components/mind-insurance/SwipeableInsightCards';
+
+type ViewMode = 'swipeable' | 'classic';
 
 export default function InsightRevealPage() {
   const { protocolId } = useParams<{ protocolId: string }>();
@@ -36,6 +41,7 @@ export default function InsightRevealPage() {
   const [showWhyItMatters, setShowWhyItMatters] = useState(false);
   const [showAllDays, setShowAllDays] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('swipeable'); // Default to swipeable cards
 
   useEffect(() => {
     async function loadProtocol() {
@@ -108,10 +114,22 @@ export default function InsightRevealPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
-            <Sparkles className="w-3 h-3 mr-1" />
-            New Insight
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'swipeable' ? 'classic' : 'swipeable')}
+              className="text-slate-400 hover:text-white"
+              title={viewMode === 'swipeable' ? 'Switch to classic view' : 'Switch to card view'}
+            >
+              <Layers className="w-4 h-4" />
+            </Button>
+            <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+              <Sparkles className="w-3 h-3 mr-1" />
+              New Insight
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -154,106 +172,125 @@ export default function InsightRevealPage() {
           </h1>
         </motion.div>
 
-        {/* Insight Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
-        >
-          <Card className="bg-slate-800/50 border-slate-700/50 p-6">
-            <p className="text-slate-300 text-lg leading-relaxed">
-              {protocol.insight_summary}
-            </p>
-          </Card>
-        </motion.div>
-
-        {/* Why It Matters (Collapsible) */}
-        {protocol.why_it_matters && (
+        {/* View Mode: Swipeable Cards (Default) */}
+        {viewMode === 'swipeable' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1, duration: 0.6 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
           >
-            <Collapsible open={showWhyItMatters} onOpenChange={setShowWhyItMatters}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between text-slate-400 hover:text-white hover:bg-slate-800/50"
-                >
-                  <span className="flex items-center">
-                    <Brain className="w-4 h-4 mr-2 text-cyan-400" />
-                    Why This Matters (The Neuroscience)
-                  </span>
-                  {showWhyItMatters ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Card className="bg-slate-800/30 border-slate-700/30 p-6 mt-2">
-                  <p className="text-slate-400 leading-relaxed">
-                    {protocol.why_it_matters}
-                  </p>
-                  {protocol.neural_principle && (
-                    <div className="mt-4 pt-4 border-t border-slate-700/50">
-                      <p className="text-sm text-cyan-400 font-medium mb-2">
-                        Neural Rewiring Principle:
-                      </p>
-                      <p className="text-slate-300 italic">
-                        "{protocol.neural_principle}"
-                      </p>
-                    </div>
-                  )}
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
+            <SwipeableInsightCards
+              protocol={protocol}
+              showNavigation={true}
+            />
           </motion.div>
         )}
 
-        {/* 7-Day Protocol Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3, duration: 0.6 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-cyan-400" />
-              Your 7-Day Protocol
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAllDays(!showAllDays)}
-              className="text-slate-400 hover:text-white"
+        {/* View Mode: Classic (Original Layout) */}
+        {viewMode === 'classic' && (
+          <>
+            {/* Insight Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.6 }}
             >
-              {showAllDays ? 'Collapse' : 'Expand All'}
-            </Button>
-          </div>
+              <Card className="bg-slate-800/50 border-slate-700/50 p-6">
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  {protocol.insight_summary}
+                </p>
+              </Card>
+            </motion.div>
 
-          <AnimatePresence>
-            {showAllDays && (
+            {/* Why It Matters (Collapsible) */}
+            {protocol.why_it_matters && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-3"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1, duration: 0.6 }}
               >
-                {protocol.day_tasks.map((task, index) => (
-                  <DayCard
-                    key={task.day}
-                    task={task}
-                    isFirst={index === 0}
-                    delay={index * 0.1}
-                  />
-                ))}
+                <Collapsible open={showWhyItMatters} onOpenChange={setShowWhyItMatters}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    >
+                      <span className="flex items-center">
+                        <Brain className="w-4 h-4 mr-2 text-cyan-400" />
+                        Why This Matters (The Neuroscience)
+                      </span>
+                      {showWhyItMatters ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="bg-slate-800/30 border-slate-700/30 p-6 mt-2">
+                      <p className="text-slate-400 leading-relaxed">
+                        {protocol.why_it_matters}
+                      </p>
+                      {protocol.neural_principle && (
+                        <div className="mt-4 pt-4 border-t border-slate-700/50">
+                          <p className="text-sm text-cyan-400 font-medium mb-2">
+                            Neural Rewiring Principle:
+                          </p>
+                          <p className="text-slate-300 italic">
+                            "{protocol.neural_principle}"
+                          </p>
+                        </div>
+                      )}
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
               </motion.div>
             )}
-          </AnimatePresence>
-        </motion.div>
+
+            {/* 7-Day Protocol Preview */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.3, duration: 0.6 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-cyan-400" />
+                  Your 7-Day Protocol
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllDays(!showAllDays)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  {showAllDays ? 'Collapse' : 'Expand All'}
+                </Button>
+              </div>
+
+              <AnimatePresence>
+                {showAllDays && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-3"
+                  >
+                    {protocol.day_tasks.map((task, index) => (
+                      <DayCard
+                        key={task.day}
+                        task={task}
+                        isFirst={index === 0}
+                        delay={index * 0.1}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </>
+        )}
 
         {/* CTA Buttons */}
         <motion.div
