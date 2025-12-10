@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain, Sparkles, BookOpen } from 'lucide-react';
+import { Shield, Calendar, Trophy, Play, BookOpen, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +10,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 import { TodayProtocolTask, ProtocolTaskModal } from '@/components/mind-insurance/TodayProtocolTask';
 import { getTodayProtocolTask } from '@/services/mioInsightProtocolService';
+import { getTodayInTimezone } from '@/utils/timezoneUtils';
 import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
+
+// V2 Coach Protocols
+import { CoachProtocolTabs } from '@/components/mind-insurance/CoachProtocolTabs';
+import { useCoachProtocols } from '@/hooks/useCoachProtocols';
+import { useCoachProtocolTasks } from '@/hooks/useCoachProtocolTasks';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -31,6 +37,19 @@ export default function MindInsuranceHub() {
   const [loading, setLoading] = useState(true);
   const [protocolTask, setProtocolTask] = useState<TodayProtocolTaskType | null>(null);
   const [showProtocolModal, setShowProtocolModal] = useState(false);
+
+  // V2 Coach Protocols hooks
+  const { protocols: coachProtocols, isLoading: protocolsLoading } = useCoachProtocols();
+  const {
+    todayTasks,
+    isLoading: tasksLoading,
+    isSaving: tasksSaving,
+    completeTaskHandler,
+    refetch: refetchTasks,
+  } = useCoachProtocolTasks();
+
+  // Check if user has any active coach protocols
+  const hasCoachProtocols = coachProtocols.primary !== null || coachProtocols.secondary !== null;
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -56,7 +75,7 @@ export default function MindInsuranceHub() {
     // Show modal on first open of day if there's an incomplete task
     if (task && !task.is_completed) {
       const lastShownKey = `mio_protocol_modal_${user.id}`;
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayInTimezone();
       const lastShown = localStorage.getItem(lastShownKey);
 
       if (lastShown !== today) {
@@ -76,7 +95,7 @@ export default function MindInsuranceHub() {
   const fetchDailyStatus = async () => {
     if (!user?.id) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayInTimezone();
 
     const { data, error } = await supabase
       .from('daily_practices')
@@ -136,21 +155,21 @@ export default function MindInsuranceHub() {
     <div className="min-h-screen bg-mi-navy">
       <div className="container mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
-              <Shield className="w-8 h-8 text-mi-cyan" />
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
+              <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
               Mind Insurance
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-400 mt-1">
               Your daily PROTECT practice hub
             </p>
           </div>
           <Badge
             variant="outline"
-            className={`text-lg px-4 py-2 border-mi-navy-light ${getChampionshipColor(userStats.championshipLevel)}`}
+            className={`text-sm sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 border-mi-navy-light w-fit ${getChampionshipColor(userStats.championshipLevel)}`}
           >
-            <Trophy className="w-4 h-4 mr-2" />
+            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             {userStats.championshipLevel}
           </Badge>
         </div>
@@ -193,7 +212,28 @@ export default function MindInsuranceHub() {
           </div>
         </Card>
 
-        {/* Today's Protocol Task (if active) */}
+        {/* Coach Protocols Section (V2) */}
+        {hasCoachProtocols && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-mi-gold" />
+              <h2 className="text-lg font-semibold text-white">Coach Protocols</h2>
+            </div>
+            <CoachProtocolTabs
+              protocols={coachProtocols}
+              todayTasks={todayTasks}
+              onCompleteTask={completeTaskHandler}
+              isSaving={tasksSaving}
+              isLoading={tasksLoading || protocolsLoading}
+              onProtocolComplete={() => {
+                // Refetch after protocol completion to update UI
+                refetchTasks();
+              }}
+            />
+          </div>
+        )}
+
+        {/* Today's Protocol Task (if active - legacy MIO protocols) */}
         {protocolTask && (
           <TodayProtocolTask
             task={protocolTask}
@@ -201,7 +241,7 @@ export default function MindInsuranceHub() {
           />
         )}
 
-        {/* Protocol Task Modal (first open of day) */}
+        {/* Protocol Task Modal (first open of day - legacy MIO) */}
         {protocolTask && (
           <ProtocolTaskModal
             task={protocolTask}
@@ -263,44 +303,6 @@ export default function MindInsuranceHub() {
           </Card>
         )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/insights')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <FileText className="w-6 h-6 text-mi-cyan" />
-            <span>Weekly Insights</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/vault')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <Shield className="w-6 h-6 text-mi-cyan" />
-            <span>Recording Vault</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/championship')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-gold/30 hover:border-mi-gold hover:bg-mi-gold/10 text-white"
-          >
-            <TrendingUp className="w-6 h-6 text-mi-gold" />
-            <span>Progress</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate('/avatar-assessment')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <Brain className="w-6 h-6 text-mi-cyan" />
-            <span>Temperament</span>
-          </Button>
-        </div>
       </div>
     </div>
   );

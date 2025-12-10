@@ -54,8 +54,16 @@ export async function getActiveInsightProtocol(
     .eq('protocol_id', protocol.id)
     .order('day_number', { ascending: true });
 
-  // Calculate today's task
-  const dayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  // Calculate today's task - normalize success_criteria to always be an array
+  const rawDayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  const dayTasks = rawDayTasks.map((task) => ({
+    ...task,
+    success_criteria: Array.isArray(task.success_criteria)
+      ? task.success_criteria
+      : typeof task.success_criteria === 'string' && task.success_criteria
+        ? [task.success_criteria]
+        : [],
+  }));
   const currentDay = protocol.current_day || 1;
   const todayTask = dayTasks.find((t) => t.day === currentDay);
   const todayCompletion = completions?.find(
@@ -98,7 +106,16 @@ export async function getProtocolById(
     return null;
   }
 
-  const dayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  // Normalize success_criteria to always be an array
+  const rawDayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  const dayTasks = rawDayTasks.map((task: MIOInsightDayTask) => ({
+    ...task,
+    success_criteria: Array.isArray(task.success_criteria)
+      ? task.success_criteria
+      : typeof task.success_criteria === 'string' && task.success_criteria
+        ? [task.success_criteria]
+        : [],
+  }));
   const currentDay = protocol.current_day || 1;
   const todayTask = dayTasks.find((t: MIOInsightDayTask) => t.day === currentDay);
   const todayCompletion = completions.find(
@@ -245,14 +262,20 @@ export async function startProtocol(protocolId: string): Promise<void> {
 }
 
 /**
- * Calculate days since protocol was assigned (for skip logic)
+ * Calculate current protocol day based on creation date
+ *
+ * IMPORTANT: Pass protocol.created_at, NOT protocol.assigned_week_start
+ * - created_at = actual creation timestamp (correct)
+ * - assigned_week_start = Monday of creation week (causes mid-week skip issues)
+ *
+ * Returns 1-7 (day number), capped at 7
  */
 export function calculateCurrentProtocolDay(
-  assignedDate: string | Date
+  createdAt: string | Date
 ): number {
-  const assigned = new Date(assignedDate);
+  const created = new Date(createdAt);
   const now = new Date();
-  const diffTime = now.getTime() - assigned.getTime();
+  const diffTime = now.getTime() - created.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return Math.min(Math.max(diffDays, 1), 7);
 }
@@ -363,6 +386,180 @@ export async function createInsightProtocol(
 }
 
 // ============================================================================
+// COACH PROTOCOL INTEGRATION
+// ============================================================================
+
+/**
+ * Check if user has an active coach protocol
+ * If so, MIO protocols should be paused/skipped
+ */
+export async function checkForActiveCoachProtocol(
+  userId: string
+): Promise<{ hasActiveCoachProtocol: boolean; coachProtocolTitle?: string; assignmentId?: string }> {
+  const { data, error } = await supabase
+    .from('user_coach_protocol_assignments')
+    .select(`
+      id,
+      protocol:coach_protocols_v2(title)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { hasActiveCoachProtocol: false };
+  }
+
+  return {
+    hasActiveCoachProtocol: true,
+    coachProtocolTitle: (data.protocol as { title: string })?.title,
+    assignmentId: data.id,
+  };
+}
+
+/**
+ * Pause MIO protocol when a coach protocol is assigned
+ */
+export async function pauseMIOForCoachProtocol(
+  userId: string,
+  coachAssignmentId: string
+): Promise<{ success: boolean; pausedProtocolId?: string; error?: string }> {
+  // Find active MIO protocol
+  const { data: activeMio, error: findError } = await supabase
+    .from('mio_weekly_protocols')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (findError) {
+    console.error('Error finding active MIO protocol:', findError);
+    return { success: false, error: findError.message };
+  }
+
+  if (!activeMio) {
+    // No active MIO protocol to pause
+    return { success: true };
+  }
+
+  // Pause the MIO protocol
+  const { error: pauseError } = await supabase
+    .from('mio_weekly_protocols')
+    .update({
+      status: 'paused',
+      paused_by_coach_protocol_id: coachAssignmentId,
+    })
+    .eq('id', activeMio.id);
+
+  if (pauseError) {
+    console.error('Error pausing MIO protocol:', pauseError);
+    return { success: false, error: pauseError.message };
+  }
+
+  return { success: true, pausedProtocolId: activeMio.id };
+}
+
+/**
+ * Resume MIO protocol when coach protocol ends
+ * Can optionally generate a new MIO protocol with coach protocol context
+ */
+export async function resumeMIOAfterCoachProtocol(
+  userId: string,
+  coachAssignmentId: string,
+  completedProtocolContext?: { title: string; weeksCompleted: number; tasksCompleted: number }
+): Promise<{ success: boolean; resumedProtocolId?: string; generatedNew?: boolean; error?: string }> {
+  // Find paused MIO protocol linked to this coach assignment
+  const { data: pausedMio, error: findError } = await supabase
+    .from('mio_weekly_protocols')
+    .select('id, status, current_day')
+    .eq('user_id', userId)
+    .eq('paused_by_coach_protocol_id', coachAssignmentId)
+    .maybeSingle();
+
+  if (findError) {
+    console.error('Error finding paused MIO protocol:', findError);
+    return { success: false, error: findError.message };
+  }
+
+  if (pausedMio) {
+    // Resume the paused MIO protocol
+    const { error: resumeError } = await supabase
+      .from('mio_weekly_protocols')
+      .update({
+        status: 'active',
+        paused_by_coach_protocol_id: null,
+      })
+      .eq('id', pausedMio.id);
+
+    if (resumeError) {
+      console.error('Error resuming MIO protocol:', resumeError);
+      return { success: false, error: resumeError.message };
+    }
+
+    return { success: true, resumedProtocolId: pausedMio.id, generatedNew: false };
+  }
+
+  // No paused protocol found - a new MIO will be generated by the weekly n8n workflow
+  // The workflow can optionally include completedProtocolContext in the prompt
+  return { success: true, generatedNew: true };
+}
+
+/**
+ * Get coach protocol context for MIO prompt injection
+ * This context is used when generating MIO insights to reference the user's coach protocol
+ */
+export async function getCoachProtocolContextForMIO(userId: string): Promise<{
+  hasCoachProtocol: boolean;
+  protocolTitle?: string;
+  currentWeek?: number;
+  currentDay?: number;
+  todayTasks?: string[];
+  completionRate?: number;
+} | null> {
+  const { data: assignment, error } = await supabase
+    .from('user_coach_protocol_assignments')
+    .select(`
+      id,
+      current_week,
+      current_day,
+      days_completed,
+      total_tasks_completed,
+      protocol:coach_protocols_v2(id, title, total_weeks)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !assignment) {
+    return null;
+  }
+
+  const protocol = assignment.protocol as { id: string; title: string; total_weeks: number };
+
+  // Get today's tasks
+  const { data: tasks } = await supabase
+    .from('coach_protocol_tasks_v2')
+    .select('title')
+    .eq('protocol_id', protocol.id)
+    .eq('week_number', assignment.current_week)
+    .eq('day_number', assignment.current_day);
+
+  const totalDays = protocol.total_weeks * 7;
+  const completionRate = Math.round((assignment.days_completed / totalDays) * 100);
+
+  return {
+    hasCoachProtocol: true,
+    protocolTitle: protocol.title,
+    currentWeek: assignment.current_week,
+    currentDay: assignment.current_day,
+    todayTasks: (tasks || []).map((t) => t.title),
+    completionRate,
+  };
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -442,6 +639,12 @@ export const mioInsightProtocolService = {
 
   // Real-time
   subscribeToProtocolUpdates,
+
+  // Coach Protocol Integration
+  checkForActiveCoachProtocol,
+  pauseMIOForCoachProtocol,
+  resumeMIOAfterCoachProtocol,
+  getCoachProtocolContextForMIO,
 };
 
 export default mioInsightProtocolService;
