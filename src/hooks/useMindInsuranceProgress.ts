@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getTodayInTimezone, getStartOfWeekInTimezone, getDateDaysAgoInTimezone } from "@/utils/timezoneUtils";
 
 export interface MindInsuranceProgress {
   currentStreak: number;
@@ -25,37 +26,39 @@ function calculateStreaksFromDates(practiceDates: string[]): { currentStreak: nu
   // Get unique dates and sort descending (newest first)
   const uniqueDates = [...new Set(practiceDates)].sort().reverse();
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  // Get today's date in YYYY-MM-DD format using browser timezone
+  const todayStr = getTodayInTimezone();
 
   // Calculate current streak (consecutive days from today or yesterday)
   let currentStreak = 0;
-  const checkDate = new Date(today);
 
   // Check if the most recent practice is today or yesterday
   const mostRecentDate = uniqueDates[0];
-  const daysSinceLastPractice = Math.floor(
-    (today.getTime() - new Date(mostRecentDate).getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Compare dates as strings since they're in YYYY-MM-DD format
+  const yesterdayStr = getDateDaysAgoInTimezone(1);
+  const hasPracticeToday = mostRecentDate === todayStr;
+  const hasPracticeYesterday = mostRecentDate === yesterdayStr;
+  const streakIsBroken = !hasPracticeToday && !hasPracticeYesterday;
 
   // If last practice was more than 1 day ago, streak is broken
-  if (daysSinceLastPractice > 1) {
+  if (streakIsBroken) {
     currentStreak = 0;
   } else {
     // Start from today and count backwards
-    for (let i = 0; i < 365; i++) {
-      const dateStr = checkDate.toISOString().split('T')[0];
+    // Use a simple date string comparison since practice_date is already in YYYY-MM-DD format
+    let daysBack = 0;
+    while (daysBack < 365) {
+      const dateStr = getDateDaysAgoInTimezone(daysBack);
       if (uniqueDates.includes(dateStr)) {
         currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else if (i === 0) {
+        daysBack++;
+      } else if (daysBack === 0) {
         // If no practice today, check if yesterday had one (streak continues)
-        checkDate.setDate(checkDate.getDate() - 1);
-        const yesterdayStr = checkDate.toISOString().split('T')[0];
+        daysBack++;
+        const yesterdayStr = getDateDaysAgoInTimezone(daysBack);
         if (uniqueDates.includes(yesterdayStr)) {
           currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
+          daysBack++;
         } else {
           break;
         }
@@ -124,20 +127,12 @@ export function useMindInsuranceProgress() {
       else if (totalPoints >= 5000) championshipLevel = 'gold';
       else if (totalPoints >= 2500) championshipLevel = 'silver';
 
-      // Get weekly practices count (current calendar week)
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - dayOfWeek);
-      startOfWeek.setHours(0, 0, 0, 0);
-      const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
-
+      // Get weekly practices count (current calendar week) using browser timezone
+      const startOfWeekStr = getStartOfWeekInTimezone();
       const weeklyPractices = allPractices?.filter(p => p.practice_date >= startOfWeekStr).length || 0;
 
       // Calculate pattern awareness from P-type practices completed in last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+      const thirtyDaysAgoStr = getDateDaysAgoInTimezone(30);
 
       const { data: patternPractices } = await supabase
         .from('daily_practices')

@@ -118,10 +118,10 @@ export function ProtocolJournalInput({
 
       {/* Textarea */}
       <div
-        className={`relative rounded-lg transition-all ${
+        className={`relative rounded-xl transition-all border-2 ${
           isFocused
-            ? 'ring-2 ring-cyan-500/50'
-            : 'ring-1 ring-slate-700'
+            ? 'border-cyan-500/50 bg-slate-800/70'
+            : 'border-slate-700/50 bg-slate-800/50'
         }`}
       >
         <Textarea
@@ -134,7 +134,7 @@ export function ProtocolJournalInput({
           disabled={disabled}
           rows={minRows}
           className={`
-            bg-slate-800/50 border-0 resize-none
+            bg-transparent border-0 resize-none
             text-slate-200 placeholder:text-slate-500
             focus:ring-0 focus-visible:ring-0
             ${isOverLimit ? 'text-red-300' : ''}
@@ -151,7 +151,7 @@ export function ProtocolJournalInput({
       </div>
 
       {/* Guided prompts from success criteria */}
-      {successCriteria && successCriteria.length > 0 && !value && (
+      {Array.isArray(successCriteria) && successCriteria.length > 0 && !value && (
         <div className="pt-2">
           <p className="text-xs text-slate-500 mb-2">Consider reflecting on:</p>
           <div className="flex flex-wrap gap-2">

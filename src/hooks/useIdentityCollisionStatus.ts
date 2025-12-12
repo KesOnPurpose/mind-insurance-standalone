@@ -33,20 +33,26 @@ export function useIdentityCollisionStatus(userId: string | undefined) {
 
       if (!profileError && profile?.collision_patterns) {
         const patterns = profile.collision_patterns as Record<string, unknown>;
-        const primaryPattern = patterns.primary_pattern as string | undefined;
 
-        if (primaryPattern) {
-          const normalizedPattern = primaryPattern.toLowerCase().replace(/ /g, '_') as
-            'past_prison' | 'success_sabotage' | 'compass_crisis';
+        // Guard against empty objects {} - treat same as null
+        // This prevents infinite redirect loops for users whose save failed
+        if (Object.keys(patterns).length > 0) {
+          const primaryPattern = patterns.primary_pattern as string | undefined;
 
-          return {
-            hasPattern: true,
-            primaryPattern: normalizedPattern,
-            confidence: patterns.confidence as number | undefined,
-            impactArea: patterns.impact_area as string | undefined,
-            source: 'user_profiles',
-          };
+          if (primaryPattern) {
+            const normalizedPattern = primaryPattern.toLowerCase().replace(/ /g, '_') as
+              'past_prison' | 'success_sabotage' | 'compass_crisis';
+
+            return {
+              hasPattern: true,
+              primaryPattern: normalizedPattern,
+              confidence: patterns.confidence as number | undefined,
+              impactArea: patterns.impact_area as string | undefined,
+              source: 'user_profiles',
+            };
+          }
         }
+        // If patterns is empty {} or has no primary_pattern, fall through to check other tables
       }
 
       // 2. Check avatar_assessments table (existing deep assessment data)
@@ -138,7 +144,7 @@ export function getPatternDescription(pattern: string | null | undefined): strin
 
   const descriptions: Record<string, string> = {
     'past_prison': 'Your past experiences, upbringing, or environment are creating invisible barriers that hold you back from your potential. You carry guilt, limiting beliefs, or identity ceilings from your history.',
-    'success_sabotage': 'You pull back right when breakthrough is near. Your amygdala associates success with danger, causing you to unconsciously sabotage progress at critical moments.',
+    'success_sabotage': 'You pull back right when breakthrough is near. Your amygdala (your brain\'s threat-detection center) associates success with danger, causing you to unconsciously sabotage progress at critical moments.',
     'compass_crisis': 'You lack clear direction or feel pulled in multiple directions. Without a defined path, you struggle with decision paralysis and comparison to others.',
   };
 

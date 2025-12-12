@@ -190,6 +190,10 @@ export default function AssessmentCenter() {
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
+  // Select All Users state
+  const [selectAllMode, setSelectAllMode] = useState(false);
+  const [bulkAssignProgress, setBulkAssignProgress] = useState({ current: 0, total: 0 });
+
   // Edit dialog state
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingInvitation, setEditingInvitation] = useState<AssessmentInvitation | null>(null);
@@ -441,6 +445,48 @@ export default function AssessmentCenter() {
       setSelectedAssessmentType(filterType as AssessmentType);
     }
     setShowAssignDialog(true);
+  };
+
+  // Assign assessment to ALL users in the system
+  const handleAssignToAllUsers = async () => {
+    if (users.length === 0) {
+      toast({ title: 'No users', description: 'No users found in the system', variant: 'destructive' });
+      return;
+    }
+
+    setSelectAllMode(true);
+    setBulkAssignProgress({ current: 0, total: users.length });
+
+    let successCount = 0;
+    let skipCount = 0;
+
+    for (let i = 0; i < users.length; i++) {
+      try {
+        await createInvitation.mutateAsync({
+          userId: users[i].user_id,
+          assessmentType: selectedAssessmentType,
+          invitedBy: 'admin',
+          invitedByUserId: user?.id,
+          reason: customReason || ASSESSMENT_INFO[selectedAssessmentType].description,
+        });
+        successCount++;
+      } catch {
+        // Skip duplicates or errors silently
+        skipCount++;
+      }
+      setBulkAssignProgress({ current: i + 1, total: users.length });
+    }
+
+    setSelectAllMode(false);
+    setBulkAssignProgress({ current: 0, total: 0 });
+    setShowAssignDialog(false);
+    setCustomReason('');
+    refetchInvitations();
+
+    toast({
+      title: 'Bulk Assignment Complete',
+      description: `Sent ${successCount} invitation${successCount !== 1 ? 's' : ''}${skipCount > 0 ? ` (${skipCount} skipped - already assigned)` : ''}`,
+    });
   };
 
   // ============================================================================
@@ -801,14 +847,98 @@ export default function AssessmentCenter() {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+              {/* Assessment Type - First so Select All knows what type */}
+              <div className="space-y-2">
+                <Label className="text-white/90">Assessment Type</Label>
+                <Select
+                  value={selectedAssessmentType}
+                  onValueChange={(v) => setSelectedAssessmentType(v as AssessmentType)}
+                  disabled={selectAllMode}
+                >
+                  <SelectTrigger className="bg-mi-navy-light border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-mi-navy border-white/10">
+                    <SelectItem value="mental_pillar" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Compass className="w-4 h-4 text-emerald-400" />
+                        Mental Pillar Baseline
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="inner_wiring_discovery" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-cyan-400" />
+                        Inner Wiring Discovery
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="avatar_deep" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-4 h-4 text-amber-400" />
+                        Identity Collision Avatar (Deep)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="identity_collision" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-purple-400" />
+                        Identity Collision (Gate - Usually Auto)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {ASSESSMENT_INFO[selectedAssessmentType].description}
+                </p>
+              </div>
+
+              {/* Select All Users Option */}
+              <div className="border border-mi-cyan/30 rounded-lg p-4 bg-mi-cyan/5">
+                <Button
+                  variant="outline"
+                  onClick={handleAssignToAllUsers}
+                  disabled={selectAllMode || isAssigning || isLoadingUsers}
+                  className="w-full border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10 hover:text-mi-cyan"
+                >
+                  {selectAllMode ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Assigning to {bulkAssignProgress.current}/{bulkAssignProgress.total} users...
+                    </>
+                  ) : isLoadingUsers ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading users...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4 mr-2" />
+                      Select All Users ({users.length})
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Assign this assessment to all {users.length} users in the system
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-mi-navy px-2 text-gray-500">Or select individually</span>
+                </div>
+              </div>
+
               {/* Target Mode */}
               <div className="space-y-2">
-                <Label>Send To</Label>
+                <Label className="text-white/90">Send To</Label>
                 <div className="flex gap-2">
                   <Button
                     variant={targetMode === 'user' ? 'default' : 'outline'}
                     onClick={() => setTargetMode('user')}
-                    className={targetMode === 'user' ? 'bg-mi-cyan' : 'border-white/10'}
+                    disabled={selectAllMode}
+                    className={targetMode === 'user' ? 'bg-mi-cyan hover:bg-mi-cyan/80 text-white' : 'border-white/20 text-white/70 hover:text-white hover:bg-white/5'}
                   >
                     <User className="w-4 h-4 mr-2" />
                     Individual User
@@ -816,7 +946,8 @@ export default function AssessmentCenter() {
                   <Button
                     variant={targetMode === 'group' ? 'default' : 'outline'}
                     onClick={() => setTargetMode('group')}
-                    className={targetMode === 'group' ? 'bg-mi-cyan' : 'border-white/10'}
+                    disabled={selectAllMode}
+                    className={targetMode === 'group' ? 'bg-mi-cyan hover:bg-mi-cyan/80 text-white' : 'border-white/20 text-white/70 hover:text-white hover:bg-white/5'}
                   >
                     <Users className="w-4 h-4 mr-2" />
                     User Group
@@ -827,13 +958,14 @@ export default function AssessmentCenter() {
               {/* User Selection */}
               {targetMode === 'user' && (
                 <div className="space-y-2">
-                  <Label>Select User</Label>
+                  <Label className="text-white/90">Select User</Label>
                   <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between bg-mi-navy-light border-white/10 text-white"
+                        disabled={selectAllMode}
+                        className="w-full justify-between bg-mi-navy-light border-white/10 text-white hover:bg-white/5"
                       >
                         {selectedUser ? (
                           <span>{selectedUser.full_name || selectedUser.email}</span>
@@ -843,15 +975,15 @@ export default function AssessmentCenter() {
                         <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-mi-navy border-white/10" align="start">
-                      <Command className="bg-transparent">
+                    <PopoverContent className="w-[400px] p-0 bg-mi-navy border-white/10" align="start">
+                      <Command className="bg-mi-navy">
                         <CommandInput
                           placeholder="Search by name or email..."
                           value={userSearchQuery}
                           onValueChange={setUserSearchQuery}
-                          className="text-white"
+                          className="text-white border-white/10"
                         />
-                        <CommandList>
+                        <CommandList className="max-h-[300px]">
                           <CommandEmpty className="text-gray-400 p-4 text-center">
                             No users found
                           </CommandEmpty>
@@ -864,11 +996,11 @@ export default function AssessmentCenter() {
                                   setSelectedUserId(u.user_id);
                                   setUserSearchOpen(false);
                                 }}
-                                className="text-white hover:bg-white/10"
+                                className="text-white hover:bg-white/10 cursor-pointer aria-selected:bg-mi-cyan/20"
                               >
                                 <User className="w-4 h-4 mr-2 text-gray-400" />
                                 <div>
-                                  <div>{u.full_name || 'Unnamed'}</div>
+                                  <div className="font-medium">{u.full_name || 'Unnamed'}</div>
                                   <div className="text-xs text-gray-500">{u.email}</div>
                                 </div>
                               </CommandItem>
@@ -884,14 +1016,14 @@ export default function AssessmentCenter() {
               {/* Group Selection */}
               {targetMode === 'group' && (
                 <div className="space-y-2">
-                  <Label>Select Group</Label>
-                  <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                  <Label className="text-white/90">Select Group</Label>
+                  <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={selectAllMode}>
                     <SelectTrigger className="bg-mi-navy-light border-white/10 text-white">
                       <SelectValue placeholder="Select a group..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-mi-navy border-white/10">
                       {groups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
+                        <SelectItem key={group.id} value={group.id} className="text-white hover:bg-white/10 focus:bg-white/10">
                           {group.name}
                         </SelectItem>
                       ))}
@@ -900,72 +1032,32 @@ export default function AssessmentCenter() {
                 </div>
               )}
 
-              {/* Assessment Type */}
-              <div className="space-y-2">
-                <Label>Assessment Type</Label>
-                <Select
-                  value={selectedAssessmentType}
-                  onValueChange={(v) => setSelectedAssessmentType(v as AssessmentType)}
-                >
-                  <SelectTrigger className="bg-mi-navy-light border-white/10 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mental_pillar">
-                      <div className="flex items-center gap-2">
-                        <Compass className="w-4 h-4 text-emerald-400" />
-                        Mental Pillar Baseline
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="inner_wiring_discovery">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-cyan-400" />
-                        Inner Wiring Discovery
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="avatar_deep">
-                      <div className="flex items-center gap-2">
-                        <Brain className="w-4 h-4 text-amber-400" />
-                        Identity Collision Avatar (Deep)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="identity_collision">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-purple-400" />
-                        Identity Collision (Gate - Usually Auto)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  {ASSESSMENT_INFO[selectedAssessmentType].description}
-                </p>
-              </div>
-
               {/* Custom Reason */}
               <div className="space-y-2">
-                <Label>Custom Message (Optional)</Label>
+                <Label className="text-white/90">Custom Message (Optional)</Label>
                 <Textarea
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
                   placeholder="Add a personalized message explaining why this assessment is recommended..."
-                  className="bg-mi-navy-light border-white/10 text-white min-h-[80px]"
+                  className="bg-mi-navy-light border-white/10 text-white placeholder:text-gray-500 min-h-[80px]"
+                  disabled={selectAllMode}
                 />
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowAssignDialog(false)}
-                className="border-white/10"
+                disabled={selectAllMode}
+                className="border-white/20 text-white/70 hover:text-white hover:bg-white/5"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAssignAssessment}
-                disabled={isAssigning || (targetMode === 'user' && !selectedUserId) || (targetMode === 'group' && !selectedGroupId)}
-                className="bg-mi-cyan hover:bg-mi-cyan/80"
+                disabled={isAssigning || selectAllMode || (targetMode === 'user' && !selectedUserId) || (targetMode === 'group' && !selectedGroupId)}
+                className="bg-mi-cyan hover:bg-mi-cyan/80 text-white"
               >
                 {isAssigning ? (
                   <>

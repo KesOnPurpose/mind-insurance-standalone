@@ -247,6 +247,63 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXV
 
 ## Common Development Patterns
 
+### Admin User Picker Pattern (CRITICAL REFERENCE)
+
+When building admin features that need to list/select users, follow this exact pattern.
+
+**Database Tables:**
+| Table | Purpose | Key Fields |
+|-------|---------|------------|
+| `gh_approved_users` | Source of approved users | `id`, `full_name`, `email`, `user_id` (FK), `tier`, `is_active` |
+| `user_profiles` | User accounts | `id` (UUID) |
+| `admin_users` | Admin permission check | `user_id`, `role`, `is_active` |
+
+**Key Relationship**: `gh_approved_users.user_id` → `user_profiles.id`
+
+**Edge Function**: `admin-group-management` with action `list_users`
+- Bypasses RLS using service role
+- Returns: `id`, `full_name`, `email`, `user_id`, `tier`
+- Filters: `is_active=true` AND `user_id IS NOT NULL`
+
+**Working Reference**: `src/components/admin/reports/UserGroupManager.tsx`
+
+**Pattern to Follow:**
+```typescript
+// 1. FULL interface matching Edge Function response (don't drop fields!)
+interface UserProfile {
+  id: string;              // gh_approved_users.id (React key)
+  full_name: string | null;
+  email: string | null;
+  user_id: string;         // FK to user_profiles.id (for targeting)
+  tier: string;
+}
+
+// 2. Store API response DIRECTLY (no transformation!)
+const result = await callAdminGroupAPI('list_users');
+setUsers((result.data || []) as UserProfile[]);
+
+// 3. Use user_id for targeting/FK relationships
+const handleAddUser = (user: UserProfile) => {
+  const newIds = [...selectedUserIds, user.user_id];  // NOT user.id!
+  // ...
+};
+
+// 4. Make CommandItem value searchable (NOT UUID!)
+<CommandItem
+  key={user.id}
+  value={`${user.full_name || ''} ${user.email || ''}`}  // Searchable text
+  onSelect={() => handleAddUser(user)}
+>
+```
+
+**Common Mistakes to AVOID:**
+1. ❌ Missing fields in interface (causes undefined errors)
+2. ❌ Transforming data (mapping `user_id` to `id` destroys FK relationship)
+3. ❌ Using `user.id` instead of `user.user_id` for targeting
+4. ❌ Setting `CommandItem value={UUID}` (search won't work - must be text)
+
+---
+
 ### Component Template
 ```typescript
 import { useState } from 'react';

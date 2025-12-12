@@ -1,0 +1,19 @@
+{
+  "name": "Mind Insurance",
+  "short_name": "MindIns",
+  "description": "Your daily behavioral practice companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#22d3ee",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["health", "lifestyle", "productivity"],
+  "prefer_related_applications": false
+}

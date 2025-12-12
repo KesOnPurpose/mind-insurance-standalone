@@ -49,11 +49,18 @@ import type { CoachProtocol, CoachProtocolStatus } from '@/types/protocol';
 import {
   getAllProtocols as getAllProtocolsV2,
   updateProtocol as updateProtocolV2,
+  updateProtocolStatus as updateProtocolStatusV2,
   deleteProtocol as deleteProtocolV2,
+  createProtocol as createProtocolV2,
+  bulkCreateTasks,
+  deleteAllTasks,
+  assignToUsers,
 } from '@/services/coachProtocolV2Service';
 import type {
   CoachProtocolV2,
   CoachProtocolStatus as CoachProtocolStatusV2,
+  CreateCoachProtocolForm,
+  CreateCoachProtocolTaskForm,
 } from '@/types/coach-protocol';
 
 // V2 Components
@@ -61,11 +68,12 @@ import { MultiWeekProtocolEditor } from '@/components/admin/protocols/MultiWeekP
 import { ProtocolImporter } from '@/components/admin/protocols/ProtocolImporter';
 import { ProtocolAssigner } from '@/components/admin/protocols/ProtocolAssigner';
 import { CoachProtocolDashboard } from '@/components/admin/protocols/CoachProtocolDashboard';
+import { AssignedUsersList } from '@/components/admin/protocols/AssignedUsersList';
 
 // Legacy Editor
 import { ProtocolEditor } from '@/components/admin/protocols/ProtocolEditor';
 
-type ViewMode = 'list' | 'create' | 'edit' | 'import' | 'assign' | 'dashboard';
+type ViewMode = 'list' | 'create' | 'edit' | 'import' | 'assign' | 'dashboard' | 'assigned_users';
 type ProtocolTab = 'mio' | 'coach';
 
 export default function ProtocolManagement() {
@@ -212,10 +220,11 @@ export default function ProtocolManagement() {
   const handleCoachStatusChange = async (protocolId: string, status: CoachProtocolStatusV2) => {
     try {
       setIsProcessing(true);
-      await updateProtocolV2(protocolId, { status });
+      await updateProtocolStatusV2(protocolId, status);
       toast({ title: 'Success', description: 'Status updated' });
       fetchCoachProtocols();
     } catch (error) {
+      console.error('Error updating status:', error);
       toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
     } finally {
       setIsProcessing(false);
@@ -225,6 +234,211 @@ export default function ProtocolManagement() {
   const handleCoachAssign = (protocol: CoachProtocolV2) => {
     setSelectedCoachProtocol(protocol);
     setViewMode('assign');
+  };
+
+  const handleViewAssignedUsers = (protocol: CoachProtocolV2) => {
+    setSelectedCoachProtocol(protocol);
+    setViewMode('assigned_users');
+  };
+
+  // Handler for saving coach protocols (V2) - transforms form data and saves to DB
+  const handleCoachSave = async (form: {
+    title: string;
+    description: string;
+    visibility: string;
+    visibility_config?: Record<string, unknown>;
+    schedule_type: string;
+    start_date?: string;
+    theme_color: string;
+    weeks: Array<{
+      week_number: number;
+      theme: string;
+      days: Array<{
+        day_number: number;
+        tasks: Array<{
+          id?: string;
+          task_order: number;
+          title: string;
+          instructions: string;
+          task_type: string;
+          time_of_day: string;
+          estimated_minutes?: number;
+          resource_url?: string;
+        }>;
+      }>;
+    }>;
+  }) => {
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to save protocols',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      // 1. Flatten tasks from weeks[].days[].tasks[] into single array
+      const tasks: CreateCoachProtocolTaskForm[] = [];
+      form.weeks.forEach((week) => {
+        week.days.forEach((day) => {
+          day.tasks.forEach((task) => {
+            if (task.title.trim()) {
+              tasks.push({
+                week_number: week.week_number,
+                day_number: day.day_number,
+                task_order: task.task_order,
+                title: task.title,
+                instructions: task.instructions,
+                task_type: task.task_type as CreateCoachProtocolTaskForm['task_type'],
+                time_of_day: task.time_of_day as CreateCoachProtocolTaskForm['time_of_day'],
+                estimated_minutes: task.estimated_minutes,
+                resource_url: task.resource_url,
+                week_theme: week.theme,
+              });
+            }
+          });
+        });
+      });
+
+      // 2. Build protocol data
+      const protocolData: CreateCoachProtocolForm = {
+        title: form.title,
+        description: form.description,
+        total_weeks: form.weeks.length,
+        visibility: form.visibility as CreateCoachProtocolForm['visibility'],
+        visibility_config: form.visibility_config,
+        schedule_type: form.schedule_type as CreateCoachProtocolForm['schedule_type'],
+        start_date: form.start_date,
+        theme_color: form.theme_color,
+        tasks: tasks,
+      };
+
+      // 3. Create or Update
+      if (selectedCoachProtocol?.id) {
+        // UPDATE existing protocol
+        await updateProtocolV2(selectedCoachProtocol.id, {
+          title: protocolData.title,
+          description: protocolData.description,
+          total_weeks: protocolData.total_weeks,
+          visibility: protocolData.visibility,
+          visibility_config: protocolData.visibility_config,
+          schedule_type: protocolData.schedule_type,
+          start_date: protocolData.start_date,
+          theme_color: protocolData.theme_color,
+        });
+
+        // Delete old tasks and recreate
+        await deleteAllTasks(selectedCoachProtocol.id);
+        if (tasks.length > 0) {
+          await bulkCreateTasks(selectedCoachProtocol.id, tasks);
+        }
+
+        // AUTO-ASSIGN on UPDATE: If visibility is 'individual', assign any users who aren't already assigned
+        // This ensures re-saving a protocol with the same users still creates missing assignments
+        if (form.visibility === 'individual' && form.visibility_config?.user_ids) {
+          const userIds = form.visibility_config.user_ids as string[];
+          if (userIds.length > 0) {
+            const assignmentOptions = {
+              slot: 'primary' as const,
+              start_date: form.schedule_type === 'date_specific' ? form.start_date : undefined,
+              override_existing: false, // Don't override existing assignments
+            };
+
+            const results = await assignToUsers(
+              selectedCoachProtocol.id,
+              userIds,
+              assignmentOptions,
+              user.id
+            );
+            const successCount = results.filter(r => r.success).length;
+            const conflictCount = results.filter(r => r.conflict).length;
+
+            if (successCount > 0) {
+              toast({
+                title: 'Protocol Updated & Users Assigned',
+                description: `Updated protocol. ${successCount} user(s) enrolled${conflictCount > 0 ? ` (${conflictCount} already had assignments)` : ''}.`,
+              });
+            } else if (conflictCount > 0) {
+              toast({
+                title: 'Success',
+                description: `Protocol updated. All ${conflictCount} user(s) already have active assignments.`,
+              });
+            } else {
+              toast({
+                title: 'Success',
+                description: 'Protocol updated successfully',
+              });
+            }
+          } else {
+            toast({
+              title: 'Success',
+              description: 'Protocol updated successfully',
+            });
+          }
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Protocol updated successfully',
+          });
+        }
+      } else {
+        // CREATE new protocol
+        const createdProtocol = await createProtocolV2(user.id, protocolData);
+
+        // AUTO-ASSIGN: If visibility is 'individual' with user_ids, create assignments automatically
+        // This bridges the gap between visibility (who CAN see) and assignment (who IS enrolled)
+        if (form.visibility === 'individual' && form.visibility_config?.user_ids) {
+          const userIds = form.visibility_config.user_ids as string[];
+          if (userIds.length > 0 && createdProtocol?.id) {
+            const assignmentOptions = {
+              slot: 'primary' as const,
+              start_date: form.schedule_type === 'date_specific' ? form.start_date : undefined,
+              override_existing: false,
+            };
+
+            const results = await assignToUsers(
+              createdProtocol.id,
+              userIds,
+              assignmentOptions,
+              user.id
+            );
+            const successCount = results.filter(r => r.success).length;
+            const failedCount = results.filter(r => !r.success).length;
+
+            toast({
+              title: 'Protocol Created & Users Assigned',
+              description: `${successCount} of ${userIds.length} users enrolled${failedCount > 0 ? ` (${failedCount} had conflicts)` : ''}`,
+            });
+          } else {
+            toast({
+              title: 'Success',
+              description: 'Protocol created successfully',
+            });
+          }
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Protocol created successfully',
+          });
+        }
+      }
+
+      // 4. Close editor and refresh list
+      handleSaveComplete();
+
+    } catch (error) {
+      console.error('Error saving protocol:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save protocol',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSaveComplete = () => {
@@ -297,8 +511,9 @@ export default function ProtocolManagement() {
           </Button>
           <MultiWeekProtocolEditor
             protocol={selectedCoachProtocol || undefined}
-            onSave={handleSaveComplete}
+            onSave={handleCoachSave}
             onCancel={() => setViewMode('list')}
+            isSaving={isProcessing}
           />
         </div>
       </SidebarLayout>
@@ -356,6 +571,29 @@ export default function ProtocolManagement() {
       </DialogContent>
     </Dialog>
   );
+
+  // V2 Assigned Users View
+  if (activeTab === 'coach' && viewMode === 'assigned_users' && selectedCoachProtocol) {
+    return (
+      <SidebarLayout
+        mode="admin"
+        showHeader
+        headerTitle="Assigned Users"
+        headerSubtitle={`Viewing assignments for ${selectedCoachProtocol.title}`}
+        headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
+      >
+        <div className="max-w-6xl mx-auto p-4">
+          <AssignedUsersList
+            protocol={selectedCoachProtocol}
+            onBack={() => {
+              setViewMode('list');
+              setSelectedCoachProtocol(null);
+            }}
+          />
+        </div>
+      </SidebarLayout>
+    );
+  }
 
   // V2 Dashboard View
   if (activeTab === 'coach' && viewMode === 'dashboard') {
@@ -574,16 +812,28 @@ export default function ProtocolManagement() {
                             <Edit className="h-4 w-4" />
                           </Button>
                           {protocol.status === 'published' && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleCoachAssign(protocol)}
-                              disabled={isProcessing}
-                              className="text-blue-600"
-                              title="Assign to Users"
-                            >
-                              <UserPlus className="h-4 w-4" />
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleCoachAssign(protocol)}
+                                disabled={isProcessing}
+                                className="text-blue-600"
+                                title="Assign to Users"
+                              >
+                                <UserPlus className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewAssignedUsers(protocol)}
+                                disabled={isProcessing}
+                                className="text-cyan-600"
+                                title="View Assigned Users"
+                              >
+                                <Users className="h-4 w-4" />
+                              </Button>
+                            </>
                           )}
                           {protocol.status === 'draft' && (
                             <Button

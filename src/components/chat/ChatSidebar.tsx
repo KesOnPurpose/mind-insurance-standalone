@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, User, MessageSquare, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -76,6 +76,9 @@ export function ChatSidebar() {
 
   const { canAccessAdminPanel } = useAccessControl();
 
+  // MIO Insights Thread selection state
+  const [isMIOInsightsActive, setIsMIOInsightsActive] = useState(false);
+
   // Check if we're in the Mind Insurance section for dark theme
   const isMindInsurance = useMemo(() => {
     return location.pathname.startsWith('/mind-insurance');
@@ -87,6 +90,7 @@ export function ChatSidebar() {
 
   const handleNewChat = () => {
     startNewConversation();
+    setIsMIOInsightsActive(false); // Deselect MIO Insights when starting new chat
     // Close mobile sidebar after action
     if (isMobile) {
       setOpenMobile(false);
@@ -95,6 +99,17 @@ export function ChatSidebar() {
 
   const handleSelectConversation = (conversationId: string) => {
     selectConversation(conversationId);
+    setIsMIOInsightsActive(false); // Deselect MIO Insights when selecting a conversation
+    // Close mobile sidebar after selection
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  const handleSelectMIOInsights = () => {
+    setIsMIOInsightsActive(true);
+    // Navigate to the MIO Insights thread page
+    navigate('/mind-insurance/mio-insights');
     // Close mobile sidebar after selection
     if (isMobile) {
       setOpenMobile(false);
@@ -172,6 +187,8 @@ export function ChatSidebar() {
             onSelectConversation={handleSelectConversation}
             onRenameConversation={renameConversation}
             onArchiveConversation={removeConversation}
+            onSelectMIOInsights={handleSelectMIOInsights}
+            isMIOInsightsActive={isMIOInsightsActive}
           />
         </div>
 

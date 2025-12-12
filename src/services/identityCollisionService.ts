@@ -131,13 +131,37 @@ export async function saveAssessmentResult(
   const { userId, result } = request;
 
   try {
+    // 0. Ensure user_profile exists (prevents FK errors)
+    const { error: profileEnsureError } = await supabase
+      .from('user_profiles')
+      .upsert({
+        id: userId,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: true,
+      });
+
+    if (profileEnsureError) {
+      console.warn('[identityCollisionService] Could not ensure user_profile exists:', profileEnsureError);
+      // Continue anyway - the profile might already exist
+    }
+
     // 1. Save to identity_collision_assessments table
+    // Generate a session ID for this assessment
+    const sessionId = crypto.randomUUID();
+
     const { data: assessmentData, error: assessmentError } = await supabase
       .from('identity_collision_assessments')
       .insert({
         user_id: userId,
+        session_id: sessionId,
         dominant_pattern: result.primaryPattern,
         pattern_confidence: result.confidence,
+        past_prison_score: result.scores.past_prison,
+        success_sabotage_score: result.scores.success_sabotage,
+        compass_crisis_score: result.scores.compass_crisis,
+        completed_at: new Date().toISOString(),
         responses: {
           answers: result.answers,
           impact_area: result.impactArea,
@@ -173,24 +197,53 @@ export async function saveAssessmentResult(
       // Don't fail if profile update fails - assessment is already saved
     }
 
-    // 3. Also save to avatar_assessments for compatibility with existing system
-    const { error: avatarError } = await supabase
-      .from('avatar_assessments')
-      .upsert({
-        user_id: userId,
-        primary_pattern: result.primaryPattern.toUpperCase().replace(/_/g, ' '),
-        past_prison_score: result.scores.past_prison,
-        success_sabotage_score: result.scores.success_sabotage,
-        compass_crisis_score: result.scores.compass_crisis,
-        completed_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false,
-      });
+    // 3. Also update avatar_assessments for compatibility with existing system
+    // avatar_type format: pattern_temperament (e.g., past_prison_sage)
+    const avatarType = `${result.primaryPattern}_sage`;
 
-    if (avatarError) {
-      console.error('[identityCollisionService] Error upserting avatar_assessments:', avatarError);
-      // Don't fail if this fails - main assessment is saved
+    // First try to update existing record
+    const { data: existingAvatar } = await supabase
+      .from('avatar_assessments')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (existingAvatar) {
+      // Update existing record
+      const { error: avatarUpdateError } = await supabase
+        .from('avatar_assessments')
+        .update({
+          avatar_type: avatarType,
+          temperament: 'sage',
+          primary_pattern: result.primaryPattern,
+          past_prison_score: result.scores.past_prison,
+          success_sabotage_score: result.scores.success_sabotage,
+          compass_crisis_score: result.scores.compass_crisis,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (avatarUpdateError) {
+        console.error('[identityCollisionService] Error updating avatar_assessments:', avatarUpdateError);
+      }
+    } else {
+      // Insert new record
+      const { error: avatarInsertError } = await supabase
+        .from('avatar_assessments')
+        .insert({
+          user_id: userId,
+          avatar_type: avatarType,
+          temperament: 'sage',
+          primary_pattern: result.primaryPattern,
+          past_prison_score: result.scores.past_prison,
+          success_sabotage_score: result.scores.success_sabotage,
+          compass_crisis_score: result.scores.compass_crisis,
+          completed_at: new Date().toISOString(),
+        });
+
+      if (avatarInsertError) {
+        console.error('[identityCollisionService] Error inserting avatar_assessments:', avatarInsertError);
+      }
     }
 
     return {
@@ -297,7 +350,7 @@ export const PATTERN_INFO: Record<CollisionPattern, {
   success_sabotage: {
     name: 'Success Sabotage',
     shortDescription: 'You pull back when breakthrough is near',
-    fullDescription: 'You pull back right when breakthrough is near. Your amygdala associates success with danger—fear of visibility, fear of outgrowing relationships, or fear of not being able to maintain success. This causes you to unconsciously sabotage progress at critical moments.',
+    fullDescription: 'You pull back right when breakthrough is near. Your amygdala (your brain\'s threat-detection center) associates success with danger—fear of visibility, fear of outgrowing relationships, or fear of not being able to maintain success. This causes you to unconsciously sabotage progress at critical moments.',
     icon: '⚡',
     color: '#f59e0b', // Amber
   },

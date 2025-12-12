@@ -2,9 +2,10 @@
 // KNOWLEDGE INGESTION SERVICE
 // ============================================================================
 // Service for managing knowledge base operations across all three AI agents:
-// - Nette (GroupHome) → gh_training_chunks
+// - Nette (GroupHome) → nette_knowledge_chunks (updated 2025-12-09)
 // - MIO (Mind Insurance) → mio_knowledge_chunks
 // - ME (Money Evolution) → me_knowledge_chunks
+// All tables use consistent schema with chunk_text, category, tokens_approx
 // ============================================================================
 
 import { supabase } from '@/integrations/supabase/client';
@@ -24,8 +25,9 @@ import type {
 } from '@/types/knowledgeManagement';
 
 // N8N Webhook URL for knowledge processing
+// Updated 2025-12-09: Changed from purposewaze.app.n8n.cloud to n8n-n8n.vq00fr.easypanel.host
 const N8N_KNOWLEDGE_WEBHOOK_URL = import.meta.env.VITE_N8N_KNOWLEDGE_WEBHOOK_URL ||
-  'https://purposewaze.app.n8n.cloud/webhook/knowledge-ingest';
+  'https://n8n-n8n.vq00fr.easypanel.host/webhook/knowledge-ingest';
 
 // ============================================================================
 // KNOWLEDGE CHUNK OPERATIONS
@@ -44,7 +46,7 @@ export async function getKnowledgeChunks(
 ): Promise<{ chunks: NormalizedKnowledgeChunk[]; total: number }> {
   try {
     const tableName = getTableNameForAgent(agent);
-    const contentColumn = agent === 'nette' ? 'chunk_text' : 'content';
+    const contentColumn = 'chunk_text'; // All tables use chunk_text
 
     // First get the count
     let countQuery = supabase
@@ -216,6 +218,71 @@ export async function submitKnowledgeIngestion(
   });
 
   return queueItem as ProcessingQueueItem;
+}
+
+/**
+ * Submit multiple knowledge ingestion requests at once (bulk mode)
+ * Creates queue entries for each item and triggers N8N webhooks in parallel
+ */
+export async function submitBulkKnowledgeIngestion(
+  agent: AgentType,
+  items: Array<{
+    source_type: KnowledgeSourceType;
+    source_url: string;
+    source_title?: string;
+    category: string;
+  }>,
+  userId?: string
+): Promise<ProcessingQueueItem[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  // Create all queue entries at once
+  const insertData = items.map((item) => ({
+    agent_type: agent,
+    source_type: item.source_type,
+    source_url: item.source_url,
+    source_title: item.source_title,
+    category: item.category,
+    status: 'pending' as ProcessingStatus,
+    submitted_by: userId,
+    metadata: {},
+  }));
+
+  const { data: queueItems, error: queueError } = await supabase
+    .from('knowledge_processing_queue')
+    .insert(insertData)
+    .select();
+
+  if (queueError) {
+    console.error('Error creating bulk queue entries:', queueError);
+    throw new Error(`Failed to submit bulk ingestion request: ${queueError.message}`);
+  }
+
+  // Trigger N8N webhooks for all items in parallel (non-blocking)
+  const webhookPromises = (queueItems || []).map((queueItem, index) => {
+    const item = items[index];
+    return triggerN8NWebhook({
+      action: 'process_knowledge',
+      agent_type: agent,
+      source_type: item.source_type,
+      source_url: item.source_url,
+      source_title: item.source_title,
+      category: item.category,
+      queue_id: queueItem.id,
+      metadata: {},
+    }).catch((err) => {
+      console.error(`Failed to trigger N8N webhook for item ${index}:`, err);
+      // Update queue status to failed
+      updateQueueStatus(queueItem.id, 'failed', 'Failed to trigger processing webhook');
+    });
+  });
+
+  // Don't await - let webhooks process in background
+  Promise.all(webhookPromises);
+
+  return (queueItems || []) as ProcessingQueueItem[];
 }
 
 /**
@@ -489,7 +556,7 @@ export async function insertKnowledgeChunk(
   userId?: string
 ): Promise<NormalizedKnowledgeChunk> {
   const tableName = getTableNameForAgent(agent);
-  const contentColumn = agent === 'nette' ? 'chunk_text' : 'content';
+  const contentColumn = 'chunk_text'; // All tables use chunk_text
 
   const insertData: Record<string, unknown> = {
     [contentColumn]: data.content,
@@ -540,7 +607,7 @@ export async function bulkInsertKnowledgeChunks(
   userId?: string
 ): Promise<number> {
   const tableName = getTableNameForAgent(agent);
-  const contentColumn = agent === 'nette' ? 'chunk_text' : 'content';
+  const contentColumn = 'chunk_text'; // All tables use chunk_text
 
   const insertData = chunks.map((chunk) => {
     const data: Record<string, unknown> = {
@@ -587,7 +654,7 @@ export async function bulkInsertKnowledgeChunks(
 function getTableNameForAgent(agent: AgentType): string {
   switch (agent) {
     case 'nette':
-      return 'gh_training_chunks';
+      return 'nette_knowledge_chunks'; // Changed from gh_training_chunks (2025-12-09)
     case 'mio':
       return 'mio_knowledge_chunks';
     case 'me':
@@ -597,17 +664,18 @@ function getTableNameForAgent(agent: AgentType): string {
 
 /**
  * Normalize a chunk from any table to a consistent format
+ * All tables now use consistent schema with chunk_text column
  */
 function normalizeChunk(chunk: Record<string, unknown>, agent: AgentType): NormalizedKnowledgeChunk {
   return {
     id: chunk.id as string,
     agent_type: agent,
-    content: (agent === 'nette' ? chunk.chunk_text : chunk.content) as string,
+    content: chunk.chunk_text as string, // All tables use chunk_text
     category: chunk.category as string,
     source_url: chunk.source_url as string | undefined,
     source_type: chunk.source_type as KnowledgeSourceType | undefined,
     source_title: chunk.source_title as string | undefined,
-    metadata: (agent === 'nette' ? chunk.upload_metadata : chunk.metadata) as Record<string, unknown> | undefined,
+    metadata: chunk.metadata as Record<string, unknown> | undefined,
     chunk_index: chunk.chunk_index as number | undefined,
     total_chunks: chunk.total_chunks as number | undefined,
     created_at: chunk.created_at as string,

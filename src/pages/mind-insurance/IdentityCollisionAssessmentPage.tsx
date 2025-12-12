@@ -1,19 +1,32 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Identity Collision Assessment Page - $100M Premium UX Redesign
+ *
+ * Features:
+ * - One question per page with cinematic transitions
+ * - Journey progress visualization
+ * - Phase-specific theming (Foundation, Pattern, Impact)
+ * - Premium slider for impact intensity
+ * - Cinematic results reveal with pattern breakdown
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Progress } from '@/components/ui/progress';
-import { Brain, CheckCircle2, ArrowRight, Loader2, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AssessmentJourneyProgress,
+  AssessmentQuestionCard,
+  AssessmentSliderQuestion,
+  AssessmentResultsReveal,
+  AssessmentIntroScreens,
+} from '@/components/mind-insurance/assessment';
 import {
   calculateCollisionResult,
   saveAssessmentResult,
-  PATTERN_INFO,
   type AssessmentAnswer,
   type AssessmentResult,
   type CollisionPattern,
@@ -51,8 +64,8 @@ const QUESTIONS: Question[] = [
     subtitle: 'Think about the last 6-12 months',
     type: 'single',
     options: [
-      { id: 'a', text: 'Major gap — I work incredibly hard but results don\'t match', score: 10 },
-      { id: 'b', text: 'Significant gap — There\'s a clear disconnect', score: 7 },
+      { id: 'a', text: "Major gap — I work incredibly hard but results don't match", score: 10 },
+      { id: 'b', text: "Significant gap — There's a clear disconnect", score: 7 },
       { id: 'c', text: 'Moderate gap — Some inconsistency', score: 4 },
       { id: 'd', text: 'Minimal gap — Effort and results align well', score: 1 },
     ],
@@ -83,7 +96,7 @@ const QUESTIONS: Question[] = [
       },
       {
         id: 'd',
-        text: 'I\'m generally consistent with execution',
+        text: "I'm generally consistent with execution",
         score: 2,
       },
     ],
@@ -94,10 +107,10 @@ const QUESTIONS: Question[] = [
     subtitle: 'Be honest with yourself',
     type: 'single',
     options: [
-      { id: 'a', text: 'Daily — It\'s a constant thought', score: 10, patternIndicators: { compass_crisis: 5, past_prison: 3 } },
+      { id: 'a', text: "Daily — It's a constant thought", score: 10, patternIndicators: { compass_crisis: 5, past_prison: 3 } },
       { id: 'b', text: 'Weekly — Comes up regularly', score: 7, patternIndicators: { compass_crisis: 3, past_prison: 2 } },
       { id: 'c', text: 'Monthly — Occasional thought', score: 4, patternIndicators: { compass_crisis: 1 } },
-      { id: 'd', text: 'Rarely — I\'m at peace with my progress', score: 1 },
+      { id: 'd', text: "Rarely — I'm at peace with my progress", score: 1 },
     ],
   },
   {
@@ -108,7 +121,7 @@ const QUESTIONS: Question[] = [
     options: [
       {
         id: 'a',
-        text: 'I feel held back by my past, upbringing, or background. There\'s guilt or limiting beliefs from where I came from.',
+        text: "I feel held back by my past, upbringing, or background. There's guilt or limiting beliefs from where I came from.",
         score: 10,
         patternIndicators: { past_prison: 15 },
       },
@@ -126,7 +139,7 @@ const QUESTIONS: Question[] = [
       },
       {
         id: 'd',
-        text: 'I feel generally aligned and don\'t strongly identify with any of these patterns.',
+        text: "I feel generally aligned and don't strongly identify with any of these patterns.",
         score: 2,
       },
     ],
@@ -145,7 +158,7 @@ const QUESTIONS: Question[] = [
       },
       {
         id: 'b',
-        text: 'Stop-start cycle — I can\'t maintain consistency',
+        text: "Stop-start cycle — I can't maintain consistency",
         score: 6,
         patternIndicators: { compass_crisis: 5 },
       },
@@ -175,19 +188,19 @@ const QUESTIONS: Question[] = [
       },
       {
         id: 'b',
-        text: 'I often feel like an impostor who doesn\'t deserve success',
+        text: "I often feel like an impostor who doesn't deserve success",
         score: 7,
         patternIndicators: { past_prison: 5, success_sabotage: 3 },
       },
       {
         id: 'c',
-        text: 'It depends heavily on context and who\'s around',
+        text: "It depends heavily on context and who's around",
         score: 5,
         patternIndicators: { compass_crisis: 3 },
       },
       {
         id: 'd',
-        text: 'I\'m generally confident in my decisions',
+        text: "I'm generally confident in my decisions",
         score: 2,
       },
     ],
@@ -207,8 +220,8 @@ const QUESTIONS: Question[] = [
   },
   {
     id: 'q8',
-    title: 'How much is this pattern impacting your life?',
-    subtitle: 'Drag the slider to indicate impact intensity',
+    title: 'How much are these internal conflicts impacting your life?',
+    subtitle: 'Consider the barriers you identified earlier',
     type: 'slider',
     sliderConfig: {
       min: 1,
@@ -224,29 +237,53 @@ const QUESTIONS: Question[] = [
 // ============================================================================
 
 const STORAGE_KEY = 'identity_collision_assessment_progress';
+const STEP_KEY = 'identity_collision_assessment_step';
+const INTRO_COMPLETED_KEY = 'identity_collision_intro_completed';
 
-function saveProgress(answers: Record<string, string>) {
+function saveProgress(answers: Record<string, string>, step: number) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+    localStorage.setItem(STEP_KEY, step.toString());
   } catch (e) {
     console.warn('Could not save progress to localStorage:', e);
   }
 }
 
-function loadProgress(): Record<string, string> {
+function loadProgress(): { answers: Record<string, string>; step: number } {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
+    const savedAnswers = localStorage.getItem(STORAGE_KEY);
+    const savedStep = localStorage.getItem(STEP_KEY);
+    return {
+      answers: savedAnswers ? JSON.parse(savedAnswers) : {},
+      step: savedStep ? parseInt(savedStep, 10) : 0,
+    };
   } catch (e) {
-    return {};
+    return { answers: {}, step: 0 };
   }
 }
 
 function clearProgress() {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STEP_KEY);
   } catch (e) {
     console.warn('Could not clear localStorage:', e);
+  }
+}
+
+function hasCompletedIntro(): boolean {
+  try {
+    return localStorage.getItem(INTRO_COMPLETED_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+function setIntroCompleted() {
+  try {
+    localStorage.setItem(INTRO_COMPLETED_KEY, 'true');
+  } catch (e) {
+    console.warn('Could not save intro completion to localStorage:', e);
   }
 }
 
@@ -259,26 +296,40 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // State
+  const [showIntro, setShowIntro] = useState(() => !hasCompletedIntro());
+  const [introStep, setIntroStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [showResults, setShowResults] = useState(false);
   const [result, setResult] = useState<AssessmentResult | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Load saved progress on mount
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'true') {
+      clearProgress();
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
     const saved = loadProgress();
-    if (Object.keys(saved).length > 0) {
-      setAnswers(saved);
+    if (Object.keys(saved.answers).length > 0) {
+      setAnswers(saved.answers);
+      setCurrentStep(saved.step);
     }
   }, []);
 
   // Save progress on change
   useEffect(() => {
     if (Object.keys(answers).length > 0) {
-      saveProgress(answers);
+      saveProgress(answers, currentStep);
     }
-  }, [answers]);
+  }, [answers, currentStep]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -287,27 +338,58 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
       return saveAssessmentResult({ userId: user.id, result: assessmentResult });
     },
     onSuccess: () => {
-      // Invalidate identity collision status query
       queryClient.invalidateQueries({ queryKey: ['identityCollisionStatus'] });
       clearProgress();
     },
   });
 
-  // Calculate progress
-  const answeredCount = Object.keys(answers).length;
-  const progress = (answeredCount / QUESTIONS.length) * 100;
-  const isComplete = answeredCount === QUESTIONS.length;
+  // Current question
+  const currentQuestion = QUESTIONS[currentStep];
+  const isLastQuestion = currentStep === QUESTIONS.length - 1;
+  const hasCurrentAnswer = Boolean(answers[currentQuestion?.id]);
 
-  // Handle answer change
-  const handleAnswer = (questionId: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
+  // Navigation handlers
+  const goToNextStep = useCallback(() => {
+    if (currentStep < QUESTIONS.length - 1) {
+      setDirection('forward');
+      setCurrentStep((prev) => prev + 1);
+    }
+  }, [currentStep]);
+
+  const goToPreviousStep = useCallback(() => {
+    if (currentStep > 0) {
+      setDirection('backward');
+      setCurrentStep((prev) => prev - 1);
+    }
+  }, [currentStep]);
+
+  // Handle answer
+  const handleAnswer = useCallback(
+    (value: string) => {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
+
+      // Auto-advance after short delay (except for slider)
+      if (currentQuestion.type !== 'slider' && currentStep < QUESTIONS.length - 1) {
+        setTimeout(() => {
+          goToNextStep();
+        }, 400);
+      }
+    },
+    [currentQuestion, currentStep, goToNextStep]
+  );
+
+  // Handle slider change (no auto-advance)
+  const handleSliderChange = useCallback(
+    (value: number) => {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value.toString() }));
+    },
+    [currentQuestion]
+  );
 
   // Handle submit
   const handleSubmit = async () => {
-    if (!isComplete) return;
+    setSaveError(null);
 
-    // Convert answers to AssessmentAnswer format
     const formattedAnswers: AssessmentAnswer[] = QUESTIONS.map((question) => {
       const answerValue = answers[question.id];
 
@@ -328,244 +410,207 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
       };
     });
 
-    // Calculate result
     const assessmentResult = calculateCollisionResult(formattedAnswers);
-    setResult(assessmentResult);
 
-    // Save to database
-    await saveMutation.mutateAsync(assessmentResult);
+    try {
+      const response = await saveMutation.mutateAsync(assessmentResult);
 
-    // Show results
-    setShowResults(true);
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to save assessment');
+      }
+
+      setResult(assessmentResult);
+      setShowResults(true);
+    } catch (error) {
+      console.error('[Assessment] Save failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setSaveError(errorMessage);
+      toast({
+        title: 'Unable to save assessment',
+        description: 'Please try again. If the problem persists, contact support.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Handle continue after results
   const handleContinue = () => {
-    // Get the intended destination from location state, or default to hub
     const from = location.state?.from?.pathname || '/mind-insurance';
     navigate(from, { replace: true });
   };
 
-  // Render results screen
-  if (showResults && result) {
-    const patternInfo = PATTERN_INFO[result.primaryPattern];
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showResults) return;
 
+      if (e.key === 'ArrowRight' && hasCurrentAnswer && !isLastQuestion) {
+        goToNextStep();
+      } else if (e.key === 'ArrowLeft' && currentStep > 0) {
+        goToPreviousStep();
+      } else if (e.key === 'Enter' && isLastQuestion && hasCurrentAnswer) {
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, hasCurrentAnswer, isLastQuestion, showResults, goToNextStep, goToPreviousStep]);
+
+  // Intro screen handlers (7 screens: 0-6)
+  const handleIntroNext = useCallback(() => {
+    if (introStep < 6) {
+      setIntroStep((prev) => prev + 1);
+    } else {
+      setIntroCompleted();
+      setShowIntro(false);
+    }
+  }, [introStep]);
+
+  const handleIntroSkip = useCallback(() => {
+    setIntroCompleted();
+    setShowIntro(false);
+  }, []);
+
+  // Show intro screens for first-time users
+  if (showIntro) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#3c3c3b] via-[#2a2a2a] to-[#1a1a1a] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-lg"
-        >
-          <Card className="bg-white/[0.08] backdrop-blur-xl border-white/10 p-8 rounded-3xl">
-            {/* Success Icon */}
-            <div className="flex justify-center mb-6">
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
-                style={{ backgroundColor: `${patternInfo.color}20` }}
-              >
-                {patternInfo.icon}
-              </div>
-            </div>
+      <AssessmentIntroScreens
+        currentStep={introStep}
+        onNext={handleIntroNext}
+        onSkip={handleIntroSkip}
+      />
+    );
+  }
 
-            {/* Pattern Name */}
-            <h1 className="text-2xl md:text-3xl font-bold text-center text-white mb-2">
-              Your Pattern: {patternInfo.name}
-            </h1>
-
-            {/* Confidence */}
-            <div className="flex justify-center items-center gap-2 mb-6">
-              <div
-                className="px-3 py-1 rounded-full text-sm font-medium"
-                style={{ backgroundColor: patternInfo.color, color: '#fff' }}
-              >
-                {result.confidence}% confidence
-              </div>
-            </div>
-
-            {/* Description */}
-            <p className="text-gray-300 text-center mb-6 leading-relaxed">
-              {patternInfo.shortDescription}
-            </p>
-
-            {/* Full Description */}
-            <div className="bg-white/5 rounded-xl p-4 mb-6">
-              <p className="text-gray-400 text-sm leading-relaxed">
-                {patternInfo.fullDescription}
-              </p>
-            </div>
-
-            {/* Impact Area */}
-            {result.impactArea && (
-              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-6">
-                <span>Most affected area:</span>
-                <span className="text-mi-gold font-medium capitalize">
-                  {result.impactArea.replace('_', ' ')}
-                </span>
-              </div>
-            )}
-
-            {/* Continue Button */}
-            <Button
-              onClick={handleContinue}
-              className="w-full h-14 text-lg font-semibold rounded-xl bg-gradient-to-r from-mi-gold to-mi-gold/80 hover:from-mi-gold/90 hover:to-mi-gold/70 text-black"
-            >
-              <Shield className="w-5 h-5 mr-2" />
-              Continue to Mind Insurance
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Card>
-        </motion.div>
+  // Show results
+  if (showResults && result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-mi-navy via-mi-navy-light to-[#0d1a2d] p-4">
+        <div className="container mx-auto max-w-lg pt-8">
+          <AssessmentResultsReveal
+            result={result}
+            onContinue={handleContinue}
+            isLoading={saveMutation.isPending}
+          />
+        </div>
       </div>
     );
   }
 
-  // Render assessment questions
+  // Render assessment
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#3c3c3b] via-[#2a2a2a] to-[#1a1a1a]">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-mi-cyan/20 mb-4">
-            <Brain className="w-8 h-8 text-mi-cyan" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Identity Collision Assessment
-          </h1>
-          <p className="text-gray-400">
-            Discover which pattern is holding you back
-          </p>
-        </div>
+    <div className="min-h-[100dvh] bg-gradient-to-br from-mi-navy via-mi-navy-light to-[#0d1a2d] flex flex-col overflow-hidden">
+      {/* Journey Progress Header */}
+      <div className="flex-shrink-0 bg-mi-navy/90 backdrop-blur-lg border-b border-white/10">
+        <AssessmentJourneyProgress currentStep={currentStep} totalSteps={QUESTIONS.length} />
+      </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-400 mb-2">
-            <span>Progress</span>
-            <span>{answeredCount} of {QUESTIONS.length}</span>
-          </div>
-          <Progress value={progress} className="h-2 bg-white/10" />
-        </div>
-
-        {/* Questions */}
-        <div className="space-y-6">
-          {QUESTIONS.map((question, index) => (
-            <motion.div
-              key={question.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="bg-white/[0.08] backdrop-blur-xl border-white/10 p-6 rounded-2xl">
-                {/* Question Number */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      answers[question.id]
-                        ? 'bg-mi-cyan text-white'
-                        : 'bg-white/10 text-gray-400'
-                    }`}
-                  >
-                    {answers[question.id] ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-medium">{question.title}</h3>
-                    {question.subtitle && (
-                      <p className="text-gray-500 text-sm">{question.subtitle}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Options or Slider */}
-                {question.type === 'single' && question.options && (
-                  <RadioGroup
-                    value={answers[question.id] || ''}
-                    onValueChange={(value) => handleAnswer(question.id, value)}
-                    className="space-y-3"
-                  >
-                    {question.options.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`flex items-start space-x-3 p-3 rounded-xl transition-colors cursor-pointer ${
-                          answers[question.id] === option.id
-                            ? 'bg-mi-cyan/20 border border-mi-cyan/50'
-                            : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                        }`}
-                        onClick={() => handleAnswer(question.id, option.id)}
-                      >
-                        <RadioGroupItem
-                          value={option.id}
-                          id={`${question.id}-${option.id}`}
-                          className="mt-0.5 border-gray-500 text-mi-cyan"
-                        />
-                        <Label
-                          htmlFor={`${question.id}-${option.id}`}
-                          className="text-gray-300 cursor-pointer leading-relaxed"
-                        >
-                          {option.text}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                )}
-
-                {question.type === 'slider' && question.sliderConfig && (
-                  <div className="space-y-4 pt-2">
-                    <Slider
-                      value={[parseInt(answers[question.id] || '5', 10)]}
-                      onValueChange={(value) =>
-                        handleAnswer(question.id, value[0].toString())
-                      }
-                      min={question.sliderConfig.min}
-                      max={question.sliderConfig.max}
-                      step={1}
-                      className="[&_[role=slider]]:bg-mi-cyan [&_[role=slider]]:border-mi-cyan"
-                    />
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>{question.sliderConfig.minLabel}</span>
-                      <span className="text-mi-gold font-bold text-lg">
-                        {answers[question.id] || 5}
-                      </span>
-                      <span>{question.sliderConfig.maxLabel}</span>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Submit Button */}
-        <div className="mt-8 pb-8">
-          <Button
-            onClick={handleSubmit}
-            disabled={!isComplete || saveMutation.isPending}
-            className={`w-full h-14 text-lg font-semibold rounded-xl transition-all ${
-              isComplete
-                ? 'bg-gradient-to-r from-mi-gold to-mi-gold/80 hover:from-mi-gold/90 hover:to-mi-gold/70 text-black'
-                : 'bg-white/10 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {saveMutation.isPending ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analyzing Your Pattern...
-              </>
-            ) : isComplete ? (
-              <>
-                Reveal My Pattern
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
+      {/* Question Content */}
+      <div className="flex-1 flex flex-col justify-center px-3 sm:px-4 py-4 overflow-y-auto">
+        <div className="w-full max-w-md sm:max-w-lg mx-auto">
+          <AnimatePresence mode="wait" custom={direction}>
+            {currentQuestion.type === 'slider' ? (
+              <AssessmentSliderQuestion
+                key={currentQuestion.id}
+                questionIndex={currentStep}
+                totalQuestions={QUESTIONS.length}
+                title={currentQuestion.title}
+                subtitle={currentQuestion.subtitle}
+                sliderConfig={currentQuestion.sliderConfig!}
+                value={parseInt(answers[currentQuestion.id] || '5', 10)}
+                onValueChange={handleSliderChange}
+                direction={direction}
+              />
             ) : (
-              `Answer ${QUESTIONS.length - answeredCount} more question${
-                QUESTIONS.length - answeredCount > 1 ? 's' : ''
-              }`
+              <AssessmentQuestionCard
+                key={currentQuestion.id}
+                question={currentQuestion}
+                questionIndex={currentStep}
+                totalQuestions={QUESTIONS.length}
+                selectedAnswer={answers[currentQuestion.id] || null}
+                onAnswer={handleAnswer}
+                direction={direction}
+              />
             )}
+          </AnimatePresence>
+
+          {/* Error Message */}
+          {saveError && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+            >
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-red-400 font-medium mb-1">Unable to save your assessment</p>
+                  <p className="text-red-400/70 text-sm mb-3">
+                    There was an issue saving your results. Please try again.
+                  </p>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={saveMutation.isPending}
+                    size="sm"
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    {saveMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      'Try Again'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation Footer */}
+      <div className="flex-shrink-0 bg-mi-navy/90 backdrop-blur-lg border-t border-white/10 p-3 sm:p-4">
+        <div className="max-w-md sm:max-w-lg mx-auto flex items-center justify-between gap-3">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={goToPreviousStep}
+            disabled={currentStep === 0}
+            className="text-gray-400 hover:text-white disabled:opacity-30"
+          >
+            <ChevronLeft className="w-5 h-5 mr-1" />
+            Back
           </Button>
+
+          {/* Next / Submit Button */}
+          {isLastQuestion ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={!hasCurrentAnswer || saveMutation.isPending}
+              className="flex-1 max-w-xs h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-mi-gold to-mi-gold/80 hover:from-mi-gold/90 hover:to-mi-gold/70 text-black disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saveMutation.isPending ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                'Reveal My Pattern'
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={goToNextStep}
+              disabled={!hasCurrentAnswer}
+              className="text-gray-400 hover:text-white disabled:opacity-30"
+            >
+              Next
+              <ChevronRight className="w-5 h-5 ml-1" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

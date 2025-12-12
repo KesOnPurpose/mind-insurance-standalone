@@ -65,6 +65,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getAllMIOReports,
@@ -151,6 +152,7 @@ interface AdminProtocolView extends MIOInsightProtocol {
 export default function ReportManagement() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<AdminTab>('reports');
@@ -231,7 +233,7 @@ export default function ReportManagement() {
       setIsLoadingProtocols(true);
       const { data, error } = await supabase
         .from('mio_weekly_protocols')
-        .select('*, user_profiles(full_name, email)')
+        .select('*, user_profiles!mio_weekly_protocols_user_id_fkey(full_name, email)')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -344,8 +346,8 @@ export default function ReportManagement() {
     }
   };
 
-  // n8n webhook URL for MIO report generation
-  const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-v5';
+  // n8n webhook URL for MIO report generation (improved workflow with 15 capabilities)
+  const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
 
   // Generate report for selected user or group via n8n workflow
   const handleGenerateReport = async () => {

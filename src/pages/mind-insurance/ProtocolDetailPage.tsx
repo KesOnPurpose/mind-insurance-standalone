@@ -24,13 +24,14 @@ import {
   ChevronUp,
   Calendar,
   Trophy,
+  Lightbulb,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
+import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
 import {
   getProtocolById,
   completeProtocolDay,
@@ -97,9 +98,10 @@ export default function ProtocolDetailPage() {
   };
 
   const handleSkipToToday = async () => {
-    if (!protocol || !protocol.assigned_week_start) return;
+    if (!protocol || !protocol.created_at) return;
 
-    const actualDay = calculateCurrentProtocolDay(protocol.assigned_week_start);
+    // Use created_at for day calculation (not assigned_week_start which is Monday of week)
+    const actualDay = calculateCurrentProtocolDay(protocol.created_at);
     if (actualDay <= protocol.current_day) return;
 
     const result = await skipToDay(protocol.id, actualDay);
@@ -141,6 +143,7 @@ export default function ProtocolDetailPage() {
   const isMuted = protocol.muted_by_coach;
 
   return (
+    <MindInsuranceErrorBoundary fallbackTitle="Error loading Protocol Details" showHomeButton>
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800/50">
@@ -198,7 +201,7 @@ export default function ProtocolDetailPage() {
           </div>
 
           {/* Progress Bar */}
-          <Card className="bg-slate-800/30 border-slate-700/30 p-4">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-400">Progress</span>
               <span className="text-sm text-white font-medium">
@@ -211,15 +214,15 @@ export default function ProtocolDetailPage() {
                 {protocol.days_skipped} day(s) skipped
               </p>
             )}
-          </Card>
+          </div>
 
           {/* Insight Summary */}
-          <Card className="bg-slate-800/50 border-slate-700/50 p-4">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
             <p className="text-sm text-cyan-400 font-medium mb-2">
               This Week's Insight
             </p>
             <p className="text-slate-300">{protocol.insight_summary}</p>
-          </Card>
+          </div>
         </motion.div>
 
         {/* 7-Day List */}
@@ -269,17 +272,17 @@ export default function ProtocolDetailPage() {
 
         {/* Neural Principle */}
         {protocol.neural_principle && (
-          <Card className="bg-slate-800/30 border-slate-700/30 p-4">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
             <p className="text-sm text-cyan-400 font-medium mb-2">
               Neural Rewiring Principle
             </p>
             <p className="text-slate-400 italic">"{protocol.neural_principle}"</p>
-          </Card>
+          </div>
         )}
 
         {/* Muted Warning */}
         {isMuted && (
-          <Card className="bg-amber-500/10 border-amber-500/30 p-4">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
             <p className="text-amber-400 text-sm">
               This protocol has been paused by your coach.
               {protocol.muted_reason && (
@@ -288,10 +291,11 @@ export default function ProtocolDetailPage() {
                 </span>
               )}
             </p>
-          </Card>
+          </div>
         )}
       </div>
     </div>
+    </MindInsuranceErrorBoundary>
   );
 }
 
@@ -358,7 +362,7 @@ function DayAccordion({
 
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
-      <Card className={`overflow-hidden transition-all ${getCardStyle()}`}>
+      <div className={`overflow-hidden transition-all rounded-xl border ${getCardStyle()}`}>
         <CollapsibleTrigger asChild>
           <button className="w-full p-4 flex items-center justify-between text-left">
             <div className="flex items-center gap-3">
@@ -400,6 +404,23 @@ function DayAccordion({
 
         <CollapsibleContent>
           <div className="px-4 pb-4 space-y-4 border-t border-slate-700/30 pt-4">
+            {/* Context Reminder - Connects task back to original insight */}
+            {task.context_reminder && (
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-cyan-500 font-medium uppercase tracking-wide mb-1">
+                      Remember Why You're Here
+                    </p>
+                    <p className="text-sm text-cyan-300">
+                      {task.context_reminder}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Instructions */}
             <div>
               <p className="text-sm text-cyan-400 font-medium mb-2">
@@ -419,7 +440,7 @@ function DayAccordion({
             )}
 
             {/* Success Criteria */}
-            {task.success_criteria.length > 0 && (
+            {Array.isArray(task.success_criteria) && task.success_criteria.length > 0 && (
               <div>
                 <p className="text-sm text-cyan-400 font-medium mb-2 flex items-center">
                   <Target className="w-4 h-4 mr-1" />
@@ -464,7 +485,7 @@ function DayAccordion({
             )}
           </div>
         </CollapsibleContent>
-      </Card>
+      </div>
     </Collapsible>
   );
 }

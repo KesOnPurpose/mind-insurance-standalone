@@ -157,17 +157,10 @@ export function UserGroupManager() {
 
   const fetchUsers = async () => {
     try {
-      // Query gh_approved_users (better name/email data)
-      // Filter to only users with user_id (they have signed up and have a profile)
-      const { data, error } = await supabase
-        .from('gh_approved_users')
-        .select('id, full_name, email, user_id, tier')
-        .eq('is_active', true)
-        .not('user_id', 'is', null)
-        .order('full_name', { ascending: true });
-
-      if (error) throw error;
-      setUsers((data || []) as UserProfile[]);
+      // Use Edge Function to bypass RLS on gh_approved_users
+      // Only returns users with user_id populated (they have signed up)
+      const result = await callAdminGroupAPI('list_users');
+      setUsers((result.data || []) as UserProfile[]);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -445,20 +438,20 @@ export function UserGroupManager() {
                                 Add Member
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="start">
+                            <PopoverContent className="w-[350px] p-0" align="start">
                               <Command>
                                 <CommandInput
-                                  placeholder="Search users..."
+                                  placeholder="Search by name or email..."
                                   value={memberSearchQuery}
                                   onValueChange={setMemberSearchQuery}
                                 />
-                                <CommandList>
+                                <CommandList className="max-h-[300px]">
                                   <CommandEmpty>No users found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {filteredUsers.slice(0, 10).map((user) => (
+                                  <CommandGroup heading={`${filteredUsers.length} users${memberSearchQuery ? ' matching' : ' total'}`}>
+                                    {filteredUsers.slice(0, 50).map((user) => (
                                       <CommandItem
                                         key={user.id}
-                                        value={user.id}
+                                        value={`${user.full_name || ''} ${user.email || ''}`}
                                         onSelect={() => handleAddMember(user.user_id)}
                                       >
                                         <User className="mr-2 h-4 w-4" />
@@ -475,6 +468,11 @@ export function UserGroupManager() {
                                         </div>
                                       </CommandItem>
                                     ))}
+                                    {filteredUsers.length > 50 && (
+                                      <div className="px-2 py-1.5 text-xs text-muted-foreground text-center border-t">
+                                        Type to search {filteredUsers.length - 50} more users...
+                                      </div>
+                                    )}
                                   </CommandGroup>
                                 </CommandList>
                               </Command>

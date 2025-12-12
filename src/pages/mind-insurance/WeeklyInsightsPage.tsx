@@ -7,6 +7,7 @@ import { ArrowLeft, RefreshCw, Calendar, Brain, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
 
 // Hub components
 import { WeekProgressRing } from '@/components/weekly-insights/hub/WeekProgressRing';
@@ -43,10 +44,15 @@ export default function WeeklyInsightsPage() {
   // Calculate days progress for the ring
   const getDaysProgress = (): ProtocolDayProgress[] => {
     if (!mioProtocol?.progress?.daily_completions) {
-      return Array.from({ length: 7 }, (_, i) => ({
-        day: i + 1,
-        completed: false,
-      }));
+      return Array.from({ length: 7 }, (_, i) => {
+        const day = i + 1;
+        return {
+          day,
+          completed: false,
+          isToday: day === currentDayNumber,
+          isFuture: day > currentDayNumber,
+        };
+      });
     }
 
     return Array.from({ length: 7 }, (_, i) => {
@@ -56,6 +62,8 @@ export default function WeeklyInsightsPage() {
         day,
         completed: completion?.completed ?? false,
         completedAt: completion?.completed_at,
+        isToday: day === currentDayNumber,
+        isFuture: day > currentDayNumber,
       };
     });
   };
@@ -99,6 +107,7 @@ export default function WeeklyInsightsPage() {
   };
 
   return (
+    <MindInsuranceErrorBoundary fallbackTitle="Error loading Weekly Insights" showHomeButton>
     <div className="min-h-screen bg-mi-navy">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Header */}
@@ -191,5 +200,6 @@ export default function WeeklyInsightsPage() {
         </div>
       </div>
     </div>
+    </MindInsuranceErrorBoundary>
   );
 }

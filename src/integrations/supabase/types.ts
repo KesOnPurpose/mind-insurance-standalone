@@ -1749,6 +1749,94 @@ export type Database = {
           },
         ]
       }
+      mental_pillar_assessments: {
+        Row: {
+          id: string
+          user_id: string
+          assessment_phase: string
+          attempt_number: number
+          source: string
+          source_context: Json | null
+          invitation_id: string | null
+          pillar_scores: Json
+          baseline_assessment_id: string | null
+          growth_deltas: Json | null
+          responses: Json
+          mio_feedback: Json | null
+          confidence_score: number | null
+          answer_quality_score: number | null
+          started_at: string | null
+          completed_at: string | null
+          time_to_complete_seconds: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          assessment_phase: string
+          attempt_number?: number
+          source?: string
+          source_context?: Json | null
+          invitation_id?: string | null
+          pillar_scores: Json
+          baseline_assessment_id?: string | null
+          growth_deltas?: Json | null
+          responses: Json
+          mio_feedback?: Json | null
+          confidence_score?: number | null
+          answer_quality_score?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          time_to_complete_seconds?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          assessment_phase?: string
+          attempt_number?: number
+          source?: string
+          source_context?: Json | null
+          invitation_id?: string | null
+          pillar_scores?: Json
+          baseline_assessment_id?: string | null
+          growth_deltas?: Json | null
+          responses?: Json
+          mio_feedback?: Json | null
+          confidence_score?: number | null
+          answer_quality_score?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          time_to_complete_seconds?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mental_pillar_assessments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mental_pillar_assessments_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mental_pillar_assessments_baseline_assessment_id_fkey"
+            columns: ["baseline_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "mental_pillar_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_collision_scores: {
         Row: {
           collision_count: number | null
@@ -3287,9 +3375,11 @@ export type Database = {
           full_name: string | null
           id: string
           include_credit_repair: boolean | null
+          inner_wiring: Json | null
           last_tactic_completed_at: string | null
           license_status: string | null
           longest_streak: number | null
+          mental_pillar_progress: Json | null
           ninety_day_vision: string | null
           notification_preferences: Json | null
           onboarding_completed: boolean | null
@@ -3307,6 +3397,7 @@ export type Database = {
           target_demographics: Json | null
           target_state: string | null
           temperament: string | null
+          temperament_type: string | null
           tier_expires_at: string | null
           tier_level: string | null
           tier_start_date: string | null
@@ -3347,9 +3438,11 @@ export type Database = {
           full_name?: string | null
           id: string
           include_credit_repair?: boolean | null
+          inner_wiring?: Json | null
           last_tactic_completed_at?: string | null
           license_status?: string | null
           longest_streak?: number | null
+          mental_pillar_progress?: Json | null
           ninety_day_vision?: string | null
           notification_preferences?: Json | null
           onboarding_completed?: boolean | null
@@ -3367,6 +3460,7 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          temperament_type?: string | null
           tier_expires_at?: string | null
           tier_level?: string | null
           tier_start_date?: string | null
@@ -3407,9 +3501,11 @@ export type Database = {
           full_name?: string | null
           id?: string
           include_credit_repair?: boolean | null
+          inner_wiring?: Json | null
           last_tactic_completed_at?: string | null
           license_status?: string | null
           longest_streak?: number | null
+          mental_pillar_progress?: Json | null
           ninety_day_vision?: string | null
           notification_preferences?: Json | null
           onboarding_completed?: boolean | null
@@ -3427,6 +3523,7 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          temperament_type?: string | null
           tier_expires_at?: string | null
           tier_level?: string | null
           tier_start_date?: string | null

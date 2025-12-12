@@ -2,6 +2,7 @@
 // Phase 26: Weekly Insights Feature
 
 import { supabase } from '@/integrations/supabase/client';
+import { formatDateInTimezone, getBrowserTimezone } from '@/utils/timezoneUtils';
 import type {
   MIOWeeklyProtocol,
   MIOUserProtocolProgress,
@@ -125,12 +126,13 @@ export async function createMIOProtocol(
   );
   const year = now.getFullYear();
 
-  // Calculate start of week (Monday)
+  // Calculate start of week (Monday) using browser timezone
+  const timezone = getBrowserTimezone();
   const dayOfWeek = now.getDay();
   const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - daysToMonday);
-  const assignedWeekStart = weekStart.toISOString().split('T')[0];
+  const assignedWeekStart = formatDateInTimezone(weekStart, timezone);
 
   const { data, error } = await supabase
     .from('mio_weekly_protocols')
@@ -305,15 +307,16 @@ export async function getMIOProtocolStreak(userId: string): Promise<number> {
   mostRecent.setHours(0, 0, 0, 0);
 
   if (mostRecent.getTime() === today.getTime() || mostRecent.getTime() === yesterday.getTime()) {
+    const timezone = getBrowserTimezone();
     const uniqueDays = new Set<string>();
     allCompletions.forEach(date => {
-      const dayKey = date.toISOString().split('T')[0];
+      const dayKey = formatDateInTimezone(date, timezone);
       uniqueDays.add(dayKey);
     });
 
     // Count consecutive days
     let checkDate = mostRecent;
-    while (uniqueDays.has(checkDate.toISOString().split('T')[0])) {
+    while (uniqueDays.has(formatDateInTimezone(checkDate, timezone))) {
       streak++;
       checkDate = new Date(checkDate);
       checkDate.setDate(checkDate.getDate() - 1);

@@ -7,8 +7,10 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import HandoffSuggestion from "@/components/chat/HandoffSuggestion";
 import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import { AssessmentActionCard } from "@/components/chat/AssessmentActionCard";
 import { CoachType, COACHES } from "@/types/coach";
 import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
+import { type AssessmentType } from "@/hooks/useAssessmentInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
@@ -26,12 +28,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+interface SuggestedAction {
+  type: 'assessment' | 'protocol';
+  assessment_type?: AssessmentType;
+  reason?: string;
+  button_text?: string;
+}
+
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   coachType: CoachType;
+  suggestedAction?: SuggestedAction;
 }
 
 // Map product type to default coach
@@ -444,7 +454,14 @@ function ChatPageContent() {
         role: "assistant",
         content: data.response || "I apologize, but I couldn't generate a response. Please try again.",
         timestamp: new Date(),
-        coachType: responseAgent
+        coachType: responseAgent,
+        // Parse suggested action from n8n response (for MIO assessment suggestions)
+        suggestedAction: data.suggested_action ? {
+          type: data.suggested_action.type,
+          assessment_type: data.suggested_action.assessment_type,
+          reason: data.suggested_action.reason,
+          button_text: data.suggested_action.button_text,
+        } : undefined,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -564,13 +581,22 @@ function ChatPageContent() {
                 </div>
               ) : (
                 messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    role={message.role}
-                    content={message.content}
-                    timestamp={message.timestamp}
-                    coachType={message.coachType}
-                  />
+                  <div key={message.id}>
+                    <ChatMessage
+                      role={message.role}
+                      content={message.content}
+                      timestamp={message.timestamp}
+                      coachType={message.coachType}
+                    />
+                    {/* Show AssessmentActionCard if MIO suggests an assessment */}
+                    {message.suggestedAction?.type === 'assessment' && message.suggestedAction.assessment_type && (
+                      <AssessmentActionCard
+                        assessmentType={message.suggestedAction.assessment_type}
+                        reason={message.suggestedAction.reason}
+                        buttonText={message.suggestedAction.button_text}
+                      />
+                    )}
+                  </div>
                 ))
               )}
 

@@ -7,12 +7,23 @@ import { useToast } from '@/hooks/use-toast';
 import {
   getTodayTasks,
   completeTask,
+  getWeekDayTitles,
 } from '@/services/coachProtocolV2Service';
 import type {
   TodayCoachTasksResponse,
   CompleteTaskRequest,
   AssignmentSlot,
 } from '@/types/coach-protocol';
+
+// Extended slot data with week titles for roadmap display
+interface SlotTasksWithTitles {
+  tasks: TodayCoachTasksResponse['primary'];
+  completedCount: number;
+  totalCount: number;
+  allCompleted: boolean;
+  weekTitles: string[];  // Task titles for each day in current week
+  tomorrowTitle: string | undefined;  // Tomorrow's task title for celebration teaser
+}
 
 interface UseCoachProtocolTasksReturn {
   todayTasks: TodayCoachTasksResponse;
@@ -25,12 +36,7 @@ interface UseCoachProtocolTasksReturn {
     data?: Partial<CompleteTaskRequest>
   ) => Promise<{ success: boolean; protocolCompleted?: boolean }>;
   refetch: () => Promise<void>;
-  getSlotTasks: (slot: AssignmentSlot) => {
-    tasks: TodayCoachTasksResponse['primary'];
-    completedCount: number;
-    totalCount: number;
-    allCompleted: boolean;
-  };
+  getSlotTasks: (slot: AssignmentSlot) => SlotTasksWithTitles;
 }
 
 export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
@@ -40,6 +46,11 @@ export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  // Week titles for roadmap display (keyed by slot)
+  const [weekTitles, setWeekTitles] = useState<Record<AssignmentSlot, string[]>>({
+    primary: [],
+    secondary: [],
+  });
 
   const fetchTasks = useCallback(async () => {
     if (!user?.id) {
@@ -53,6 +64,28 @@ export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
       setError(null);
       const data = await getTodayTasks(user.id);
       setTodayTasks(data);
+
+      // Fetch week titles for each active slot
+      const newWeekTitles: Record<AssignmentSlot, string[]> = {
+        primary: [],
+        secondary: [],
+      };
+
+      if (data.primary?.protocol?.id && data.primary?.assignment?.current_week) {
+        newWeekTitles.primary = await getWeekDayTitles(
+          data.primary.protocol.id,
+          data.primary.assignment.current_week
+        );
+      }
+
+      if (data.secondary?.protocol?.id && data.secondary?.assignment?.current_week) {
+        newWeekTitles.secondary = await getWeekDayTitles(
+          data.secondary.protocol.id,
+          data.secondary.assignment.current_week
+        );
+      }
+
+      setWeekTitles(newWeekTitles);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch tasks'));
       console.error('Error fetching today tasks:', err);
@@ -126,8 +159,9 @@ export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
   );
 
   const getSlotTasks = useCallback(
-    (slot: AssignmentSlot) => {
+    (slot: AssignmentSlot): SlotTasksWithTitles => {
       const slotData = slot === 'primary' ? todayTasks.primary : todayTasks.secondary;
+      const slotWeekTitles = weekTitles[slot] || [];
 
       if (!slotData) {
         return {
@@ -135,20 +169,28 @@ export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
           completedCount: 0,
           totalCount: 0,
           allCompleted: false,
+          weekTitles: [],
+          tomorrowTitle: undefined,
         };
       }
 
       const completedCount = slotData.completed_task_ids.length;
       const totalCount = slotData.tasks.length;
+      const currentDay = slotData.assignment?.current_day || 1;
+
+      // Get tomorrow's title for celebration teaser (day is 1-indexed, array is 0-indexed)
+      const tomorrowTitle = currentDay < 7 ? slotWeekTitles[currentDay] : undefined;
 
       return {
         tasks: slotData,
         completedCount,
         totalCount,
         allCompleted: completedCount === totalCount && totalCount > 0,
+        weekTitles: slotWeekTitles,
+        tomorrowTitle,
       };
     },
-    [todayTasks]
+    [todayTasks, weekTitles]
   );
 
   return {

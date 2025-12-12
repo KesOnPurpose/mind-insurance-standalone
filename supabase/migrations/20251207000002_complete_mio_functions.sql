@@ -82,6 +82,9 @@ GRANT SELECT ON mio_automation_run_log TO authenticated;
 -- SECTION 3: Create/Replace group milestone function
 -- ============================================================================
 
+-- Drop existing function to ensure clean create
+DROP FUNCTION IF EXISTS get_group_users_at_milestone(TEXT, JSONB, INTEGER[]);
+
 CREATE OR REPLACE FUNCTION get_group_users_at_milestone(
   p_target_type TEXT,
   p_target_config JSONB,
@@ -178,6 +181,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- SECTION 4: Create/Replace immediate mode function
 -- ============================================================================
 
+-- Drop existing function to ensure clean create
+DROP FUNCTION IF EXISTS get_group_users_immediate(TEXT, JSONB);
+
 CREATE OR REPLACE FUNCTION get_group_users_immediate(
   p_target_type TEXT,
   p_target_config JSONB
@@ -244,6 +250,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================================
 -- SECTION 5: Create/Replace comprehensive user context function
 -- ============================================================================
+
+-- Drop existing function to ensure clean create
+DROP FUNCTION IF EXISTS get_user_mio_context(UUID);
 
 CREATE OR REPLACE FUNCTION get_user_mio_context(p_user_id UUID)
 RETURNS JSONB AS $$

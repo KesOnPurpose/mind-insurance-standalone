@@ -9,6 +9,7 @@ import {
   Shield,
   Settings,
   Home,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -57,6 +58,13 @@ const ADMIN_NAV_ITEMS: Array<{
     href: '/admin/reports',
     icon: Brain,
     description: 'Mind Insurance Oracle',
+    requiredTier: 'super_admin',
+  },
+  {
+    title: 'Assessments',
+    href: '/admin/assessments',
+    icon: ClipboardCheck,
+    description: 'Assessment invitations',
     requiredTier: 'super_admin',
   },
   {

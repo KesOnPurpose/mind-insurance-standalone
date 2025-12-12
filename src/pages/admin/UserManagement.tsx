@@ -1376,7 +1376,7 @@ export default function UserManagement() {
                                   </>
                                 )}
                               </DropdownMenuItem>
-                              {isSuperAdmin && canModifyTier(user.tier, user.email) && (
+                              {isAdmin && canModifyTier(user.tier, user.email) && (
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteUser(user)}
                                   className="text-destructive"

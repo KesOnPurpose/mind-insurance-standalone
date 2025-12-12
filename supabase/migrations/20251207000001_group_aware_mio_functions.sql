@@ -66,6 +66,10 @@ CREATE INDEX IF NOT EXISTS idx_mio_run_log_started ON mio_automation_run_log(sta
 -- RLS for run log
 ALTER TABLE mio_automation_run_log ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies before creating (idempotent)
+DROP POLICY IF EXISTS "Service role full access to run log" ON mio_automation_run_log;
+DROP POLICY IF EXISTS "Admins can view run logs" ON mio_automation_run_log;
+
 CREATE POLICY "Service role full access to run log"
   ON mio_automation_run_log FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
@@ -87,6 +91,9 @@ GRANT SELECT ON mio_automation_run_log TO authenticated;
 -- ============================================================================
 -- SECTION 3: Group + Milestone Resolution Function
 -- ============================================================================
+
+-- Drop existing function if exists to ensure clean create
+DROP FUNCTION IF EXISTS get_group_users_at_milestone(TEXT, JSONB, INTEGER[]);
 
 CREATE OR REPLACE FUNCTION get_group_users_at_milestone(
   p_target_type TEXT,
@@ -194,6 +201,9 @@ COMMENT ON FUNCTION get_group_users_at_milestone IS
 -- SECTION 4: Immediate Mode Resolution Function
 -- ============================================================================
 
+-- Drop existing function if exists to ensure clean create
+DROP FUNCTION IF EXISTS get_group_users_immediate(TEXT, JSONB);
+
 CREATE OR REPLACE FUNCTION get_group_users_immediate(
   p_target_type TEXT,
   p_target_config JSONB
@@ -267,6 +277,9 @@ COMMENT ON FUNCTION get_group_users_immediate IS
 -- ============================================================================
 -- SECTION 5: Comprehensive User Data Fetch Function
 -- ============================================================================
+
+-- Drop existing function if exists to ensure clean create
+DROP FUNCTION IF EXISTS get_user_mio_context(UUID);
 
 CREATE OR REPLACE FUNCTION get_user_mio_context(p_user_id UUID)
 RETURNS JSONB AS $$
@@ -523,6 +536,9 @@ COMMENT ON FUNCTION get_user_mio_context IS
 -- ============================================================================
 -- SECTION 6: Helper function to resolve target users with optional milestone filter
 -- ============================================================================
+
+-- Drop existing function if exists to ensure clean create
+DROP FUNCTION IF EXISTS resolve_target_users_direct(TEXT, JSONB, TEXT, INTEGER[]);
 
 CREATE OR REPLACE FUNCTION resolve_target_users_direct(
   p_target_type TEXT,

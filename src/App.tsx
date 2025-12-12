@@ -40,9 +40,11 @@ import AdminKnowledgeBase from "./pages/AdminKnowledgeBase";
 import { DocumentManagement } from "./pages/admin/DocumentManagement";
 import ProtocolManagement from "./pages/admin/ProtocolManagement";
 import ReportManagement from "./pages/admin/ReportManagement";
+import AssessmentCenter from "./pages/admin/AssessmentCenter";
 import UserManagement from "./pages/admin/UserManagement";
 import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
 import IdentityCollisionAssessmentPage from "./pages/mind-insurance/IdentityCollisionAssessmentPage";
+import InnerWiringDiscoveryPage from "./pages/mind-insurance/InnerWiringDiscoveryPage";
 import { IdentityCollisionGuard } from "@/components/mind-insurance/IdentityCollisionGuard";
 import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
 import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
@@ -57,6 +59,9 @@ import TriggerReset from "./pages/mind-insurance/practices/TriggerReset";
 import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
 import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
 import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
+import MIOInsightsPage from "./pages/mind-insurance/MIOInsightsPage";
+import MentalPillarAssessmentPage from "./pages/mind-insurance/MentalPillarAssessmentPage";
+import ExternalMentalPillarAssessmentPage from "./pages/external/ExternalMentalPillarAssessmentPage";
 import TestTooltip from "./pages/TestTooltip";
 import ChatPageDemo from "./pages/ChatPageDemo";
 import TestSSE from "./pages/TestSSE";
@@ -88,6 +93,10 @@ const App = () => {
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
 
+                      {/* External Assessment - Public, no auth required */}
+                      <Route path="/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
+                      <Route path="/mind-insurance/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
+
                       {/* Assessment routes - no assessment required */}
                       <Route path="/assessment" element={<ProtectedRoute requireAssessment={false}><AssessmentPage /></ProtectedRoute>} />
                       <Route path="/avatar-assessment" element={<ProtectedRoute requireAssessment={false}><AvatarAssessmentPage /></ProtectedRoute>} />
@@ -102,6 +111,12 @@ const App = () => {
 
                       {/* Mind Insurance Identity Collision Assessment - must be before other MI routes */}
                       <Route path="/mind-insurance/assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionAssessmentPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* Mind Insurance Inner Wiring Discovery - requires Identity Collision first */}
+                      <Route path="/mind-insurance/inner-wiring" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><InnerWiringDiscoveryPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* Mental Pillar Baseline Assessment - requires Identity Collision first */}
+                      <Route path="/mind-insurance/mental-pillar-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><MentalPillarAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
                       {/* Mind Insurance routes - wrapped with IdentityCollisionGuard */}
                       <Route path="/mind-insurance" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
@@ -120,6 +135,9 @@ const App = () => {
                       <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><EnergyAudit /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><CelebrateWins /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* MIO Insights Thread route */}
+                      <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
                       {/* Chat routes */}
                       <Route path="/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><ChatPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
@@ -144,6 +162,7 @@ const App = () => {
                       <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><DocumentManagement /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/protocols" element={<ProtectedRoute><AdminRoute><ProtocolManagement /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/reports" element={<ProtectedRoute><AdminRoute><ReportManagement /></AdminRoute></ProtectedRoute>} />
+                      <Route path="/admin/assessments" element={<ProtectedRoute><AdminRoute><AssessmentCenter /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/knowledge-base" element={<ProtectedRoute><AdminRoute><AdminKnowledgeBase /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/users" element={<ProtectedRoute><AccessGate requiredTier="admin"><UserManagement /></AccessGate></ProtectedRoute>} />
 

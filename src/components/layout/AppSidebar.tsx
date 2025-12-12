@@ -161,9 +161,15 @@ export function AppSidebar({ mode }: AppSidebarProps) {
             </span>
           </Link>
 
-          {/* Primary Action Button - Context-aware: Ask MIO in Mind Insurance, Ask Nette elsewhere */}
+          {/* Primary Action Button - Only show for non-Mind Insurance modes (MI handles it in panel) */}
           {(() => {
             const isInMindInsurance = location.pathname.startsWith('/mind-insurance');
+
+            // Skip rendering Ask button for Mind Insurance - the panel handles it
+            if (isInMindInsurance && mode === 'mind-insurance') {
+              return null;
+            }
+
             const activeCoach = isInMindInsurance ? COACHES.mio : COACHES.nette;
 
             if (mode === 'chat') {

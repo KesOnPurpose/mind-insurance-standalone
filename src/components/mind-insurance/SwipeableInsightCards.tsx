@@ -17,12 +17,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain,
   Lightbulb,
-  Calendar,
+  Shield,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
   Sparkles,
   Clock,
+  Calendar,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,11 +39,13 @@ interface SwipeableInsightCardsProps {
   protocol: MIOInsightProtocol;
   onComplete?: () => void;
   showNavigation?: boolean;
+  onViewAllDays?: () => void;
 }
 
 interface CardConfig {
   id: string;
   title: string;
+  shortLabel: string; // For progress indicator
   icon: React.ReactNode;
   gradient: string;
   borderColor: string;
@@ -51,29 +54,33 @@ interface CardConfig {
 const CARD_CONFIGS: CardConfig[] = [
   {
     id: 'pattern',
-    title: 'The Pattern',
-    icon: <Brain className="w-6 h-6" />,
+    title: 'What I Noticed',
+    shortLabel: 'Notice',
+    icon: <Brain className="w-5 h-5 sm:w-6 sm:h-6" />,
     gradient: 'from-cyan-500/20 to-blue-600/20',
     borderColor: 'border-cyan-500/30',
   },
   {
     id: 'why',
-    title: 'Why It Happens',
-    icon: <Lightbulb className="w-6 h-6" />,
+    title: 'Why This Happens',
+    shortLabel: 'Why',
+    icon: <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" />,
     gradient: 'from-purple-500/20 to-pink-600/20',
     borderColor: 'border-purple-500/30',
   },
   {
-    id: 'protocol',
-    title: 'Your Protocol',
-    icon: <Calendar className="w-6 h-6" />,
+    id: 'coverage',
+    title: "Today's Coverage",
+    shortLabel: 'Coverage',
+    icon: <Shield className="w-5 h-5 sm:w-6 sm:h-6" />,
     gradient: 'from-emerald-500/20 to-teal-600/20',
     borderColor: 'border-emerald-500/30',
   },
   {
     id: 'question',
-    title: 'The Question',
-    icon: <HelpCircle className="w-6 h-6" />,
+    title: 'A Question for You',
+    shortLabel: 'Reflect',
+    icon: <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />,
     gradient: 'from-amber-500/20 to-orange-600/20',
     borderColor: 'border-amber-500/30',
   },
@@ -83,6 +90,7 @@ export function SwipeableInsightCards({
   protocol,
   onComplete,
   showNavigation = true,
+  onViewAllDays,
 }: SwipeableInsightCardsProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -154,28 +162,33 @@ export function SwipeableInsightCards({
 
   return (
     <div className="w-full space-y-3 sm:space-y-4 touch-pan-x">
-      {/* Progress Dots - Mobile optimized with larger touch targets */}
-      <div className="flex items-center justify-center gap-3 pb-2">
+      {/* Progress Dots with Labels - Mobile optimized */}
+      <div className="flex items-center justify-center gap-1 sm:gap-2 pb-2">
         {CARD_CONFIGS.map((config, index) => (
           <button
             key={config.id}
             onClick={() => scrollTo(index)}
-            className={`transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center ${
-              index === currentIndex
-                ? ''
-                : ''
-            }`}
+            className="transition-all duration-300 min-h-[44px] flex flex-col items-center justify-center px-1 sm:px-2"
             aria-label={`Go to ${config.title}`}
           >
             <span
               className={`transition-all duration-300 ${
                 index === currentIndex
-                  ? 'w-8 h-2.5 rounded-full bg-cyan-400'
+                  ? 'w-6 sm:w-8 h-2 sm:h-2.5 rounded-full bg-cyan-400'
                   : index < currentIndex
-                  ? 'w-2.5 h-2.5 rounded-full bg-cyan-400/60'
-                  : 'w-2.5 h-2.5 rounded-full bg-slate-600'
+                  ? 'w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-cyan-400/60'
+                  : 'w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-slate-600'
               }`}
             />
+            <span
+              className={`text-[9px] sm:text-[10px] mt-1 transition-all duration-300 ${
+                index === currentIndex
+                  ? 'text-cyan-400 font-medium'
+                  : 'text-slate-500'
+              }`}
+            >
+              {config.shortLabel}
+            </span>
           </button>
         ))}
       </div>
@@ -192,74 +205,68 @@ export function SwipeableInsightCards({
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4 touch-pan-x">
-          {/* Card 1: The Pattern */}
+          {/* Card 1: What I Noticed */}
           <CarouselItem className="pl-2 md:pl-4">
             <InsightCard config={CARD_CONFIGS[0]} isActive={currentIndex === 0}>
-              <p className="text-slate-200 text-base sm:text-lg leading-relaxed">
-                {insightSummary}
-              </p>
+              <div className="space-y-3">
+                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+                  {insightSummary}
+                </p>
+                <p className="text-xs text-cyan-400/70 mt-auto pt-2">
+                  ← Swipe to understand why
+                </p>
+              </div>
             </InsightCard>
           </CarouselItem>
 
-          {/* Card 2: Why It Happens */}
+          {/* Card 2: Why This Happens */}
           <CarouselItem className="pl-2 md:pl-4">
             <InsightCard config={CARD_CONFIGS[1]} isActive={currentIndex === 1}>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3">
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Your brain learned this pattern to protect you.
+                </p>
                 <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
                   {whyItMatters}
                 </p>
                 {neuralPrinciple && (
-                  <div className="pt-2 sm:pt-3 border-t border-slate-700/50">
-                    <p className="text-xs sm:text-sm text-purple-400 font-medium mb-1">
-                      Neural Principle:
+                  <div className="pt-2 border-t border-slate-700/50">
+                    <p className="text-xs text-purple-400 font-medium mb-1">
+                      The Science:
                     </p>
-                    <p className="text-slate-300 italic text-xs sm:text-sm">
-                      "{neuralPrinciple}"
+                    <p className="text-slate-300 text-xs sm:text-sm">
+                      • {neuralPrinciple}
                     </p>
                   </div>
                 )}
+                <p className="text-xs text-purple-400/70 mt-auto pt-1">
+                  ← Swipe for today's coverage
+                </p>
               </div>
             </InsightCard>
           </CarouselItem>
 
-          {/* Card 3: Your Protocol */}
+          {/* Card 3: Today's Coverage - Day 1 Only */}
           <CarouselItem className="pl-2 md:pl-4">
             <InsightCard config={CARD_CONFIGS[2]} isActive={currentIndex === 2}>
-              <div className="space-y-3">
-                <p className="text-sm text-emerald-400 mb-3">
-                  7 days to rewire this pattern:
-                </p>
-                {dayTasks.slice(0, 4).map((task, index) => (
-                  <ProtocolDayPreview
-                    key={task.day}
-                    task={task}
-                    isFirst={index === 0}
-                  />
-                ))}
-                {dayTasks.length > 4 && (
-                  <p className="text-xs text-slate-500 pt-2">
-                    +{dayTasks.length - 4} more days...
-                  </p>
-                )}
-              </div>
+              <TodaysCoverageCard task={dayTasks[0]} totalDays={dayTasks.length} />
             </InsightCard>
           </CarouselItem>
 
-          {/* Card 4: The Question */}
+          {/* Card 4: A Question for You */}
           <CarouselItem className="pl-2 md:pl-4">
             <InsightCard config={CARD_CONFIGS[3]} isActive={currentIndex === 3}>
-              <div className="flex flex-col items-center justify-center min-h-[200px] text-center space-y-6">
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <Sparkles className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                  <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-amber-400" />
                 </motion.div>
-                <p className="text-xl md:text-2xl text-white font-medium leading-relaxed">
+                <p className="text-lg sm:text-xl text-white font-medium leading-relaxed px-2">
                   {getReflectiveQuestion()}
                 </p>
-                <p className="text-sm text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-400">
                   Sit with this question today.
                 </p>
               </div>
@@ -276,13 +283,13 @@ export function SwipeableInsightCards({
             size="sm"
             onClick={scrollPrev}
             disabled={!canScrollPrev}
-            className="text-slate-400 hover:text-white disabled:opacity-30"
+            className="text-slate-400 hover:text-white disabled:opacity-30 text-xs sm:text-sm"
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
+            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Prev
           </Button>
 
-          <span className="text-sm text-slate-500">
+          <span className="text-xs sm:text-sm text-slate-500">
             {currentIndex + 1} of {CARD_CONFIGS.length}
           </span>
 
@@ -291,17 +298,31 @@ export function SwipeableInsightCards({
             size="sm"
             onClick={scrollNext}
             disabled={!canScrollNext}
-            className="text-slate-400 hover:text-white disabled:opacity-30"
+            className="text-slate-400 hover:text-white disabled:opacity-30 text-xs sm:text-sm"
           >
             Next
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
           </Button>
         </div>
       )}
 
-      {/* Swipe Hint (only on first card) */}
+      {/* View All 7 Days Button */}
+      {onViewAllDays && (
+        <div className="px-4 pt-2">
+          <Button
+            variant="outline"
+            onClick={onViewAllDays}
+            className="w-full border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            View All 7 Days
+          </Button>
+        </div>
+      )}
+
+      {/* Swipe Hint (only on first card, no button) */}
       <AnimatePresence>
-        {currentIndex === 0 && (
+        {currentIndex === 0 && !onViewAllDays && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -338,20 +359,95 @@ function InsightCard({ config, isActive, children }: InsightCardProps) {
       className="h-full"
     >
       <Card
-        className={`bg-gradient-to-br ${config.gradient} ${config.borderColor} p-4 sm:p-6 min-h-[280px] sm:min-h-[320px] flex flex-col overflow-hidden`}
+        className={`bg-gradient-to-br ${config.gradient} ${config.borderColor} p-3 sm:p-4 h-[240px] sm:h-[260px] flex flex-col overflow-hidden`}
       >
-        {/* Card Header - Mobile optimized */}
-        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-slate-700/30">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-white flex-shrink-0">
+        {/* Card Header - Compact */}
+        <div className="flex items-center gap-2 mb-2 sm:mb-3 pb-2 border-b border-slate-700/30">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800/50 flex items-center justify-center text-white flex-shrink-0">
             {config.icon}
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-white">{config.title}</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-white">{config.title}</h3>
         </div>
 
-        {/* Card Content - Scrollable on mobile for long content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain -mx-1 px-1">{children}</div>
+        {/* Card Content - NO SCROLL, fixed height */}
+        <div className="flex-1 overflow-hidden">{children}</div>
       </Card>
     </motion.div>
+  );
+}
+
+// ============================================================================
+// Today's Coverage Card (Day 1 only with bullet points)
+// ============================================================================
+
+interface TodaysCoverageCardProps {
+  task: MIOInsightDayTask;
+  totalDays: number;
+}
+
+function TodaysCoverageCard({ task, totalDays }: TodaysCoverageCardProps) {
+  // Parse instructions into bullet points (split by newlines or periods)
+  const getBulletPoints = (instructions: string): string[] => {
+    // Try splitting by newlines first
+    let points = instructions.split(/\n+/).filter(p => p.trim().length > 0);
+
+    // If only one point, try splitting by numbered items or bullet points
+    if (points.length === 1) {
+      points = instructions.split(/(?:\d+\.\s*|\•\s*|-\s*)/).filter(p => p.trim().length > 0);
+    }
+
+    // If still only one point, split by sentences but keep it reasonable
+    if (points.length === 1 && instructions.length > 100) {
+      points = instructions.split(/(?<=[.!?])\s+/).filter(p => p.trim().length > 0);
+    }
+
+    // Return max 3 bullet points, truncate long ones
+    return points.slice(0, 3).map(p => {
+      const trimmed = p.trim();
+      return trimmed.length > 60 ? trimmed.substring(0, 57) + '...' : trimmed;
+    });
+  };
+
+  const bulletPoints = getBulletPoints(task.task_instructions);
+
+  return (
+    <div className="space-y-2 h-full flex flex-col">
+      {/* Day indicator */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs sm:text-sm text-emerald-400 font-medium">
+          Day {task.day} of {totalDays}
+        </span>
+        {task.duration_minutes && (
+          <span className="text-xs text-slate-400 flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            ~{task.duration_minutes}m
+          </span>
+        )}
+      </div>
+
+      {/* Task title */}
+      <p className="text-white font-medium text-sm sm:text-base">
+        "{task.task_title}"
+      </p>
+
+      {/* Action bullets */}
+      <div className="flex-1">
+        <p className="text-xs text-emerald-400/80 mb-1.5">Activate your coverage:</p>
+        <ul className="space-y-1.5">
+          {bulletPoints.map((point, index) => (
+            <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
+              <span className="text-emerald-400 mt-0.5">•</span>
+              <span className="line-clamp-2">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Swipe hint */}
+      <p className="text-xs text-emerald-400/70 pt-1">
+        ← Swipe for a question
+      </p>
+    </div>
   );
 }
 

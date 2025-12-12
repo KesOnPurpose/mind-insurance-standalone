@@ -12,6 +12,7 @@ import { TodayProtocolTask, ProtocolTaskModal } from '@/components/mind-insuranc
 import { getTodayProtocolTask } from '@/services/mioInsightProtocolService';
 import { getTodayInTimezone } from '@/utils/timezoneUtils';
 import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
+import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
 
 // V2 Coach Protocols
 import { CoachProtocolTabs } from '@/components/mind-insurance/CoachProtocolTabs';
@@ -50,6 +51,15 @@ export default function MindInsuranceHub() {
 
   // Check if user has any active coach protocols
   const hasCoachProtocols = coachProtocols.primary !== null || coachProtocols.secondary !== null;
+
+  // Debug logging for protocol display logic
+  console.log('[MindInsuranceHub] Protocol state:', {
+    hasCoachProtocols,
+    primaryProtocol: coachProtocols.primary?.protocol?.title || null,
+    secondaryProtocol: coachProtocols.secondary?.protocol?.title || null,
+    protocolsLoading,
+    todayTasksCount: todayTasks.length,
+  });
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -152,6 +162,7 @@ export default function MindInsuranceHub() {
   }
 
   return (
+    <MindInsuranceErrorBoundary fallbackTitle="Error loading Mind Insurance Hub" showHomeButton={false}>
     <div className="min-h-screen bg-mi-navy">
       <div className="container mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
@@ -233,16 +244,16 @@ export default function MindInsuranceHub() {
           </div>
         )}
 
-        {/* Today's Protocol Task (if active - legacy MIO protocols) */}
-        {protocolTask && (
+        {/* Today's Protocol Task (MIO protocols - only show if NO active Coach V2 protocol) */}
+        {protocolTask && !hasCoachProtocols && (
           <TodayProtocolTask
             task={protocolTask}
             onComplete={fetchProtocolTask}
           />
         )}
 
-        {/* Protocol Task Modal (first open of day - legacy MIO) */}
-        {protocolTask && (
+        {/* Protocol Task Modal (first open of day - MIO - only if NO Coach V2) */}
+        {protocolTask && !hasCoachProtocols && (
           <ProtocolTaskModal
             task={protocolTask}
             isOpen={showProtocolModal}
@@ -305,5 +316,6 @@ export default function MindInsuranceHub() {
 
       </div>
     </div>
+    </MindInsuranceErrorBoundary>
   );
 }

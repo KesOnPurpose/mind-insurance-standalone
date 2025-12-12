@@ -12,9 +12,10 @@ interface ChatMessageProps {
   content: string;
   timestamp: Date;
   coachType?: CoachType;
+  userTimezone?: string;
 }
 
-const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, timestamp, coachType = 'nette', userTimezone }: ChatMessageProps) => {
   const { currentProduct } = useProduct();
   const isMindInsurance = currentProduct === 'mind-insurance';
   const coach = COACHES[coachType];
@@ -121,9 +122,11 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
                 : "text-muted-foreground"
           }`}
         >
-          {timestamp.toLocaleTimeString([], {
+          {timestamp.toLocaleTimeString('en-US', {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: true,
+            ...(userTimezone ? { timeZone: userTimezone } : {}),
           })}
         </span>
       </Card>

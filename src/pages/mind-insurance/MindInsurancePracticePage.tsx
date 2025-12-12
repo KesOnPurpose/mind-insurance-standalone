@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Trophy, Zap, Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
 import { TimeWindowSection, type TimeWindow as TimeWindowType } from '@/components/mind-insurance/TimeWindowSection';
 import { PracticeCard } from '@/components/mind-insurance/PracticeCard';
+import { MIOInsightBanner } from '@/components/mind-insurance/MIOInsightBanner';
+import { usePendingInsight } from '@/hooks/usePendingInsight';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
@@ -45,13 +47,18 @@ const TIME_WINDOWS: Record<string, TimeWindowType> = {
 
 export default function MindInsurancePracticePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: progressData } = useMindInsuranceProgress();
+  const { pendingInsight, clearPendingInsight } = usePendingInsight();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todaysPractices, setTodaysPractices] = useState<DailyPractice[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [championshipLevel, setChampionshipLevel] = useState<ChampionshipLevel>('bronze');
+
+  // Get section to auto-expand from URL param (for returning from practice)
+  const expandedSection = searchParams.get('section');
 
   // Get streak from hook (calculated from actual practice data)
   const streak: PracticeStreak | null = progressData ? {
@@ -63,6 +70,11 @@ export default function MindInsurancePracticePage() {
     created_at: '',
     updated_at: ''
   } : null;
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Update current time every minute
   useEffect(() => {
@@ -99,8 +111,11 @@ export default function MindInsurancePracticePage() {
         setUserProfile(profile);
       }
 
-      // Load today's practices
-      const today = new Date().toISOString().split('T')[0];
+      // Load today's practices using user's timezone (or browser default)
+      // This ensures we query for the correct local date, not UTC
+      const userTimezone = profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: userTimezone });
+
       const { data: practices, error: practicesError } = await supabase
         .from('daily_practices')
         .select('*')
@@ -223,9 +238,27 @@ export default function MindInsurancePracticePage() {
     );
   }
 
+  // Handle banner view action
+  const handleViewInsight = () => {
+    clearPendingInsight();
+    navigate('/mind-insurance/mio-insights');
+  };
+
   return (
     <div className="min-h-screen bg-mi-navy">
-      <div className="container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* MIO Insight Banner - shows when insight is pending */}
+      {pendingInsight && (
+        <MIOInsightBanner
+          insight={pendingInsight}
+          onView={handleViewInsight}
+          onDismiss={clearPendingInsight}
+        />
+      )}
+
+      <div className={cn(
+        "container max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6",
+        pendingInsight && "pt-20" // Add padding when banner is shown
+      )}>
         {/* Back Button */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" className="gap-1.5 text-gray-300 hover:text-white hover:bg-mi-navy-light" onClick={() => navigate('/mind-insurance')}>
@@ -258,136 +291,125 @@ export default function MindInsurancePracticePage() {
             </Button>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Today's Points */}
-            <Card className="overflow-hidden bg-mi-navy-light border-mi-cyan/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Today's Points</p>
-                    <p className="text-2xl font-bold text-white">
-                      {todaysPoints} / {maxPossiblePoints}
-                    </p>
-                    <div className="w-full bg-mi-cyan/20 rounded-full h-2 mt-2">
-                      <div
-                        className="bg-mi-cyan h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(todaysPoints / maxPossiblePoints) * 100}%` }}
-                      />
-                    </div>
+          {/* Compact Stats Strip */}
+          <Card className="overflow-hidden bg-mi-navy-light border-mi-cyan/30">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between gap-2">
+                {/* Today's Points */}
+                <div className="flex items-center gap-2 flex-1">
+                  <Trophy className="h-4 w-4 text-mi-gold flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-400">Points</p>
+                    <p className="text-sm font-bold text-white">{todaysPoints}/{maxPossiblePoints}</p>
                   </div>
-                  <Trophy className="h-8 w-8 text-mi-gold" />
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Championship Level */}
-            <Card className="overflow-hidden bg-mi-navy-light border-mi-gold/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Championship Level</p>
-                    <Badge className={cn("mt-2", getChampionshipLevelStyles())}>
-                      {championshipLevel.toUpperCase()}
-                    </Badge>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Keep pushing forward!
-                    </p>
-                  </div>
-                  <Zap className="h-8 w-8 text-mi-gold" />
-                </div>
-              </CardContent>
-            </Card>
+                <div className="h-8 w-px bg-mi-cyan/20" />
 
-            {/* Streak Counter */}
-            <Card className="overflow-hidden bg-mi-navy-light border-mi-gold/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Current Streak</p>
-                    <p className="text-2xl font-bold text-mi-gold">
-                      {streak?.current_streak || 0} days
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Best: {streak?.longest_streak || 0} days
-                    </p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-mi-gold" />
+                {/* Championship Level */}
+                <div className="flex items-center gap-2 flex-1 justify-center">
+                  <Zap className="h-4 w-4 text-mi-gold flex-shrink-0" />
+                  <Badge className={cn("text-xs px-2 py-0.5", getChampionshipLevelStyles())}>
+                    {championshipLevel.toUpperCase()}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+
+                <div className="h-8 w-px bg-mi-cyan/20" />
+
+                {/* Streak Counter */}
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  <Calendar className="h-4 w-4 text-mi-gold flex-shrink-0" />
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">Streak</p>
+                    <p className="text-sm font-bold text-mi-gold">{streak?.current_streak || 0} days</p>
+                  </div>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="mt-2">
+                <div className="w-full bg-mi-cyan/20 rounded-full h-1.5">
+                  <div
+                    className="bg-mi-cyan h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(todaysPoints / maxPossiblePoints) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Time Windows */}
         <div className="space-y-4">
           {/* Championship Setup Window */}
           <TimeWindowSection
-          window={TIME_WINDOWS.CHAMPIONSHIP_SETUP}
-          practices={getPracticesForWindow('CHAMPIONSHIP_SETUP').map(type => ({
-            id: type,
-            name: PRACTICE_CONFIG[type].name,
-            category: 'morning',
-            completed: isPracticeCompleted(type)
-          }))}
-          currentTime={currentTime}
-        >
-          {getPracticesForWindow('CHAMPIONSHIP_SETUP').map(practiceType => (
-            <PracticeCard
-              key={practiceType}
-              practiceType={practiceType}
-              isCompleted={isPracticeCompleted(practiceType)}
-              isAvailable={isPracticeAvailable(practiceType)}
-              pointsEarned={getPracticePoints(practiceType)}
-              onClick={() => handlePracticeClick(practiceType)}
-            />
-          ))}
-        </TimeWindowSection>
+            window={TIME_WINDOWS.CHAMPIONSHIP_SETUP}
+            practices={getPracticesForWindow('CHAMPIONSHIP_SETUP').map(type => ({
+              id: type,
+              name: PRACTICE_CONFIG[type].name,
+              category: 'morning',
+              completed: isPracticeCompleted(type)
+            }))}
+            currentTime={currentTime}
+            defaultOpen={expandedSection === 'CHAMPIONSHIP_SETUP'}
+          >
+            {getPracticesForWindow('CHAMPIONSHIP_SETUP').map(practiceType => (
+              <PracticeCard
+                key={practiceType}
+                practiceType={practiceType}
+                isCompleted={isPracticeCompleted(practiceType)}
+                isAvailable={isPracticeAvailable(practiceType)}
+                pointsEarned={getPracticePoints(practiceType)}
+                onClick={() => handlePracticeClick(practiceType)}
+              />
+            ))}
+          </TimeWindowSection>
 
-        {/* NASCAR Pit Stop Window */}
-        <TimeWindowSection
-          window={TIME_WINDOWS.NASCAR_PIT_STOP}
-          practices={getPracticesForWindow('NASCAR_PIT_STOP').map(type => ({
-            id: type,
-            name: PRACTICE_CONFIG[type].name,
-            category: 'midday',
-            completed: isPracticeCompleted(type)
-          }))}
-          currentTime={currentTime}
-        >
-          {getPracticesForWindow('NASCAR_PIT_STOP').map(practiceType => (
-            <PracticeCard
-              key={practiceType}
-              practiceType={practiceType}
-              isCompleted={isPracticeCompleted(practiceType)}
-              isAvailable={isPracticeAvailable(practiceType)}
-              pointsEarned={getPracticePoints(practiceType)}
-              onClick={() => handlePracticeClick(practiceType)}
-            />
-          ))}
-        </TimeWindowSection>
+          {/* NASCAR Pit Stop Window */}
+          <TimeWindowSection
+            window={TIME_WINDOWS.NASCAR_PIT_STOP}
+            practices={getPracticesForWindow('NASCAR_PIT_STOP').map(type => ({
+              id: type,
+              name: PRACTICE_CONFIG[type].name,
+              category: 'midday',
+              completed: isPracticeCompleted(type)
+            }))}
+            currentTime={currentTime}
+            defaultOpen={expandedSection === 'NASCAR_PIT_STOP'}
+          >
+            {getPracticesForWindow('NASCAR_PIT_STOP').map(practiceType => (
+              <PracticeCard
+                key={practiceType}
+                practiceType={practiceType}
+                isCompleted={isPracticeCompleted(practiceType)}
+                isAvailable={isPracticeAvailable(practiceType)}
+                pointsEarned={getPracticePoints(practiceType)}
+                onClick={() => handlePracticeClick(practiceType)}
+              />
+            ))}
+          </TimeWindowSection>
 
-        {/* Victory Lap Window */}
-        <TimeWindowSection
-          window={TIME_WINDOWS.VICTORY_LAP}
-          practices={getPracticesForWindow('VICTORY_LAP').map(type => ({
-            id: type,
-            name: PRACTICE_CONFIG[type].name,
-            category: 'evening',
-            completed: isPracticeCompleted(type)
-          }))}
-          currentTime={currentTime}
-        >
-          {getPracticesForWindow('VICTORY_LAP').map(practiceType => (
-            <PracticeCard
-              key={practiceType}
-              practiceType={practiceType}
-              isCompleted={isPracticeCompleted(practiceType)}
-              isAvailable={isPracticeAvailable(practiceType)}
-              pointsEarned={getPracticePoints(practiceType)}
-              onClick={() => handlePracticeClick(practiceType)}
-            />
-          ))}
+          {/* Victory Lap Window */}
+          <TimeWindowSection
+            window={TIME_WINDOWS.VICTORY_LAP}
+            practices={getPracticesForWindow('VICTORY_LAP').map(type => ({
+              id: type,
+              name: PRACTICE_CONFIG[type].name,
+              category: 'evening',
+              completed: isPracticeCompleted(type)
+            }))}
+            currentTime={currentTime}
+            defaultOpen={expandedSection === 'VICTORY_LAP'}
+          >
+            {getPracticesForWindow('VICTORY_LAP').map(practiceType => (
+              <PracticeCard
+                key={practiceType}
+                practiceType={practiceType}
+                isCompleted={isPracticeCompleted(practiceType)}
+                isAvailable={isPracticeAvailable(practiceType)}
+                pointsEarned={getPracticePoints(practiceType)}
+                onClick={() => handlePracticeClick(practiceType)}
+              />
+            ))}
           </TimeWindowSection>
         </div>
 

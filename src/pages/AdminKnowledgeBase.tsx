@@ -25,7 +25,7 @@ import {
   AGENT_CONFIGS,
   getCategoriesForAgent,
 } from '@/types/knowledgeManagement';
-import { submitKnowledgeIngestion } from '@/services/knowledgeIngestionService';
+import { submitKnowledgeIngestion, submitBulkKnowledgeIngestion } from '@/services/knowledgeIngestionService';
 import {
   AgentSelector,
   CategorySelector,
@@ -33,6 +33,8 @@ import {
   ProcessingQueue,
   KnowledgeChunkTable,
   QueueWidget,
+  BulkUrlInput,
+  parseBulkUrls,
 } from '@/components/admin/knowledge';
 import { MigrateKnowledgeCard } from '@/components/admin/knowledge/MigrateKnowledgeCard';
 import { PopulateKnowledgeCard } from '@/components/admin/knowledge/PopulateKnowledgeCard';
@@ -69,7 +71,9 @@ import {
   CheckCircle2,
   BookOpen,
   Settings,
+  Layers,
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminKnowledgeBase() {
@@ -82,6 +86,8 @@ export default function AdminKnowledgeBase() {
   const [activeTab, setActiveTab] = useState<'browse' | 'add' | 'queue' | 'setup'>('browse');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkUrlInput, setBulkUrlInput] = useState('');
 
   // Form state for adding new knowledge
   const [sourceInput, setSourceInput] = useState<{
@@ -103,7 +109,7 @@ export default function AdminKnowledgeBase() {
   }, []);
 
   const handleSubmitKnowledge = async () => {
-    // Validate
+    // Validate category
     if (!selectedCategory) {
       toast({
         title: 'Category Required',
@@ -113,6 +119,53 @@ export default function AdminKnowledgeBase() {
       return;
     }
 
+    // Handle bulk mode submission
+    if (isBulkMode) {
+      const parsedUrls = parseBulkUrls(bulkUrlInput);
+      const validUrls = parsedUrls.filter((p) => p.isValid && p.sourceType);
+
+      if (validUrls.length === 0) {
+        toast({
+          title: 'No Valid URLs',
+          description: 'Please enter at least one valid Google Docs, Drive, or Notion URL.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const items = validUrls.map((parsed) => ({
+          source_type: parsed.sourceType!,
+          source_url: parsed.url,
+          category: selectedCategory,
+        }));
+
+        await submitBulkKnowledgeIngestion(selectedAgent, items, adminUser?.user_id);
+
+        toast({
+          title: 'Bulk Submission Complete',
+          description: `${validUrls.length} document${validUrls.length !== 1 ? 's' : ''} added to the processing queue.`,
+        });
+
+        // Reset form
+        setBulkUrlInput('');
+        setIsAddDialogOpen(false);
+        setActiveTab('queue'); // Switch to queue to show progress
+      } catch (error) {
+        console.error('Failed to submit bulk knowledge:', error);
+        toast({
+          title: 'Bulk Submission Failed',
+          description: 'Failed to submit documents. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Single document submission (original logic)
     if (sourceInput.sourceType !== 'file_upload' && !sourceInput.sourceUrl) {
       toast({
         title: 'Source URL Required',
@@ -143,7 +196,8 @@ export default function AdminKnowledgeBase() {
         file: sourceInput.file,
       };
 
-      await submitKnowledgeIngestion(request, adminUser?.id);
+      // Pass user_id (auth.uid), not admin_users.id
+      await submitKnowledgeIngestion(request, adminUser?.user_id);
 
       toast({
         title: 'Knowledge Submitted',
@@ -191,16 +245,31 @@ export default function AdminKnowledgeBase() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add New Knowledge</DialogTitle>
-                <DialogDescription>
-                  Add knowledge content for {agentConfig.name} from various sources
-                </DialogDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle>Add New Knowledge</DialogTitle>
+                    <DialogDescription>
+                      Add knowledge content for {agentConfig.name} from various sources
+                    </DialogDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label htmlFor="dialog-bulk-mode" className="text-sm font-medium flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Bulk
+                    </label>
+                    <Switch
+                      id="dialog-bulk-mode"
+                      checked={isBulkMode}
+                      onCheckedChange={setIsBulkMode}
+                    />
+                  </div>
+                </div>
               </DialogHeader>
 
               <div className="space-y-6 py-4">
                 {/* Category Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
+                  <label className="text-sm font-medium">Category *</label>
                   <CategorySelector
                     agent={selectedAgent}
                     value={selectedCategory || ''}
@@ -208,14 +277,22 @@ export default function AdminKnowledgeBase() {
                   />
                 </div>
 
-                {/* Source Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Source</label>
-                  <KnowledgeSourceInput
-                    value={sourceInput}
-                    onChange={setSourceInput}
+                {/* Source Input - Toggle between single and bulk */}
+                {isBulkMode ? (
+                  <BulkUrlInput
+                    value={bulkUrlInput}
+                    onChange={setBulkUrlInput}
+                    disabled={isSubmitting}
                   />
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Source</label>
+                    <KnowledgeSourceInput
+                      value={sourceInput}
+                      onChange={setSourceInput}
+                    />
+                  </div>
+                )}
               </div>
 
               <DialogFooter>
@@ -233,6 +310,11 @@ export default function AdminKnowledgeBase() {
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Submitting...
+                    </>
+                  ) : isBulkMode ? (
+                    <>
+                      <Layers className="h-4 w-4 mr-2" />
+                      Submit {parseBulkUrls(bulkUrlInput).filter(p => p.isValid).length || ''} Documents
                     </>
                   ) : (
                     <>
@@ -325,11 +407,26 @@ export default function AdminKnowledgeBase() {
           <TabsContent value="add" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Add Knowledge Content</CardTitle>
-                <CardDescription>
-                  Import knowledge from Google Drive, Google Docs, Notion, or upload files directly.
-                  Content will be processed and chunked for the {agentConfig.name} agent.
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Add Knowledge Content</CardTitle>
+                    <CardDescription>
+                      Import knowledge from Google Drive, Google Docs, Notion, or upload files directly.
+                      Content will be processed and chunked for the {agentConfig.name} agent.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label htmlFor="bulk-mode" className="text-sm font-medium flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Bulk Mode
+                    </label>
+                    <Switch
+                      id="bulk-mode"
+                      checked={isBulkMode}
+                      onCheckedChange={setIsBulkMode}
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Category Selection */}
@@ -342,14 +439,22 @@ export default function AdminKnowledgeBase() {
                   />
                 </div>
 
-                {/* Source Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Source</label>
-                  <KnowledgeSourceInput
-                    value={sourceInput}
-                    onChange={setSourceInput}
+                {/* Source Input - Toggle between single and bulk */}
+                {isBulkMode ? (
+                  <BulkUrlInput
+                    value={bulkUrlInput}
+                    onChange={setBulkUrlInput}
+                    disabled={isSubmitting}
                   />
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Source</label>
+                    <KnowledgeSourceInput
+                      value={sourceInput}
+                      onChange={setSourceInput}
+                    />
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="flex justify-end">
@@ -362,6 +467,11 @@ export default function AdminKnowledgeBase() {
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Submitting...
+                      </>
+                    ) : isBulkMode ? (
+                      <>
+                        <Layers className="h-4 w-4 mr-2" />
+                        Submit {parseBulkUrls(bulkUrlInput).filter(p => p.isValid).length || ''} Documents
                       </>
                     ) : (
                       <>
@@ -381,30 +491,55 @@ export default function AdminKnowledgeBase() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    <span>
-                      <strong>Google Drive:</strong> Share link to folders or files. The system will process all supported documents.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    <span>
-                      <strong>Google Docs:</strong> Paste the share link to any Google Doc. Content will be extracted and chunked automatically.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    <span>
-                      <strong>Notion:</strong> Share link to Notion pages or databases. Nested content will be crawled.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    <span>
-                      <strong>File Upload:</strong> Supports PDF, DOCX, TXT, MD, and CSV files up to 10MB.
-                    </span>
-                  </li>
+                  {isBulkMode ? (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Bulk Mode:</strong> Paste multiple URLs, one per line. All documents will share the same category.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Supported:</strong> Google Docs, Google Drive files/folders, and Notion pages.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Auto-detection:</strong> Source type is automatically detected from the URL pattern.
+                        </span>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Google Drive:</strong> Share link to folders or files. The system will process all supported documents.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Google Docs:</strong> Paste the share link to any Google Doc. Content will be extracted and chunked automatically.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>Notion:</strong> Share link to Notion pages or databases. Nested content will be crawled.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>
+                          <strong>File Upload:</strong> Supports PDF, DOCX, TXT, MD, and CSV files up to 10MB.
+                        </span>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </CardContent>
             </Card>

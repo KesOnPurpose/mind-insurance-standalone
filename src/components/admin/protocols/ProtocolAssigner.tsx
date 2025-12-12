@@ -55,8 +55,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { assignToUsers, assignToGroup } from '@/services/coachProtocolV2Service';
-import type { AssignmentSlot, CoachProtocolV2 } from '@/types/coach-protocol';
+import type { AssignmentSlot, CoachProtocolV2, AssignmentOptions } from '@/types/coach-protocol';
 
 // Helper to call the admin-group-management Edge Function
 async function callAdminGroupAPI(action: string, data?: Record<string, unknown>) {
@@ -118,6 +119,7 @@ export function ProtocolAssigner({
   onCancel,
 }: ProtocolAssignerProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // State
   const [targetType, setTargetType] = useState<TargetType>('individual');
@@ -284,6 +286,15 @@ export function ProtocolAssigner({
   };
 
   const handleAssign = async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to assign protocols',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsAssigning(true);
     setAssignmentProgress(0);
 
@@ -292,29 +303,35 @@ export function ProtocolAssigner({
       let totalAssigned = 0;
       let totalFailed = 0;
 
+      // Build AssignmentOptions object with slot inside
+      const assignmentOptions: AssignmentOptions = {
+        slot: slot,
+        start_date: calculatedStartDate?.toISOString(),
+        override_existing: overrideConflicts,
+      };
+
       if (targetType === 'individual') {
         // Assign to individual users
         const results = await assignToUsers(
           protocol.id,
           selectedUserIds,
-          slot,
-          {
-            startDate: calculatedStartDate,
-            overrideExisting: overrideConflicts,
-            onProgress: (progress) => setAssignmentProgress(progress),
-          }
+          assignmentOptions,
+          user.id
         );
 
         totalAssigned = results.filter((r) => r.success).length;
         totalFailed = results.filter((r) => !r.success).length;
+        setAssignmentProgress(100);
       } else if (targetType === 'custom_group' || targetType === 'multiple_groups') {
         // Assign to each selected group
         for (let i = 0; i < selectedGroupIds.length; i++) {
           const groupId = selectedGroupIds[i];
-          const results = await assignToGroup(protocol.id, groupId, slot, {
-            startDate: calculatedStartDate,
-            overrideExisting: overrideConflicts,
-          });
+          const results = await assignToGroup(
+            protocol.id,
+            groupId,
+            assignmentOptions,
+            user.id
+          );
 
           totalAssigned += results.filter((r) => r.success).length;
           totalFailed += results.filter((r) => !r.success).length;

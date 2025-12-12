@@ -398,6 +398,10 @@ export interface MIOInsightDayTask {
   task_instructions: string;
   duration_minutes?: number;
   success_criteria: string[];
+  // NEW: Context reminder connecting task back to original insight
+  context_reminder?: string;
+  // NEW: Short phrase linking to the pattern being addressed
+  insight_connection?: string;
   // Optional structured tasks (for more complex protocols)
   morning_task?: {
     title: string;
@@ -463,6 +467,50 @@ export interface MIOInsightProtocol {
   // User engagement
   insight_viewed_at?: string;
   first_task_started_at?: string;
+
+  // NEW: Simplified versions for mobile-friendly display
+  simplified_insight_summary?: string;
+  simplified_why_it_matters?: string;
+  simplified_neural_principle?: string;
+  simplified_day_tasks?: MIOInsightDayTask[];
+
+  // NEW: Raw analysis for future AI queries
+  raw_analysis?: {
+    triggered_capabilities?: Array<{
+      capability: number;
+      name: string;
+      score: number;
+      finding: string;
+    }>;
+    full_insight?: Record<string, unknown>;
+    pattern_context?: {
+      primary_pattern: string;
+      pattern_frequency: Record<string, number>;
+      collision_pattern: string;
+      temperament: string;
+    };
+    metadata?: Record<string, unknown>;
+  };
+
+  // NEW: Conversation context that influenced the insight
+  conversation_context?: {
+    mio_chats?: Array<{
+      user_said: string;
+      mio_said: string;
+      date: string;
+    }>;
+    nette_chats?: Array<{
+      user_said: string;
+      nette_said: string;
+      date: string;
+    }>;
+    themes_discussed?: string[];
+    total_conversations?: number;
+    influenced_insight?: string[];
+  };
+
+  // NEW: Transformation impact score (0-100)
+  transformation_impact_score?: number;
 
   // Timestamps
   created_at: string;

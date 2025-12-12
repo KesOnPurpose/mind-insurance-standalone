@@ -374,13 +374,14 @@ export async function assignToUsers(
   for (const userId of userIds) {
     try {
       // Check for existing assignment in the slot
+      // Use maybeSingle() instead of single() to avoid 406 errors when no assignment exists
       const { data: existing } = await supabase
         .from('user_coach_protocol_assignments')
         .select('id, protocol_id')
         .eq('user_id', userId)
         .eq('assignment_slot', options.slot)
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
       if (existing && !options.override_existing) {
         // Get existing protocol title for conflict info
@@ -711,34 +712,56 @@ export async function advanceDay(assignmentId: string): Promise<void> {
 
 /**
  * Pause MIO protocol for user when coach protocol is assigned
+ *
+ * IMPORTANT: This function handles the case where a user might have multiple
+ * active MIO protocols. It pauses ALL active protocols to ensure Coach V2
+ * takes priority. Returns the ID of the first paused protocol for reference.
  */
 export async function pauseMIOForUser(userId: string): Promise<MIOPauseResult> {
   try {
-    // Find active MIO protocol
-    const { data: mioProtocol } = await supabase
-      .from('mio_weekly_protocols')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .single();
+    console.log('[pauseMIOForUser] Starting MIO pause for user:', userId);
 
-    if (!mioProtocol) {
+    // Find ALL active MIO protocols (don't use .single() - user might have multiple)
+    const { data: mioProtocols, error: queryError } = await supabase
+      .from('mio_weekly_protocols')
+      .select('id, title, status')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (queryError) {
+      console.error('[pauseMIOForUser] Query error:', queryError);
+      throw queryError;
+    }
+
+    // No active protocols is OK - just nothing to pause
+    if (!mioProtocols || mioProtocols.length === 0) {
+      console.log('[pauseMIOForUser] No active MIO protocols found for user - nothing to pause');
       return { success: true };
     }
 
-    // Pause it
-    const { error } = await supabase
+    console.log(`[pauseMIOForUser] Found ${mioProtocols.length} active protocol(s):`,
+      mioProtocols.map(p => ({ id: p.id, title: p.title?.substring(0, 50) })));
+
+    // Pause ALL active protocols
+    const protocolIds = mioProtocols.map(p => p.id);
+    const { error: updateError, count } = await supabase
       .from('mio_weekly_protocols')
       .update({ status: 'paused' })
-      .eq('id', mioProtocol.id);
+      .in('id', protocolIds);
 
-    if (error) throw error;
+    if (updateError) {
+      console.error('[pauseMIOForUser] Update error:', updateError);
+      throw updateError;
+    }
+
+    console.log(`[pauseMIOForUser] Successfully paused ${protocolIds.length} protocol(s)`);
 
     return {
       success: true,
-      paused_mio_protocol_id: mioProtocol.id,
+      paused_mio_protocol_id: protocolIds[0], // Return first one for reference
     };
   } catch (err) {
+    console.error('[pauseMIOForUser] Error:', err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error',
@@ -775,8 +798,7 @@ export async function resumeMIOForUser(
         .eq('id', assignment.paused_mio_protocol_id);
     }
 
-    // TODO: Trigger n8n webhook to generate new MIO protocol
-    // This should include context about the completed coach protocol
+    // Build context about the completed coach protocol
     const context = assignment ? {
       title: assignment.protocol?.title || 'Unknown',
       days_completed: assignment.days_completed,
@@ -785,6 +807,42 @@ export async function resumeMIOForUser(
         (assignment.days_completed / (assignment.days_completed + assignment.days_skipped || 1)) * 100
       ),
     } : undefined;
+
+    // Trigger N8n webhook to generate new MIO protocol
+    // This creates a fresh AI-generated protocol with context from completed coach protocol
+    const webhookUrl = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
+
+    try {
+      const webhookResponse = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target_type: 'specific_users',
+          target_config: {
+            user_ids: [userId],
+          },
+          triggered_by: 'coach_protocol_completion',
+          context: context ? {
+            completed_protocol_title: context.title,
+            days_completed: context.days_completed,
+            days_skipped: context.days_skipped,
+            completion_percentage: context.completion_percentage,
+          } : undefined,
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        console.warn('[resumeMIOForUser] Webhook returned non-OK status:', webhookResponse.status);
+        // Don't fail the function - MIO will be generated on next scheduled run
+      } else {
+        console.log('[resumeMIOForUser] Successfully triggered MIO generation webhook');
+      }
+    } catch (webhookErr) {
+      console.error('[resumeMIOForUser] Failed to trigger MIO generation webhook:', webhookErr);
+      // Don't fail the resume - MIO will be generated on next scheduled run
+    }
 
     return {
       success: true,
@@ -1034,4 +1092,37 @@ export function subscribeToProtocolUpdates(
       onUpdate
     )
     .subscribe();
+}
+
+/**
+ * Get task titles for each day in the current week (for roadmap display)
+ * Returns array of 7 titles, one per day (first task title for each day)
+ *
+ * Behavioral Science: Shows users what's coming without overwhelming them
+ * with full task details. Creates anticipation without cognitive overload.
+ */
+export async function getWeekDayTitles(
+  protocolId: string,
+  weekNumber: number
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('coach_protocol_tasks_v2')
+    .select('day_number, title')
+    .eq('protocol_id', protocolId)
+    .eq('week_number', weekNumber)
+    .order('day_number')
+    .order('task_order');
+
+  if (error) {
+    console.error('Error fetching week day titles:', error);
+    return [];
+  }
+
+  // Get first task title for each day (days 1-7)
+  const titles: string[] = [];
+  for (let day = 1; day <= 7; day++) {
+    const dayTask = data?.find(t => t.day_number === day);
+    titles.push(dayTask?.title || `Day ${day}`);
+  }
+  return titles;
 }

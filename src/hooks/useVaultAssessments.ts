@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export interface VaultAssessment {
   id: string;
-  type: 'identity_collision' | 'avatar' | 'temperament';
+  type: 'identity_collision' | 'avatar' | 'temperament' | 'inner_wiring' | 'mental_pillar';
   title: string;
   primary_result: string;
   secondary_results?: Record<string, unknown>;
@@ -20,6 +20,14 @@ export interface VaultAssessment {
   can_retake: boolean;
   confidence?: number;
   impact_area?: string;
+  // Mental Pillar specific fields
+  assessment_phase?: 'pre' | 'post';
+  growth_deltas?: Record<string, number>;
+  mio_feedback?: {
+    content: string;
+    generated_at: string;
+    focus_areas?: string[];
+  };
 }
 
 interface VaultAssessmentsData {
@@ -101,10 +109,10 @@ export function useVaultAssessments() {
         });
       }
 
-      // 3. Fetch temperament from user_profiles (if exists separately)
+      // 3. Fetch temperament, inner_wiring, and mental_pillar_progress from user_profiles
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('temperament_type, updated_at')
+        .select('temperament_type, inner_wiring, mental_pillar_progress, updated_at')
         .eq('id', user.id)
         .single();
 
@@ -122,6 +130,93 @@ export function useVaultAssessments() {
             can_retake: true,
           });
         }
+      }
+
+      // 4. Fetch inner_wiring from user_profiles (separate from avatar assessment)
+      if (!profileError && profileData?.inner_wiring) {
+        const wiring = profileData.inner_wiring as {
+          primary: string;
+          secondary?: string;
+          scores?: Record<string, number>;
+          confidence?: number;
+          assessed_at?: string;
+        };
+
+        if (wiring.primary) {
+          assessments.push({
+            id: `inner-wiring-${user.id}`,
+            type: 'inner_wiring',
+            title: 'Inner Wiring Discovery',
+            primary_result: formatTemperamentName(wiring.primary),
+            secondary_results: wiring.secondary ? { secondary: wiring.secondary } : undefined,
+            confidence: wiring.confidence,
+            completed_at: wiring.assessed_at || profileData.updated_at || '',
+            can_retake: true,
+          });
+        }
+      }
+
+      // 5. Fetch mental_pillar_assessments
+      const { data: mentalPillarData, error: mentalPillarError } = await supabase
+        .from('mental_pillar_assessments')
+        .select('*')
+        .eq('user_id', user.id)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false });
+
+      if (!mentalPillarError && mentalPillarData) {
+        mentalPillarData.forEach((row) => {
+          const pillarScores = row.pillar_scores as {
+            pattern_awareness: number;
+            identity_alignment: number;
+            belief_mastery: number;
+            mental_resilience: number;
+            overall: number;
+          } | null;
+
+          const growthDeltas = row.growth_deltas as Record<string, number> | null;
+          const mioFeedback = row.mio_feedback as {
+            content: string;
+            generated_at: string;
+            focus_areas?: string[];
+          } | null;
+
+          // Determine primary result based on phase
+          const phase = row.assessment_phase as 'pre' | 'post';
+          let primaryResult = `Overall Score: ${pillarScores?.overall || 0}`;
+          if (phase === 'post' && growthDeltas?.overall) {
+            const delta = growthDeltas.overall;
+            primaryResult = `Overall: ${pillarScores?.overall || 0} (${delta > 0 ? '+' : ''}${delta} growth)`;
+          }
+
+          // Check if user can retake (from status function or estimate)
+          // For now, allow retake if this is their most recent completed assessment
+          const isLatest = mentalPillarData[0]?.id === row.id;
+
+          assessments.push({
+            id: row.id,
+            type: 'mental_pillar',
+            title: phase === 'post' ? 'Mental Pillar Assessment (Post)' : 'Mental Pillar Baseline Assessment',
+            primary_result: primaryResult,
+            secondary_results: {
+              phase,
+              focus_areas: mioFeedback?.focus_areas,
+            },
+            scores: pillarScores ? {
+              pattern_awareness: pillarScores.pattern_awareness,
+              identity_alignment: pillarScores.identity_alignment,
+              belief_mastery: pillarScores.belief_mastery,
+              mental_resilience: pillarScores.mental_resilience,
+              overall: pillarScores.overall,
+            } : undefined,
+            completed_at: row.completed_at || row.created_at || '',
+            can_retake: isLatest,
+            confidence: row.confidence_score ? Number(row.confidence_score) : undefined,
+            assessment_phase: phase,
+            growth_deltas: growthDeltas || undefined,
+            mio_feedback: mioFeedback || undefined,
+          });
+        });
       }
 
       // Sort by date (newest first)

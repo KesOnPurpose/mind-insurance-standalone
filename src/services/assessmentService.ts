@@ -415,6 +415,21 @@ export async function saveAssessmentResults(
     throw baseError;
   }
 
+  // CRITICAL: Verify the save actually persisted before proceeding
+  // Supabase upsert can return success even if RLS policies block the write
+  const { data: verification, error: verifyError } = await supabase
+    .from('user_onboarding')
+    .select('assessment_completed_at')
+    .eq('user_id', userId)
+    .single();
+
+  if (verifyError || !verification?.assessment_completed_at) {
+    console.error('Assessment save verification failed - data did not persist:', verifyError);
+    throw new Error('Assessment save verification failed. Your progress was not saved. Please try again.');
+  }
+
+  console.log('Assessment save verified successfully for user:', userId);
+
   // Now try to save enhanced fields separately (may fail if migration not applied)
   // This allows assessment to work even before migration is applied
   const enhancedPayload: Record<string, unknown> = {
