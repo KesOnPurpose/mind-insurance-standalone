@@ -9,7 +9,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { X, Trophy, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { toast } from 'sonner';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 // Constants
 const PRACTICE_TYPE = 'T'; // T for Trigger Reset in PROTECT methodology
@@ -23,6 +26,8 @@ const RESET_METHODS = [
 
 export default function TriggerReset() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,8 +39,23 @@ export default function TriggerReset() {
   const [newResponse, setNewResponse] = useState('');
 
   // User data
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     loadUserData();
@@ -62,11 +82,8 @@ export default function TriggerReset() {
     }
   }
 
-  function getTodayDate(): string {
-    return new Date().toLocaleDateString('en-CA', {
-      timeZone: userTimezone
-    });
-  }
+  // Use centralized safe date utility
+  const getTodayDate = (): string => getSafeTodayDate(userTimezone);
 
   async function handleComplete() {
     // Validate all fields
@@ -153,11 +170,15 @@ export default function TriggerReset() {
         toast.success('Practice completed successfully!');
       }
 
+      // Check if this completes a section and trigger MIO feedback
+      await checkSectionCompletion(PRACTICE_TYPE, practiceDate);
+
       // Navigate back to practice list
-      navigate('/mind-insurance/practice');
-    } catch (err: any) {
+      navigate('/mind-insurance/practice?section=NASCAR_PIT_STOP');
+    } catch (err: unknown) {
       console.error('Error saving practice:', err);
-      setError(err.message || 'An error occurred while saving the practice');
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       setLoading(false);
     }
   }
@@ -179,7 +200,7 @@ export default function TriggerReset() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/mind-insurance/practice')}
+          onClick={() => navigate('/mind-insurance/practice?section=NASCAR_PIT_STOP')}
           aria-label="Close"
           className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >

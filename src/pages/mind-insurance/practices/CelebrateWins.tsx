@@ -9,7 +9,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 // import { motion, AnimatePresence } from 'framer-motion'; // Package not installed
 
 // Victory celebration options with animations
@@ -54,6 +57,8 @@ const VICTORY_CELEBRATIONS = [
 export default function CelebrateWins() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion } = useSectionCompletion();
 
   // Form state
   const [championshipWin, setChampionshipWin] = useState('');
@@ -61,12 +66,27 @@ export default function CelebrateWins() {
   const [futureSelfEvidence, setFutureSelfEvidence] = useState('');
   const [championshipGratitude, setChampionshipGratitude] = useState('');
   const [victoryCelebration, setVictoryCelebration] = useState('');
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load user timezone on mount
   useEffect(() => {
@@ -128,9 +148,7 @@ export default function CelebrateWins() {
       }
 
       const points = 2;
-      const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const practiceDate = getSafeTodayDate(userTimezone);
 
       // Check for existing practice today
       const { data: existingPractices, error: fetchError } = await supabase
@@ -195,7 +213,7 @@ export default function CelebrateWins() {
           .update({
             total_points: (profile.total_points || 0) + points
           })
-          .eq('user_id', user.id);
+          .eq('id', user.id); // user_profiles.id matches auth user id
       }
 
       // Show celebration animation before navigating
@@ -206,13 +224,17 @@ export default function CelebrateWins() {
         description: `You earned ${points} points. Keep celebrating those wins!`,
       });
 
+      // Check if this completes the CT section and trigger MIO feedback
+      await checkCompletion('C', practiceDate);
+
       setTimeout(() => {
-        navigate('/mind-insurance/practice');
+        navigate('/mind-insurance/practice?section=VICTORY_LAP');
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving practice:', err);
-      setError(err.message || 'An error occurred while saving your practice');
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -230,7 +252,7 @@ export default function CelebrateWins() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/mind-insurance/practice')}
+                onClick={() => navigate('/mind-insurance/practice?section=VICTORY_LAP')}
                 className="text-gray-400 hover:text-white hover:bg-mi-navy"
               >
                 <ArrowLeft className="h-5 w-5" />

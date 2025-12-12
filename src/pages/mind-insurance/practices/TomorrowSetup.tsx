@@ -8,8 +8,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X, Loader2, Sunrise, Trophy } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 // Constants
 const PRACTICE_TYPE = 'T2'; // T2 for Tomorrow Setup in PROTECT methodology
@@ -17,7 +19,8 @@ const BASE_POINTS = 2;
 
 export default function TomorrowSetup() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
 
   // Form state
   const [tomorrowGoal, setTomorrowGoal] = useState('');
@@ -36,7 +39,22 @@ export default function TomorrowSetup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load user timezone
   useEffect(() => {
@@ -70,9 +88,7 @@ export default function TomorrowSetup() {
     if (!user) return;
 
     try {
-      const today = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const today = getSafeTodayDate(userTimezone);
       const { data: existingPractices } = await supabase
         .from('daily_practices')
         .select('*')
@@ -107,9 +123,7 @@ export default function TomorrowSetup() {
     setError('');
 
     try {
-      const today = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const today = getSafeTodayDate(userTimezone);
 
       // Check if practice already exists for today
       const { data: existingPractices } = await supabase
@@ -169,10 +183,15 @@ export default function TomorrowSetup() {
         });
       }
 
+      // Check if this completes the CT section and trigger MIO feedback
+      await checkSectionCompletion('T2', today);
+
       // Success! Navigate back to practice screen
-      navigate('/mind-insurance/practice');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving your practice');
+      navigate('/mind-insurance/practice?section=VICTORY_LAP');
+    } catch (err: unknown) {
+      console.error('Error saving practice:', err);
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       setLoading(false);
     }
   }
@@ -195,7 +214,7 @@ export default function TomorrowSetup() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/mind-insurance/practice')}
+          onClick={() => navigate('/mind-insurance/practice?section=VICTORY_LAP')}
           aria-label="Close"
           className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >

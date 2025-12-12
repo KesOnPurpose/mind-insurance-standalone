@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Mic, MicOff, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   createPractice,
   updatePractice,
@@ -28,11 +29,15 @@ import {
 import { PRACTICE_TYPES, POINTS_CONFIG, AUDIO_DURATIONS, TIME_WINDOWS } from '@/constants/protect';
 import type { DailyPractice } from '@/types/practices';
 import { useToast } from '@/hooks/use-toast';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { VoiceActivityIndicator } from '@/components/voice/VoiceActivityIndicator';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 export default function ReinforceIdentity() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
 
   // Form state
   const [identityStatement, setIdentityStatement] = useState('');
@@ -41,7 +46,10 @@ export default function ReinforceIdentity() {
   const [hasRecording, setHasRecording] = useState(false);
   const [currentRecordingId, setCurrentRecordingId] = useState<string | null>(null);
   const [currentVolume, setCurrentVolume] = useState(0);
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -52,6 +60,18 @@ export default function ReinforceIdentity() {
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const recordingDataRef = useRef<{ blob: Blob; duration: number } | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Initialize audio recorder on mount
   useEffect(() => {
@@ -289,10 +309,8 @@ export default function ReinforceIdentity() {
         recording_duration: recordingDataRef.current.duration,
       };
 
-      // Get today's date in user's timezone
-      const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      // Get today's date in user's timezone (Safari-safe)
+      const practiceDate = getSafeTodayDate(userTimezone);
 
       // Create or update practice
       if (existingPractice) {
@@ -320,11 +338,15 @@ export default function ReinforceIdentity() {
         description: `You earned ${pointsEarned} points`,
       });
 
-      // Navigate back to practice page
-      navigate('/mind-insurance/practice');
+      // Check if this completes a section and trigger MIO feedback
+      await checkSectionCompletion(PRACTICE_TYPES.REINFORCE_IDENTITY, practiceDate);
 
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving your practice');
+      // Navigate back to practice page
+      navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP');
+
+    } catch (err: unknown) {
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       console.error('Practice completion error:', err);
     } finally {
       setLoading(false);
@@ -343,7 +365,7 @@ export default function ReinforceIdentity() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/mind-insurance/practice')}
+            onClick={() => navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP')}
             className="shrink-0 text-gray-400 hover:text-white hover:bg-mi-navy-light"
           >
             <ArrowLeft className="h-5 w-5" />

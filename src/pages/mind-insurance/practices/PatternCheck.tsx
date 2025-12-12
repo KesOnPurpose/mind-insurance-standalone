@@ -18,8 +18,10 @@ import { X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSession } from '@/hooks/useSession';
 import { useFeatureUsage } from '@/hooks/useFeatureUsage';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 // Constants
 const PRACTICE_TYPE = 'P'; // P for Pattern Check in PROTECT methodology
@@ -33,11 +35,14 @@ const COLLISION_TYPES = [
 
 export default function PatternCheck() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Analytics tracking
   const { trackTactic } = useSession('practice');
   const { trackFeature } = useFeatureUsage('tactic_practice', true);
+
+  // Section completion tracking for MIO feedback
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
 
   // Form state
   const [caughtPattern, setCaughtPattern] = useState<string>('');
@@ -49,7 +54,22 @@ export default function PatternCheck() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load user timezone
   useEffect(() => {
@@ -83,9 +103,7 @@ export default function PatternCheck() {
     if (!user) return;
 
     try {
-      const today = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const today = getSafeTodayDate(userTimezone);
       const { data: existingPractices } = await supabase
         .from('daily_practices')
         .select('*')
@@ -114,9 +132,7 @@ export default function PatternCheck() {
     setError('');
 
     try {
-      const today = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const today = getSafeTodayDate(userTimezone);
 
       // Check if practice already exists for today
       const { data: existingPractices } = await supabase
@@ -181,10 +197,15 @@ export default function PatternCheck() {
       // Track tactic completion for analytics
       await trackTactic();
 
+      // Check if this completes a section and trigger MIO feedback
+      await checkSectionCompletion(PRACTICE_TYPE, today);
+
       // Success! Navigate back to practice screen
-      navigate('/mind-insurance/practice');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving your practice');
+      navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP');
+    } catch (err: unknown) {
+      console.error('Error saving practice:', err);
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       setLoading(false);
     }
   }
@@ -212,7 +233,7 @@ export default function PatternCheck() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/mind-insurance/practice')}
+          onClick={() => navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP')}
           aria-label="Close"
           className="text-gray-400 hover:text-white hover:bg-mi-navy-light"
         >
