@@ -14,6 +14,11 @@ import { getTodayInTimezone } from '@/utils/timezoneUtils';
 import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
 import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
 
+// Coverage Center Dashboard Card
+import { DashboardCoverageCard } from '@/components/coverage-center';
+import { getActiveInsightProtocol } from '@/services/mioInsightProtocolService';
+import type { MIOInsightProtocolWithProgress } from '@/types/protocol';
+
 // V2 Coach Protocols
 import { CoachProtocolTabs } from '@/components/mind-insurance/CoachProtocolTabs';
 import { useCoachProtocols } from '@/hooks/useCoachProtocols';
@@ -38,6 +43,8 @@ export default function MindInsuranceHub() {
   const [loading, setLoading] = useState(true);
   const [protocolTask, setProtocolTask] = useState<TodayProtocolTaskType | null>(null);
   const [showProtocolModal, setShowProtocolModal] = useState(false);
+  const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
+  const [protocolLoading, setProtocolLoading] = useState(true);
 
   // V2 Coach Protocols hooks
   const { protocols: coachProtocols, isLoading: protocolsLoading } = useCoachProtocols();
@@ -73,8 +80,22 @@ export default function MindInsuranceHub() {
       fetchDailyStatus();
       fetchCoachContent();
       fetchProtocolTask();
+      fetchActiveProtocol();
     }
   }, [user]);
+
+  const fetchActiveProtocol = async () => {
+    if (!user?.id) return;
+    setProtocolLoading(true);
+    try {
+      const protocol = await getActiveInsightProtocol(user.id);
+      setActiveProtocol(protocol);
+    } catch (err) {
+      console.error('[MindInsuranceHub] Error fetching active protocol:', err);
+    } finally {
+      setProtocolLoading(false);
+    }
+  };
 
   const fetchProtocolTask = async () => {
     if (!user?.id) return;
@@ -223,6 +244,13 @@ export default function MindInsuranceHub() {
           </div>
         </Card>
 
+        {/* Coverage Center Card - Links to Coverage Center */}
+        <DashboardCoverageCard
+          activeProtocol={activeProtocol}
+          hasCoachProtocol={hasCoachProtocols}
+          isLoading={protocolLoading}
+        />
+
         {/* Coach Protocols Section (V2) */}
         {hasCoachProtocols && (
           <div className="space-y-4">
@@ -295,7 +323,7 @@ export default function MindInsuranceHub() {
         {hasCoachContent && (
           <Card
             className="p-4 bg-mi-navy-light border-amber-500/30 cursor-pointer hover:border-amber-500/50 transition-all"
-            onClick={() => navigate('/mind-insurance/insights')}
+            onClick={() => navigate('/mind-insurance/coverage')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -303,12 +331,12 @@ export default function MindInsuranceHub() {
                   <BookOpen className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-white">Coach Content Available</p>
-                  <p className="text-sm text-gray-400">New expert-curated content for you</p>
+                  <p className="font-medium text-white">Coverage Center</p>
+                  <p className="text-sm text-gray-400">View your protocols and progress</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30">
-                New
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
+                View
               </Badge>
             </div>
           </Card>

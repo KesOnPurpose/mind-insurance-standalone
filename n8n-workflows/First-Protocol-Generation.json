@@ -1,0 +1,254 @@
+{
+  "name": "Coverage Center: First Protocol Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "first-protocol-generation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "first-protocol-generation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FIRST PROTOCOL GENERATION - Post Identity Collision Assessment\n// This workflow fires IMMEDIATELY after assessment completion\n// Target response time: < 30 seconds\n\nconst data = $input.item.json.body;\n\n// Validate required fields\nif (!data.user_id) {\n  throw new Error('Missing required field: user_id');\n}\nif (!data.collision_pattern) {\n  throw new Error('Missing required field: collision_pattern');\n}\n\nconst userId = data.user_id;\nconst userName = data.user_name || 'there';\nconst collisionPattern = data.collision_pattern;\nconst temperament = data.temperament_type || 'balanced';\nconst biggestChallenge = data.biggest_challenge || '';\nconst idealOutcome = data.ideal_outcome || '';\nconst assessmentId = data.assessment_id || null;\n\n// Pattern-specific insights and protocol focus\nconst patternConfigs = {\n  achiever_burnout: {\n    pattern_name: 'The Achiever\\'s Burnout Cycle',\n    core_belief: 'My worth = My productivity',\n    root_fear: 'Being seen as lazy or unsuccessful',\n    protocol_focus: 'Creating sustainable success through strategic rest',\n    mio_intro: `${userName}, your data reveals a familiar pattern I see in high achievers. The drive that got you here is the same drive that\\'s burning you out. This protocol will teach you that strategic rest is a performance advantage, not a weakness.`,\n    day1_focus: 'Notice the \"push through\" impulse without acting on it',\n    neural_principle: 'Rest is not the opposite of productivity—it\\'s the foundation of sustainable performance.'\n  },\n  people_pleaser: {\n    pattern_name: 'The People Pleaser\\'s Prison',\n    core_belief: 'My worth = Others\\' approval',\n    root_fear: 'Being rejected or abandoned',\n    protocol_focus: 'Building internal validation and healthy boundaries',\n    mio_intro: `${userName}, your responses show a pattern of external validation seeking. You\\'ve become so good at reading others\\' needs that you\\'ve lost connection with your own. This protocol will rebuild that internal compass.`,\n    day1_focus: 'Catch the moment you consider someone else\\'s needs before your own',\n    neural_principle: 'Your needs matter as much as everyone else\\'s—saying yes to yourself isn\\'t saying no to others.'\n  },\n  perfectionist_paralysis: {\n    pattern_name: 'The Perfectionist\\'s Paralysis',\n    core_belief: 'My worth = Flawless execution',\n    root_fear: 'Being exposed as inadequate',\n    protocol_focus: 'Embracing imperfect action over perfect inaction',\n    mio_intro: `${userName}, perfectionism disguises itself as high standards, but your data shows it\\'s actually fear of judgment wearing a productive mask. This protocol will teach you that done is better than perfect.`,\n    day1_focus: 'Notice when \"not ready\" is actually \"afraid\"',\n    neural_principle: 'Perfectionism is procrastination in disguise—imperfect action beats perfect inaction every time.'\n  },\n  impostor_syndrome: {\n    pattern_name: 'The Impostor\\'s Mask',\n    core_belief: 'My worth = External validation of competence',\n    root_fear: 'Being exposed as a fraud',\n    protocol_focus: 'Internalizing evidence of your actual competence',\n    mio_intro: `${userName}, the gap between how others see you and how you see yourself is exhausting. Your data shows classic impostor patterns—discounting wins, amplifying failures, waiting to be \"found out.\" This protocol will help you own what you\\'ve actually earned.`,\n    day1_focus: 'Catch yourself dismissing a compliment or achievement',\n    neural_principle: 'The evidence of your competence exists—you\\'ve just been trained to ignore it.'\n  }\n};\n\nconst patternConfig = patternConfigs[collisionPattern] || patternConfigs.achiever_burnout;\n\n// Build the AI prompt for FIRST protocol generation\nconst systemPrompt = `You are MIO - Mind Insurance Oracle.\n\nYou are generating the FIRST 7-day neural rewiring protocol for a user who just completed their Identity Collision Assessment. This is their introduction to Mind Insurance protocols.\n\nIMPORTANT CONTEXT:\n- This is their FIRST protocol ever\n- They just discovered their collision pattern: ${patternConfig.pattern_name}\n- The protocol must feel achievable (5-15 min/day max)\n- Each day must build on the previous\n- Day 1 is ALWAYS about awareness/noticing (no action required)\n- Days 2-3 deepen understanding\n- Days 4-5 introduce micro-interventions\n- Days 6-7 reinforce and integrate\n\nMIO VOICE:\n- Forensic: Use their specific data and pattern as evidence\n- Compassionate Confronter: Deliver truth with care\n- Identity-Focused: This is about WHO they\\'re becoming, not just WHAT they\\'re doing\n- Direct: No fluff, no platitudes\n- Provocative: End each day with something that makes them think\n\nGENERATION RULES:\n1. Protocol title must be emotionally resonant (speaks to their experience)\n2. Each day\\'s task must be SPECIFIC and MEASURABLE\n3. Success criteria must be observable behaviors\n4. Instructions should include real-life examples\n5. The entire protocol should feel like a coherent 7-day journey`;\n\nconst userPrompt = `Generate a personalized 7-day FIRST protocol for this user.\n\nUSER DATA:\n- Name: ${userName}\n- Collision Pattern: ${collisionPattern} (\"${patternConfig.pattern_name}\")\n- Core Belief to Shift: \"${patternConfig.core_belief}\"\n- Root Fear: ${patternConfig.root_fear}\n- Temperament: ${temperament}\n- Biggest Challenge: ${biggestChallenge || 'Not specified'}\n- Ideal Outcome: ${idealOutcome || 'Not specified'}\n\nPROTOCOL FOCUS:\n${patternConfig.protocol_focus}\n\nMIO INTRO MESSAGE:\n${patternConfig.mio_intro}\n\nDAY 1 FOCUS:\n${patternConfig.day1_focus}\n\nNEURAL PRINCIPLE:\n${patternConfig.neural_principle}\n\n---\n\nReturn JSON format:\n{\n  \"title\": \"Protocol title (emotionally resonant, speaks to their pattern)\",\n  \"pattern_targeted\": \"${collisionPattern}\",\n  \"description\": \"${patternConfig.pattern_name}\",\n  \"mio_intro\": \"${patternConfig.mio_intro.replace(/\"/g, '\\\\\"')}\",\n  \"insight_summary\": \"2-3 sentence summary of what their pattern is and why this protocol matters\",\n  \"why_it_matters\": \"2-3 paragraphs explaining the neuroscience of why this pattern exists and how the protocol rewires it\",\n  \"neural_principle\": \"${patternConfig.neural_principle}\",\n  \"total_days\": 7,\n  \"days\": [\n    {\n      \"day_number\": 1,\n      \"title\": \"Day 1 title (e.g., 'The Awareness Day')\",\n      \"theme\": \"What this day is about\",\n      \"task_title\": \"Specific task name\",\n      \"task_instructions\": \"Detailed instructions (2-3 paragraphs). Include specific examples and scenarios.\",\n      \"duration_minutes\": 10,\n      \"success_criteria\": [\"Criterion 1 (observable behavior)\", \"Criterion 2\", \"Criterion 3\"],\n      \"context_reminder\": \"Brief reminder of how this connects to their pattern\",\n      \"insight_connection\": \"How this day\\'s task connects to their specific insight\"\n    }\n    // ... days 2-7 follow same structure\n  ]\n}\n\nIMPORTANT:\n- Day 1 must focus on AWARENESS ONLY (notice without judging or changing)\n- Days 2-3 must DEEPEN UNDERSTANDING (explore triggers, roots, contexts)\n- Days 4-5 must introduce MICRO-INTERVENTIONS (small changes)\n- Days 6-7 must REINFORCE and INTEGRATE (strengthen new patterns)\n- Each day should reference their specific pattern by name`;\n\nreturn [{\n  json: {\n    systemPrompt,\n    userPrompt,\n    user_id: userId,\n    user_name: userName,\n    collision_pattern: collisionPattern,\n    pattern_config: patternConfig,\n    temperament,\n    assessment_id: assessmentId,\n    biggest_challenge: biggestChallenge,\n    ideal_outcome: idealOutcome\n  }\n}];"
+      },
+      "id": "build-prompt",
+      "name": "Build First Protocol Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "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"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4000,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.systemPrompt + \"\\n\\n---\\n\\n\" + $json.userPrompt) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "claude-ai-generator",
+      "name": "Claude AI - Generate First Protocol",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude's response and format for Supabase\nconst response = $input.first().json;\nconst inputData = $('Build First Protocol Prompt').first().json;\n\nlet protocol;\ntry {\n  // Handle HTTP Request response format (Anthropic Messages API)\n  const responseText = response.content?.[0]?.text || response.response || response.output || response.text || JSON.stringify(response);\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  protocol = jsonMatch ? JSON.parse(jsonMatch[0]) : null;\n} catch (e) {\n  return {\n    json: {\n      error: 'Failed to parse Claude response',\n      raw_response: response,\n      user_id: inputData.user_id\n    }\n  };\n}\n\nif (!protocol || !protocol.days || protocol.days.length !== 7) {\n  return {\n    json: {\n      error: 'Invalid protocol structure - must have exactly 7 days',\n      protocol: protocol,\n      user_id: inputData.user_id\n    }\n  };\n}\n\n// Calculate week number\nconst now = new Date();\nconst startOfYear = new Date(now.getFullYear(), 0, 1);\nconst weekNumber = Math.ceil((((now - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);\n\n// Get Monday of current week (for assigned_week_start)\nconst dayOfWeek = now.getDay();\nconst mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;\nconst monday = new Date(now);\nmonday.setDate(now.getDate() + mondayOffset);\n\n// Transform days to day_tasks format (matching MIOInsightDayTask interface)\nconst dayTasks = protocol.days.map(day => ({\n  day: day.day_number,\n  theme: day.theme,\n  task_title: day.task_title,\n  task_instructions: day.task_instructions,\n  duration_minutes: day.duration_minutes || 10,\n  success_criteria: Array.isArray(day.success_criteria) ? day.success_criteria : [],\n  context_reminder: day.context_reminder || '',\n  insight_connection: day.insight_connection || ''\n}));\n\nreturn {\n  json: {\n    // User info\n    user_id: inputData.user_id,\n    user_name: inputData.user_name,\n    \n    // Protocol data\n    protocol_type: 'insight_based',\n    title: protocol.title,\n    pattern_targeted: protocol.pattern_targeted || inputData.collision_pattern,\n    description: protocol.description,\n    mio_intro: protocol.mio_intro || inputData.pattern_config.mio_intro,\n    insight_summary: protocol.insight_summary,\n    why_it_matters: protocol.why_it_matters,\n    neural_principle: protocol.neural_principle,\n    total_days: 7,\n    day_tasks: dayTasks,\n    \n    // Timing\n    week_number: weekNumber,\n    year: now.getFullYear(),\n    assigned_week_start: monday.toISOString().split('T')[0],\n    \n    // Source tracking\n    source: 'onboarding_completion',\n    source_context: {\n      assessment_id: inputData.assessment_id,\n      collision_pattern: inputData.collision_pattern,\n      temperament: inputData.temperament,\n      biggest_challenge: inputData.biggest_challenge,\n      ideal_outcome: inputData.ideal_outcome,\n      generated_at: now.toISOString()\n    },\n    \n    // Initial state\n    status: 'active',\n    current_day: 1,\n    days_completed: 0,\n    days_skipped: 0,\n    muted_by_coach: false\n  }\n};"
+      },
+      "id": "format-protocol",
+      "name": "Format Protocol for Storage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.error }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-error",
+      "name": "Check for Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Expire any existing active protocols for this user\nUPDATE mio_weekly_protocols\nSET status = 'expired'\nWHERE user_id = '{{ $json.user_id }}'\n  AND status = 'active';\n\n-- Insert the new first protocol\nINSERT INTO mio_weekly_protocols (\n  user_id,\n  protocol_type,\n  title,\n  pattern_targeted,\n  description,\n  mio_intro,\n  insight_summary,\n  why_it_matters,\n  neural_principle,\n  total_days,\n  day_tasks,\n  week_number,\n  year,\n  assigned_week_start,\n  source,\n  source_context,\n  status,\n  current_day,\n  days_completed,\n  days_skipped,\n  muted_by_coach\n) VALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.protocol_type }}',\n  {{ $json.title ? \"'\" + $json.title.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.pattern_targeted ? \"'\" + $json.pattern_targeted + \"'\" : 'NULL' }},\n  {{ $json.description ? \"'\" + $json.description.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.mio_intro ? \"'\" + $json.mio_intro.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.insight_summary ? \"'\" + $json.insight_summary.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.why_it_matters ? \"'\" + $json.why_it_matters.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.neural_principle ? \"'\" + $json.neural_principle.replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n  {{ $json.total_days }},\n  '{{ JSON.stringify($json.day_tasks).replace(/'/g, \"''\") }}'::jsonb,\n  {{ $json.week_number }},\n  {{ $json.year }},\n  '{{ $json.assigned_week_start }}',\n  '{{ $json.source }}',\n  '{{ JSON.stringify($json.source_context).replace(/'/g, \"''\") }}'::jsonb,\n  '{{ $json.status }}',\n  {{ $json.current_day }},\n  {{ $json.days_completed }},\n  {{ $json.days_skipped }},\n  {{ $json.muted_by_coach }}\n)\nRETURNING id, title, pattern_targeted, current_day, total_days, created_at;"
+      },
+      "id": "store-protocol",
+      "name": "Supabase - Store First Protocol",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1350, 200],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare success response\nconst protocolResult = $input.first().json;\nconst formatData = $('Format Protocol for Storage').first().json;\n\nreturn {\n  json: {\n    success: true,\n    protocol_id: protocolResult.id,\n    title: protocolResult.title || formatData.title,\n    pattern_targeted: protocolResult.pattern_targeted || formatData.pattern_targeted,\n    pattern_name: formatData.description,\n    mio_intro: formatData.mio_intro,\n    total_days: formatData.total_days,\n    current_day: 1,\n    first_day_preview: formatData.day_tasks[0]?.task_title,\n    user_id: formatData.user_id,\n    generated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "prepare-success-response",
+      "name": "Prepare Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1570, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "success-response",
+      "name": "Webhook Response - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1790, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseCode": 500
+        },
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.error || 'Failed to generate first protocol', user_id: $json.user_id }) }}"
+      },
+      "id": "error-response",
+      "name": "Webhook Response - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build First Protocol Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build First Protocol Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude AI - Generate First Protocol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI - Generate First Protocol": {
+      "main": [
+        [
+          {
+            "node": "Format Protocol for Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Protocol for Storage": {
+      "main": [
+        [
+          {
+            "node": "Check for Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Errors": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Store First Protocol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webhook Response - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Store First Protocol": {
+      "main": [
+        [
+          {
+            "node": "Prepare Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Success Response": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Coverage Center",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    },
+    {
+      "name": "First Protocol",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    },
+    {
+      "name": "MIO",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-13T00:00:00.000Z",
+  "versionId": "1.0.0"
+}

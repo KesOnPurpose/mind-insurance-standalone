@@ -791,7 +791,7 @@ function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className="text-sm text-gray-400 mb-5"
+        className="text-sm text-gray-300 mb-5"
       >
         Your policy includes the{' '}
         <span className="text-mi-gold font-semibold">P.R.O.T.E.C.T. Method™</span>
@@ -815,16 +815,16 @@ function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
               <span className="text-mi-gold font-bold text-lg w-6 flex-shrink-0">
                 {practice.letter}
               </span>
-              <Icon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <Icon className="w-5 h-5 text-gray-300 flex-shrink-0" />
               <div className="text-left flex-1 min-w-0">
                 <span className="text-white font-medium text-sm block">
                   {practice.name}
                 </span>
-                <p className="text-xs text-gray-400 truncate">
+                <p className="text-xs text-gray-300 truncate">
                   {practice.description}
                 </p>
               </div>
-              <span className="text-xs text-gray-500 flex-shrink-0">
+              <span className="text-xs text-gray-400 flex-shrink-0">
                 {practice.time}
               </span>
             </motion.div>
@@ -839,6 +839,7 @@ function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
         transition={{ delay: 0.8, duration: 0.4 }}
         className="text-sm text-mi-cyan mb-6"
       >
+        <span className="text-white font-medium">10 minutes a day.</span>{' '}
         7 practices. 3 time windows.{' '}
         <span className="text-mi-gold font-semibold">21 days to breakthrough.</span>
       </motion.p>

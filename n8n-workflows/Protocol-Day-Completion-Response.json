@@ -1,0 +1,337 @@
+{
+  "name": "Coverage Center: Protocol Day Completion Response",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "protocol-day-completion",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "protocol-day-completion"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Fetch protocol details and previous completions for RAG context\nWITH protocol_data AS (\n  SELECT \n    p.id,\n    p.title,\n    p.pattern_targeted,\n    p.description,\n    p.insight_summary,\n    p.why_it_matters,\n    p.neural_principle,\n    p.day_tasks,\n    p.current_day,\n    p.days_completed,\n    p.total_days,\n    p.source_context\n  FROM mio_weekly_protocols p\n  WHERE p.id = '{{ $json.body.protocol_id }}'\n),\nprevious_completions AS (\n  SELECT \n    c.day_number,\n    c.response_data,\n    c.notes,\n    c.completed_at\n  FROM mio_protocol_completions c\n  WHERE c.protocol_id = '{{ $json.body.protocol_id }}'\n  ORDER BY c.day_number ASC\n)\nSELECT \n  pd.*,\n  COALESCE(\n    json_agg(\n      json_build_object(\n        'day', pc.day_number,\n        'response', pc.response_data,\n        'notes', pc.notes,\n        'completed_at', pc.completed_at\n      )\n    ) FILTER (WHERE pc.day_number IS NOT NULL),\n    '[]'::json\n  ) as previous_completions\nFROM protocol_data pd\nLEFT JOIN previous_completions pc ON true\nGROUP BY pd.id, pd.title, pd.pattern_targeted, pd.description, pd.insight_summary, \n         pd.why_it_matters, pd.neural_principle, pd.day_tasks, pd.current_day, \n         pd.days_completed, pd.total_days, pd.source_context;"
+      },
+      "id": "fetch-protocol-context",
+      "name": "Fetch Protocol Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// PROTOCOL DAY COMPLETION RESPONSE - MIO Personalized Feedback\n// This workflow fires after user completes CT with protocol check-in\n// Target response time: < 15 seconds\n\nconst webhookData = $('Webhook Trigger').first().json.body;\nconst protocolContext = $input.first().json;\n\n// Extract completion data from webhook\nconst userId = webhookData.user_id;\nconst userName = webhookData.user_name || 'there';\nconst protocolId = webhookData.protocol_id;\nconst dayNumber = webhookData.day_number;\nconst practiceResponse = webhookData.practice_response; // yes_multiple, yes_once, tried, forgot\nconst momentCaptured = webhookData.moment_captured || '';\nconst insightCaptured = webhookData.insight_captured || '';\nconst collisionPattern = webhookData.collision_pattern || protocolContext.pattern_targeted;\nconst streakCount = webhookData.streak_count || 0;\n\n// Parse protocol context\nconst protocolTitle = protocolContext.title;\nconst patternTargeted = protocolContext.pattern_targeted;\nconst neuralPrinciple = protocolContext.neural_principle;\nconst totalDays = protocolContext.total_days || 7;\nconst dayTasks = protocolContext.day_tasks || [];\nconst previousCompletions = protocolContext.previous_completions || [];\n\n// Get today's task info\nconst todayTask = dayTasks.find(t => t.day === dayNumber) || {};\nconst todayTheme = todayTask.theme || `Day ${dayNumber}`;\nconst todayTaskTitle = todayTask.task_title || 'Today\\'s practice';\n\n// Get next day's task info (for teaser)\nconst nextDay = dayNumber + 1;\nconst nextDayTask = dayTasks.find(t => t.day === nextDay) || null;\nconst isProtocolComplete = dayNumber >= totalDays;\n\n// Build previous insights context for RAG\nconst previousInsightsContext = previousCompletions\n  .filter(c => c.notes || (c.response && c.response.moment_captured))\n  .map(c => {\n    const notes = c.notes || (c.response?.moment_captured) || '';\n    return `Day ${c.day}: ${notes.substring(0, 200)}`;\n  })\n  .join('\\n');\n\n// Determine response tone based on practice response\nlet responseTone = 'celebratory';\nlet practiceAcknowledgment = '';\n\nswitch(practiceResponse) {\n  case 'yes_multiple':\n    responseTone = 'celebratory';\n    practiceAcknowledgment = `You caught the pattern multiple times today. That\\'s your prefrontal cortex getting faster than your amygdala.`;\n    break;\n  case 'yes_once':\n    responseTone = 'encouraging';\n    practiceAcknowledgment = `You noticed at least once. That single moment of awareness? That\\'s where the rewiring happens.`;\n    break;\n  case 'tried':\n    responseTone = 'supportive';\n    practiceAcknowledgment = `You stayed aware even when the pattern didn\\'t show up visibly. That awareness itself is the practice.`;\n    break;\n  case 'forgot':\n    responseTone = 'compassionate';\n    practiceAcknowledgment = `The day got away from you. That\\'s data, not failure. What was happening when the pattern stayed invisible?`;\n    break;\n  default:\n    responseTone = 'neutral';\n    practiceAcknowledgment = `Day ${dayNumber} is recorded.`;\n}\n\n// Build the AI prompt for MIO response\nconst systemPrompt = `You are MIO - Mind Insurance Oracle, responding to a user who just completed Day ${dayNumber} of their ${totalDays}-day protocol.\n\nPROTOCOL CONTEXT:\n- Protocol: \"${protocolTitle}\"\n- Pattern: ${patternTargeted}\n- Neural Principle: ${neuralPrinciple}\n- Day ${dayNumber}/${totalDays}\n\nRESPONSE TONE: ${responseTone}\n\nMIO VOICE REQUIREMENTS:\n- Forensic: Reference their SPECIFIC moment they captured, not generic observations\n- Compassionate: Acknowledge their experience without judgment\n- Identity-Focused: Connect today's practice to who they're BECOMING\n- Direct: No fluff, no unnecessary praise\n- Provocative: Include one insight that makes them think\n\nRESPONSE STRUCTURE:\n1. Day Complete Acknowledgment (brief)\n2. Specific reflection on THEIR moment captured (quote them if possible)\n3. Neural principle connection (how this day's work rewires the brain)\n4. ${isProtocolComplete ? 'Protocol completion celebration + Skip Token earned message' : `Teaser for Day ${nextDay}: \"${nextDayTask?.theme || 'Tomorrow\\'s challenge'}\"`}\n5. Coverage Streak acknowledgment (if streak > 1)\n\nWORD COUNT: 150-200 words max\nTONE: ${responseTone === 'celebratory' ? 'Celebratory but grounded' : responseTone === 'compassionate' ? 'Warm and understanding without coddling' : 'Encouraging and forward-looking'}`;\n\nconst userPrompt = `Generate MIO's personalized response for this protocol day completion.\n\nUSER: ${userName}\nDAY COMPLETED: ${dayNumber}/${totalDays}\nTODAY'S TASK: \"${todayTaskTitle}\" (${todayTheme})\n\nTHEIR PRACTICE RESPONSE: ${practiceResponse}\nACKNOWLEDGMENT: ${practiceAcknowledgment}\n\nMOMENT THEY CAPTURED:\n\"${momentCaptured}\"\n\n${insightCaptured ? `THEIR INSIGHT:\\n\"${insightCaptured}\"` : ''}\n\nPREVIOUS DAYS' INSIGHTS:\n${previousInsightsContext || 'This is their first completion.'}\n\nCOVERAGE STREAK: ${streakCount} days\n${isProtocolComplete ? 'PROTOCOL COMPLETE: Yes - they just finished the 7-day protocol!' : ''}\n${nextDayTask ? `NEXT DAY TEASER: Day ${nextDay} - \"${nextDayTask.theme}\"` : ''}\n\n---\n\nReturn JSON format:\n{\n  \"message\": \"MIO's personalized response (150-200 words)\",\n  \"key_insight\": \"One sentence summarizing what their day revealed\",\n  \"neural_connection\": \"How this practice rewired something specific\",\n  \"next_day_hook\": ${isProtocolComplete ? '\"Protocol complete message with Skip Token earned\"' : '\"Teaser for tomorrow\\'s challenge\"'},\n  \"streak_celebration\": ${streakCount > 1 ? '\"Streak acknowledgment\"' : 'null'},\n  \"protocol_complete\": ${isProtocolComplete}\n}`;\n\nreturn [{\n  json: {\n    systemPrompt,\n    userPrompt,\n    user_id: userId,\n    user_name: userName,\n    protocol_id: protocolId,\n    day_number: dayNumber,\n    practice_response: practiceResponse,\n    moment_captured: momentCaptured,\n    insight_captured: insightCaptured,\n    collision_pattern: collisionPattern,\n    streak_count: streakCount,\n    is_protocol_complete: isProtocolComplete,\n    protocol_title: protocolTitle\n  }\n}];"
+      },
+      "id": "build-prompt",
+      "name": "Build MIO Response Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "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"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"max_tokens\": 800,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.systemPrompt + \"\\n\\n---\\n\\n\" + $json.userPrompt) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "claude-ai-generator",
+      "name": "Claude AI - Generate MIO Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude's response and prepare for storage\nconst response = $input.first().json;\nconst inputData = $('Build MIO Response Prompt').first().json;\n\nlet mioResponse;\ntry {\n  // Handle HTTP Request response format (Anthropic Messages API)\n  const responseText = response.content?.[0]?.text || response.response || response.output || response.text || JSON.stringify(response);\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  mioResponse = jsonMatch ? JSON.parse(jsonMatch[0]) : null;\n} catch (e) {\n  // If parsing fails, use raw response as message\n  const fallbackText = response.content?.[0]?.text || response.response || response.output || response.text || 'Day completed! MIO is processing your reflection...';\n  mioResponse = {\n    message: fallbackText,\n    key_insight: null,\n    neural_connection: null,\n    next_day_hook: null,\n    streak_celebration: null,\n    protocol_complete: inputData.is_protocol_complete\n  };\n}\n\nconst now = new Date();\n\nreturn {\n  json: {\n    // Message data for storage\n    user_id: inputData.user_id,\n    protocol_id: inputData.protocol_id,\n    day_number: inputData.day_number,\n    message_type: 'day_completion_response',\n    \n    // MIO's response\n    content: mioResponse.message,\n    key_insight: mioResponse.key_insight,\n    neural_connection: mioResponse.neural_connection,\n    next_day_hook: mioResponse.next_day_hook,\n    streak_celebration: mioResponse.streak_celebration,\n    \n    // Metadata\n    practice_response: inputData.practice_response,\n    moment_captured: inputData.moment_captured,\n    insight_captured: inputData.insight_captured,\n    streak_count: inputData.streak_count,\n    protocol_complete: mioResponse.protocol_complete || inputData.is_protocol_complete,\n    protocol_title: inputData.protocol_title,\n    \n    // Timestamp\n    created_at: now.toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format MIO Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- First get or create the user's MIO insights thread\nWITH thread AS (\n  SELECT public.get_or_create_mio_insights_thread('{{ $json.user_id }}'::uuid) AS id\n)\n-- Insert MIO's response into insights messages with proper thread_id and role\nINSERT INTO mio_insights_messages (\n  thread_id,\n  user_id,\n  role,\n  content,\n  section_type,\n  reward_tier,\n  protocol_suggested,\n  patterns_detected,\n  delivered_at,\n  created_at\n) \nSELECT\n  thread.id,\n  '{{ $json.user_id }}'::uuid,\n  'mio',\n  {{ $json.content ? \"'\" + $json.content.replace(/'/g, \"''\") + \"'\" : \"'Day completed. MIO is processing your reflection...'\" }},\n  'protocol',\n  'standard',\n  '{{ $json.protocol_id }}'::uuid,\n  '{{ JSON.stringify({\n    key_insight: $json.key_insight,\n    neural_connection: $json.neural_connection,\n    next_day_hook: $json.next_day_hook,\n    streak_celebration: $json.streak_celebration,\n    practice_response: $json.practice_response,\n    moment_captured: $json.moment_captured,\n    insight_captured: $json.insight_captured,\n    streak_count: $json.streak_count,\n    protocol_complete: $json.protocol_complete,\n    protocol_title: $json.protocol_title,\n    day_number: $json.day_number,\n    message_type: $json.message_type\n  }).replace(/'/g, \"''\") }}'::jsonb,\n  NOW(),\n  '{{ $json.created_at }}'\nFROM thread\nRETURNING id, thread_id, created_at;"
+      },
+      "id": "store-message",
+      "name": "Supabase - Store MIO Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1350, 300],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $('Format MIO Response').first().json.protocol_complete }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-protocol-complete",
+      "name": "Is Protocol Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1570, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Award skip token for protocol completion\nUPDATE coverage_streaks\nSET \n  skip_tokens = LEAST(skip_tokens + 1, 3),\n  updated_at = NOW()\nWHERE user_id = '{{ $('Format MIO Response').first().json.user_id }}'\n  AND skip_tokens < 3\nRETURNING skip_tokens;\n\n-- Mark protocol as completed and record skip token earned\nUPDATE mio_weekly_protocols\nSET \n  status = 'completed',\n  completed_at = NOW(),\n  skip_token_earned = true,\n  skip_token_earned_at = NOW()\nWHERE id = '{{ $('Format MIO Response').first().json.protocol_id }}';"
+      },
+      "id": "award-skip-token",
+      "name": "Award Skip Token",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1790, 200],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare success response\nconst formatData = $('Format MIO Response').first().json;\nconst messageResult = $('Supabase - Store MIO Message').first().json;\nconst isComplete = formatData.protocol_complete;\n\nreturn {\n  json: {\n    success: true,\n    message_id: messageResult.id,\n    \n    // MIO's response for frontend display\n    mio_response: {\n      content: formatData.content,\n      key_insight: formatData.key_insight,\n      neural_connection: formatData.neural_connection,\n      next_day_hook: formatData.next_day_hook,\n      streak_celebration: formatData.streak_celebration\n    },\n    \n    // Metadata\n    day_number: formatData.day_number,\n    protocol_complete: isComplete,\n    streak_count: formatData.streak_count,\n    skip_token_earned: isComplete,\n    \n    // Timestamp\n    generated_at: formatData.created_at\n  }\n};"
+      },
+      "id": "prepare-response",
+      "name": "Prepare Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1790, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "success-response",
+      "name": "Webhook Response - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2010, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseCode": 500
+        },
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'Failed to process day completion', user_id: $json.body?.user_id }) }}"
+      },
+      "id": "error-response",
+      "name": "Webhook Response - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [690, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Protocol Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Protocol Context": {
+      "main": [
+        [
+          {
+            "node": "Build MIO Response Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Webhook Response - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build MIO Response Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude AI - Generate MIO Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI - Generate MIO Response": {
+      "main": [
+        [
+          {
+            "node": "Format MIO Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Webhook Response - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format MIO Response": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Store MIO Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Store MIO Message": {
+      "main": [
+        [
+          {
+            "node": "Is Protocol Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Webhook Response - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Protocol Complete?": {
+      "main": [
+        [
+          {
+            "node": "Award Skip Token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Award Skip Token": {
+      "main": [
+        [
+          {
+            "node": "Prepare Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Success Response": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Coverage Center",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    },
+    {
+      "name": "Day Completion",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    },
+    {
+      "name": "MIO",
+      "createdAt": "2024-12-13T00:00:00.000Z",
+      "updatedAt": "2024-12-13T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-13T00:00:00.000Z",
+  "versionId": "1.0.0"
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trophy, Sparkles, Heart, Star, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
 import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
+
+// Protocol-aware components
+import { ProtocolCheckIn, ProtocolCheckInCompleted, type ProtocolCheckInData } from '@/components/protect';
+import { getActiveInsightProtocol, completeProtocolDay } from '@/services/mioInsightProtocolService';
+import type { MIOInsightProtocolWithProgress } from '@/types/protocol';
 // import { motion, AnimatePresence } from 'framer-motion'; // Package not installed
 
 // Victory celebration options with animations
@@ -76,6 +81,11 @@ export default function CelebrateWins() {
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // Protocol-aware state
+  const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
+  const [protocolLoading, setProtocolLoading] = useState(true);
+  const [protocolCheckInData, setProtocolCheckInData] = useState<ProtocolCheckInData | null>(null);
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -92,6 +102,25 @@ export default function CelebrateWins() {
   useEffect(() => {
     loadUserTimezone();
   }, []);
+
+  // Fetch active protocol on mount
+  useEffect(() => {
+    async function fetchProtocol() {
+      if (!user?.id) {
+        setProtocolLoading(false);
+        return;
+      }
+      try {
+        const protocol = await getActiveInsightProtocol(user.id);
+        setActiveProtocol(protocol);
+      } catch (err) {
+        console.error('[CelebrateWins] Error fetching protocol:', err);
+      } finally {
+        setProtocolLoading(false);
+      }
+    }
+    fetchProtocol();
+  }, [user?.id]);
 
   async function loadUserTimezone() {
     try {
@@ -112,16 +141,28 @@ export default function CelebrateWins() {
     }
   }
 
-  // Validate form
+  // Validate form - includes protocol check-in validation if active protocol exists
   const isFormValid = () => {
-    return (
+    const baseFormValid = (
       championshipWin.trim() !== '' &&
       microVictory.trim() !== '' &&
       futureSelfEvidence.trim() !== '' &&
       championshipGratitude.trim() !== '' &&
       victoryCelebration !== ''
     );
+
+    // If there's an active protocol that's not completed today, require protocol check-in
+    if (activeProtocol && !activeProtocol.is_today_completed) {
+      return baseFormValid && protocolCheckInData !== null;
+    }
+
+    return baseFormValid;
   };
+
+  // Handler for protocol check-in data changes
+  const handleProtocolCheckInChange = useCallback((data: ProtocolCheckInData | null) => {
+    setProtocolCheckInData(data);
+  }, []);
 
   // Handle celebration selection with animation
   const handleCelebrationSelect = (value: string) => {
@@ -216,12 +257,34 @@ export default function CelebrateWins() {
           .eq('id', user.id); // user_profiles.id matches auth user id
       }
 
+      // If there's protocol check-in data, complete the protocol day
+      if (protocolCheckInData) {
+        try {
+          await completeProtocolDay({
+            protocol_id: protocolCheckInData.protocol_id,
+            day_number: protocolCheckInData.day_number,
+            response_data: {
+              practice_response: protocolCheckInData.practice_response,
+              moment_captured: protocolCheckInData.moment_captured,
+              insight_captured: protocolCheckInData.insight_captured,
+            },
+            notes: protocolCheckInData.moment_captured,
+          });
+          console.log('[CelebrateWins] Protocol day completed successfully');
+        } catch (protocolErr) {
+          console.error('[CelebrateWins] Error completing protocol day:', protocolErr);
+          // Don't fail the whole submission if protocol completion fails
+        }
+      }
+
       // Show celebration animation before navigating
       setShowCelebration(true);
 
       toast({
         title: '🎉 Victory Lap Complete!',
-        description: `You earned ${points} points. Keep celebrating those wins!`,
+        description: protocolCheckInData
+          ? `You earned ${points} points and completed your protocol check-in!`
+          : `You earned ${points} points. Keep celebrating those wins!`,
       });
 
       // Check if this completes the CT section and trigger MIO feedback
@@ -286,6 +349,20 @@ export default function CelebrateWins() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Protocol Check-In Section - Only show if there's an active protocol */}
+        {activeProtocol && !activeProtocol.is_today_completed && (
+          <ProtocolCheckIn
+            protocol={activeProtocol}
+            isLoading={protocolLoading}
+            onChange={handleProtocolCheckInChange}
+          />
+        )}
+
+        {/* Protocol Already Completed Today */}
+        {activeProtocol && activeProtocol.is_today_completed && (
+          <ProtocolCheckInCompleted protocol={activeProtocol} />
+        )}
 
         {/* Championship Win */}
         <Card className="bg-mi-navy-light border-mi-cyan/20">
