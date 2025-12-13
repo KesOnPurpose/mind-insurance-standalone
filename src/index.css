@@ -405,3 +405,53 @@ div.fixed.mi-sidebar-dark,
 div:has(> .mi-sidebar-dark)[class*="border-r"] {
   border-right-color: rgba(5, 195, 221, 0.2) !important;
 }
+
+/* ================================================
+   MIO Insights - One-Time Reward Animations
+   ================================================
+   These animations play ONCE on load to celebrate
+   bonus insights and breakthroughs, then stop.
+   This prevents the "strobe light" effect from
+   continuous pulsing/bouncing animations.
+   ================================================ */
+
+/* One-time pulse animation for bonus insights */
+@keyframes pulse-once {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
+}
+
+/* One-time bounce animation for breakthroughs */
+@keyframes bounce-once {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-6px);
+  }
+  40% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+  80% {
+    transform: translateY(0);
+  }
+}
+
+/* One-time glow animation for breakthroughs */
+@keyframes glow-once {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(250, 204, 21, 0);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.5);
+  }
+}

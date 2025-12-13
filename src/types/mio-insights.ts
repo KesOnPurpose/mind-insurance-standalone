@@ -102,7 +102,7 @@ export const REWARD_TIER_CONFIG: Record<RewardTier, {
     probability: 0.85, // 25% (60% + 25%)
     icon: '✨',
     badgeColor: 'bg-cyan-500',
-    animationClass: 'animate-pulse',
+    animationClass: 'animate-pulse-once', // One-time pulse to prevent strobe effect
   },
   pattern_breakthrough: {
     name: 'Pattern Breakthrough',
@@ -110,7 +110,7 @@ export const REWARD_TIER_CONFIG: Record<RewardTier, {
     probability: 1.00, // 15% (remaining)
     icon: '🌟',
     badgeColor: 'bg-gradient-to-r from-yellow-400 to-purple-500',
-    animationClass: 'animate-bounce',
+    animationClass: 'animate-bounce-once animate-glow-once', // One-time bounce + glow
   },
 };
 
