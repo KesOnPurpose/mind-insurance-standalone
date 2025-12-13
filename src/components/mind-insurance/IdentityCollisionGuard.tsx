@@ -1,9 +1,12 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useIdentityCollisionStatus, hasCompletedCollisionAssessment } from '@/hooks/useIdentityCollisionStatus';
 import { Loader2 } from 'lucide-react';
+
+// Maximum time to wait for loading states before redirecting to assessment
+const LOADING_TIMEOUT_MS = 10000; // 10 seconds
 
 // ============================================================================
 // IDENTITY COLLISION GUARD COMPONENT
@@ -20,12 +23,33 @@ interface IdentityCollisionGuardProps {
 
 export const IdentityCollisionGuard: React.FC<IdentityCollisionGuardProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdmin();
   const { data: collisionStatus, isLoading: statusLoading } = useIdentityCollisionStatus(user?.id);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   // Show loading spinner while checking auth, admin status, or collision status
   const isLoading = authLoading || adminLoading || statusLoading;
+
+  // Timeout handler to prevent infinite loading spinner
+  // If loading takes longer than LOADING_TIMEOUT_MS, redirect to assessment
+  useEffect(() => {
+    if (isLoading && !loadingTimedOut) {
+      const timeout = setTimeout(() => {
+        console.warn('[IdentityCollisionGuard] Loading timeout exceeded - redirecting to assessment');
+        setLoadingTimedOut(true);
+      }, LOADING_TIMEOUT_MS);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, loadingTimedOut]);
+
+  // If loading timed out, redirect to assessment page
+  if (loadingTimedOut && location.pathname !== '/mind-insurance/assessment') {
+    console.log('[IdentityCollisionGuard] Timeout redirect to assessment');
+    return <Navigate to="/mind-insurance/assessment" state={{ from: location }} replace />;
+  }
 
   if (isLoading) {
     return (
