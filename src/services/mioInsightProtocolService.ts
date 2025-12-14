@@ -560,6 +560,51 @@ export async function getCoachProtocolContextForMIO(userId: string): Promise<{
 }
 
 // ============================================================================
+// REFLECTION OPERATIONS
+// ============================================================================
+
+/**
+ * Update the reflection text for a completed protocol day
+ * Used when user edits their reflection after initial completion
+ */
+export async function updateProtocolReflection(
+  completionId: string,
+  reflectionText: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // First get the existing response_data to preserve any other fields
+    const { data: existing, error: fetchError } = await supabase
+      .from('mio_protocol_completions')
+      .select('response_data')
+      .eq('id', completionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Merge the new reflection with existing response_data
+    const updatedResponseData = {
+      ...(existing?.response_data || {}),
+      reflection_text: reflectionText,
+      last_edited_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('mio_protocol_completions')
+      .update({
+        response_data: updatedResponseData,
+        notes: reflectionText, // backup in notes field
+      })
+      .eq('id', completionId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to update reflection:', err);
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -636,6 +681,9 @@ export const mioInsightProtocolService = {
 
   // Creation (for n8n)
   createInsightProtocol,
+
+  // Reflection operations
+  updateProtocolReflection,
 
   // Real-time
   subscribeToProtocolUpdates,

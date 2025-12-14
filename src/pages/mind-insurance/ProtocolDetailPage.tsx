@@ -9,9 +9,9 @@
  * - Ability to complete current day
  */
 
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Sparkles,
@@ -25,6 +25,9 @@ import {
   Calendar,
   Trophy,
   Lightbulb,
+  PenLine,
+  Cloud,
+  CloudOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,12 +40,14 @@ import {
   completeProtocolDay,
   skipToDay,
   calculateCurrentProtocolDay,
+  updateProtocolReflection,
 } from '@/services/mioInsightProtocolService';
-import type { MIOInsightProtocolWithProgress, MIOInsightDayTask } from '@/types/protocol';
+import type { MIOInsightProtocolWithProgress, MIOInsightDayTask, MIOProtocolCompletion } from '@/types/protocol';
 import { toast } from 'sonner';
 
 export default function ProtocolDetailPage() {
   const { protocolId } = useParams<{ protocolId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -50,6 +55,9 @@ export default function ProtocolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [completingDay, setCompletingDay] = useState<number | null>(null);
+
+  // Store reflection text for each day (keyed by day number)
+  const reflectionTextsRef = useRef<Record<number, string>>({});
 
   useEffect(() => {
     loadProtocol();
@@ -62,9 +70,12 @@ export default function ProtocolDetailPage() {
     const data = await getProtocolById(protocolId);
     setProtocol(data);
 
-    // Auto-expand current day
+    // Auto-expand day from query param (if provided), otherwise current day
     if (data) {
-      setExpandedDay(data.current_day);
+      const dayParam = searchParams.get('day');
+      const targetDay = dayParam ? parseInt(dayParam, 10) : data.current_day;
+      // Validate day is between 1-7
+      setExpandedDay(targetDay >= 1 && targetDay <= 7 ? targetDay : data.current_day);
     }
 
     setLoading(false);
@@ -75,18 +86,35 @@ export default function ProtocolDetailPage() {
 
     setCompletingDay(dayNumber);
 
+    // Get reflection text from the ref
+    const reflectionText = reflectionTextsRef.current[dayNumber] || '';
+
     const result = await completeProtocolDay({
       protocol_id: protocol.id,
       day_number: dayNumber,
+      response_data: reflectionText
+        ? {
+            reflection_text: reflectionText,
+            submitted_at: new Date().toISOString(),
+            word_count: reflectionText.split(/\s+/).filter(Boolean).length,
+          }
+        : undefined,
+      notes: reflectionText || undefined,
     });
 
     setCompletingDay(null);
 
     if (result.success) {
+      // Clear the draft from localStorage
+      const DRAFT_KEY = `mio_reflection_draft_${protocol.id}_${dayNumber}`;
+      localStorage.removeItem(DRAFT_KEY);
+      // Clear from ref
+      delete reflectionTextsRef.current[dayNumber];
+
       toast.success(`Day ${dayNumber} complete!`, {
         description:
           result.protocol_completed
-            ? '🎉 You completed the entire protocol!'
+            ? 'You completed the entire protocol!'
             : `${7 - dayNumber} days remaining`,
       });
       loadProtocol(); // Refresh data
@@ -96,6 +124,11 @@ export default function ProtocolDetailPage() {
       });
     }
   };
+
+  // Callback for DayAccordion to update reflection text
+  const handleReflectionChange = useCallback((dayNumber: number, text: string) => {
+    reflectionTextsRef.current[dayNumber] = text;
+  }, []);
 
   const handleSkipToToday = async () => {
     if (!protocol || !protocol.created_at) return;
@@ -264,6 +297,10 @@ export default function ProtocolDetailPage() {
                   onComplete={() => handleCompleteDay(dayNumber)}
                   isCompleting={completingDay === dayNumber}
                   disabled={isMuted || (!isCurrent && !isComplete)}
+                  protocolId={protocol.id}
+                  completion={completion}
+                  onReflectionChange={handleReflectionChange}
+                  onRefresh={loadProtocol}
                 />
               </motion.div>
             );
@@ -315,6 +352,10 @@ interface DayAccordionProps {
   onComplete: () => void;
   isCompleting: boolean;
   disabled: boolean;
+  protocolId: string;
+  completion: MIOProtocolCompletion | undefined;
+  onReflectionChange: (dayNumber: number, text: string) => void;
+  onRefresh: () => void;
 }
 
 function DayAccordion({
@@ -329,7 +370,95 @@ function DayAccordion({
   onComplete,
   isCompleting,
   disabled,
+  protocolId,
+  completion,
+  onReflectionChange,
+  onRefresh,
 }: DayAccordionProps) {
+  // Reflection state
+  const [reflectionText, setReflectionText] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [isEditingReflection, setIsEditingReflection] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const DRAFT_KEY = `mio_reflection_draft_${protocolId}_${dayNumber}`;
+
+  // Load existing reflection or draft when accordion expands
+  useEffect(() => {
+    if (isExpanded) {
+      // Check for existing saved reflection first
+      const existingReflection = completion?.response_data?.reflection_text as string | undefined;
+      if (existingReflection) {
+        setReflectionText(existingReflection);
+        return;
+      }
+
+      // Check localStorage for draft
+      try {
+        const draft = localStorage.getItem(DRAFT_KEY);
+        if (draft) {
+          setReflectionText(draft);
+          // Notify parent of the loaded draft
+          onReflectionChange(dayNumber, draft);
+        }
+      } catch (err) {
+        console.error('Failed to load draft:', err);
+      }
+    }
+  }, [isExpanded, completion, DRAFT_KEY, dayNumber, onReflectionChange]);
+
+  // Auto-save to localStorage with debounce
+  useEffect(() => {
+    // Only auto-save if day is not complete and there's content
+    if (isComplete || !reflectionText) return;
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setSaveStatus('saving');
+
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, reflectionText);
+        // Notify parent of the change
+        onReflectionChange(dayNumber, reflectionText);
+        setSaveStatus('saved');
+        // Reset status after 2 seconds
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (err) {
+        console.error('Failed to save draft:', err);
+        setSaveStatus('idle');
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [reflectionText, isComplete, DRAFT_KEY, dayNumber, onReflectionChange]);
+
+  // Handle saving edited reflection for completed days
+  const handleSaveEditedReflection = async () => {
+    if (!completion?.id || !reflectionText) return;
+
+    setIsSavingEdit(true);
+    const result = await updateProtocolReflection(completion.id, reflectionText);
+    setIsSavingEdit(false);
+
+    if (result.success) {
+      toast.success('Reflection updated');
+      setIsEditingReflection(false);
+      onRefresh(); // Refresh to get updated data
+    } else {
+      toast.error('Failed to save changes', {
+        description: result.error,
+      });
+    }
+  };
+
   const getStatusIcon = () => {
     if (isComplete) {
       return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
@@ -359,6 +488,8 @@ function DayAccordion({
     }
     return 'bg-slate-800/30 border-slate-700/30';
   };
+
+  const existingReflection = completion?.response_data?.reflection_text as string | undefined;
 
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
@@ -459,6 +590,110 @@ function DayAccordion({
                 </ul>
               </div>
             )}
+
+            {/* Reflection Section */}
+            <div className="pt-4 border-t border-slate-700/30">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-amber-400 font-medium flex items-center">
+                  <PenLine className="w-4 h-4 mr-1" />
+                  Your Reflection
+                </p>
+                {/* Save status indicator */}
+                <AnimatePresence mode="wait">
+                  {saveStatus === 'saving' && (
+                    <motion.span
+                      key="saving"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-xs text-slate-500 flex items-center gap-1"
+                    >
+                      <Cloud className="w-3 h-3 animate-pulse" /> Saving...
+                    </motion.span>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <motion.span
+                      key="saved"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-xs text-emerald-400 flex items-center gap-1"
+                    >
+                      <CheckCircle2 className="w-3 h-3" /> Saved
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <textarea
+                value={reflectionText}
+                onChange={(e) => setReflectionText(e.target.value)}
+                placeholder="Write your thoughts, insights, and reflections here..."
+                className="w-full min-h-[120px] p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 text-sm placeholder:text-slate-500 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/30 resize-y transition-colors"
+                disabled={isComplete && !isEditingReflection}
+              />
+
+              {/* For completed days - show edit button if they have a reflection */}
+              {isComplete && existingReflection && !isEditingReflection && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingReflection(true)}
+                  className="mt-2 text-slate-400 hover:text-white"
+                >
+                  <PenLine className="w-3 h-3 mr-1" />
+                  Edit Reflection
+                </Button>
+              )}
+
+              {/* Save button for editing completed reflections */}
+              {isComplete && isEditingReflection && (
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    size="sm"
+                    onClick={handleSaveEditedReflection}
+                    disabled={isSavingEdit}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    {isSavingEdit ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="mr-1"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                        </motion.div>
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingReflection(false);
+                      // Reset to original
+                      setReflectionText(existingReflection || '');
+                    }}
+                    disabled={isSavingEdit}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
+              {/* Auto-save message for incomplete days */}
+              {!isComplete && (
+                <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                  <Cloud className="w-3 h-3" />
+                  Your thoughts are saved automatically
+                </p>
+              )}
+            </div>
 
             {/* Complete Button */}
             {isCurrent && !isComplete && !disabled && (
