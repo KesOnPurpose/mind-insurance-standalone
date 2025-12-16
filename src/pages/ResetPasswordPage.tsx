@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -190,7 +188,8 @@ const ResetPasswordPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="w-12 h-12 rounded-2xl bg-gradient-hero flex items-center justify-center mb-4">
-            <LockIcon className="w-6 h-6 text-white" />
+            {/* Fixed: Changed LockIcon to Lock since that is what is imported */}
+            <Lock className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl">Create new password</CardTitle>
           <CardDescription>
