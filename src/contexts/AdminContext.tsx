@@ -74,9 +74,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           // No matching admin user found (not an error, user is just not an admin)
           console.log('[AdminContext] User is not an admin');
           setAdminUser(null);
+        } else if (error.code === '42501' || error.message?.includes('406') || error.message?.includes('permission denied')) {
+          // 406 = RLS policy denied access (user is not an admin, which is expected)
+          console.log('[AdminContext] User does not have admin permissions (RLS denied)');
+          setAdminUser(null);
         } else {
-          console.error('[AdminContext] Error fetching admin user:', error);
-          throw error;
+          // Unexpected error - log but fail gracefully (don't throw)
+          console.error('[AdminContext] Unexpected error fetching admin user:', error);
+          setAdminUser(null);
         }
       } else {
         console.log('[AdminContext] Admin user loaded:', data.role);

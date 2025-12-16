@@ -43,10 +43,27 @@ export function useIdentityCollisionStatus(userId: string | undefined) {
             const normalizedPattern = primaryPattern.toLowerCase().replace(/ /g, '_') as
               'past_prison' | 'success_sabotage' | 'compass_crisis';
 
+            // Calculate confidence from pattern scores if not explicitly set
+            // The score represents the raw assessment score (0-100 scale typically)
+            let confidence = patterns.confidence as number | undefined;
+
+            if (confidence === undefined) {
+              // Look for pattern-specific scores (e.g., success_sabotage_score: 33)
+              const patternScoreKey = `${normalizedPattern}_score`;
+              const patternScore = patterns[patternScoreKey] as number | undefined;
+
+              if (patternScore !== undefined) {
+                // Pattern scores are already on a reasonable scale
+                // Higher score = stronger Identity Collision grip
+                // Scale to 0-100 if needed (scores appear to be out of ~40 max based on data)
+                confidence = Math.min(100, Math.round((patternScore / 40) * 100));
+              }
+            }
+
             return {
               hasPattern: true,
               primaryPattern: normalizedPattern,
-              confidence: patterns.confidence as number | undefined,
+              confidence,
               impactArea: patterns.impact_area as string | undefined,
               source: 'user_profiles',
             };

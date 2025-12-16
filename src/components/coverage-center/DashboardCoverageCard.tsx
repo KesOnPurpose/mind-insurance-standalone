@@ -152,7 +152,7 @@ export function DashboardCoverageCard({
                 {Array.from({ length: skipTokens }).map((_, i) => (
                   <Shield
                     key={i}
-                    className="h-3 w-3 text-emerald-400 fill-emerald-400/30"
+                    className="h-3 w-3 text-mi-cyan fill-mi-cyan/30"
                   />
                 ))}
               </div>
@@ -178,7 +178,7 @@ export function DashboardCoverageCard({
 
         {activeProtocol?.is_today_completed && (
           <div className="mt-4 pt-4 border-t border-gray-700/50">
-            <div className="flex items-center gap-2 text-sm text-emerald-400">
+            <div className="flex items-center gap-2 text-sm text-mi-cyan">
               <Calendar className="h-4 w-4" />
               Today's coverage complete
             </div>

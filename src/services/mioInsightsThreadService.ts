@@ -439,3 +439,295 @@ export function getCurrentSectionFromTime(timezone: string = 'America/Los_Angele
 
   return null;
 }
+
+// ============================================================================
+// FIRST ENGAGEMENT (ONBOARDING)
+// ============================================================================
+
+export interface FirstEngagementData {
+  userId: string;
+  protocolId?: string;
+  patternName: string;
+  questionAsked: string;
+  responseText: string;
+  wasSkipped?: boolean;
+}
+
+/**
+ * Save the user's first engagement response from FirstSessionPage
+ * Stores in mio_insights_messages with section_type = 'first_engagement'
+ *
+ * This captures the user's first authentic insight about their pattern,
+ * when MIO asks pattern-specific questions like:
+ * - "What was the last thing you said 'yes' to, that a part of you was screaming 'no'?"
+ * - "Who taught you that your needs come last?"
+ */
+export async function saveFirstEngagementToThread(
+  data: FirstEngagementData
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const { userId, patternName, questionAsked, responseText, wasSkipped = false } = data;
+
+  try {
+    // Get or create the user's MIO insights thread
+    const thread = await getOrCreateThread(userId);
+    if (!thread) {
+      return { success: false, error: 'Failed to get/create thread' };
+    }
+
+    // Check if first engagement already exists (prevent duplicates)
+    const { data: existing } = await supabase
+      .from('mio_insights_messages')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('section_type', 'first_engagement')
+      .eq('role', 'user')
+      .single();
+
+    if (existing) {
+      console.warn('[FirstEngagement] User already has first engagement response');
+      return { success: true, messageId: existing.id }; // Idempotent - return existing
+    }
+
+    // First, insert MIO's question as a message
+    const { data: mioMessage, error: mioError } = await supabase
+      .from('mio_insights_messages')
+      .insert({
+        thread_id: thread.id,
+        user_id: userId,
+        role: 'mio',
+        content: questionAsked,
+        section_type: 'first_engagement',
+        section_energy: 'commander', // First session uses commander energy
+        reward_tier: 'standard',
+        patterns_detected: [{ pattern_name: patternName, confidence: 1.0 }],
+      })
+      .select('id')
+      .single();
+
+    if (mioError) {
+      console.error('[FirstEngagement] Error saving MIO question:', mioError);
+      return { success: false, error: mioError.message };
+    }
+
+    // Then insert user's response
+    const { data: userMessage, error: userError } = await supabase
+      .from('mio_insights_messages')
+      .insert({
+        thread_id: thread.id,
+        user_id: userId,
+        role: 'user',
+        content: wasSkipped ? '[SKIPPED]' : responseText,
+        section_type: 'first_engagement',
+        in_reply_to: mioMessage.id,
+        patterns_detected: [{ pattern_name: patternName, confidence: 1.0, was_skipped: wasSkipped }],
+      })
+      .select('id')
+      .single();
+
+    if (userError) {
+      console.error('[FirstEngagement] Error saving user response:', userError);
+      return { success: false, error: userError.message };
+    }
+
+    console.log('[FirstEngagement] Successfully saved first engagement for user:', userId);
+    return { success: true, messageId: userMessage.id };
+
+  } catch (error) {
+    console.error('[FirstEngagement] Unexpected error:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Check if user has completed first engagement
+ * Used by FirstSessionGuard to determine if user can access Coverage Center
+ */
+export async function hasCompletedFirstEngagement(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('mio_insights_messages')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('section_type', 'first_engagement')
+      .eq('role', 'user')
+      .single();
+
+    // PGRST116 = no rows found (user hasn't completed)
+    if (error && error.code !== 'PGRST116') {
+      console.error('[FirstEngagement] Error checking completion:', error);
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('[FirstEngagement] Unexpected error checking completion:', error);
+    return false;
+  }
+}
+
+/**
+ * Get user's first engagement response
+ */
+export async function getFirstEngagementResponse(userId: string): Promise<MIOInsightsMessage | null> {
+  try {
+    const { data, error } = await supabase
+      .from('mio_insights_messages')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('section_type', 'first_engagement')
+      .eq('role', 'user')
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('[FirstEngagement] Error fetching response:', error);
+      return null;
+    }
+
+    return data as MIOInsightsMessage | null;
+  } catch (error) {
+    console.error('[FirstEngagement] Unexpected error fetching response:', error);
+    return null;
+  }
+}
+
+// ============================================================================
+// PATTERN CONFIGURATION FOR FIRST ENGAGEMENT
+// ============================================================================
+
+/**
+ * Pattern information for MIO's first engagement message
+ */
+export const PATTERN_INFO: Record<string, {
+  name: string;
+  shortDescription: string;
+  fullDescription: string;
+  question: string;
+}> = {
+  past_prison: {
+    name: 'Past Prison',
+    shortDescription: 'Your past creates invisible barriers',
+    fullDescription: `Your past experiences, upbringing, or environment are creating invisible barriers that hold you back from your potential. You carry guilt, limiting beliefs, or identity ceilings from your history that dictate what you believe is possible.
+
+The good news? Your past is data, not destiny. This protocol will help you build evidence of your new identity.`,
+    question: "What's one pattern you've noticed running your life that you wish would change?",
+  },
+  success_sabotage: {
+    name: 'Success Sabotage',
+    shortDescription: 'You pull back when breakthrough is near',
+    fullDescription: `You pull back right when breakthrough is near. Your amygdala (your brain's threat-detection center) associates success with danger—fear of visibility, fear of outgrowing relationships, or fear of not being able to maintain success.
+
+This protocol will teach your nervous system that success is safe.`,
+    question: "When did you first notice yourself pulling back right before a win?",
+  },
+  compass_crisis: {
+    name: 'Compass Crisis',
+    shortDescription: 'Unclear direction creates paralysis',
+    fullDescription: `You lack clear direction or feel pulled in multiple directions. Without a defined path, you struggle with decision paralysis and constant comparison to others who seem more certain about their journey.
+
+This protocol will help you build internal clarity one decision at a time. Clarity comes from commitment, not certainty.`,
+    question: "What would you do differently if you knew exactly who you were meant to be?",
+  },
+};
+
+/**
+ * Get the pattern-specific question for first engagement
+ */
+export function getPatternQuestion(pattern: string): string {
+  const normalizedPattern = pattern.toLowerCase().replace(/ /g, '_');
+  return PATTERN_INFO[normalizedPattern]?.question || PATTERN_INFO.past_prison.question;
+}
+
+/**
+ * Inject MIO's first engagement question into thread
+ * Called when user first visits MIO thread after Identity Collision Assessment
+ *
+ * This creates MIO's opening message with:
+ * - Pattern recognition
+ * - Pattern description
+ * - Protocol preview (if available)
+ * - Pattern-specific question
+ */
+export async function injectMIOFirstEngagementQuestion(
+  userId: string,
+  patternName: string,
+  protocolPreview?: { title: string; day1Task: string } | null
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const thread = await getOrCreateThread(userId);
+    if (!thread) {
+      return { success: false, error: 'Failed to get/create thread' };
+    }
+
+    // Check if MIO already asked the question (prevent duplicates)
+    const { data: existing } = await supabase
+      .from('mio_insights_messages')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('section_type', 'first_engagement')
+      .eq('role', 'mio')
+      .maybeSingle();
+
+    if (existing) {
+      console.log('[FirstEngagement] MIO question already exists for user:', userId);
+      return { success: true, messageId: existing.id }; // Already exists - idempotent
+    }
+
+    // Get pattern-specific info
+    const normalizedPattern = patternName.toLowerCase().replace(/ /g, '_');
+    const patternInfo = PATTERN_INFO[normalizedPattern] || PATTERN_INFO.past_prison;
+
+    // Build MIO's intro message
+    let mioContent = `I can see your pattern clearly now.
+
+**${patternInfo.name}** - ${patternInfo.shortDescription}
+
+${patternInfo.fullDescription}`;
+
+    // Add protocol preview if available (from N8n webhook)
+    if (protocolPreview) {
+      mioContent += `
+
+---
+
+**Your 7-Day Protocol**: *${protocolPreview.title}*
+
+**Day 1 Preview**: ${protocolPreview.day1Task}
+
+*Your full protocol is waiting in the Coverage Center.*`;
+    }
+
+    mioContent += `
+
+---
+
+${patternInfo.question}
+
+*Take your time. This is just between us.*`;
+
+    // Insert MIO's question message
+    const { data: mioMessage, error: mioError } = await supabase
+      .from('mio_insights_messages')
+      .insert({
+        thread_id: thread.id,
+        user_id: userId,
+        role: 'mio',
+        content: mioContent,
+        section_type: 'first_engagement',
+        section_energy: 'commander', // First session uses commander energy
+        reward_tier: 'standard',
+        patterns_detected: [{ pattern_name: patternInfo.name, confidence: 1.0 }],
+      })
+      .select('id')
+      .single();
+
+    if (mioError) {
+      console.error('[FirstEngagement] Error inserting MIO question:', mioError);
+      return { success: false, error: mioError.message };
+    }
+
+    console.log('[FirstEngagement] MIO question injected for user:', userId);
+    return { success: true, messageId: mioMessage.id };
+  } catch (error) {
+    console.error('[FirstEngagement] Error:', error);
+    return { success: false, error: String(error) };
+  }
+}

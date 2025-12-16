@@ -377,3 +377,39 @@ export const COVERAGE_LANGUAGE = {
   completion: 'Coverage Completion',
   lapsed: 'Coverage Lapsed',
 } as const;
+
+// =============================================
+// Identity Collision Grip Types (P6 Redesign)
+// =============================================
+
+/**
+ * Grip strength indicates how much Identity Collision is affecting the user
+ * - 'weakening': User is winning (high completion, streak, pattern catches)
+ * - 'stable': Battle is even (moderate engagement)
+ * - 'tightening': Identity Collision fighting back (missed days, low completion)
+ */
+export type GripStrength = 'weakening' | 'stable' | 'tightening';
+
+/**
+ * Data needed to calculate grip strength
+ */
+export interface GripCalculationData {
+  current_streak: number;
+  longest_streak: number;
+  recent_completions: number; // Last 7 days
+  total_recent_days: number; // Days available in last 7 days
+  triggers_caught_this_week: number;
+  yes_multiple_count: number; // "Practiced multiple times" responses
+  forgot_count: number; // "Forgot to practice" responses
+  streak_just_broken: boolean;
+}
+
+/**
+ * Result of grip strength calculation
+ */
+export interface GripStrengthResult {
+  gripStrength: GripStrength;
+  triggersCaughtThisWeek: number;
+  weekOverWeekChange?: number; // Negative = weakening (good), positive = tightening
+  patternName: string;
+}

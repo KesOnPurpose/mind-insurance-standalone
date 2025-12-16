@@ -68,10 +68,10 @@ export function TransformationMetrics({
   };
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-purple-500" />
+        <CardTitle className="text-lg flex items-center gap-2 text-white">
+          <TrendingUp className="h-5 w-5 text-purple-400" />
           Transformation Progress
         </CardTitle>
       </CardHeader>
@@ -83,49 +83,49 @@ export function TransformationMetrics({
             icon={CheckCircle2}
             label="Protocols Completed"
             value={metrics.protocols_completed}
-            iconColor="text-emerald-500"
+            iconColor="text-mi-cyan"
           />
           <MetricCard
             icon={Calendar}
             label="Days Practiced"
             value={metrics.total_days_practiced}
-            iconColor="text-blue-500"
+            iconColor="text-blue-400"
           />
           <MetricCard
             icon={Target}
             label="Avg Completion"
             value={`${metrics.average_completion_rate}%`}
-            iconColor="text-amber-500"
+            iconColor="text-mi-gold"
           />
           <MetricCard
             icon={Brain}
             label="Patterns Worked"
             value={metrics.patterns_addressed.length}
-            iconColor="text-purple-500"
+            iconColor="text-purple-400"
           />
         </div>
 
         {/* Completion rate progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
+            <span className="text-gray-400">
               Average Protocol Completion
             </span>
-            <span className="font-medium">
+            <span className="font-medium text-white">
               {metrics.average_completion_rate}%
             </span>
           </div>
-          <Progress value={metrics.average_completion_rate} className="h-2" />
+          <Progress value={metrics.average_completion_rate} className="h-2 bg-mi-navy" />
           {metrics.average_completion_rate >= 80 ? (
-            <p className="text-xs text-emerald-600 dark:text-emerald-400">
+            <p className="text-xs text-mi-cyan">
               Excellent consistency! You're building strong neural pathways.
             </p>
           ) : metrics.average_completion_rate >= 50 ? (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
+            <p className="text-xs text-mi-gold">
               Good progress. Consistency will accelerate your transformation.
             </p>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-400">
               Every practice strengthens your new patterns.
             </p>
           )}
@@ -134,10 +134,10 @@ export function TransformationMetrics({
         {/* Patterns addressed */}
         {metrics.patterns_addressed.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Patterns Addressed</h4>
+            <h4 className="text-sm font-medium text-white">Patterns Addressed</h4>
             <div className="flex flex-wrap gap-2">
               {metrics.patterns_addressed.map((pattern) => (
-                <Badge key={pattern} variant="secondary" className="text-xs">
+                <Badge key={pattern} variant="secondary" className="text-xs bg-mi-navy text-mi-cyan border-mi-cyan/30">
                   {formatPatternName(pattern)}
                 </Badge>
               ))}
@@ -147,25 +147,25 @@ export function TransformationMetrics({
 
         {/* Streak comparison */}
         {(currentStreak > 0 || longestStreak > 0) && (
-          <div className="p-4 rounded-lg bg-muted/50">
-            <h4 className="text-sm font-medium mb-3">Streak Progress</h4>
+          <div className="p-4 rounded-lg bg-mi-navy">
+            <h4 className="text-sm font-medium mb-3 text-white">Streak Progress</h4>
             <div className="flex items-center justify-between">
               <div className="text-center">
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-2xl font-bold text-mi-cyan">
                   {currentStreak}
                 </p>
-                <p className="text-xs text-muted-foreground">Current Streak</p>
+                <p className="text-xs text-gray-400">Current Streak</p>
               </div>
-              <div className="h-10 w-px bg-border" />
+              <div className="h-10 w-px bg-mi-cyan/20" />
               <div className="text-center">
-                <p className="text-2xl font-bold text-amber-500">
+                <p className="text-2xl font-bold text-mi-gold">
                   {longestStreak}
                 </p>
-                <p className="text-xs text-muted-foreground">Best Streak</p>
+                <p className="text-xs text-gray-400">Best Streak</p>
               </div>
               {currentStreak >= longestStreak && currentStreak > 0 && (
                 <div className="absolute -top-2 right-4">
-                  <Badge className="bg-amber-500 text-white text-xs">
+                  <Badge className="bg-mi-gold text-mi-navy text-xs">
                     New Record!
                   </Badge>
                 </div>
@@ -194,12 +194,12 @@ function MetricCard({
   iconColor: string;
 }) {
   return (
-    <div className="p-3 rounded-lg bg-muted/50">
+    <div className="p-3 rounded-lg bg-mi-navy">
       <div className="flex items-center gap-2 mb-1">
         <Icon className={cn('h-4 w-4', iconColor)} />
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-xs text-gray-400">{label}</span>
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }
@@ -221,13 +221,13 @@ function formatPatternName(pattern: string): string {
 
 function TransformationMetricsEmpty({ className }: { className?: string }) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardContent className="py-8 text-center">
-        <div className="inline-flex p-3 rounded-full bg-muted mb-4">
-          <TrendingUp className="h-8 w-8 text-muted-foreground" />
+        <div className="inline-flex p-3 rounded-full bg-mi-navy mb-4">
+          <TrendingUp className="h-8 w-8 text-gray-400" />
         </div>
-        <h3 className="font-semibold mb-2">Start Your Transformation</h3>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+        <h3 className="font-semibold mb-2 text-white">Start Your Transformation</h3>
+        <p className="text-sm text-gray-400 max-w-sm mx-auto">
           Complete protocols to track your neural rewiring progress and
           see your transformation metrics grow.
         </p>
@@ -242,14 +242,14 @@ function TransformationMetricsEmpty({ className }: { className?: string }) {
 
 function TransformationMetricsSkeleton({ className }: { className?: string }) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
         <Skeleton className="h-6 w-48" />
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-3 rounded-lg bg-muted/50">
+            <div key={i} className="p-3 rounded-lg bg-mi-navy">
               <Skeleton className="h-4 w-24 mb-2" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -286,18 +286,18 @@ export function TransformationMetricsCompact({
   return (
     <div className={cn('flex items-center gap-4', className)}>
       <div className="flex items-center gap-1.5">
-        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        <span className="text-sm font-medium">
+        <CheckCircle2 className="h-4 w-4 text-mi-cyan" />
+        <span className="text-sm font-medium text-white">
           {metrics.protocols_completed}
         </span>
-        <span className="text-xs text-muted-foreground">protocols</span>
+        <span className="text-xs text-gray-400">protocols</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <Target className="h-4 w-4 text-amber-500" />
-        <span className="text-sm font-medium">
+        <Target className="h-4 w-4 text-mi-gold" />
+        <span className="text-sm font-medium text-white">
           {metrics.average_completion_rate}%
         </span>
-        <span className="text-xs text-muted-foreground">avg</span>
+        <span className="text-xs text-gray-400">avg</span>
       </div>
     </div>
   );

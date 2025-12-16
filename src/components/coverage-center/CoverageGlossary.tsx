@@ -96,9 +96,9 @@ export function CoverageGlossary({ className }: CoverageGlossaryProps) {
         <button
           className={cn(
             'inline-flex items-center gap-1 px-2 py-1 rounded-md',
-            'text-sm text-muted-foreground',
-            'hover:bg-muted transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'text-sm text-gray-400',
+            'hover:bg-mi-navy transition-colors',
+            'focus:outline-none focus:ring-2 focus:ring-mi-cyan focus:ring-offset-2 focus:ring-offset-mi-navy',
             className
           )}
           aria-label="Open coverage glossary"
@@ -107,10 +107,10 @@ export function CoverageGlossary({ className }: CoverageGlossaryProps) {
           <span>What do these mean?</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <div className="p-4 border-b border-border">
-          <h3 className="font-semibold text-lg">Coverage Glossary</h3>
-          <p className="text-sm text-muted-foreground mt-1">
+      <PopoverContent className="w-96 p-0 bg-mi-navy-light border-mi-cyan/20" align="end">
+        <div className="p-4 border-b border-mi-cyan/20">
+          <h3 className="font-semibold text-lg text-white">Coverage Glossary</h3>
+          <p className="text-sm text-gray-400 mt-1">
             Understanding your Mind Insurance coverage
           </p>
         </div>
@@ -123,20 +123,20 @@ export function CoverageGlossary({ className }: CoverageGlossaryProps) {
                 key={item.term}
                 className={cn(
                   'p-4',
-                  index < glossaryTerms.length - 1 && 'border-b border-border'
+                  index < glossaryTerms.length - 1 && 'border-b border-mi-cyan/20'
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-1.5 rounded-md bg-muted flex-shrink-0">
-                    <Icon className="h-4 w-4 text-primary" />
+                  <div className="p-1.5 rounded-md bg-mi-navy flex-shrink-0">
+                    <Icon className="h-4 w-4 text-mi-cyan" />
                   </div>
                   <div className="space-y-1.5">
-                    <h4 className="font-medium text-sm">{item.term}</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-medium text-sm text-white">{item.term}</h4>
+                    <p className="text-sm text-gray-400">
                       {item.definition}
                     </p>
                     {item.neuralPrinciple && (
-                      <p className="text-xs text-muted-foreground/80 italic border-l-2 border-primary/30 pl-2">
+                      <p className="text-xs text-gray-500 italic border-l-2 border-mi-cyan/30 pl-2">
                         {item.neuralPrinciple}
                       </p>
                     )}
@@ -147,8 +147,8 @@ export function CoverageGlossary({ className }: CoverageGlossaryProps) {
           })}
         </div>
 
-        <div className="p-3 bg-muted/50 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
+        <div className="p-3 bg-mi-navy border-t border-mi-cyan/20">
+          <p className="text-xs text-gray-400 text-center">
             Based on behavioral neuroscience research
           </p>
         </div>
@@ -179,9 +179,9 @@ export function GlossaryInfoButton({ term, className }: GlossaryInfoButtonProps)
             className={cn(
               'inline-flex items-center justify-center',
               'h-5 w-5 rounded-full',
-              'text-muted-foreground hover:text-foreground',
-              'hover:bg-muted transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-ring',
+              'text-gray-400 hover:text-white',
+              'hover:bg-mi-navy transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-mi-cyan',
               className
             )}
             aria-label={`Learn about ${term}`}
@@ -189,15 +189,15 @@ export function GlossaryInfoButton({ term, className }: GlossaryInfoButtonProps)
             <Info className="h-3.5 w-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
+        <TooltipContent side="top" className="max-w-xs bg-mi-navy-light border-mi-cyan/20">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4 text-primary" />
-              <p className="font-medium">{termData.term}</p>
+              <Icon className="h-4 w-4 text-mi-cyan" />
+              <p className="font-medium text-white">{termData.term}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{termData.definition}</p>
+            <p className="text-sm text-gray-400">{termData.definition}</p>
             {termData.neuralPrinciple && (
-              <p className="text-xs text-muted-foreground/80 italic">
+              <p className="text-xs text-gray-500 italic">
                 {termData.neuralPrinciple}
               </p>
             )}
@@ -236,17 +236,17 @@ export function GlossaryTerm({
         <TooltipTrigger asChild>
           <span
             className={cn(
-              'underline decoration-dotted decoration-primary/50',
+              'underline decoration-dotted decoration-mi-cyan/50',
               'cursor-help transition-colors',
-              'hover:decoration-primary hover:text-primary',
+              'hover:decoration-mi-cyan hover:text-mi-cyan',
               className
             )}
           >
             {children}
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
-          <p className="text-sm">{termData.definition}</p>
+        <TooltipContent side="top" className="max-w-xs bg-mi-navy-light border-mi-cyan/20">
+          <p className="text-sm text-gray-400">{termData.definition}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -266,12 +266,12 @@ export function GlossaryOnboardingCard({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'p-4 rounded-lg border border-border bg-card',
+        'p-4 rounded-lg border border-mi-cyan/20 bg-mi-navy-light',
         className
       )}
     >
-      <h4 className="font-semibold mb-3 flex items-center gap-2">
-        <Brain className="h-5 w-5 text-primary" />
+      <h4 className="font-semibold mb-3 flex items-center gap-2 text-white">
+        <Brain className="h-5 w-5 text-mi-cyan" />
         Quick Reference
       </h4>
 
@@ -280,10 +280,10 @@ export function GlossaryOnboardingCard({ className }: { className?: string }) {
           const Icon = item.icon;
           return (
             <div key={item.term} className="flex items-start gap-2">
-              <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <Icon className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-medium text-sm">{item.term}:</span>{' '}
-                <span className="text-sm text-muted-foreground">
+                <span className="font-medium text-sm text-white">{item.term}:</span>{' '}
+                <span className="text-sm text-gray-400">
                   {item.definition.split('.')[0]}.
                 </span>
               </div>

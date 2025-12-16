@@ -246,6 +246,18 @@ export async function saveAssessmentResult(
       }
     }
 
+    // 4. Trigger N8n First Protocol Generation webhook (background, non-blocking)
+    // This creates the AI-generated 7-day protocol in mio_weekly_protocols table
+    triggerFirstProtocolGeneration({
+      user_id: userId,
+      user_name: await getUserName(userId),
+      collision_pattern: result.primaryPattern,
+      assessment_id: assessmentData?.id,
+    }).catch((err) => {
+      console.error('[identityCollisionService] Protocol generation webhook failed:', err);
+      // Non-blocking - user flow continues even if webhook fails
+    });
+
     return {
       success: true,
       assessmentId: assessmentData?.id,
@@ -362,6 +374,58 @@ export const PATTERN_INFO: Record<CollisionPattern, {
     color: '#06b6d4', // Cyan
   },
 };
+
+// ============================================================================
+// N8N WEBHOOK INTEGRATION
+// ============================================================================
+
+/**
+ * Get user's display name from user_profiles
+ */
+async function getUserName(userId: string): Promise<string> {
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('full_name')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return data?.full_name || 'there';
+}
+
+/**
+ * Trigger N8n First Protocol Generation webhook
+ * This creates the 7-day protocol in mio_weekly_protocols table
+ *
+ * @param data - User and assessment data
+ * @returns Promise<void>
+ *
+ * Webhook URL: POST https://n8n-n8n.vq00fr.easypanel.host/webhook/first-protocol-generation
+ * See: n8n-workflows/First-Protocol-Generation.json
+ */
+async function triggerFirstProtocolGeneration(data: {
+  user_id: string;
+  user_name: string;
+  collision_pattern: string;
+  assessment_id?: string;
+}): Promise<void> {
+  const webhookUrl = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/first-protocol-generation';
+
+  console.log('[identityCollisionService] Triggering First Protocol Generation webhook for user:', data.user_id);
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error');
+    throw new Error(`Protocol generation failed: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log('[identityCollisionService] Protocol generated successfully:', result.protocol_id || result);
+}
 
 export default {
   calculateCollisionResult,

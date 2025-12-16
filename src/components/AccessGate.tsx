@@ -1,10 +1,13 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut } from 'lucide-react';
+import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut, AlertCircle, RefreshCw } from 'lucide-react';
+
+// Maximum time to wait for loading states before showing timeout UI
+const LOADING_TIMEOUT_MS = 10000; // 10 seconds
 
 interface AccessGateProps {
   children: ReactNode;
@@ -14,15 +17,62 @@ interface AccessGateProps {
 
 export function AccessGate({ children, requiredTier = 'user', fallback }: AccessGateProps) {
   const { user } = useAuth();
-  const { isApproved, tier, isLoading, hasTierAccess } = useAccessControl();
+  const { isApproved, tier, isLoading, hasTierAccess, refetch } = useAccessControl();
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
-  // Show loading state
-  if (isLoading) {
+  // Timeout handler to prevent infinite loading spinner
+  useEffect(() => {
+    if (isLoading && !loadingTimedOut) {
+      const timeout = setTimeout(() => {
+        console.warn('[AccessGate] Loading timeout exceeded - showing timeout UI');
+        setLoadingTimedOut(true);
+      }, LOADING_TIMEOUT_MS);
+
+      return () => clearTimeout(timeout);
+    }
+    // Reset timeout state when loading completes
+    if (!isLoading) {
+      setLoadingTimedOut(false);
+    }
+  }, [isLoading, loadingTimedOut]);
+
+  // Show loading state (only while not timed out)
+  if (isLoading && !loadingTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show timeout UI with retry options
+  if (loadingTimedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
+          <h2 className="text-xl font-semibold">Taking longer than expected</h2>
+          <p className="text-muted-foreground">
+            We're having trouble verifying your access. This could be due to a slow connection.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => {
+                setLoadingTimedOut(false);
+                refetch?.();
+              }}
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
+          </div>
         </div>
       </div>
     );

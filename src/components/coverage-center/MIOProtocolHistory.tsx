@@ -6,7 +6,7 @@
  * Shows pattern targeted, completion rate, and skip token earned status.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Brain,
   CheckCircle2,
@@ -14,6 +14,8 @@ import {
   Clock,
   Shield,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Calendar,
   TrendingUp,
 } from 'lucide-react';
@@ -35,6 +37,7 @@ interface MIOProtocolHistoryProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   onViewProtocol?: (protocolId: string) => void;
+  onCollapse?: () => void;
   className?: string;
 }
 
@@ -47,43 +50,43 @@ function getStatusConfig(status: CoverageHistoryItem['status']) {
     case 'completed':
       return {
         icon: CheckCircle2,
-        color: 'text-emerald-500',
-        bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+        color: 'text-mi-cyan',
+        bgColor: 'bg-mi-cyan/10',
         label: 'Completed',
       };
     case 'active':
       return {
         icon: Clock,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
         label: 'Active',
       };
     case 'expired':
       return {
         icon: XCircle,
-        color: 'text-amber-500',
-        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+        color: 'text-mi-gold',
+        bgColor: 'bg-mi-gold/10',
         label: 'Expired',
       };
     case 'skipped':
       return {
         icon: XCircle,
-        color: 'text-muted-foreground',
-        bgColor: 'bg-muted',
+        color: 'text-gray-400',
+        bgColor: 'bg-mi-navy',
         label: 'Skipped',
       };
     case 'muted':
       return {
         icon: XCircle,
-        color: 'text-muted-foreground',
-        bgColor: 'bg-muted',
+        color: 'text-gray-400',
+        bgColor: 'bg-mi-navy',
         label: 'Muted',
       };
     default:
       return {
         icon: Clock,
-        color: 'text-muted-foreground',
-        bgColor: 'bg-muted',
+        color: 'text-gray-400',
+        bgColor: 'bg-mi-navy',
         label: status,
       };
   }
@@ -103,14 +106,19 @@ function formatDate(dateString: string | null): string {
 // COMPONENT
 // ============================================================================
 
+const DEFAULT_VISIBLE_COUNT = 3;
+
 export function MIOProtocolHistory({
   history,
   isLoading = false,
   hasMore = false,
   onLoadMore,
   onViewProtocol,
+  onCollapse,
   className,
 }: MIOProtocolHistoryProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Loading state
   if (isLoading && history.length === 0) {
     return <MIOProtocolHistorySkeleton className={className} />;
@@ -121,39 +129,81 @@ export function MIOProtocolHistory({
     return <MIOProtocolHistoryEmpty className={className} />;
   }
 
+  // Determine which items to show
+  const showExpandButton = history.length > DEFAULT_VISIBLE_COUNT;
+  const visibleHistory = isExpanded ? history : history.slice(0, DEFAULT_VISIBLE_COUNT);
+  const hiddenCount = history.length - DEFAULT_VISIBLE_COUNT;
+
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Brain className="h-5 w-5 text-purple-500" />
+          <CardTitle className="text-lg flex items-center gap-2 text-white">
+            <Brain className="h-5 w-5 text-purple-400" />
             Protocol History
           </CardTitle>
-          <Badge variant="outline" className="text-xs">
-            {history.length} protocol{history.length !== 1 ? 's' : ''}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs border-mi-cyan/30 text-mi-cyan bg-mi-cyan/10">
+              {history.length} protocol{history.length !== 1 ? 's' : ''}
+            </Badge>
+            {onCollapse && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCollapse();
+                }}
+                className="text-gray-400 hover:text-white hover:bg-mi-navy h-7 px-2"
+              >
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Collapse
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {history.map((item, index) => (
+        {visibleHistory.map((item, index) => (
           <ProtocolHistoryItem
             key={item.protocol_id}
             item={item}
-            isLast={index === history.length - 1}
+            isLast={index === visibleHistory.length - 1 && !showExpandButton}
             onClick={() => onViewProtocol?.(item.protocol_id)}
           />
         ))}
 
-        {/* Load more */}
-        {hasMore && (
+        {/* Expand/Collapse button */}
+        {showExpandButton && (
+          <Button
+            variant="ghost"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full text-gray-400 hover:text-white hover:bg-mi-navy"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-2" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-2" />
+                Show {hiddenCount} More Protocol{hiddenCount !== 1 ? 's' : ''}
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Load more from server (when expanded and has more) */}
+        {isExpanded && hasMore && (
           <Button
             variant="ghost"
             onClick={onLoadMore}
             disabled={isLoading}
-            className="w-full"
+            className="w-full text-mi-cyan hover:text-mi-cyan hover:bg-mi-cyan/10"
           >
-            {isLoading ? 'Loading...' : 'Load More'}
+            {isLoading ? 'Loading...' : 'Load More from History'}
           </Button>
         )}
       </CardContent>
@@ -181,9 +231,9 @@ function ProtocolHistoryItem({
     <button
       onClick={onClick}
       className={cn(
-        'w-full p-3 rounded-lg border border-border bg-card',
-        'text-left transition-all hover:bg-muted/50',
-        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        'w-full p-3 rounded-lg border border-mi-cyan/20 bg-mi-navy',
+        'text-left transition-all hover:bg-mi-navy-light',
+        'focus:outline-none focus:ring-2 focus:ring-mi-cyan focus:ring-offset-2 focus:ring-offset-mi-navy',
         !isLast && 'mb-2'
       )}
     >
@@ -202,10 +252,10 @@ function ProtocolHistoryItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h4 className="font-medium text-sm line-clamp-1">
+              <h4 className="font-medium text-sm line-clamp-1 text-white">
                 {item.protocol_title}
               </h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 {item.pattern_targeted}
               </p>
             </div>
@@ -213,7 +263,7 @@ function ProtocolHistoryItem({
             {/* Skip token earned */}
             {item.skip_token_earned && (
               <div className="flex-shrink-0">
-                <Shield className="h-4 w-4 text-emerald-500" />
+                <Shield className="h-4 w-4 text-mi-cyan" />
               </div>
             )}
           </div>
@@ -221,25 +271,25 @@ function ProtocolHistoryItem({
           {/* Progress bar */}
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">
+              <span className="text-gray-400">
                 {item.days_completed}/{item.total_days} days
               </span>
               <Badge
                 variant="secondary"
-                className={cn('text-xs', statusConfig.color)}
+                className={cn('text-xs bg-mi-navy border-mi-cyan/30', statusConfig.color)}
               >
                 {statusConfig.label}
               </Badge>
             </div>
             <Progress
               value={item.completion_percentage}
-              className="h-1.5"
+              className="h-1.5 bg-mi-navy"
             />
           </div>
 
           {/* Date info */}
           {(item.started_at || item.completed_at) && (
-            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
               <Calendar className="h-3 w-3" />
               <span>
                 {item.completed_at
@@ -251,7 +301,7 @@ function ProtocolHistoryItem({
         </div>
 
         {/* Arrow */}
-        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+        <ChevronRight className="h-4 w-4 text-gray-500 flex-shrink-0 mt-1" />
       </div>
     </button>
   );
@@ -263,13 +313,13 @@ function ProtocolHistoryItem({
 
 function MIOProtocolHistoryEmpty({ className }: { className?: string }) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardContent className="py-8 text-center">
-        <div className="inline-flex p-3 rounded-full bg-muted mb-4">
-          <Brain className="h-8 w-8 text-muted-foreground" />
+        <div className="inline-flex p-3 rounded-full bg-mi-navy mb-4">
+          <Brain className="h-8 w-8 text-gray-400" />
         </div>
-        <h3 className="font-semibold mb-2">No Protocol History Yet</h3>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+        <h3 className="font-semibold mb-2 text-white">No Protocol History Yet</h3>
+        <p className="text-sm text-gray-400 max-w-sm mx-auto">
           Complete your first 7-day protocol to start building your
           transformation timeline.
         </p>
@@ -284,7 +334,7 @@ function MIOProtocolHistoryEmpty({ className }: { className?: string }) {
 
 function MIOProtocolHistorySkeleton({ className }: { className?: string }) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn('bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
@@ -293,7 +343,7 @@ function MIOProtocolHistorySkeleton({ className }: { className?: string }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="p-3 rounded-lg border border-border">
+          <div key={i} className="p-3 rounded-lg border border-mi-cyan/20 bg-mi-navy">
             <div className="flex items-start gap-3">
               <Skeleton className="h-8 w-8 rounded-full" />
               <div className="flex-1">
@@ -304,6 +354,79 @@ function MIOProtocolHistorySkeleton({ className }: { className?: string }) {
             </div>
           </div>
         ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// COMPACT SUMMARY CARD
+// ============================================================================
+
+/**
+ * Compact summary card for Protocol History
+ * Shows protocol count and latest protocol preview
+ * Click to expand to full history
+ */
+export function MIOProtocolHistoryCompact({
+  history,
+  isLoading = false,
+  onExpand,
+  className,
+}: {
+  history: CoverageHistoryItem[];
+  isLoading?: boolean;
+  onExpand: () => void;
+  className?: string;
+}) {
+  // Loading state
+  if (isLoading) {
+    return <Skeleton className={cn('h-20 w-full rounded-lg bg-mi-navy-light', className)} />;
+  }
+
+  // Empty state - don't show if no history
+  if (history.length === 0) {
+    return null;
+  }
+
+  const completedCount = history.filter(p => p.status === 'completed').length;
+  const latestProtocol = history[0];
+
+  return (
+    <Card
+      className={cn(
+        'bg-mi-navy-light border-mi-cyan/20 cursor-pointer transition-all hover:border-mi-cyan/40',
+        className
+      )}
+      onClick={onExpand}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Brain className="h-5 w-5 text-purple-400" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">Protocol History</h3>
+              <p className="text-sm text-gray-400">
+                {completedCount} completed • {history.length} total
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {latestProtocol && (
+              <div className="text-right hidden sm:block">
+                <p className="text-xs text-gray-400 line-clamp-1 max-w-[150px]">
+                  {latestProtocol.protocol_title}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatDate(latestProtocol.completed_at || latestProtocol.created_at)}
+                </p>
+              </div>
+            )}
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -346,17 +469,17 @@ export function MIOProtocolTimeline({
                 <StatusIcon className="h-3 w-3" />
               </div>
               {!isLast && (
-                <div className="w-0.5 h-full min-h-[40px] bg-border" />
+                <div className="w-0.5 h-full min-h-[40px] bg-mi-cyan/20" />
               )}
             </div>
 
             {/* Content */}
             <div className="pb-4 flex-1 min-w-0">
-              <p className="text-sm font-medium line-clamp-1">
+              <p className="text-sm font-medium line-clamp-1 text-white">
                 {item.protocol_title}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {item.completion_percentage}% • {formatDate(item.created_at)}
+              <p className="text-xs text-gray-400">
+                {item.completion_percentage}% | {formatDate(item.created_at)}
               </p>
             </div>
           </div>

@@ -1,28 +1,14 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, Play, BookOpen, Users } from 'lucide-react';
+import { Shield, Calendar, Trophy, Play, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
-import { TodayProtocolTask, ProtocolTaskModal } from '@/components/mind-insurance/TodayProtocolTask';
-import { getTodayProtocolTask } from '@/services/mioInsightProtocolService';
 import { getTodayInTimezone } from '@/utils/timezoneUtils';
-import type { TodayProtocolTask as TodayProtocolTaskType } from '@/types/protocol';
 import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
-
-// Coverage Center Dashboard Card
-import { DashboardCoverageCard } from '@/components/coverage-center';
-import { getActiveInsightProtocol } from '@/services/mioInsightProtocolService';
-import type { MIOInsightProtocolWithProgress } from '@/types/protocol';
-
-// V2 Coach Protocols
-import { CoachProtocolTabs } from '@/components/mind-insurance/CoachProtocolTabs';
-import { useCoachProtocols } from '@/hooks/useCoachProtocols';
-import { useCoachProtocolTasks } from '@/hooks/useCoachProtocolTasks';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -30,6 +16,12 @@ interface DailyPracticeStatus {
   points: number;
 }
 
+/**
+ * MindInsuranceHub - Practice Hub for PROTECT Method Only
+ *
+ * This page is dedicated to the daily PROTECT Method practice.
+ * All protocol content (MIO + Coach) has been moved to Coverage Center.
+ */
 export default function MindInsuranceHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -39,34 +31,7 @@ export default function MindInsuranceHub() {
     total: 7,
     points: 0
   });
-  const [hasCoachContent, setHasCoachContent] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [protocolTask, setProtocolTask] = useState<TodayProtocolTaskType | null>(null);
-  const [showProtocolModal, setShowProtocolModal] = useState(false);
-  const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
-  const [protocolLoading, setProtocolLoading] = useState(true);
-
-  // V2 Coach Protocols hooks
-  const { protocols: coachProtocols, isLoading: protocolsLoading } = useCoachProtocols();
-  const {
-    todayTasks,
-    isLoading: tasksLoading,
-    isSaving: tasksSaving,
-    completeTaskHandler,
-    refetch: refetchTasks,
-  } = useCoachProtocolTasks();
-
-  // Check if user has any active coach protocols
-  const hasCoachProtocols = coachProtocols.primary !== null || coachProtocols.secondary !== null;
-
-  // Debug logging for protocol display logic
-  console.log('[MindInsuranceHub] Protocol state:', {
-    hasCoachProtocols,
-    primaryProtocol: coachProtocols.primary?.protocol?.title || null,
-    secondaryProtocol: coachProtocols.secondary?.protocol?.title || null,
-    protocolsLoading,
-    todayTasksCount: todayTasks.length,
-  });
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -78,43 +43,8 @@ export default function MindInsuranceHub() {
   useEffect(() => {
     if (user?.id) {
       fetchDailyStatus();
-      fetchCoachContent();
-      fetchProtocolTask();
-      fetchActiveProtocol();
     }
   }, [user]);
-
-  const fetchActiveProtocol = async () => {
-    if (!user?.id) return;
-    setProtocolLoading(true);
-    try {
-      const protocol = await getActiveInsightProtocol(user.id);
-      setActiveProtocol(protocol);
-    } catch (err) {
-      console.error('[MindInsuranceHub] Error fetching active protocol:', err);
-    } finally {
-      setProtocolLoading(false);
-    }
-  };
-
-  const fetchProtocolTask = async () => {
-    if (!user?.id) return;
-
-    const task = await getTodayProtocolTask(user.id);
-    setProtocolTask(task);
-
-    // Show modal on first open of day if there's an incomplete task
-    if (task && !task.is_completed) {
-      const lastShownKey = `mio_protocol_modal_${user.id}`;
-      const today = getTodayInTimezone();
-      const lastShown = localStorage.getItem(lastShownKey);
-
-      if (lastShown !== today) {
-        setShowProtocolModal(true);
-        localStorage.setItem(lastShownKey, today);
-      }
-    }
-  };
 
   // Update loading state when progress data loads
   useEffect(() => {
@@ -143,23 +73,6 @@ export default function MindInsuranceHub() {
         total: 7,
         points
       });
-    }
-  };
-
-
-  const fetchCoachContent = async () => {
-    if (!user?.id) return;
-
-    // Check if there's any active coach protocol for this user
-    const { data, error } = await supabase
-      .from('coach_protocols')
-      .select('id')
-      .eq('status', 'published')
-      .limit(1)
-      .maybeSingle();
-
-    if (!error && data) {
-      setHasCoachContent(true);
     }
   };
 
@@ -244,55 +157,6 @@ export default function MindInsuranceHub() {
           </div>
         </Card>
 
-        {/* Coverage Center Card - Links to Coverage Center */}
-        <DashboardCoverageCard
-          activeProtocol={activeProtocol}
-          hasCoachProtocol={hasCoachProtocols}
-          isLoading={protocolLoading}
-        />
-
-        {/* Coach Protocols Section (V2) */}
-        {hasCoachProtocols && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-mi-gold" />
-              <h2 className="text-lg font-semibold text-white">Coach Protocols</h2>
-            </div>
-            <CoachProtocolTabs
-              protocols={coachProtocols}
-              todayTasks={todayTasks}
-              onCompleteTask={completeTaskHandler}
-              isSaving={tasksSaving}
-              isLoading={tasksLoading || protocolsLoading}
-              onProtocolComplete={() => {
-                // Refetch after protocol completion to update UI
-                refetchTasks();
-              }}
-            />
-          </div>
-        )}
-
-        {/* Today's Protocol Task (MIO protocols - only show if NO active Coach V2 protocol) */}
-        {protocolTask && !hasCoachProtocols && (
-          <TodayProtocolTask
-            task={protocolTask}
-            onComplete={fetchProtocolTask}
-          />
-        )}
-
-        {/* Protocol Task Modal (first open of day - MIO - only if NO Coach V2) */}
-        {protocolTask && !hasCoachProtocols && (
-          <ProtocolTaskModal
-            task={protocolTask}
-            isOpen={showProtocolModal}
-            onClose={() => setShowProtocolModal(false)}
-            onComplete={() => {
-              setShowProtocolModal(false);
-              fetchProtocolTask();
-            }}
-          />
-        )}
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Streak Tracker */}
@@ -300,7 +164,7 @@ export default function MindInsuranceHub() {
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-gray-400">Current Streak</h3>
               <p className="text-3xl font-bold text-mi-gold">{userStats.streak} days</p>
-              <p className="text-sm text-gray-400">Keep it going! 🔥</p>
+              <p className="text-sm text-gray-400">Keep it going!</p>
             </div>
           </Card>
 
@@ -319,28 +183,26 @@ export default function MindInsuranceHub() {
           </Card>
         </div>
 
-        {/* Coach Content Available Banner (only shows when coach has assigned content) */}
-        {hasCoachContent && (
-          <Card
-            className="p-4 bg-mi-navy-light border-amber-500/30 cursor-pointer hover:border-amber-500/50 transition-all"
-            onClick={() => navigate('/mind-insurance/coverage')}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">Coverage Center</p>
-                  <p className="text-sm text-gray-400">View your protocols and progress</p>
-                </div>
+        {/* Coverage Center Link */}
+        <Card
+          className="p-4 bg-mi-navy-light border-mi-cyan/30 cursor-pointer hover:border-mi-cyan/50 transition-all"
+          onClick={() => navigate('/mind-insurance/coverage')}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-mi-cyan" />
               </div>
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
-                View
-              </Badge>
+              <div>
+                <p className="font-medium text-white">Coverage Center</p>
+                <p className="text-sm text-gray-400">View your protocols and progress</p>
+              </div>
             </div>
-          </Card>
-        )}
+            <Badge variant="outline" className="bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30">
+              View
+            </Badge>
+          </div>
+        </Card>
 
       </div>
     </div>

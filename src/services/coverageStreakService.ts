@@ -27,23 +27,66 @@ import type {
 // ============================================================================
 
 /**
+ * Default streak values when table/RPC doesn't exist yet
+ */
+function getDefaultStreak(userId: string): CoverageStreak {
+  return {
+    user_id: userId,
+    current_streak: 0,
+    longest_streak: 0,
+    skip_tokens: 0,
+    last_completion_date: null,
+    streak_started_at: null,
+    skip_token_earned_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as CoverageStreak;
+}
+
+/**
  * Get or create coverage streak for a user
+ *
+ * NOTE: Falls back to default values if the RPC/table doesn't exist yet.
+ * This allows the Coverage Center to load while database migrations are pending.
  */
 export async function getCoverageStreak(
   userId: string
 ): Promise<CoverageStreak | null> {
-  const { data, error } = await supabase.rpc('get_or_create_coverage_streak', {
-    p_user_id: userId,
-  });
+  try {
+    // Try RPC first
+    const { data, error } = await supabase.rpc('get_or_create_coverage_streak', {
+      p_user_id: userId,
+    });
 
-  if (error) {
-    console.error('Error getting coverage streak:', error);
+    if (!error && data) {
+      const streak = Array.isArray(data) ? data[0] : data;
+      return streak as CoverageStreak | null;
+    }
+
+    // RPC failed - try direct table query as fallback
+    if (error) {
+      console.warn('[getCoverageStreak] RPC not available, trying direct query:', error.message);
+
+      const { data: directData, error: directError } = await supabase
+        .from('coverage_streaks')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!directError && directData) {
+        return directData as CoverageStreak;
+      }
+
+      // Table doesn't exist or query failed - return defaults
+      console.warn('[getCoverageStreak] Using default values - database not ready');
+      return getDefaultStreak(userId);
+    }
+
     return null;
+  } catch (err) {
+    console.error('Error getting coverage streak:', err);
+    return getDefaultStreak(userId);
   }
-
-  // RPC returns array, get first result
-  const streak = Array.isArray(data) ? data[0] : data;
-  return streak as CoverageStreak | null;
 }
 
 /**

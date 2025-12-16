@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Assessments are invitation-only (except Identity Collision gate)
 // ============================================================================
 
-export type AssessmentType = 'identity_collision' | 'avatar_deep' | 'inner_wiring_discovery' | 'mental_pillar';
+export type AssessmentType = 'identity_collision' | 'temperament' | 'mental_pillar' | 'sub_pattern' | 'avatar_deep' | 'inner_wiring_discovery';
 export type InvitedBy = 'admin' | 'coach' | 'mio_chat' | 'mio_feedback' | 'system';
 export type InvitationStatus = 'pending' | 'started' | 'completed' | 'declined';
 
@@ -35,34 +35,55 @@ export const ASSESSMENT_INFO: Record<AssessmentType, {
   estimatedMinutes: number;
   icon: string;
   path: string;
+  week: number;
 }> = {
   identity_collision: {
-    name: 'Identity Collision Assessment',
+    name: 'Identity Collision',
     description: 'Discover which pattern is blocking your growth',
     estimatedMinutes: 5,
     icon: '🎯',
-    path: '/mind-insurance/assessment',
+    path: '/mind-insurance/identity-collision',
+    week: 1,
   },
-  inner_wiring_discovery: {
-    name: 'Inner Wiring Discovery',
-    description: 'Discover how you naturally process challenges and restore energy',
-    estimatedMinutes: 7,
-    icon: '⚡',
-    path: '/mind-insurance/inner-wiring',
-  },
-  avatar_deep: {
-    name: 'Identity Collision Avatar Assessment',
-    description: 'Meet your full avatar persona with breakthrough path',
-    estimatedMinutes: 15,
-    icon: '🎭',
-    path: '/avatar-assessment',
+  temperament: {
+    name: 'Internal Wiring',
+    description: 'Discover how you naturally process stress and make decisions',
+    estimatedMinutes: 3,
+    icon: '✨',
+    path: '/mind-insurance/temperament-assessment',
+    week: 2,
   },
   mental_pillar: {
-    name: 'Mental Pillar Baseline Assessment',
+    name: 'Mental Pillar Baseline',
     description: 'Measure 4 competencies: Pattern Awareness, Identity Alignment, Belief Mastery, Mental Resilience',
     estimatedMinutes: 12,
     icon: '🧠',
     path: '/mind-insurance/mental-pillar-assessment',
+    week: 2,
+  },
+  sub_pattern: {
+    name: 'Sub-Pattern Deep Dive',
+    description: 'Identify the specific sub-patterns attacking your foundation',
+    estimatedMinutes: 7,
+    icon: '🔍',
+    path: '/mind-insurance/sub-pattern-assessment',
+    week: 3,
+  },
+  avatar_deep: {
+    name: 'Avatar Deep Dive',
+    description: 'Meet your full avatar persona with breakthrough path',
+    estimatedMinutes: 15,
+    icon: '🎭',
+    path: '/avatar-assessment',
+    week: 4,
+  },
+  inner_wiring_discovery: {
+    name: 'Inner Wiring Discovery (Legacy)',
+    description: 'Discover how you naturally process challenges and restore energy',
+    estimatedMinutes: 7,
+    icon: '⚡',
+    path: '/mind-insurance/temperament-assessment',
+    week: 2,
   },
 };
 

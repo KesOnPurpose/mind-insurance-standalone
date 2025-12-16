@@ -99,8 +99,8 @@ export function ActiveMIOProtocolCard({
     if (onStartTask) {
       onStartTask();
     } else {
-      // Default: Navigate to protocol task page
-      navigate(`/mind-insurance/protocol/${protocol.id}/day/${protocol.current_day}`);
+      // Navigate to protocol detail page with day param for auto-expansion
+      navigate(`/mind-insurance/protocol/${protocol.id}?day=${protocol.current_day}`);
     }
   };
 
@@ -119,21 +119,21 @@ export function ActiveMIOProtocolCard({
     'Identity Pattern';
 
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn('overflow-hidden bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs bg-mi-navy text-mi-cyan border-mi-cyan/30">
                 <Brain className="h-3 w-3 mr-1" />
                 MIO Protocol
               </Badge>
               <CoverageStreakBadge currentStreak={currentStreak} />
             </div>
-            <CardTitle className="text-lg line-clamp-2">
+            <CardTitle className="text-lg line-clamp-2 text-white">
               {protocol.title}
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-gray-400 mt-1">
               Targeting: {patternTargeted}
             </p>
           </div>
@@ -144,10 +144,10 @@ export function ActiveMIOProtocolCard({
         {/* Progress Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
+            <span className="text-gray-400">
               Day {protocol.current_day} of 7
             </span>
-            <span className="font-medium">{progressPercent}% complete</span>
+            <span className="font-medium text-white">{progressPercent}% complete</span>
           </div>
 
           {/* Day progress dots */}
@@ -158,10 +158,10 @@ export function ActiveMIOProtocolCard({
                 className={cn(
                   'flex-1 h-2 rounded-full transition-all',
                   day.completed
-                    ? 'bg-emerald-500'
+                    ? 'bg-mi-cyan'
                     : day.isToday
-                    ? 'bg-primary animate-pulse'
-                    : 'bg-muted'
+                    ? 'bg-mi-gold animate-pulse'
+                    : 'bg-mi-navy'
                 )}
                 title={`Day ${day.day}: ${
                   day.completed ? 'Completed' : day.isToday ? 'Today' : 'Upcoming'
@@ -177,8 +177,8 @@ export function ActiveMIOProtocolCard({
             className={cn(
               'p-4 rounded-lg border transition-colors',
               isTodayCompleted
-                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
-                : 'bg-muted/50 border-border hover:bg-muted/80'
+                ? 'bg-mi-cyan/10 border-mi-cyan/30'
+                : 'bg-mi-navy border-mi-cyan/20 hover:bg-mi-navy-light'
             )}
           >
             <div className="flex items-start gap-3">
@@ -186,41 +186,41 @@ export function ActiveMIOProtocolCard({
                 className={cn(
                   'p-2 rounded-full flex-shrink-0',
                   isTodayCompleted
-                    ? 'bg-emerald-100 dark:bg-emerald-900/50'
-                    : 'bg-primary/10'
+                    ? 'bg-mi-cyan/20'
+                    : 'bg-mi-gold/10'
                 )}
               >
                 {isTodayCompleted ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircle2 className="h-5 w-5 text-mi-cyan" />
                 ) : (
-                  <Play className="h-5 w-5 text-primary" />
+                  <Play className="h-5 w-5 text-mi-gold" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-gray-400">
                     Day {protocol.current_day}
                   </span>
-                  <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-gray-500">|</span>
+                  <span className="text-xs text-gray-400">
                     {todayTask.theme}
                   </span>
                 </div>
 
-                <h4 className="font-medium text-sm line-clamp-1">
+                <h4 className="font-medium text-sm line-clamp-1 text-white">
                   {todayTask.task_title}
                 </h4>
 
                 {todayTask.duration_minutes && (
-                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
                     <Clock className="h-3 w-3" />
                     <span>{todayTask.duration_minutes} min</span>
                   </div>
                 )}
 
                 {isTodayCompleted && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                  <p className="text-xs text-mi-cyan mt-2">
                     Completed! Great work today.
                   </p>
                 )}
@@ -250,10 +250,10 @@ export function ActiveMIOProtocolCard({
 
         {/* Insight summary */}
         {protocol.insight_summary && (
-          <div className="pt-3 border-t border-border/50">
+          <div className="pt-3 border-t border-mi-cyan/20">
             <div className="flex items-start gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-muted-foreground line-clamp-2">
+              <Sparkles className="h-4 w-4 text-purple-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-400 line-clamp-2">
                 {protocol.insight_summary}
               </p>
             </div>
@@ -270,13 +270,13 @@ export function ActiveMIOProtocolCard({
 
 function NoActiveProtocolCard({ className }: { className?: string }) {
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn('overflow-hidden bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardContent className="py-8 text-center">
-        <div className="inline-flex p-3 rounded-full bg-muted mb-4">
-          <Brain className="h-8 w-8 text-muted-foreground" />
+        <div className="inline-flex p-3 rounded-full bg-mi-navy mb-4">
+          <Brain className="h-8 w-8 text-gray-400" />
         </div>
-        <h3 className="font-semibold mb-2">No Active Protocol</h3>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+        <h3 className="font-semibold mb-2 text-white">No Active Protocol</h3>
+        <p className="text-sm text-gray-400 max-w-sm mx-auto">
           MIO will generate a personalized 7-day protocol based on your patterns.
           Check back soon!
         </p>
@@ -291,7 +291,7 @@ function NoActiveProtocolCard({ className }: { className?: string }) {
 
 function ActiveMIOProtocolCardSkeleton({ className }: { className?: string }) {
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn('overflow-hidden bg-mi-navy-light border-mi-cyan/20', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 mb-2">
           <Skeleton className="h-5 w-24" />
@@ -346,31 +346,31 @@ export function ActiveMIOProtocolCardCompact({
     <button
       onClick={onClick}
       className={cn(
-        'w-full p-4 rounded-lg border border-border bg-card',
-        'text-left transition-all hover:bg-muted/50',
-        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        'w-full p-4 rounded-lg border border-mi-cyan/20 bg-mi-navy-light',
+        'text-left transition-all hover:bg-mi-navy',
+        'focus:outline-none focus:ring-2 focus:ring-mi-cyan focus:ring-offset-2 focus:ring-offset-mi-navy',
         className
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-xs bg-mi-navy text-mi-cyan border-mi-cyan/30">
           <Brain className="h-3 w-3 mr-1" />
           Day {protocol.current_day}
         </Badge>
         {isTodayCompleted ? (
-          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          <CheckCircle2 className="h-5 w-5 text-mi-cyan" />
         ) : (
-          <Play className="h-5 w-5 text-primary" />
+          <Play className="h-5 w-5 text-mi-gold" />
         )}
       </div>
 
-      <h4 className="font-medium text-sm line-clamp-1 mb-1">
+      <h4 className="font-medium text-sm line-clamp-1 mb-1 text-white">
         {protocol.title}
       </h4>
 
-      <Progress value={progressPercent} className="h-1.5" />
-      <p className="text-xs text-muted-foreground mt-1">
-        {protocol.days_completed}/7 days • {progressPercent}%
+      <Progress value={progressPercent} className="h-1.5 bg-mi-navy" />
+      <p className="text-xs text-gray-400 mt-1">
+        {protocol.days_completed}/7 days | {progressPercent}%
       </p>
     </button>
   );

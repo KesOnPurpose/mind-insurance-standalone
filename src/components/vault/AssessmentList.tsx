@@ -87,7 +87,7 @@ const TYPE_LABELS: Record<string, string> = {
   'identity_collision': 'Identity Collision',
   'avatar': 'Inner Wiring Discovery',
   'inner_wiring': 'Inner Wiring Discovery',
-  'temperament': 'Temperament',
+  'temperament': 'Internal Wiring',
   'mental_pillar': 'Mental Pillar Assessment',
 };
 

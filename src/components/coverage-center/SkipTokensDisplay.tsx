@@ -74,8 +74,8 @@ export function SkipTokensDisplay({
                       iconSize,
                       'transition-all duration-300',
                       isFilled
-                        ? 'text-emerald-500 dark:text-emerald-400'
-                        : 'text-muted-foreground/30'
+                        ? 'text-mi-cyan'
+                        : 'text-gray-600'
                     )}
                     fill={isFilled ? 'currentColor' : 'none'}
                     strokeWidth={isFilled ? 1.5 : 1}
@@ -86,29 +86,29 @@ export function SkipTokensDisplay({
 
             {/* Optional label */}
             {showLabel && (
-              <span className="text-xs text-muted-foreground ml-1">
+              <span className="text-xs text-gray-400 ml-1">
                 {tokens}/{maxTokens}
               </span>
             )}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="max-w-xs">
+        <TooltipContent side="bottom" className="max-w-xs bg-mi-navy-light border-mi-cyan/20">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <p className="font-semibold">{COVERAGE_LANGUAGE.skipToken}</p>
+              <ShieldCheck className="h-4 w-4 text-mi-cyan" />
+              <p className="font-semibold text-white">{COVERAGE_LANGUAGE.skipToken}</p>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               {tokens === 0
                 ? "You don't have any coverage protection tokens. Complete a 7-day protocol to earn one!"
                 : `You have ${tokens} protection token${tokens > 1 ? 's' : ''}. Use one if you miss a day to protect your streak.`}
             </p>
-            <div className="text-xs space-y-1 pt-1 border-t border-border/50">
-              <p className="text-muted-foreground">
-                <span className="font-medium">How to earn:</span> Complete a 7-day protocol
+            <div className="text-xs space-y-1 pt-1 border-t border-mi-cyan/20">
+              <p className="text-gray-400">
+                <span className="font-medium text-white">How to earn:</span> Complete a 7-day protocol
               </p>
-              <p className="text-muted-foreground">
-                <span className="font-medium">Maximum:</span> {maxTokens} tokens
+              <p className="text-gray-400">
+                <span className="font-medium text-white">Maximum:</span> {maxTokens} tokens
               </p>
             </div>
           </div>
@@ -145,18 +145,18 @@ export function SkipTokensCard({
       className={cn(
         'p-4 rounded-lg border',
         isAtRisk
-          ? 'border-amber-500/50 bg-amber-50/50 dark:bg-amber-900/10'
-          : 'border-border bg-card',
+          ? 'border-mi-gold/50 bg-mi-gold/10'
+          : 'border-mi-cyan/20 bg-mi-navy-light',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            <h3 className="font-semibold">{COVERAGE_LANGUAGE.skipToken}</h3>
+            <ShieldCheck className="h-5 w-5 text-mi-cyan" />
+            <h3 className="font-semibold text-white">{COVERAGE_LANGUAGE.skipToken}</h3>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-400">
             Protect your streak when you miss a day
           </p>
         </div>
@@ -169,8 +169,8 @@ export function SkipTokensCard({
               className={cn(
                 'h-6 w-6 transition-all',
                 index < tokens
-                  ? 'text-emerald-500'
-                  : 'text-muted-foreground/20'
+                  ? 'text-mi-cyan'
+                  : 'text-gray-600'
               )}
               fill={index < tokens ? 'currentColor' : 'none'}
             />
@@ -180,14 +180,14 @@ export function SkipTokensCard({
 
       {/* At-risk warning */}
       {isAtRisk && tokens > 0 && (
-        <div className="mt-3 p-3 rounded-md bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800">
+        <div className="mt-3 p-3 rounded-md bg-mi-gold/10 border border-mi-gold/30">
           <div className="flex items-start gap-2">
-            <ShieldOff className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <ShieldOff className="h-5 w-5 text-mi-gold flex-shrink-0 mt-0.5" />
             <div className="space-y-2 flex-1">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              <p className="text-sm font-medium text-mi-gold">
                 Your coverage streak is at risk!
               </p>
-              <p className="text-xs text-amber-700 dark:text-amber-300">
+              <p className="text-xs text-gray-400">
                 You missed a protocol day. Use a token to protect your streak.
               </p>
               {onUseToken && (
@@ -196,7 +196,7 @@ export function SkipTokensCard({
                   disabled={!canUseToken}
                   className={cn(
                     'text-sm font-medium px-3 py-1.5 rounded-md',
-                    'bg-amber-600 text-white hover:bg-amber-700',
+                    'bg-mi-gold text-mi-navy hover:bg-mi-gold/90',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     'transition-colors'
                   )}
@@ -210,8 +210,8 @@ export function SkipTokensCard({
       )}
 
       {/* How to earn section */}
-      <div className="mt-3 pt-3 border-t border-border/50">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="mt-3 pt-3 border-t border-mi-cyan/20">
+        <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <Info className="h-3 w-3" />
           <span>Complete a 7-day protocol to earn a token</span>
         </div>
@@ -234,8 +234,8 @@ export function SkipTokensBadge({
     <div
       className={cn(
         'inline-flex items-center gap-1 px-2 py-0.5 rounded-full',
-        'bg-emerald-100 dark:bg-emerald-900/30',
-        'text-emerald-700 dark:text-emerald-300',
+        'bg-mi-cyan/10 border border-mi-cyan/30',
+        'text-mi-cyan',
         className
       )}
     >

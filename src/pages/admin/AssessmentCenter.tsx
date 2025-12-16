@@ -124,11 +124,13 @@ const STATUS_CONFIG: Record<InvitationStatus, { label: string; icon: React.React
   declined: { label: 'Declined', icon: <XCircle className="w-4 h-4" />, color: 'bg-red-500/20 text-red-400' },
 };
 
-const ASSESSMENT_TYPE_CONFIG: Record<AssessmentType, { label: string; icon: React.ReactNode; color: string }> = {
-  identity_collision: { label: 'Identity Collision', icon: <Target className="w-4 h-4" />, color: 'text-purple-400' },
-  inner_wiring_discovery: { label: 'Inner Wiring Discovery', icon: <Zap className="w-4 h-4" />, color: 'text-cyan-400' },
-  avatar_deep: { label: 'Avatar Deep', icon: <Brain className="w-4 h-4" />, color: 'text-amber-400' },
-  mental_pillar: { label: 'Mental Pillar Baseline', icon: <Compass className="w-4 h-4" />, color: 'text-emerald-400' },
+const ASSESSMENT_TYPE_CONFIG: Record<AssessmentType, { label: string; icon: React.ReactNode; color: string; week: number }> = {
+  identity_collision: { label: 'Identity Collision', icon: <Target className="w-4 h-4" />, color: 'text-orange-400', week: 1 },
+  temperament: { label: 'Internal Wiring', icon: <Zap className="w-4 h-4" />, color: 'text-mi-cyan', week: 2 },
+  mental_pillar: { label: 'Mental Pillar Baseline', icon: <Compass className="w-4 h-4" />, color: 'text-purple-400', week: 2 },
+  sub_pattern: { label: 'Sub-Pattern Deep Dive', icon: <Target className="w-4 h-4" />, color: 'text-red-400', week: 3 },
+  avatar_deep: { label: 'Avatar Deep Dive', icon: <Brain className="w-4 h-4" />, color: 'text-amber-400', week: 4 },
+  inner_wiring_discovery: { label: 'Inner Wiring (Legacy)', icon: <Zap className="w-4 h-4" />, color: 'text-gray-400', week: 2 },
 };
 
 // Helper to call the admin-group-management Edge Function
@@ -641,10 +643,11 @@ export default function AssessmentCenter() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="mental_pillar">Mental Pillar Baseline</SelectItem>
-                    <SelectItem value="identity_collision">Identity Collision</SelectItem>
-                    <SelectItem value="inner_wiring_discovery">Inner Wiring Discovery</SelectItem>
-                    <SelectItem value="avatar_deep">Avatar Deep</SelectItem>
+                    <SelectItem value="identity_collision">Identity Collision (Week 1)</SelectItem>
+                    <SelectItem value="temperament">Internal Wiring (Week 2)</SelectItem>
+                    <SelectItem value="mental_pillar">Mental Pillar Baseline (Week 2)</SelectItem>
+                    <SelectItem value="sub_pattern">Sub-Pattern Deep Dive (Week 3)</SelectItem>
+                    <SelectItem value="avatar_deep">Avatar Deep Dive (Week 4)</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -859,28 +862,34 @@ export default function AssessmentCenter() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-mi-navy border-white/10">
-                    <SelectItem value="mental_pillar" className="text-white hover:bg-white/10 focus:bg-white/10">
+                    <SelectItem value="identity_collision" className="text-white hover:bg-white/10 focus:bg-white/10">
                       <div className="flex items-center gap-2">
-                        <Compass className="w-4 h-4 text-emerald-400" />
-                        Mental Pillar Baseline
+                        <Target className="w-4 h-4 text-orange-400" />
+                        Identity Collision (Week 1)
                       </div>
                     </SelectItem>
-                    <SelectItem value="inner_wiring_discovery" className="text-white hover:bg-white/10 focus:bg-white/10">
+                    <SelectItem value="temperament" className="text-white hover:bg-white/10 focus:bg-white/10">
                       <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-cyan-400" />
-                        Inner Wiring Discovery
+                        <Zap className="w-4 h-4 text-mi-cyan" />
+                        Internal Wiring (Week 2)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="mental_pillar" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Compass className="w-4 h-4 text-purple-400" />
+                        Mental Pillar Baseline (Week 2)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="sub_pattern" className="text-white hover:bg-white/10 focus:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-red-400" />
+                        Sub-Pattern Deep Dive (Week 3)
                       </div>
                     </SelectItem>
                     <SelectItem value="avatar_deep" className="text-white hover:bg-white/10 focus:bg-white/10">
                       <div className="flex items-center gap-2">
                         <Brain className="w-4 h-4 text-amber-400" />
-                        Identity Collision Avatar (Deep)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="identity_collision" className="text-white hover:bg-white/10 focus:bg-white/10">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-purple-400" />
-                        Identity Collision (Gate - Usually Auto)
+                        Avatar Deep Dive (Week 4)
                       </div>
                     </SelectItem>
                   </SelectContent>

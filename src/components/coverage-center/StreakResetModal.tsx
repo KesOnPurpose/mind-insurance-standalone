@@ -73,31 +73,31 @@ export function StreakResetModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-mi-navy-light border-mi-cyan/20">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <ShieldAlert className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            <div className="p-2 rounded-full bg-mi-gold/10">
+              <ShieldAlert className="h-6 w-6 text-mi-gold" />
             </div>
-            <DialogTitle className="text-xl">Coverage at Risk</DialogTitle>
+            <DialogTitle className="text-xl text-white">Coverage at Risk</DialogTitle>
           </div>
-          <DialogDescription className="text-left">
+          <DialogDescription className="text-left text-gray-400">
             You missed yesterday's protocol completion. Your {currentStreak}-day coverage streak is about to reset.
           </DialogDescription>
         </DialogHeader>
 
         {/* Streak visualization */}
         <div className="py-4">
-          <div className="flex items-center justify-center gap-4 p-4 rounded-lg bg-muted">
+          <div className="flex items-center justify-center gap-4 p-4 rounded-lg bg-mi-navy">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1.5">
-                <Flame className="h-8 w-8 text-orange-500" fill="currentColor" />
-                <span className="text-3xl font-bold tabular-nums">{currentStreak}</span>
+                <Flame className="h-8 w-8 text-mi-gold" fill="currentColor" />
+                <span className="text-3xl font-bold tabular-nums text-white">{currentStreak}</span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">Day Streak</p>
+              <p className="text-sm text-gray-400 mt-1">Day Streak</p>
             </div>
 
-            <div className="h-12 w-px bg-border" />
+            <div className="h-12 w-px bg-mi-cyan/20" />
 
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
@@ -107,14 +107,14 @@ export function StreakResetModal({
                     className={cn(
                       'h-6 w-6',
                       i < skipTokens
-                        ? 'text-emerald-500'
-                        : 'text-muted-foreground/20'
+                        ? 'text-mi-cyan'
+                        : 'text-gray-600'
                     )}
                     fill={i < skipTokens ? 'currentColor' : 'none'}
                   />
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 {skipTokens} Token{skipTokens !== 1 ? 's' : ''} Available
               </p>
             </div>
@@ -130,27 +130,27 @@ export function StreakResetModal({
             className={cn(
               'w-full p-4 rounded-lg border-2 text-left transition-all',
               canUseToken
-                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
-                : 'border-muted bg-muted cursor-not-allowed opacity-60'
+                ? 'border-mi-cyan bg-mi-cyan/10 hover:bg-mi-cyan/20'
+                : 'border-gray-700 bg-mi-navy cursor-not-allowed opacity-60'
             )}
           >
             <div className="flex items-start gap-3">
               <ShieldCheck
                 className={cn(
                   'h-6 w-6 flex-shrink-0 mt-0.5',
-                  canUseToken ? 'text-emerald-500' : 'text-muted-foreground'
+                  canUseToken ? 'text-mi-cyan' : 'text-gray-400'
                 )}
               />
               <div className="flex-1">
-                <p className="font-semibold">Use {COVERAGE_LANGUAGE.skipToken}</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="font-semibold text-white">Use {COVERAGE_LANGUAGE.skipToken}</p>
+                <p className="text-sm text-gray-400 mt-0.5">
                   {canUseToken
                     ? `Protect your ${currentStreak}-day streak (${skipTokens - 1} tokens will remain)`
                     : "You don't have any protection tokens"}
                 </p>
               </div>
               {canUseToken && (
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-1 rounded">
+                <span className="text-xs font-medium text-mi-cyan bg-mi-cyan/20 px-2 py-1 rounded">
                   Recommended
                 </span>
               )}
@@ -160,13 +160,13 @@ export function StreakResetModal({
           {/* Let Reset Option */}
           <button
             onClick={handleLetReset}
-            className="w-full p-4 rounded-lg border-2 border-border bg-card text-left transition-all hover:bg-muted"
+            className="w-full p-4 rounded-lg border-2 border-mi-cyan/20 bg-mi-navy text-left transition-all hover:bg-mi-navy-light"
           >
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-6 w-6 text-amber-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="h-6 w-6 text-mi-gold flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-semibold">Let Coverage Lapse</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="font-semibold text-white">Let Coverage Lapse</p>
+                <p className="text-sm text-gray-400 mt-0.5">
                   Your streak will reset to 0. Complete today's protocol to start fresh.
                 </p>
               </div>
@@ -182,8 +182,8 @@ export function StreakResetModal({
         )}
 
         {/* Neural principle */}
-        <div className="pt-2 border-t border-border/50">
-          <p className="text-xs text-muted-foreground italic">
+        <div className="pt-2 border-t border-mi-cyan/20">
+          <p className="text-xs text-gray-400 italic">
             "Every streak counts. Research shows that breaking a habit chain makes it 3x harder to restart.
             Your amygdala will thank you for protecting this progress."
           </p>
@@ -219,22 +219,22 @@ export function StreakProtectedDialog({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm text-center">
+      <DialogContent className="sm:max-w-sm text-center bg-mi-navy-light border-mi-cyan/20">
         <div className="py-4">
-          <div className="inline-flex p-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
-            <ShieldCheck className="h-8 w-8 text-emerald-500" />
+          <div className="inline-flex p-3 rounded-full bg-mi-cyan/10 mb-4">
+            <ShieldCheck className="h-8 w-8 text-mi-cyan" />
           </div>
-          <DialogTitle className="text-xl mb-2">Streak Protected!</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl mb-2 text-white">Streak Protected!</DialogTitle>
+          <DialogDescription className="text-gray-400">
             Your {streakCount}-day coverage streak has been protected.
             You have {tokensRemaining} token{tokensRemaining !== 1 ? 's' : ''} remaining.
           </DialogDescription>
         </div>
 
         <div className="flex items-center justify-center gap-2 py-3">
-          <Flame className="h-6 w-6 text-orange-500" fill="currentColor" />
-          <span className="text-2xl font-bold">{streakCount}</span>
-          <span className="text-muted-foreground">days</span>
+          <Flame className="h-6 w-6 text-mi-gold" fill="currentColor" />
+          <span className="text-2xl font-bold text-white">{streakCount}</span>
+          <span className="text-gray-400">days</span>
         </div>
 
         <DialogFooter className="sm:justify-center">
@@ -259,20 +259,20 @@ export function StreakResetConfirmDialog({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm text-center">
+      <DialogContent className="sm:max-w-sm text-center bg-mi-navy-light border-mi-cyan/20">
         <div className="py-4">
-          <div className="inline-flex p-3 rounded-full bg-amber-100 dark:bg-amber-900/30 mb-4">
-            <AlertTriangle className="h-8 w-8 text-amber-500" />
+          <div className="inline-flex p-3 rounded-full bg-mi-gold/10 mb-4">
+            <AlertTriangle className="h-8 w-8 text-mi-gold" />
           </div>
-          <DialogTitle className="text-xl mb-2">Coverage Lapsed</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl mb-2 text-white">Coverage Lapsed</DialogTitle>
+          <DialogDescription className="text-gray-400">
             Your {previousStreak}-day streak has been reset.
             Complete today's protocol to start building again.
           </DialogDescription>
         </div>
 
-        <div className="p-4 rounded-lg bg-muted">
-          <p className="text-sm text-muted-foreground">
+        <div className="p-4 rounded-lg bg-mi-navy">
+          <p className="text-sm text-gray-400">
             "Every setback is a setup for a comeback. Your neural pathways remember the progress -
             rebuilding will be faster this time."
           </p>

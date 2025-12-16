@@ -3397,7 +3397,10 @@ export type Database = {
           target_demographics: Json | null
           target_state: string | null
           temperament: string | null
+          temperament_assessed_at: string | null
           temperament_type: string | null
+          avatar_assigned_at: string | null
+          assigned_avatar_assessment_id: string | null
           tier_expires_at: string | null
           tier_level: string | null
           tier_start_date: string | null
@@ -3460,7 +3463,10 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          temperament_assessed_at?: string | null
           temperament_type?: string | null
+          avatar_assigned_at?: string | null
+          assigned_avatar_assessment_id?: string | null
           tier_expires_at?: string | null
           tier_level?: string | null
           tier_start_date?: string | null
@@ -3523,7 +3529,10 @@ export type Database = {
           target_demographics?: Json | null
           target_state?: string | null
           temperament?: string | null
+          temperament_assessed_at?: string | null
           temperament_type?: string | null
+          avatar_assigned_at?: string | null
+          assigned_avatar_assessment_id?: string | null
           tier_expires_at?: string | null
           tier_level?: string | null
           tier_start_date?: string | null

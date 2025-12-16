@@ -44,8 +44,8 @@ import AssessmentCenter from "./pages/admin/AssessmentCenter";
 import UserManagement from "./pages/admin/UserManagement";
 import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
 import IdentityCollisionAssessmentPage from "./pages/mind-insurance/IdentityCollisionAssessmentPage";
-import InnerWiringDiscoveryPage from "./pages/mind-insurance/InnerWiringDiscoveryPage";
 import { IdentityCollisionGuard } from "@/components/mind-insurance/IdentityCollisionGuard";
+import { FirstSessionGuard } from "@/components/mind-insurance/FirstSessionGuard";
 import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
 import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
 import WeeklyInsightsPage from "./pages/mind-insurance/WeeklyInsightsPage";
@@ -54,6 +54,7 @@ import FirstSessionPage from "./pages/mind-insurance/FirstSessionPage";
 import VaultPage from "./pages/mind-insurance/VaultPage";
 import InsightRevealPage from "./pages/mind-insurance/InsightRevealPage";
 import ProtocolDetailPage from "./pages/mind-insurance/ProtocolDetailPage";
+import CoachProtocolDetailPage from "./pages/mind-insurance/CoachProtocolDetailPage";
 import PatternCheck from "./pages/mind-insurance/practices/PatternCheck";
 import ReinforceIdentity from "./pages/mind-insurance/practices/ReinforceIdentity";
 import OutcomeVisualization from "./pages/mind-insurance/practices/OutcomeVisualization";
@@ -63,6 +64,9 @@ import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
 import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
 import MIOInsightsPage from "./pages/mind-insurance/MIOInsightsPage";
 import MentalPillarAssessmentPage from "./pages/mind-insurance/MentalPillarAssessmentPage";
+import TemperamentAssessmentPage from "./pages/mind-insurance/TemperamentAssessmentPage";
+import SubPatternAssessmentPage from "./pages/mind-insurance/SubPatternAssessmentPage";
+import AvatarRevealPage from "./pages/mind-insurance/AvatarRevealPage";
 import ExternalMentalPillarAssessmentPage from "./pages/external/ExternalMentalPillarAssessmentPage";
 import TestTooltip from "./pages/TestTooltip";
 import ChatPageDemo from "./pages/ChatPageDemo";
@@ -114,8 +118,8 @@ const App = () => {
                       {/* Mind Insurance Identity Collision Assessment - must be before other MI routes */}
                       <Route path="/mind-insurance/assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionAssessmentPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
-                      {/* Mind Insurance Inner Wiring Discovery - requires Identity Collision first */}
-                      <Route path="/mind-insurance/inner-wiring" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><InnerWiringDiscoveryPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      {/* Legacy Inner Wiring route - redirect to Temperament Assessment */}
+                      <Route path="/mind-insurance/inner-wiring" element={<Navigate to="/mind-insurance/temperament-assessment" replace />} />
 
                       {/* Mental Pillar Baseline Assessment - requires Identity Collision first */}
                       <Route path="/mind-insurance/mental-pillar-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><MentalPillarAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
@@ -130,6 +134,7 @@ const App = () => {
                       <Route path="/mind-insurance/vault" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><VaultPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/insight/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><InsightRevealPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
                       <Route path="/mind-insurance/protocol/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><ProtocolDetailPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/coach-protocol" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><CoachProtocolDetailPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
                       {/* Mind Insurance Practice Routes - wrapped with IdentityCollisionGuard */}
                       <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><PatternCheck /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
@@ -142,6 +147,15 @@ const App = () => {
 
                       {/* MIO Insights Thread route */}
                       <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* Temperament Assessment - requires Identity Collision first */}
+                      <Route path="/mind-insurance/temperament-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><TemperamentAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* Sub-Pattern Assessment - requires Identity Collision first */}
+                      <Route path="/mind-insurance/sub-pattern-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SubPatternAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+
+                      {/* Avatar Reveal - shows combined assessment results */}
+                      <Route path="/mind-insurance/avatar" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><AvatarRevealPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
 
                       {/* Chat routes */}
                       <Route path="/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><ChatPage /></AssessmentGuard></AccessGate></ProtectedRoute>} />

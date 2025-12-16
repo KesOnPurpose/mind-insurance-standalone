@@ -168,7 +168,7 @@ export interface MIOInsightsMessage {
   user_id: string;
   role: 'mio' | 'user';
   content: string;
-  section_type: SectionType | 'reengagement' | 'protocol' | 'breakthrough' | null;
+  section_type: SectionType | 'reengagement' | 'protocol' | 'breakthrough' | 'first_engagement' | null;
   section_energy: SectionEnergy | null;
   reward_tier: RewardTier;
   reward_probability: number | null;

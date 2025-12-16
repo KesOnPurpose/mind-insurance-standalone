@@ -11,7 +11,8 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Send, Sparkles, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Send, Sparkles, RefreshCw, Wifi, WifiOff, ArrowRight, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useMIOInsightsThread } from '@/hooks/useMIOInsightsThread';
+import { useFirstSessionStatus } from '@/hooks/useFirstSessionStatus';
 import { MIOInsightMessage } from './MIOInsightMessage';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +33,7 @@ interface MIOInsightsThreadViewProps {
 }
 
 export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsightsThreadViewProps) {
+  const navigate = useNavigate();
   const {
     thread,
     messages,
@@ -47,6 +50,9 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
     lastRewardTier,
     isConnected
   } = useMIOInsightsThread();
+
+  // Check if user has completed first engagement (for Coverage Center CTA)
+  const { data: firstSessionStatus } = useFirstSessionStatus();
 
   const [inputValue, setInputValue] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -258,6 +264,35 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
           </div>
         )}
       </ScrollArea>
+
+      {/* Coverage Center CTA - Show after first engagement is completed */}
+      {firstSessionStatus?.hasCompleted && (
+        <div className="mx-4 mb-3">
+          <Card className="p-4 bg-gradient-to-r from-purple-900/40 to-cyan-900/40 border border-purple-500/30">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex-shrink-0">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">
+                  Your first insight has been captured
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Your full 7-day protocol is ready in the Coverage Center
+                </p>
+              </div>
+              <Button
+                onClick={() => navigate('/mind-insurance/coverage')}
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white flex-shrink-0"
+              >
+                Go to Coverage
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Reply indicator */}
       {replyingToMessage && (

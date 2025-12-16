@@ -12,7 +12,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Users, RefreshCw, Loader2 } from 'lucide-react';
+import { Brain, Users, RefreshCw, Loader2, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,25 +20,35 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
 // Coverage Center components
+// P6 Redesign: Removed TransformationMetrics, CoverageMilestones from main content
+// These metrics are now in sidebar (MindInsurancePanel) to reduce visual overload
+// Added IdentityCollisionGrip as hero transformation evidence component
 import {
   CoverageHeader,
   ActiveMIOProtocolCard,
   MIOProtocolHistory,
-  TransformationMetrics,
-  CoverageMilestones,
+  MIOProtocolHistoryCompact,
   ActiveCoachProtocolCard,
   CoachProtocolHistory,
   StreakResetModal,
   StreakProtectedDialog,
+  AssessmentsTab,
+  IdentityCollisionGrip,
 } from '@/components/coverage-center';
 
 // Hooks
 import { useCoverageStreak } from '@/hooks/useCoverageStreak';
 import { useCoverageHistory } from '@/hooks/useCoverageHistory';
+import { useTemperamentStatus } from '@/hooks/useTemperamentStatus';
+import { useSubPatternStatus } from '@/hooks/useSubPatternStatus';
+import { useIdentityCollisionStatus } from '@/hooks/useIdentityCollisionStatus';
+import { useMentalPillarAssessmentStatus } from '@/hooks/useMentalPillarAssessment';
+import { useIdentityCollisionGrip } from '@/hooks/useIdentityCollisionGrip';
 
 // Services
 import { getActiveInsightProtocol } from '@/services/mioInsightProtocolService';
 import { getUserMilestones } from '@/services/coverageStreakService';
+import { getUserActiveProtocols } from '@/services/coachProtocolV2Service';
 
 // Types
 import type { MIOInsightProtocolWithProgress } from '@/types/protocol';
@@ -76,6 +86,39 @@ export default function CoverageCenterPage() {
     refresh: refreshHistory,
   } = useCoverageHistory();
 
+  // Temperament status
+  const {
+    data: temperamentStatus,
+    isLoading: temperamentLoading,
+  } = useTemperamentStatus();
+
+  // Sub-pattern status
+  const {
+    data: subPatternStatus,
+    isLoading: subPatternLoading,
+  } = useSubPatternStatus();
+
+  // Collision status (for primary pattern)
+  const {
+    data: collisionStatus,
+    isLoading: collisionLoading,
+  } = useIdentityCollisionStatus(user?.id);
+
+  // Mental Pillar status
+  const {
+    status: mentalPillarStatus,
+    isLoading: mentalPillarLoading,
+  } = useMentalPillarAssessmentStatus();
+
+  // Identity Collision Grip (P6 Hero Component)
+  const {
+    gripStrength,
+    triggersCaughtThisWeek,
+    weekOverWeekChange,
+    patternName,
+    isLoading: gripLoading,
+  } = useIdentityCollisionGrip();
+
   // Local state
   const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
   const [milestones, setMilestones] = useState<CoverageMilestoneWithProtocol[]>([]);
@@ -86,6 +129,9 @@ export default function CoverageCenterPage() {
   // Modal state
   const [showStreakResetModal, setShowStreakResetModal] = useState(false);
   const [showStreakProtectedDialog, setShowStreakProtectedDialog] = useState(false);
+
+  // Protocol history expanded state
+  const [showFullHistory, setShowFullHistory] = useState(false);
 
   // ============================================================================
   // DATA FETCHING
@@ -116,13 +162,36 @@ export default function CoverageCenterPage() {
     }
   }, [user?.id]);
 
+  const fetchCoachAssignment = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const protocols = await getUserActiveProtocols(user.id);
+      // Use primary assignment if available, otherwise secondary
+      const activeAssignment = protocols.primary || protocols.secondary;
+      if (activeAssignment) {
+        setCoachAssignment({
+          ...activeAssignment.assignment,
+          protocol: activeAssignment.protocol,
+          progress: activeAssignment.progress,
+        });
+      } else {
+        setCoachAssignment(null);
+      }
+    } catch (err) {
+      console.error('[CoverageCenterPage] Error fetching coach assignment:', err);
+      setCoachAssignment(null);
+    }
+  }, [user?.id]);
+
   // Initial data fetch
   useEffect(() => {
     if (user?.id && !authLoading) {
       fetchActiveProtocol();
       fetchMilestones();
+      fetchCoachAssignment();
     }
-  }, [user?.id, authLoading, fetchActiveProtocol, fetchMilestones]);
+  }, [user?.id, authLoading, fetchActiveProtocol, fetchMilestones, fetchCoachAssignment]);
 
   // Show streak at-risk modal
   useEffect(() => {
@@ -141,12 +210,13 @@ export default function CoverageCenterPage() {
       refreshHistory(),
       fetchActiveProtocol(),
       fetchMilestones(),
+      fetchCoachAssignment(),
     ]);
     toast({
       title: 'Refreshed',
       description: 'Coverage data has been updated.',
     });
-  }, [refreshStreak, refreshHistory, fetchActiveProtocol, fetchMilestones, toast]);
+  }, [refreshStreak, refreshHistory, fetchActiveProtocol, fetchMilestones, fetchCoachAssignment, toast]);
 
   const handleUseToken = useCallback(async () => {
     const result = await useToken();
@@ -196,14 +266,14 @@ export default function CoverageCenterPage() {
   // Not authenticated
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <p className="text-muted-foreground">Please sign in to view your coverage.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 bg-mi-navy">
+        <p className="text-gray-400">Please sign in to view your coverage.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-mi-navy">
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <CoverageHeader
@@ -211,6 +281,8 @@ export default function CoverageCenterPage() {
           longestStreak={longestStreak}
           skipTokens={skipTokens}
           milestones={milestones}
+          protocolDaysCompleted={activeProtocol?.days_completed ?? 0}
+          protocolTotalDays={activeProtocol?.total_days ?? 7}
           isLoading={isLoading}
           onBack={() => navigate('/mind-insurance')}
           onRefresh={handleRefresh}
@@ -218,26 +290,50 @@ export default function CoverageCenterPage() {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="mio" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 bg-mi-navy-light border border-mi-cyan/20">
+            <TabsTrigger
+              value="mio"
+              className="flex items-center gap-2 text-gray-400 data-[state=active]:bg-mi-cyan data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm"
+            >
               <Brain className="h-4 w-4" />
-              MIO Coverage
+              <span className="hidden sm:inline">MIO</span> Coverage
+            </TabsTrigger>
+            <TabsTrigger
+              value="assessments"
+              className="flex items-center gap-2 text-gray-400 data-[state=active]:bg-mi-cyan data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Assessments
             </TabsTrigger>
             <TabsTrigger
               value="coach"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-gray-400 data-[state=active]:bg-mi-cyan data-[state=active]:text-white data-[state=active]:shadow-none disabled:text-gray-600 text-xs sm:text-sm"
               disabled={!hasCoachProtocol && coachHistory.length === 0}
             >
               <Users className="h-4 w-4" />
-              Coach Coverage
+              Coach
               {!hasCoachProtocol && coachHistory.length === 0 && (
-                <span className="text-xs text-muted-foreground">(Coming Soon)</span>
+                <span className="text-xs text-gray-600 hidden sm:inline">(Soon)</span>
               )}
             </TabsTrigger>
           </TabsList>
 
           {/* MIO Coverage Tab */}
+          {/* P6 Redesign: Simplified - Hero component shows transformation evidence
+              CoverageMilestones and TransformationMetrics moved to sidebar */}
           <TabsContent value="mio" className="space-y-6 mt-6">
+            {/* Hero: Identity Collision Grip - Transformation Evidence */}
+            <IdentityCollisionGrip
+              gripStrength={gripStrength}
+              patternName={patternName}
+              triggersCaughtThisWeek={triggersCaughtThisWeek}
+              weekOverWeekChange={weekOverWeekChange}
+              currentStreak={currentStreak}
+              hasTodaysPractice={activeProtocol?.is_today_completed ?? false}
+              daysCompleted={activeProtocol?.days_completed ?? 0}
+              isLoading={gripLoading}
+            />
+
             {/* Active Protocol */}
             <ActiveMIOProtocolCard
               protocol={activeProtocol}
@@ -245,7 +341,8 @@ export default function CoverageCenterPage() {
               isLoading={protocolLoading}
               onStartTask={() => {
                 if (activeProtocol) {
-                  navigate(`/mind-insurance/protocol/${activeProtocol.id}/day/${activeProtocol.current_day}`);
+                  // Use query param - ProtocolDetailPage auto-expands the day
+                  navigate(`/mind-insurance/protocol/${activeProtocol.id}?day=${activeProtocol.current_day}`);
                 }
               }}
               onViewProtocol={() => {
@@ -255,27 +352,36 @@ export default function CoverageCenterPage() {
               }}
             />
 
-            {/* Milestones */}
-            <CoverageMilestones
-              currentStreak={currentStreak}
-              achievedMilestones={milestones}
-            />
+            {/* Protocol History - Compact by default, expands on click */}
+            {showFullHistory ? (
+              <MIOProtocolHistory
+                history={mioHistory}
+                isLoading={historyLoading}
+                hasMore={hasMoreMio}
+                onLoadMore={() => loadMore('mio')}
+                onViewProtocol={handleViewProtocol}
+                onCollapse={() => setShowFullHistory(false)}
+              />
+            ) : (
+              <MIOProtocolHistoryCompact
+                history={mioHistory}
+                isLoading={historyLoading}
+                onExpand={() => setShowFullHistory(true)}
+              />
+            )}
+          </TabsContent>
 
-            {/* Transformation Metrics */}
-            <TransformationMetrics
-              metrics={metrics}
-              currentStreak={currentStreak}
-              longestStreak={longestStreak}
-              isLoading={historyLoading}
-            />
-
-            {/* Protocol History */}
-            <MIOProtocolHistory
-              history={mioHistory}
-              isLoading={historyLoading}
-              hasMore={hasMoreMio}
-              onLoadMore={() => loadMore('mio')}
-              onViewProtocol={handleViewProtocol}
+          {/* Assessments Tab */}
+          <TabsContent value="assessments" className="space-y-6 mt-6">
+            <AssessmentsTab
+              collisionStatus={collisionStatus}
+              temperamentStatus={temperamentStatus}
+              subPatternStatus={subPatternStatus}
+              mentalPillarStatus={mentalPillarStatus ? {
+                hasBaseline: !!mentalPillarStatus.baselineDate,
+                baselineDate: mentalPillarStatus.baselineDate,
+              } : null}
+              isLoading={collisionLoading || temperamentLoading || subPatternLoading || mentalPillarLoading}
             />
           </TabsContent>
 
@@ -293,7 +399,7 @@ export default function CoverageCenterPage() {
               isLoading={historyLoading}
               hasMore={hasMoreCoach}
               onLoadMore={() => loadMore('coach')}
-              onViewProtocol={handleViewProtocol}
+              // onViewProtocol removed - Coach detail page not implemented yet
             />
           </TabsContent>
         </Tabs>
@@ -325,7 +431,7 @@ export default function CoverageCenterPage() {
 
 function CoverageCenterSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-mi-navy">
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Header skeleton */}
         <div className="space-y-4">

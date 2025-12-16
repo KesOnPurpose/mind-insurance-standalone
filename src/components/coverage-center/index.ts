@@ -50,6 +50,7 @@ export {
 
 export {
   MIOProtocolHistory,
+  MIOProtocolHistoryCompact,
   MIOProtocolTimeline,
 } from './MIOProtocolHistory';
 
@@ -74,6 +75,20 @@ export {
   DashboardCoverageCard,
   CoverageBadge,
 } from './DashboardCoverageCard';
+
+// Avatar System Components (Week 2+)
+export { TemperamentUnlockCard } from './TemperamentUnlockCard';
+export { SubPatternUnlockCard } from './SubPatternUnlockCard';
+
+// Assessments Tab (P2 - Your Assessments)
+export { AssessmentsTab } from './AssessmentsTab';
+
+// Identity Collision Grip (P6 - Transformation Evidence)
+export {
+  IdentityCollisionGrip,
+  IdentityCollisionGripCompact,
+  type GripStrength,
+} from './IdentityCollisionGrip';
 
 // Default exports for convenience
 export { default as CoverageStreakDefault } from './CoverageStreak';

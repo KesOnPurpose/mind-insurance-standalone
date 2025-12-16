@@ -324,7 +324,9 @@ export async function canUserTakeAssessment(
     };
   }
 
-  if (status.cooldown_ends_at && new Date(status.cooldown_ends_at) > new Date()) {
+  // Only enforce cooldown if user has actually COMPLETED an assessment (has_baseline)
+  // This fixes the bug where first-time users were incorrectly blocked
+  if (status.has_baseline && status.cooldown_ends_at && new Date(status.cooldown_ends_at) > new Date()) {
     return {
       canTake: false,
       reason: 'Please wait 7 days between assessments for accurate results.',

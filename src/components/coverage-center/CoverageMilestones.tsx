@@ -73,28 +73,28 @@ function MilestoneBadge({
     switch (config.color) {
       case 'orange':
         return {
-          achieved: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-700',
-          locked: 'bg-muted text-muted-foreground border-border',
-          icon: isAchieved ? 'text-orange-500' : 'text-muted-foreground',
+          achieved: 'bg-mi-gold/10 text-mi-gold border-mi-gold/30',
+          locked: 'bg-mi-navy text-gray-400 border-gray-700',
+          icon: isAchieved ? 'text-mi-gold' : 'text-gray-400',
         };
       case 'purple':
         return {
-          achieved: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-700',
-          locked: 'bg-muted text-muted-foreground border-border',
-          icon: isAchieved ? 'text-purple-500' : 'text-muted-foreground',
+          achieved: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+          locked: 'bg-mi-navy text-gray-400 border-gray-700',
+          icon: isAchieved ? 'text-purple-400' : 'text-gray-400',
         };
       case 'gold':
         return {
-          achieved: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700',
-          locked: 'bg-muted text-muted-foreground border-border',
-          icon: isAchieved ? 'text-amber-500' : 'text-muted-foreground',
+          achieved: 'bg-mi-gold/10 text-mi-gold border-mi-gold/30',
+          locked: 'bg-mi-navy text-gray-400 border-gray-700',
+          icon: isAchieved ? 'text-mi-gold' : 'text-gray-400',
         };
       case 'green':
       default:
         return {
-          achieved: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700',
-          locked: 'bg-muted text-muted-foreground border-border',
-          icon: isAchieved ? 'text-emerald-500' : 'text-muted-foreground',
+          achieved: 'bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30',
+          locked: 'bg-mi-navy text-gray-400 border-gray-700',
+          icon: isAchieved ? 'text-mi-cyan' : 'text-gray-400',
         };
     }
   };
@@ -161,20 +161,20 @@ function MilestoneBadge({
             )}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="max-w-xs">
+        <TooltipContent side="bottom" className="max-w-xs bg-mi-navy-light border-mi-cyan/20">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Icon className={cn('h-4 w-4', colors.icon)} />
-              <p className="font-semibold">{config.label}</p>
+              <p className="font-semibold text-white">{config.label}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{config.description}</p>
+            <p className="text-sm text-gray-400">{config.description}</p>
             {isAchieved && achievedAt && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 Achieved {new Date(achievedAt).toLocaleDateString()}
               </p>
             )}
             {!isAchieved && daysRequired > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 {daysRemaining > 0
                   ? `${daysRemaining} more days to unlock`
                   : 'Keep going!'}
@@ -219,9 +219,9 @@ export function CoverageMilestones({
     <div className={cn('space-y-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg">{COVERAGE_LANGUAGE.milestone}s</h3>
+        <h3 className="font-semibold text-lg text-white">{COVERAGE_LANGUAGE.milestone}s</h3>
         {protocolCompletes > 0 && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-gray-400">
             {protocolCompletes} protocol{protocolCompletes > 1 ? 's' : ''} completed
           </span>
         )}
@@ -243,7 +243,7 @@ export function CoverageMilestones({
       {/* Progress indicator */}
       {currentStreak > 0 && currentStreak < 66 && (
         <div className="text-center">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-gray-400">
             {currentStreak < 7 && `${7 - currentStreak} days to 7-Day Streak`}
             {currentStreak >= 7 && currentStreak < 21 && `${21 - currentStreak} days to 21-Day Breakthrough`}
             {currentStreak >= 21 && currentStreak < 66 && `${66 - currentStreak} days to 66-Day Transformation`}
@@ -253,14 +253,14 @@ export function CoverageMilestones({
 
       {/* Transformation achieved message */}
       {currentStreak >= 66 && (
-        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-100 to-amber-100 dark:from-purple-900/30 dark:to-amber-900/30 border border-purple-200 dark:border-purple-700">
+        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-mi-gold/10 border border-purple-500/30">
           <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+            <Trophy className="h-5 w-5 text-mi-gold" />
+            <p className="text-sm font-medium text-purple-400">
               Identity Transformation Complete!
             </p>
           </div>
-          <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+          <p className="text-xs text-gray-400 mt-1">
             You've installed a new neural default. Keep building on this foundation.
           </p>
         </div>
@@ -306,22 +306,22 @@ export function CoverageMilestonesCompact({
                   className={cn(
                     'rounded-full p-1.5 transition-all',
                     achieved
-                      ? 'bg-amber-100 dark:bg-amber-900/30'
-                      : 'bg-muted opacity-40'
+                      ? 'bg-mi-gold/10 border border-mi-gold/30'
+                      : 'bg-mi-navy opacity-40 border border-gray-700'
                   )}
                 >
                   <Icon
                     className={cn(
                       'h-4 w-4',
-                      achieved ? 'text-amber-500' : 'text-muted-foreground'
+                      achieved ? 'text-mi-gold' : 'text-gray-400'
                     )}
                     fill={achieved ? 'currentColor' : 'none'}
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-sm font-medium">{config.label}</p>
-                <p className="text-xs text-muted-foreground">
+              <TooltipContent className="bg-mi-navy-light border-mi-cyan/20">
+                <p className="text-sm font-medium text-white">{config.label}</p>
+                <p className="text-xs text-gray-400">
                   {achieved ? 'Achieved!' : config.description}
                 </p>
               </TooltipContent>
