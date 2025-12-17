@@ -37,36 +37,54 @@ const AuthCallback = () => {
     }
   };
 
-  // Smart redirect based on assessment completion status
+  // Smart redirect based on Identity Collision assessment completion status
+  // Mind Insurance uses Identity Collision Assessment as the gating assessment
   const smartRedirect = async (userId: string) => {
     try {
-      console.log('AuthCallback: Checking assessment completion for smart redirect...');
+      console.log('AuthCallback: Checking Identity Collision assessment for smart redirect...');
 
-      // Check if user has completed assessment
-      const { data: onboarding, error: onboardingError } = await supabase
-        .from('user_onboarding')
-        .select('assessment_completed_at')
-        .eq('user_id', userId)
+      // Check if user has completed Identity Collision Assessment (MI-specific)
+      // Check user_profiles.collision_patterns first (fastest check)
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('collision_patterns')
+        .eq('id', userId)
         .single();
 
-      if (onboardingError && onboardingError.code !== 'PGRST116') {
-        console.error('Error checking onboarding status:', onboardingError);
-      }
+      // If collision_patterns exists and has data, user has completed assessment
+      const hasCollisionPatterns = profile?.collision_patterns &&
+        typeof profile.collision_patterns === 'object' &&
+        Object.keys(profile.collision_patterns).length > 0 &&
+        (profile.collision_patterns as Record<string, unknown>).primary_pattern;
 
-      // If assessment is NOT completed, redirect to assessment
-      if (!onboarding?.assessment_completed_at) {
-        console.log('AuthCallback: Assessment not completed - redirecting to /assessment');
-        window.location.href = '/assessment';
+      if (hasCollisionPatterns) {
+        // Assessment completed - redirect to Mind Insurance Hub
+        console.log('AuthCallback: Identity Collision completed - redirecting to /mind-insurance');
+        window.location.href = '/mind-insurance';
         return;
       }
 
-      // Assessment completed - redirect to chat (home screen)
-      console.log('AuthCallback: Assessment completed - redirecting to /chat');
-      window.location.href = '/chat';
+      // Also check identity_collision_assessments table as fallback
+      const { data: collisionAssessment } = await supabase
+        .from('identity_collision_assessments')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (collisionAssessment) {
+        console.log('AuthCallback: Found assessment record - redirecting to /mind-insurance');
+        window.location.href = '/mind-insurance';
+        return;
+      }
+
+      // No assessment found - redirect to Identity Collision Assessment
+      console.log('AuthCallback: No Identity Collision assessment - redirecting to /mind-insurance/assessment');
+      window.location.href = '/mind-insurance/assessment';
     } catch (err) {
       console.error('Smart redirect error, defaulting to assessment:', err);
       // On error, default to assessment (safer - ensures onboarding)
-      window.location.href = '/assessment';
+      window.location.href = '/mind-insurance/assessment';
     }
   };
 
@@ -207,22 +225,22 @@ const AuthCallback = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <Card className="p-8 max-w-md w-full">
+      <div className="min-h-screen bg-mi-navy flex items-center justify-center p-4">
+        <Card className="p-8 max-w-md w-full bg-mi-navy-light border-red-500/30">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-destructive" />
+            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Authentication Error</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
+            <h2 className="text-2xl font-bold mb-2 text-white">Authentication Error</h2>
+            <p className="text-white/70 mb-6">{error}</p>
             <div className="space-y-3">
-              <Button onClick={() => navigate('/auth')} className="w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-mi-cyan hover:bg-mi-cyan/90 text-mi-navy">
                 Back to Sign In
               </Button>
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"
-                className="w-full"
+                className="w-full border-white/30 text-white hover:bg-white/10"
               >
                 Try Again
               </Button>
@@ -236,21 +254,21 @@ const AuthCallback = () => {
   // Show email verification success message
   if (!isProcessing && isEmailVerification) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <Card className="p-8 max-w-md w-full">
+      <div className="min-h-screen bg-mi-navy flex items-center justify-center p-4">
+        <Card className="p-8 max-w-md w-full bg-mi-navy-light border-mi-cyan/30">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="w-16 h-16 rounded-full bg-mi-cyan/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-mi-cyan" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Email Verified! ✓</h2>
-            <p className="text-muted-foreground mb-4">
-              Welcome to Grouphomes4newbies!
+            <h2 className="text-2xl font-bold mb-2 text-white">Email Verified!</h2>
+            <p className="text-white/70 mb-4">
+              Welcome to Mind Insurance
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-white/50">
               Redirecting you to your dashboard...
             </p>
             <div className="mt-6">
-              <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+              <Loader2 className="w-6 h-6 animate-spin text-mi-cyan mx-auto" />
             </div>
           </div>
         </Card>
@@ -260,13 +278,13 @@ const AuthCallback = () => {
 
   // Default loading state
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      <Card className="p-8 max-w-md">
+    <div className="min-h-screen bg-mi-navy flex items-center justify-center p-4">
+      <Card className="p-8 max-w-md bg-mi-navy-light border-mi-cyan/30">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-semibold">Completing sign in...</h2>
-          <p className="text-muted-foreground mt-2">
-            Authenticating with Grouphomes4newbies
+          <Loader2 className="w-12 h-12 animate-spin text-mi-cyan mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white">Completing sign in...</h2>
+          <p className="text-white/70 mt-2">
+            Authenticating with Mind Insurance
           </p>
         </div>
       </Card>
