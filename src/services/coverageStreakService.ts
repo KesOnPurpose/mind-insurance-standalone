@@ -252,12 +252,14 @@ export async function getMIOProtocolHistory(
 
 /**
  * Get Coach protocol history
+ * Now includes auto-available protocols (visibility='all_users')
  */
 export async function getCoachProtocolHistory(
   userId: string,
   limit = 10
 ): Promise<CoverageHistoryItem[]> {
-  const { data, error } = await supabase
+  // 1. Get explicit assignments (existing behavior)
+  const { data: assignmentData, error } = await supabase
     .from('user_coach_protocol_assignments')
     .select(`
       id,
@@ -278,7 +280,27 @@ export async function getCoachProtocolHistory(
     return [];
   }
 
-  return (data || []).map((a) => {
+  // 2. Get auto-available protocols (visibility='all_users' and published)
+  const { data: autoAvailable, error: autoError } = await supabase
+    .from('coach_protocols_v2')
+    .select('id, title, total_weeks')
+    .eq('visibility', 'all_users')
+    .eq('status', 'published');
+
+  if (autoError) {
+    console.error('Error getting auto-available protocols:', autoError);
+  }
+
+  // 3. Get IDs of protocols user already has assignments for
+  const existingProtocolIds = new Set(
+    (assignmentData || []).map((a) => {
+      const protocol = a.protocol as { id: string };
+      return protocol.id;
+    })
+  );
+
+  // 4. Transform explicit assignments
+  const assignmentHistory = (assignmentData || []).map((a) => {
     const protocol = a.protocol as {
       id: string;
       title: string;
@@ -300,6 +322,26 @@ export async function getCoachProtocolHistory(
       created_at: a.created_at,
     };
   });
+
+  // 5. Add auto-available protocols user doesn't have yet
+  const autoAvailableHistory = (autoAvailable || [])
+    .filter((p) => !existingProtocolIds.has(p.id))
+    .map((p) => ({
+      protocol_id: p.id,
+      protocol_title: p.title,
+      pattern_targeted: 'Coach Protocol',
+      completion_percentage: 0,
+      days_completed: 0,
+      total_days: p.total_weeks * 7,
+      status: 'available' as CoverageHistoryItem['status'],
+      skip_token_earned: false,
+      started_at: null,
+      completed_at: null,
+      created_at: new Date().toISOString(),
+    }));
+
+  // 6. Combine: show available protocols FIRST, then history
+  return [...autoAvailableHistory, ...assignmentHistory].slice(0, limit);
 }
 
 // ============================================================================

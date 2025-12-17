@@ -84,7 +84,7 @@ export interface CoverageHistoryItem {
   completion_percentage: number;
   days_completed: number;
   total_days: number;
-  status: 'active' | 'completed' | 'skipped' | 'muted' | 'expired';
+  status: 'active' | 'completed' | 'skipped' | 'muted' | 'expired' | 'available' | 'dropped';
   skip_token_earned: boolean;
   started_at: string | null;
   completed_at: string | null;
