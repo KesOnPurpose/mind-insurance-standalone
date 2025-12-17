@@ -8,15 +8,15 @@ const AuthPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in - go to chat (home screen)
+  // Redirect if already logged in - go to mind insurance hub (main dashboard)
   useEffect(() => {
     if (user) {
-      navigate('/chat', { replace: true });
+      navigate('/mind-insurance', { replace: true });
     }
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+    <div className="min-h-screen bg-mi-navy flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Link
           to="/"

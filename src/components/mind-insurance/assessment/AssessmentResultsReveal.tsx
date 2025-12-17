@@ -24,7 +24,7 @@ interface AssessmentResultsRevealProps {
   isLoading?: boolean;
 }
 
-// Pattern-specific styling
+// Pattern-specific styling - Rich, saturated colors without white overlay
 const PATTERN_STYLES: Record<CollisionPattern, {
   gradient: string;
   iconBg: string;
@@ -32,20 +32,20 @@ const PATTERN_STYLES: Record<CollisionPattern, {
   icon: React.ReactNode;
 }> = {
   past_prison: {
-    gradient: 'from-violet-600/30 via-purple-600/20 to-transparent',
-    iconBg: 'bg-violet-500/20',
+    gradient: 'from-violet-500/90 via-purple-500/80 to-violet-600/70',
+    iconBg: 'bg-violet-400/30',
     barColor: 'bg-violet-500',
     icon: <Link2 className="w-8 h-8 text-violet-400" />,
   },
   success_sabotage: {
-    gradient: 'from-amber-600/30 via-orange-600/20 to-transparent',
-    iconBg: 'bg-amber-500/20',
+    gradient: 'from-amber-500/90 via-orange-500/80 to-amber-600/70',
+    iconBg: 'bg-amber-400/30',
     barColor: 'bg-amber-500',
     icon: <Zap className="w-8 h-8 text-amber-400" />,
   },
   compass_crisis: {
-    gradient: 'from-cyan-600/30 via-blue-600/20 to-transparent',
-    iconBg: 'bg-cyan-500/20',
+    gradient: 'from-cyan-500/90 via-blue-500/80 to-cyan-600/70',
+    iconBg: 'bg-cyan-400/30',
     barColor: 'bg-cyan-500',
     icon: <Compass className="w-8 h-8 text-cyan-400" />,
   },
@@ -236,12 +236,12 @@ export function AssessmentResultsReveal({
           transition={{ duration: 0.5 }}
           className="w-full space-y-6"
         >
-          {/* Main Result Card */}
+          {/* Main Result Card - Compact design to show Pattern Mix without scrolling */}
           <Card
-            className={`bg-gradient-to-br ${patternStyle.gradient} border-white/10 border backdrop-blur-xl p-6 sm:p-8 rounded-3xl`}
+            className={`bg-gradient-to-br ${patternStyle.gradient} border-2 border-white/20 p-5 rounded-2xl`}
           >
-            {/* Pattern Icon with Animation */}
-            <div className="flex justify-center mb-6">
+            {/* Pattern Icon and Name - Horizontal layout for compactness */}
+            <div className="flex items-center gap-4 mb-4">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -251,68 +251,62 @@ export function AssessmentResultsReveal({
                   damping: 15,
                   delay: 0.2,
                 }}
-                className={`w-24 h-24 rounded-full ${patternStyle.iconBg} flex items-center justify-center relative`}
+                className={`w-16 h-16 rounded-full ${patternStyle.iconBg} flex items-center justify-center flex-shrink-0`}
               >
-                <span className="text-5xl">{patternInfo.icon}</span>
-                <motion.div
-                  className={`absolute inset-0 rounded-full ${patternStyle.iconBg}`}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
+                <span className="text-4xl">{patternInfo.icon}</span>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="flex-1"
+              >
+                <p className="text-xs text-gray-800 mb-1">Your Collision Pattern</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {patternInfo.name}
+                </h1>
               </motion.div>
             </div>
 
-            {/* Pattern Name with Typewriter Effect */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
-              className="text-center mb-4"
-            >
-              <p className="text-sm text-gray-400 mb-2">Your Collision Pattern</p>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">
-                {patternInfo.name}
-              </h1>
-            </motion.div>
-
-            {/* Confidence Badge */}
+            {/* Confidence Badge - Inline */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6, duration: 0.3 }}
-              className="flex justify-center mb-6"
+              className="flex justify-center mb-4"
             >
-              <div
-                className="px-4 py-2 rounded-full flex items-center gap-2"
-                style={{ backgroundColor: `${patternStyle.barColor.replace('bg-', '')}30` }}
-              >
+              <div className="px-3 py-1.5 rounded-full flex items-center gap-2 bg-white/20">
                 <Sparkles className="w-4 h-4 text-mi-gold" />
-                <span className="text-lg font-bold text-white">{animatedConfidence}%</span>
-                <span className="text-sm text-gray-400">confidence</span>
+                <span className="text-lg font-bold text-gray-900">{animatedConfidence}%</span>
+                <span className="text-sm text-gray-700">confidence</span>
               </div>
             </motion.div>
 
-            {/* Short Description */}
+            {/* Short Description Only - Compact */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.4 }}
-              className="text-center text-gray-300 text-lg leading-relaxed mb-6"
+              className="text-center text-gray-800 text-base leading-relaxed"
             >
               {patternInfo.shortDescription}
             </motion.p>
 
-            {/* Full Description */}
-            <motion.div
+            {/* Full Description - Hidden by default, collapsed */}
+            <motion.details
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.4 }}
-              className="bg-white/5 rounded-xl p-4 mb-6"
+              className="mt-4"
             >
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <summary className="text-xs text-gray-700 cursor-pointer hover:text-gray-900 text-center">
+                Tap to read more
+              </summary>
+              <p className="text-sm text-gray-700 leading-relaxed mt-2 bg-white/10 rounded-lg p-3">
                 {patternInfo.fullDescription}
               </p>
-            </motion.div>
+            </motion.details>
 
             {/* Impact Area */}
             {result.impactArea && (
@@ -320,10 +314,10 @@ export function AssessmentResultsReveal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2, duration: 0.4 }}
-                className="flex items-center justify-center gap-2 text-sm text-gray-400"
+                className="flex items-center justify-center gap-2 text-sm text-gray-700 mt-3"
               >
                 <span>Most affected area:</span>
-                <span className="text-mi-gold font-medium capitalize">
+                <span className="text-gray-900 font-semibold capitalize">
                   {result.impactArea.replace('_', ' ')}
                 </span>
               </motion.div>
@@ -336,7 +330,7 @@ export function AssessmentResultsReveal({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.4, duration: 0.4 }}
           >
-            <Card className="bg-white/5 border-white/10 border backdrop-blur-xl p-6 rounded-2xl">
+            <Card className="bg-mi-navy-light border-2 border-white/20 p-5 rounded-2xl">
               <h3 className="text-sm font-medium text-gray-400 mb-4">Your Pattern Mix</h3>
               <div className="space-y-4">
                 <PatternBar
@@ -372,7 +366,7 @@ export function AssessmentResultsReveal({
           >
             <Button
               onClick={onContinue}
-              className="w-full h-14 text-lg font-semibold rounded-xl bg-gradient-to-r from-mi-gold to-mi-gold/80 hover:from-mi-gold/90 hover:to-mi-gold/70 text-black"
+              className="w-full h-14 text-lg font-semibold rounded-xl bg-gradient-to-r from-mi-cyan to-mi-cyan/80 hover:from-mi-cyan/90 hover:to-mi-cyan/70 text-white shadow-lg shadow-mi-cyan/30"
             >
               <Shield className="w-5 h-5 mr-2" />
               Continue to Mind Insurance

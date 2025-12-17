@@ -169,27 +169,25 @@ export function ConversationList({
         />
       )}
 
-      {/* Regular Conversations */}
-      <div className="p-2">
-        {FOLDER_ORDER.map((coachType) => {
-          // Skip MIO folder for Mind Insurance (we use the pinned MIO Insights instead)
-          if (coachType === 'mio' && currentProduct === 'mind-insurance') {
-            return null;
-          }
-          return (
-            <ConversationFolder
-              key={coachType}
-              coachType={coachType}
-              conversations={groupedConversations[coachType]}
-              activeConversationId={isMIOInsightsActive ? null : activeConversationId}
-              isDefaultOpen={coachType === defaultOpenCoach}
-              onSelectConversation={onSelectConversation}
-              onRenameConversation={onRenameConversation}
-              onArchiveConversation={onArchiveConversation}
-            />
-          );
-        })}
-      </div>
+      {/* Regular Conversations - Hidden for Mind Insurance standalone (MIO Insights pinned above) */}
+      {currentProduct !== 'mind-insurance' && (
+        <div className="p-2">
+          {FOLDER_ORDER.map((coachType) => {
+            return (
+              <ConversationFolder
+                key={coachType}
+                coachType={coachType}
+                conversations={groupedConversations[coachType]}
+                activeConversationId={isMIOInsightsActive ? null : activeConversationId}
+                isDefaultOpen={coachType === defaultOpenCoach}
+                onSelectConversation={onSelectConversation}
+                onRenameConversation={onRenameConversation}
+                onArchiveConversation={onArchiveConversation}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

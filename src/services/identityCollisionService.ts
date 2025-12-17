@@ -7,6 +7,57 @@ import { supabase } from '@/integrations/supabase/client';
 import { buildProtocolGenerationContext } from './mioAvatarContextService';
 
 // ============================================================================
+// INTRO SELECTIONS (from pre-assessment intro screens)
+// ============================================================================
+
+// LocalStorage keys matching AssessmentIntroScreens.tsx
+const INTRO_CATEGORIES_KEY = 'identity_collision_intro_categories';
+const INTRO_PATTERNS_KEY = 'identity_collision_intro_patterns';
+
+/**
+ * Intro selections structure - what user selected in intro screens
+ * Categories: Career, Relationships, Health, Wealth, Purpose
+ * Patterns: Past Prison, Success Sabotage, Compass Crisis, Energy Dysregulation
+ */
+export interface IntroSelections {
+  categories: string[];  // e.g., ['career', 'relationships']
+  patterns: string[];    // e.g., ['past_prison', 'success_sabotage']
+  selected_at?: string;  // ISO timestamp
+}
+
+/**
+ * Retrieve intro selections from localStorage
+ * These are the categories and patterns selected during the intro screens
+ * BEFORE the 8-question assessment
+ */
+export function getIntroSelectionsFromStorage(): IntroSelections {
+  try {
+    const categoriesRaw = localStorage.getItem(INTRO_CATEGORIES_KEY);
+    const patternsRaw = localStorage.getItem(INTRO_PATTERNS_KEY);
+
+    return {
+      categories: categoriesRaw ? JSON.parse(categoriesRaw) : [],
+      patterns: patternsRaw ? JSON.parse(patternsRaw) : [],
+    };
+  } catch (error) {
+    console.warn('[identityCollisionService] Error reading intro selections from localStorage:', error);
+    return { categories: [], patterns: [] };
+  }
+}
+
+/**
+ * Clear intro selections from localStorage after saving to database
+ */
+function clearIntroSelectionsFromStorage(): void {
+  try {
+    localStorage.removeItem(INTRO_CATEGORIES_KEY);
+    localStorage.removeItem(INTRO_PATTERNS_KEY);
+  } catch (error) {
+    console.warn('[identityCollisionService] Error clearing intro selections:', error);
+  }
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -131,6 +182,17 @@ export async function saveAssessmentResult(
 ): Promise<SaveAssessmentResponse> {
   const { userId, result } = request;
 
+  // Get intro selections from localStorage (selected before 8-question assessment)
+  const introSelections = getIntroSelectionsFromStorage();
+  const hasIntroSelections = introSelections.categories.length > 0 || introSelections.patterns.length > 0;
+
+  if (hasIntroSelections) {
+    console.log('[identityCollisionService] Found intro selections:', {
+      categories: introSelections.categories,
+      patterns: introSelections.patterns,
+    });
+  }
+
   try {
     // 0. Ensure user_profile exists (prevents FK errors)
     const { error: profileEnsureError } = await supabase
@@ -179,6 +241,7 @@ export async function saveAssessmentResult(
     }
 
     // 2. Update user_profiles.collision_patterns for quick access
+    // NOW INCLUDES intro_selections from the pre-assessment intro screens
     const { error: profileError } = await supabase
       .from('user_profiles')
       .update({
@@ -189,6 +252,12 @@ export async function saveAssessmentResult(
           impact_intensity: result.impactIntensity,
           scores: result.scores,
           assessed_at: new Date().toISOString(),
+          // NEW: Include intro selections (categories & patterns selected before 8-question assessment)
+          intro_selections: hasIntroSelections ? {
+            categories: introSelections.categories,  // e.g., ['career', 'relationships']
+            patterns: introSelections.patterns,      // e.g., ['past_prison', 'success_sabotage']
+            selected_at: new Date().toISOString(),
+          } : undefined,
         },
       })
       .eq('id', userId);
@@ -196,6 +265,10 @@ export async function saveAssessmentResult(
     if (profileError) {
       console.error('[identityCollisionService] Error updating user_profiles:', profileError);
       // Don't fail if profile update fails - assessment is already saved
+    } else if (hasIntroSelections) {
+      // Clear localStorage after successful save to database
+      clearIntroSelectionsFromStorage();
+      console.log('[identityCollisionService] Intro selections saved and cleared from localStorage');
     }
 
     // 3. Also update avatar_assessments for compatibility with existing system
@@ -249,11 +322,17 @@ export async function saveAssessmentResult(
 
     // 4. Trigger N8n First Protocol Generation webhook (background, non-blocking)
     // This creates the AI-generated 7-day protocol in mio_weekly_protocols table
+    // NOW INCLUDES intro_selections for enhanced personalization
     triggerFirstProtocolGeneration({
       user_id: userId,
       user_name: await getUserName(userId),
       collision_pattern: result.primaryPattern,
       assessment_id: assessmentData?.id,
+      // NEW: Include intro selections for protocol personalization
+      intro_selections: hasIntroSelections ? {
+        categories: introSelections.categories,  // What areas they struggle with (career, relationships, etc.)
+        patterns: introSelections.patterns,      // What patterns they initially identified with
+      } : undefined,
     }).catch((err) => {
       console.error('[identityCollisionService] Protocol generation webhook failed:', err);
       // Non-blocking - user flow continues even if webhook fails
@@ -398,8 +477,11 @@ async function getUserName(userId: string): Promise<string> {
  * This creates the 7-day protocol in mio_weekly_protocols table
  *
  * Enhanced with avatar_context for progressive personalization (P6.5)
+ * NOW includes intro_selections for deeper personalization based on
+ * what categories (career, relationships, etc.) and patterns the user
+ * selected BEFORE the 8-question assessment
  *
- * @param data - User and assessment data
+ * @param data - User and assessment data including intro selections
  * @returns Promise<void>
  *
  * Webhook URL: POST https://n8n-n8n.vq00fr.easypanel.host/webhook/first-protocol-generation
@@ -410,6 +492,11 @@ async function triggerFirstProtocolGeneration(data: {
   user_name: string;
   collision_pattern: string;
   assessment_id?: string;
+  // NEW: Intro selections from pre-assessment screens
+  intro_selections?: {
+    categories: string[];  // e.g., ['career', 'relationships', 'health']
+    patterns: string[];    // e.g., ['past_prison', 'success_sabotage']
+  };
 }): Promise<void> {
   const webhookUrl = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/first-protocol-generation';
 
@@ -439,6 +526,10 @@ async function triggerFirstProtocolGeneration(data: {
       hasAvatar: !!avatarContext.avatar_context.avatar_name,
       assessmentsCompleted: avatarContext.assessments_completed,
       streakCount: avatarContext.practice_insights.streak_count,
+      // NEW: Log intro selections for debugging
+      hasIntroSelections: !!data.intro_selections,
+      introCategories: data.intro_selections?.categories || [],
+      introPatterns: data.intro_selections?.patterns || [],
     });
   } catch (contextError) {
     console.warn('[identityCollisionService] Could not build avatar context, using basic payload:', contextError);

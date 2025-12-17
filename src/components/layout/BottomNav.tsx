@@ -11,17 +11,16 @@ interface NavTab {
 }
 
 const tabs: NavTab[] = [
-  { icon: Home, label: 'Dashboard', path: '/dashboard' },
-  { icon: Map, label: 'Roadmap', path: '/roadmap' },
-  { icon: MessageSquare, label: 'Chat', path: '/chat' },
-  { icon: Calendar, label: 'Model Week', path: '/model-week' },
+  { icon: Home, label: 'Hub', path: '/mind-insurance' },
+  { icon: Shield, label: 'Coverage', path: '/mind-insurance/coverage' },
+  { icon: MessageSquare, label: 'Chat', path: '/mind-insurance/chat' },
+  { icon: BookOpen, label: 'Practice', path: '/mind-insurance/practice' },
   { icon: MoreHorizontal, label: 'More', path: null },
 ];
 
 const moreMenuItems = [
-  { icon: Shield, label: 'Mind Insurance', path: '/mind-insurance', description: 'Daily PROTECT practice' },
-  { icon: DollarSign, label: 'ME Wealth Builder', path: '/wealth', description: 'Coming Soon', disabled: true },
-  { icon: BookOpen, label: 'Resources', path: '/resources', description: 'Training materials' },
+  { icon: Map, label: 'Championship', path: '/mind-insurance/championship', description: 'Track your progress' },
+  { icon: DollarSign, label: 'Vault', path: '/mind-insurance/vault', description: 'Your evidence' },
   { icon: Settings, label: 'Settings', path: '/settings', description: 'App preferences' },
   { icon: User, label: 'Profile', path: '/profile', description: 'Your account' },
 ];

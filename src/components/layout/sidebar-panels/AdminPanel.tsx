@@ -150,7 +150,7 @@ export function AdminPanel() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Back to App">
-              <Link to="/dashboard" onClick={handleClick}>
+              <Link to="/mind-insurance" onClick={handleClick}>
                 <Home className="h-4 w-4" />
                 <span>Back to App</span>
               </Link>

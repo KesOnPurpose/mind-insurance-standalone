@@ -8,12 +8,20 @@ import { supabase } from "@/integrations/supabase/client";
 // Used by IdentityCollisionGuard to enforce assessment-first flow for Mind Insurance
 // ============================================================================
 
+export interface IntroSelections {
+  categories: string[];  // e.g., ['career', 'relationships', 'health']
+  patterns: string[];    // e.g., ['past_prison', 'success_sabotage']
+  selected_at?: string;  // ISO timestamp
+}
+
 export interface IdentityCollisionStatus {
   hasPattern: boolean;
   primaryPattern: 'past_prison' | 'success_sabotage' | 'compass_crisis' | null;
   confidence?: number;
   impactArea?: string;
   source: 'user_profiles' | 'avatar_assessments' | 'identity_collision_assessments' | null;
+  // NEW: Intro selections from pre-assessment screens
+  introSelections?: IntroSelections;
 }
 
 export function useIdentityCollisionStatus(userId: string | undefined) {
@@ -60,12 +68,21 @@ export function useIdentityCollisionStatus(userId: string | undefined) {
               }
             }
 
+            // Extract intro_selections if present (from pre-assessment screens)
+            const introSelectionsRaw = patterns.intro_selections as Record<string, unknown> | undefined;
+            const introSelections: IntroSelections | undefined = introSelectionsRaw ? {
+              categories: (introSelectionsRaw.categories as string[]) || [],
+              patterns: (introSelectionsRaw.patterns as string[]) || [],
+              selected_at: introSelectionsRaw.selected_at as string | undefined,
+            } : undefined;
+
             return {
               hasPattern: true,
               primaryPattern: normalizedPattern,
               confidence,
               impactArea: patterns.impact_area as string | undefined,
               source: 'user_profiles',
+              introSelections,
             };
           }
         }

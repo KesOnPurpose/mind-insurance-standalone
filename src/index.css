@@ -169,11 +169,7 @@ All colors MUST be HSL.
     @apply focus:ring-2 focus:ring-[#05c3dd] focus:border-[#05c3dd] focus:outline-none;
   }
 
-  /* Dark Card Styles */
-  .mi-card {
-    @apply bg-[#132337] border border-[#05c3dd]/20 rounded-lg;
-    @apply transition-all duration-200;
-  }
+  /* Dark Card Styles - main .mi-card defined OUTSIDE @layer for specificity */
 
   .mi-card-hover:hover {
     @apply border-[#05c3dd]/50 shadow-lg;
@@ -201,6 +197,7 @@ All colors MUST be HSL.
     @apply bg-[#fac832] hover:bg-[#e0b52d] text-[#0A1628] font-medium;
     @apply transition-all duration-200 rounded-md;
   }
+
 
   /* Play Button Style for Recording Vault */
   .mi-play-btn {
@@ -404,6 +401,33 @@ div.fixed.mi-sidebar-dark,
 .peer:has(.mi-sidebar-dark) div[class*="border-r"],
 div:has(> .mi-sidebar-dark)[class*="border-r"] {
   border-right-color: rgba(5, 195, 221, 0.2) !important;
+}
+
+/* ================================================
+   MI Card Dark Theme - OUTSIDE @layer for max specificity
+   This ensures Card borders are dark even when using
+   ShadCN Card component with Tailwind's border class
+   ================================================ */
+
+/* Target the mi-card class with high specificity */
+.mi-card,
+div.mi-card,
+.mi-card.rounded-lg,
+div.mi-card.rounded-lg {
+  background-color: #0D1B2A !important;
+  border-color: rgba(5, 195, 221, 0.2) !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+}
+
+
+/* Gold variant for special cards */
+.mi-card-gold,
+div.mi-card-gold {
+  background-color: #0D1B2A !important;
+  border-color: rgba(250, 200, 50, 0.3) !important;
+  border-style: solid !important;
+  border-width: 1px !important;
 }
 
 /* ================================================

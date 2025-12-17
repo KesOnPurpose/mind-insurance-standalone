@@ -123,8 +123,8 @@ export function MIOInsightMessage({
             ? "bg-[#05c3dd] text-white"
             : "bg-[#132337] border-[#05c3dd]/20 text-white",
           isBreakthrough && !isUser && "border-2 border-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.2)]",
-          isBonusInsight && !isUser && "border border-cyan-400/50 shadow-[0_0_12px_rgba(5,195,221,0.15)]",
-          rewardStyling?.animate && "animate-pulse"
+          isBonusInsight && !isUser && "border border-cyan-400/50 shadow-[0_0_12px_rgba(5,195,221,0.15)]"
+          // Removed animate-pulse - too distracting for users
         )}
       >
         {/* MIO Header */}

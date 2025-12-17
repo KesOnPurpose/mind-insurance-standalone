@@ -1,20 +1,20 @@
 /**
  * AssessmentQuestionCard Component
- * Premium single-question display with phase-specific theming
+ * $100M Premium Design - Luxury Assessment Experience
  *
- * Features:
- * - Phase-specific gradient backgrounds
- * - Radio options with selection animations
- * - Phase badge with icon
- * - Special treatment for Q4 (primary pattern detector)
+ * Design Philosophy:
+ * - Glass morphism with subtle depth
+ * - Phase-specific accent colors (not backgrounds)
+ * - Elegant micro-interactions
+ * - Premium typography and spacing
+ * - Subtle glow effects on selection
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Check, BarChart3, Target, TrendingUp, Link2, Zap, Compass } from 'lucide-react';
+import { Check, BarChart3, Target, TrendingUp, Link2, Zap, Compass, Sparkles } from 'lucide-react';
 
 interface QuestionOption {
   id: string;
@@ -45,44 +45,40 @@ type Phase = 'foundation' | 'pattern' | 'impact';
 interface PhaseConfig {
   label: string;
   icon: React.ReactNode;
-  gradient: string;
-  borderColor: string;
-  textColor: string;
-  badgeColor: string;
+  accentColor: string;
+  glowColor: string;
+  badgeBg: string;
 }
 
 const PHASE_CONFIGS: Record<Phase, PhaseConfig> = {
   foundation: {
     label: 'FOUNDATION',
-    icon: <BarChart3 className="w-4 h-4" />,
-    gradient: 'from-violet-900/80 via-violet-800/60 to-slate-900/90',
-    borderColor: 'border-violet-500/50',
-    textColor: 'text-violet-400',
-    badgeColor: 'bg-violet-500/30',
+    icon: <BarChart3 className="w-3.5 h-3.5" />,
+    accentColor: 'text-violet-400',
+    glowColor: 'shadow-violet-500/20',
+    badgeBg: 'bg-violet-500/10 border-violet-500/30',
   },
   pattern: {
     label: 'PATTERN DETECTION',
-    icon: <Target className="w-4 h-4" />,
-    gradient: 'from-amber-900/80 via-amber-800/60 to-slate-900/90',
-    borderColor: 'border-amber-500/50',
-    textColor: 'text-amber-400',
-    badgeColor: 'bg-amber-500/30',
+    icon: <Target className="w-3.5 h-3.5" />,
+    accentColor: 'text-amber-400',
+    glowColor: 'shadow-amber-500/20',
+    badgeBg: 'bg-amber-500/10 border-amber-500/30',
   },
   impact: {
     label: 'IMPACT ASSESSMENT',
-    icon: <TrendingUp className="w-4 h-4" />,
-    gradient: 'from-cyan-900/80 via-cyan-800/60 to-slate-900/90',
-    borderColor: 'border-cyan-500/50',
-    textColor: 'text-cyan-400',
-    badgeColor: 'bg-cyan-500/30',
+    icon: <TrendingUp className="w-3.5 h-3.5" />,
+    accentColor: 'text-mi-cyan',
+    glowColor: 'shadow-mi-cyan/20',
+    badgeBg: 'bg-mi-cyan/10 border-mi-cyan/30',
   },
 };
 
 // Pattern icons for Q4 options
 const PATTERN_ICONS: Record<string, React.ReactNode> = {
-  a: <Link2 className="w-4 h-4 text-violet-400" />, // Past Prison
-  b: <Compass className="w-4 h-4 text-cyan-400" />, // Compass Crisis
-  c: <Zap className="w-4 h-4 text-amber-400" />, // Success Sabotage
+  a: <Link2 className="w-4 h-4 text-violet-400" />,
+  b: <Compass className="w-4 h-4 text-cyan-400" />,
+  c: <Zap className="w-4 h-4 text-amber-400" />,
   d: null,
 };
 
@@ -95,26 +91,33 @@ function getPhaseForIndex(index: number): Phase {
 // Animation variants for card entrance/exit
 const cardVariants = {
   enter: (direction: string) => ({
-    x: direction === 'forward' ? 300 : -300,
+    x: direction === 'forward' ? 100 : -100,
     opacity: 0,
+    scale: 0.98,
   }),
   center: {
     x: 0,
     opacity: 1,
+    scale: 1,
   },
   exit: (direction: string) => ({
-    x: direction === 'forward' ? -300 : 300,
+    x: direction === 'forward' ? -100 : 100,
     opacity: 0,
+    scale: 0.98,
   }),
 };
 
-// Animation variants for options
+// Animation variants for options - staggered reveal
 const optionVariants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, x: -20 },
   visible: (i: number) => ({
     opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.05, duration: 0.2 },
+    x: 0,
+    transition: {
+      delay: 0.1 + i * 0.08,
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    },
   }),
 };
 
@@ -138,47 +141,109 @@ export function AssessmentQuestionCard({
       initial="enter"
       animate="center"
       exit="exit"
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
       className="w-full"
     >
-      <Card
-        className={`bg-gradient-to-br ${phaseConfig.gradient} ${phaseConfig.borderColor}
-          border backdrop-blur-xl p-4 sm:p-6 rounded-2xl shadow-xl shadow-black/30
-          ${isKeyQuestion ? 'ring-2 ring-mi-gold/40 shadow-mi-gold/20' : ''}`}
+      {/* Main Card - Glass morphism effect */}
+      <div
+        className={`
+          relative overflow-hidden
+          bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+          backdrop-blur-xl
+          border border-white/[0.08]
+          rounded-3xl
+          p-5 sm:p-7
+          shadow-2xl shadow-black/40
+          ${isKeyQuestion ? 'ring-1 ring-mi-gold/30' : ''}
+        `}
       >
-        {/* Phase Badge */}
-        <div className="flex items-center justify-between mb-4">
-          <div className={`flex items-center gap-2 ${phaseConfig.badgeColor} px-2.5 py-1 rounded-full`}>
-            <span className={phaseConfig.textColor}>{phaseConfig.icon}</span>
-            <span className={`text-[10px] sm:text-xs font-semibold tracking-wider ${phaseConfig.textColor}`}>
-              {phaseConfig.label}
-            </span>
+        {/* Subtle gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/20 pointer-events-none rounded-3xl" />
+
+        {/* Phase accent line at top */}
+        <div className={`absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent ${
+          phase === 'foundation' ? 'via-violet-500/60' :
+          phase === 'pattern' ? 'via-amber-500/60' :
+          'via-mi-cyan/60'
+        } to-transparent`} />
+
+        {/* Content */}
+        <div className="relative z-10">
+          {/* Header - Phase Badge & Progress */}
+          <div className="flex items-center justify-between mb-5">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className={`
+                flex items-center gap-2
+                ${phaseConfig.badgeBg}
+                border
+                px-3 py-1.5
+                rounded-full
+              `}
+            >
+              <span className={phaseConfig.accentColor}>{phaseConfig.icon}</span>
+              <span className={`text-[10px] font-semibold tracking-widest ${phaseConfig.accentColor}`}>
+                {phaseConfig.label}
+              </span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-2"
+            >
+              <div className="flex gap-1">
+                {Array.from({ length: totalQuestions }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      i < questionIndex ? 'bg-mi-cyan' :
+                      i === questionIndex ? 'bg-white' :
+                      'bg-white/20'
+                    }`}
+                  />
+                ))}
+              </div>
+            </motion.div>
           </div>
-          <span className="text-[10px] sm:text-xs text-gray-500">
-            {questionIndex + 1}/{totalQuestions}
-          </span>
-        </div>
 
-        {/* Question Title */}
-        <h2 className="text-lg sm:text-xl font-bold text-white mb-1.5 leading-snug">
-          {question.title}
-        </h2>
-
-        {/* Subtitle */}
-        {question.subtitle && (
-          <p className={`text-xs sm:text-sm mb-4 ${isKeyQuestion ? 'text-mi-gold' : 'text-gray-400'}`}>
-            {isKeyQuestion ? 'This is the key question — take your time' : question.subtitle}
-          </p>
-        )}
-
-        {/* Options */}
-        {question.type === 'single' && question.options && (
-          <RadioGroup
-            value={selectedAnswer || ''}
-            onValueChange={onAnswer}
-            className="space-y-2"
+          {/* Question Title */}
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="text-xl sm:text-2xl font-semibold text-white mb-2 leading-tight tracking-tight"
           >
-            <AnimatePresence mode="wait">
+            {question.title}
+          </motion.h2>
+
+          {/* Subtitle */}
+          {question.subtitle && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className={`text-sm mb-6 ${
+                isKeyQuestion
+                  ? 'text-mi-gold/90 flex items-center gap-2'
+                  : 'text-white/50'
+              }`}
+            >
+              {isKeyQuestion && <Sparkles className="w-4 h-4" />}
+              {isKeyQuestion ? 'This is the key question — take your time' : question.subtitle}
+            </motion.p>
+          )}
+
+          {/* Options */}
+          {question.type === 'single' && question.options && (
+            <RadioGroup
+              value={selectedAnswer || ''}
+              onValueChange={onAnswer}
+              className="space-y-3"
+            >
               {question.options.map((option, index) => {
                 const isSelected = selectedAnswer === option.id;
                 const showPatternIcon = isKeyQuestion && PATTERN_ICONS[option.id];
@@ -192,51 +257,92 @@ export function AssessmentQuestionCard({
                     animate="visible"
                   >
                     <div
-                      className={`relative flex items-start gap-2.5 p-3 rounded-lg cursor-pointer transition-all duration-200
-                        ${
-                          isSelected
-                            ? `bg-mi-cyan/30 border border-mi-cyan/60 shadow-lg shadow-mi-cyan/20`
-                            : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/25'
-                        }`}
                       onClick={() => onAnswer(option.id)}
+                      className={`
+                        relative group cursor-pointer
+                        flex items-center gap-4
+                        p-4 rounded-2xl
+                        transition-all duration-300 ease-out
+                        ${isSelected
+                          ? `
+                            bg-gradient-to-r from-mi-cyan/20 to-mi-cyan/10
+                            border border-mi-cyan/40
+                            shadow-lg ${phaseConfig.glowColor}
+                          `
+                          : `
+                            bg-white/[0.03]
+                            border border-white/[0.06]
+                            hover:bg-white/[0.06]
+                            hover:border-white/[0.12]
+                          `
+                        }
+                      `}
                     >
-                      {/* Radio Button */}
-                      <div className="mt-0.5 flex-shrink-0">
+                      {/* Custom Radio Circle */}
+                      <div className="flex-shrink-0">
+                        <div className={`
+                          w-5 h-5 rounded-full
+                          border-2 transition-all duration-300
+                          flex items-center justify-center
+                          ${isSelected
+                            ? 'border-mi-cyan bg-mi-cyan'
+                            : 'border-white/30 group-hover:border-white/50'
+                          }
+                        `}>
+                          <AnimatePresence>
+                            {isSelected && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                              >
+                                <Check className="w-3 h-3 text-mi-navy" strokeWidth={3} />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        {/* Hidden actual radio for accessibility */}
                         <RadioGroupItem
                           value={option.id}
                           id={`${question.id}-${option.id}`}
-                          className={`border-2 ${
-                            isSelected ? 'border-mi-cyan text-mi-cyan' : 'border-gray-500'
-                          }`}
+                          className="sr-only"
                         />
                       </div>
 
                       {/* Pattern Icon (Q4 only) */}
                       {showPatternIcon && (
-                        <div className="flex-shrink-0 mt-0.5">{PATTERN_ICONS[option.id]}</div>
+                        <div className="flex-shrink-0 opacity-70">
+                          {PATTERN_ICONS[option.id]}
+                        </div>
                       )}
 
                       {/* Option Text */}
                       <Label
                         htmlFor={`${question.id}-${option.id}`}
-                        className={`flex-1 cursor-pointer text-sm leading-snug ${
-                          isSelected ? 'text-white font-medium' : 'text-gray-300'
-                        }`}
+                        className={`
+                          flex-1 cursor-pointer text-sm sm:text-base leading-relaxed
+                          transition-colors duration-300
+                          ${isSelected
+                            ? 'text-white font-medium'
+                            : 'text-white/70 group-hover:text-white/90'
+                          }
+                        `}
                       >
                         {option.text}
                       </Label>
 
-                      {/* Selected Checkmark */}
+                      {/* Selection indicator arrow */}
                       <AnimatePresence>
                         {isSelected && (
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
                             className="flex-shrink-0"
                           >
-                            <div className="w-6 h-6 rounded-full bg-mi-cyan flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
+                            <div className="w-8 h-8 rounded-full bg-mi-cyan/20 flex items-center justify-center">
+                              <Check className="w-4 h-4 text-mi-cyan" />
                             </div>
                           </motion.div>
                         )}
@@ -245,10 +351,10 @@ export function AssessmentQuestionCard({
                   </motion.div>
                 );
               })}
-            </AnimatePresence>
-          </RadioGroup>
-        )}
-      </Card>
+            </RadioGroup>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }

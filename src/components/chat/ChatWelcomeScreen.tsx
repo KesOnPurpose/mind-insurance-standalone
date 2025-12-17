@@ -22,9 +22,9 @@ const QUICK_ACTIONS: Record<string, string[]> = {
     "Tell me about your journey"
   ],
   'mind-insurance': [
+    "ChatGPT VS MIO?",
     "Help me see my patterns",
     "Why do I keep repeating mistakes?",
-    "Explain the PROTECT practice",
     "What is identity collision?"
   ],
   'me-wealth': [

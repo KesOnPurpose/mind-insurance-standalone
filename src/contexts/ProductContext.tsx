@@ -32,8 +32,8 @@ const productConfig: Record<ProductType, ProductConfig> = {
     color: 'text-primary',
     bgGradient: 'from-primary/10 to-primary/5',
     borderColor: 'border-primary/30',
-    available: true,
-    route: '/dashboard',
+    available: false,
+    route: '/mind-insurance',
   },
   'mind-insurance': {
     id: 'mind-insurance',

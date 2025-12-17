@@ -1,18 +1,18 @@
 /**
- * MIO Insights Pinned Item
+ * MIO Insights Pinned Item - Minimal Elegance Design
  *
  * Pinned item at the top of the conversation list for MIO Insights Thread.
  * Features:
- * - Special MIO gradient styling
- * - Unread count badge
- * - Last message preview
- * - Click to open MIO Insights Thread
+ * - Clean, premium design without emoji clutter
+ * - Contextual preview messages instead of raw content
+ * - Progress bar showing insights collected
+ * - Subtle hover effects (no constant animations)
  */
 
-import { Pin, Sparkles, Bell } from 'lucide-react';
+import { Pin, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MIOInsightsThread, MIOInsightsMessage } from '@/types/mio-insights';
-import { formatMessageTime, getRewardBadgeStyling } from '@/services/mioInsightsThreadService';
+import { formatMessageTime } from '@/services/mioInsightsThreadService';
 import { cn } from '@/lib/utils';
 
 interface MIOInsightsPinnedItemProps {
@@ -23,6 +23,26 @@ interface MIOInsightsPinnedItemProps {
   isLoading: boolean;
   onClick: () => void;
   userTimezone?: string;
+}
+
+// Clean preview text - no emojis, no raw markdown
+function getCleanPreviewText(
+  lastMessage: MIOInsightsMessage | undefined,
+  thread: MIOInsightsThread | null
+): string {
+  if (!lastMessage) return 'Complete a practice to receive insights';
+
+  if (lastMessage.role === 'mio') {
+    if (lastMessage.reward_tier === 'pattern_breakthrough') {
+      return 'New breakthrough insight waiting';
+    }
+    if (lastMessage.reward_tier === 'bonus_insight') {
+      return 'Bonus insight available';
+    }
+    return 'Your latest insight is ready';
+  }
+
+  return 'New insight available';
 }
 
 export function MIOInsightsPinnedItem({
@@ -39,20 +59,6 @@ export function MIOInsightsPinnedItem({
     return null;
   }
 
-  // Get reward tier styling for last message
-  const rewardStyling = lastMessage?.reward_tier
-    ? getRewardBadgeStyling(lastMessage.reward_tier as any)
-    : null;
-
-  // Get section badge for last message
-  const sectionBadge = lastMessage?.section_type ? {
-    PRO: { label: 'Champion Setup', color: 'bg-yellow-500' },
-    TE: { label: 'Pit Stop', color: 'bg-cyan-500' },
-    CT: { label: 'Victory Lap', color: 'bg-purple-500' },
-    reengagement: { label: 'Check-in', color: 'bg-orange-500' },
-    breakthrough: { label: 'Breakthrough', color: 'bg-gradient-to-r from-yellow-400 to-purple-500' }
-  }[lastMessage.section_type] : null;
-
   return (
     <div className="px-2 mb-2">
       <button
@@ -65,10 +71,10 @@ export function MIOInsightsPinnedItem({
             : "border-[#05c3dd]/30 hover:border-[#05c3dd]/60 hover:shadow-[0_0_8px_rgba(5,195,221,0.2)]"
         )}
       >
-        {/* MIO Avatar */}
+        {/* MIO Avatar - Clean single icon */}
         <div className="relative flex-shrink-0">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
             style={{ background: 'linear-gradient(135deg, #05c3dd 0%, #8b5cf6 100%)' }}
           >
             <Sparkles className="w-5 h-5" />
@@ -94,14 +100,13 @@ export function MIOInsightsPinnedItem({
                 </span>
               )}
 
-              {/* Unread badge */}
+              {/* Unread badge - no pulse animation for calmer UI */}
               {unreadCount > 0 && (
                 <Badge
                   variant="destructive"
                   className={cn(
                     "min-w-[18px] h-[18px] px-1 text-[10px] font-bold",
-                    "bg-[#05c3dd] hover:bg-[#05c3dd] text-white border-0",
-                    "animate-pulse"
+                    "bg-[#05c3dd] hover:bg-[#05c3dd] text-white border-0"
                   )}
                 >
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -110,37 +115,27 @@ export function MIOInsightsPinnedItem({
             </div>
           </div>
 
-          {/* Preview text */}
+          {/* Clean preview text */}
           <div className="mt-1">
             {isLoading ? (
               <div className="h-4 bg-gray-700/50 rounded animate-pulse w-3/4" />
-            ) : lastMessage ? (
-              <p className="text-xs text-gray-400 truncate">
-                {lastMessage.role === 'mio' && rewardStyling && (
-                  <span className="mr-1">{rewardStyling.icon}</span>
-                )}
-                {lastMessage.content.substring(0, 60)}
-                {lastMessage.content.length > 60 ? '...' : ''}
-              </p>
             ) : (
-              <p className="text-xs text-gray-500 italic">
-                Complete a practice section to receive MIO insights
+              <p className="text-xs text-gray-400">
+                {getCleanPreviewText(lastMessage, thread)}
               </p>
             )}
           </div>
 
-          {/* Stats row */}
+          {/* Progress bar + total count */}
           {thread && (
-            <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
-              <span>{thread.total_insights || 0} insights</span>
-              {thread.current_engagement_streak > 0 && (
-                <>
-                  <span>•</span>
-                  <span className="text-[#05c3dd]">
-                    {thread.current_engagement_streak} day streak
-                  </span>
-                </>
-              )}
+            <div className="mt-2 flex items-center gap-2 text-[10px]">
+              <div className="flex-1 h-1 bg-gray-700/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#05c3dd] to-[#8b5cf6] rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min((thread.total_insights || 0) / 50 * 100, 100)}%` }}
+                />
+              </div>
+              <span className="text-gray-500">{thread.total_insights || 0} total</span>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, User, MessageSquare, Shield } from 'lucide-react';
+import { Settings, LogOut, User, MessageSquare, Shield, TrendingUp, FolderArchive } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -18,7 +18,6 @@ import { useConversationsContext } from '@/contexts/ConversationsContext';
 import { useConversationContext } from '@/contexts/ConversationContext';
 import { useProduct, ProductType } from '@/contexts/ProductContext';
 import { ConversationList } from './ConversationList';
-import { SidebarAppSwitcher } from '@/components/layout/SidebarAppSwitcher';
 import { cn } from '@/lib/utils';
 import { COACHES } from '@/types/coach';
 
@@ -52,6 +51,13 @@ const PRODUCT_BRANDING: Record<ProductType, {
     chatRoute: '/wealth/chat',
   },
 };
+
+// Navigation items for Mind Insurance sidebar
+const MI_NAV_ITEMS = [
+  { path: '/mind-insurance/coverage', label: 'Coverage Center', icon: TrendingUp },
+  { path: '/mind-insurance', label: 'Practice Center', icon: Shield },
+  { path: '/mind-insurance/vault', label: 'My Evidence', icon: FolderArchive },
+];
 
 export function ChatSidebar() {
   const { user, signOut } = useAuth();
@@ -194,89 +200,43 @@ export function ChatSidebar() {
 
         <SidebarSeparator className={cn("my-2 shrink-0", isMindInsurance && "!bg-mi-cyan/20")} />
 
-        {/* Fixed Navigation Section - compact, scrolls if needed */}
-        <div className="flex-1 min-h-0 overflow-y-auto max-h-[280px]">
-          {/* Apps Section */}
-          <div className={cn(
-            "text-xs font-medium px-2 py-2",
-            isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-          )}>
-            Apps
+        {/* Mind Insurance Navigation Section (only for MI) */}
+        {isMindInsurance && (
+          <div className="px-2 py-2">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+              Mind Insurance
+            </div>
+            <nav className="space-y-1">
+              {MI_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <button
+                    key={path}
+                    onClick={() => {
+                      navigate(path);
+                      if (isMobile) setOpenMobile(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+                      isActive
+                        ? "bg-mi-cyan/20 text-mi-cyan border-l-2 border-mi-cyan"
+                        : "text-gray-400 hover:bg-mi-navy hover:text-white"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-          <SidebarAppSwitcher />
+        )}
 
-          <SidebarSeparator className={cn("my-3", isMindInsurance && "!bg-mi-cyan/20")} />
-
-          {/* Navigation Section */}
-          <div className={cn(
-            "text-xs font-medium px-2 py-2",
-            isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-          )}>
-            Navigation
-          </div>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Dashboard"
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
-              )}
-            >
-              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Roadmap"
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
-              )}
-            >
-              <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
-                <Map className="h-4 w-4" />
-                <span>Roadmap</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Resources"
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
-              )}
-            >
-              <Link to="/resources" onClick={() => isMobile && setOpenMobile(false)}>
-                <BookOpen className="h-4 w-4" />
-                <span>Resources</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Model Week"
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
-              )}
-            >
-              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
-                <Calendar className="h-4 w-4" />
-                <span>Model Week</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        <SidebarSeparator className={cn("my-2", isMindInsurance && "!bg-mi-cyan/20")} />
+        <SidebarSeparator className={cn("my-2 shrink-0", isMindInsurance && "!bg-mi-cyan/20")} />
 
         {/* Account Section */}
-        <div className={cn(
+        <div className="flex-1 min-h-0 overflow-y-auto max-h-[280px]">
+          <div className={cn(
           "text-xs font-medium px-2 py-1",
           isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
         )}>

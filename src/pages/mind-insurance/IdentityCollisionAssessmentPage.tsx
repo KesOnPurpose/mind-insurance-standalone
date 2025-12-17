@@ -253,9 +253,12 @@ function loadProgress(): { answers: Record<string, string>; step: number } {
   try {
     const savedAnswers = localStorage.getItem(STORAGE_KEY);
     const savedStep = localStorage.getItem(STEP_KEY);
+    const parsedStep = savedStep ? parseInt(savedStep, 10) : 0;
+    // Ensure step is within valid bounds (0 to QUESTIONS.length - 1)
+    const validStep = Math.max(0, Math.min(parsedStep, QUESTIONS.length - 1));
     return {
       answers: savedAnswers ? JSON.parse(savedAnswers) : {},
-      step: savedStep ? parseInt(savedStep, 10) : 0,
+      step: validStep,
     };
   } catch (e) {
     return { answers: {}, step: 0 };
@@ -343,10 +346,11 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
     },
   });
 
-  // Current question
-  const currentQuestion = QUESTIONS[currentStep];
-  const isLastQuestion = currentStep === QUESTIONS.length - 1;
-  const hasCurrentAnswer = Boolean(answers[currentQuestion?.id]);
+  // Current question - ensure always valid even if currentStep is out of bounds
+  const safeCurrentStep = Math.max(0, Math.min(currentStep, QUESTIONS.length - 1));
+  const currentQuestion = QUESTIONS[safeCurrentStep];
+  const isLastQuestion = safeCurrentStep === QUESTIONS.length - 1;
+  const hasCurrentAnswer = Boolean(answers[currentQuestion.id]);
 
   // Navigation handlers
   const goToNextStep = useCallback(() => {
@@ -505,10 +509,10 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
 
   // Render assessment
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-mi-navy via-mi-navy-light to-[#0d1a2d] flex flex-col overflow-hidden">
+    <div className="min-h-[100dvh] bg-mi-navy flex flex-col overflow-hidden">
       {/* Journey Progress Header */}
       <div className="flex-shrink-0 bg-mi-navy/90 backdrop-blur-lg border-b border-white/10">
-        <AssessmentJourneyProgress currentStep={currentStep} totalSteps={QUESTIONS.length} />
+        <AssessmentJourneyProgress currentStep={safeCurrentStep} totalSteps={QUESTIONS.length} />
       </div>
 
       {/* Question Content */}
@@ -518,7 +522,7 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
             {currentQuestion.type === 'slider' ? (
               <AssessmentSliderQuestion
                 key={currentQuestion.id}
-                questionIndex={currentStep}
+                questionIndex={safeCurrentStep}
                 totalQuestions={QUESTIONS.length}
                 title={currentQuestion.title}
                 subtitle={currentQuestion.subtitle}
@@ -531,7 +535,7 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
               <AssessmentQuestionCard
                 key={currentQuestion.id}
                 question={currentQuestion}
-                questionIndex={currentStep}
+                questionIndex={safeCurrentStep}
                 totalQuestions={QUESTIONS.length}
                 selectedAnswer={answers[currentQuestion.id] || null}
                 onAnswer={handleAnswer}

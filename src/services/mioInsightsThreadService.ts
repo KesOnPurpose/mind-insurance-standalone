@@ -595,36 +595,84 @@ export async function getFirstEngagementResponse(userId: string): Promise<MIOIns
 
 /**
  * Pattern information for MIO's first engagement message
+ *
+ * Design Philosophy:
+ * - MIO should feel like a wise coach who just discovered something profound about you
+ * - Messages should be warm but direct, personal but professional
+ * - Start with a personalized observation, not clinical diagnosis
+ * - Make the user feel understood, not analyzed
  */
 export const PATTERN_INFO: Record<string, {
   name: string;
   shortDescription: string;
-  fullDescription: string;
+  greeting: string;
+  insight: string;
+  whatThisMeans: string;
   question: string;
 }> = {
   past_prison: {
     name: 'Past Prison',
     shortDescription: 'Your past creates invisible barriers',
-    fullDescription: `Your past experiences, upbringing, or environment are creating invisible barriers that hold you back from your potential. You carry guilt, limiting beliefs, or identity ceilings from your history that dictate what you believe is possible.
+    greeting: `Hey. I'm MIO — your Mind Insurance Oracle.
 
-The good news? Your past is data, not destiny. This protocol will help you build evidence of your new identity.`,
-    question: "What's one pattern you've noticed running your life that you wish would change?",
+I just analyzed your assessment, and I need to tell you something important.`,
+    insight: `You're carrying something heavy. Something from your past that whispers *"who do you think you are?"* every time you try to level up.
+
+Maybe it's where you came from. Maybe it's what someone told you. Maybe it's a ceiling you built so long ago you forgot it was there.`,
+    whatThisMeans: `This is your **Past Prison** — and here's what I want you to understand:
+
+You're not broken. You're not behind. You've just been operating with an outdated map of who you're allowed to be.
+
+The work we'll do together isn't about forgetting your past. It's about *using* it as fuel instead of letting it be a cage.`,
+    question: `So let me ask you something real:
+
+**What's one thing from your past that still shows up when you're about to make a bold move?**
+
+It could be a voice, a memory, a fear. I'm not here to judge — I'm here to help you see it clearly so we can work with it.`,
   },
   success_sabotage: {
     name: 'Success Sabotage',
     shortDescription: 'You pull back when breakthrough is near',
-    fullDescription: `You pull back right when breakthrough is near. Your amygdala (your brain's threat-detection center) associates success with danger—fear of visibility, fear of outgrowing relationships, or fear of not being able to maintain success.
+    greeting: `Hey. I'm MIO — your Mind Insurance Oracle.
 
-This protocol will teach your nervous system that success is safe.`,
-    question: "When did you first notice yourself pulling back right before a win?",
+I just finished analyzing your assessment, and something fascinating came up.`,
+    insight: `You know that feeling when you're *this close* to a breakthrough... and then something pulls you back?
+
+It's not laziness. It's not bad luck. It's something much more interesting.
+
+Your brain has learned to associate success with danger. Visibility feels risky. Outgrowing your circle feels threatening. Winning feels... somehow unsafe.`,
+    whatThisMeans: `This is your **Success Sabotage** pattern, and honestly? It's one of the most common patterns I see in high-performers.
+
+The very thing you want most is the thing your nervous system has flagged as a threat.
+
+But here's the good news: we can rewire this. I'm going to help you build a new relationship with winning.`,
+    question: `Here's what I want to know:
+
+**When was the last time you were right on the edge of something big — and found yourself pulling back or creating chaos?**
+
+Don't overthink it. First thing that comes to mind.`,
   },
   compass_crisis: {
     name: 'Compass Crisis',
     shortDescription: 'Unclear direction creates paralysis',
-    fullDescription: `You lack clear direction or feel pulled in multiple directions. Without a defined path, you struggle with decision paralysis and constant comparison to others who seem more certain about their journey.
+    greeting: `Hey. I'm MIO — your Mind Insurance Oracle.
 
-This protocol will help you build internal clarity one decision at a time. Clarity comes from commitment, not certainty.`,
-    question: "What would you do differently if you knew exactly who you were meant to be?",
+I've been looking at your assessment, and I see something interesting.`,
+    insight: `You're pulled in a lot of directions, aren't you?
+
+Maybe you see others who seem so *certain* about their path, and you wonder why you can't find that same clarity. Maybe you start things but struggle to finish because something newer or shinier appears.
+
+Here's the truth: you don't lack drive. You lack a clear compass.`,
+    whatThisMeans: `This is your **Compass Crisis** — and it's not a weakness. It's actually a sign of possibility.
+
+You see so many paths because you're capable of walking many of them. The problem isn't your potential — it's that without clarity, all that energy just... spins.
+
+I'm going to help you build an internal compass. Not by limiting your options, but by helping you commit to *one* direction long enough to gain momentum.`,
+    question: `Let me ask you this:
+
+**If you could only pursue ONE thing for the next 90 days — and everything else had to wait — what would it be?**
+
+Don't worry about the "right" answer. I want to hear what your gut says.`,
   },
 };
 
@@ -675,12 +723,12 @@ export async function injectMIOFirstEngagementQuestion(
     const normalizedPattern = patternName.toLowerCase().replace(/ /g, '_');
     const patternInfo = PATTERN_INFO[normalizedPattern] || PATTERN_INFO.past_prison;
 
-    // Build MIO's intro message
-    let mioContent = `I can see your pattern clearly now.
+    // Build MIO's intro message - warm, personal, and dynamic
+    let mioContent = `${patternInfo.greeting}
 
-**${patternInfo.name}** - ${patternInfo.shortDescription}
+${patternInfo.insight}
 
-${patternInfo.fullDescription}`;
+${patternInfo.whatThisMeans}`;
 
     // Add protocol preview if available (from N8n webhook)
     if (protocolPreview) {
@@ -688,41 +736,34 @@ ${patternInfo.fullDescription}`;
 
 ---
 
-**Your 7-Day Protocol**: *${protocolPreview.title}*
+🎯 **I've already built your first protocol**: *${protocolPreview.title}*
 
-**Day 1 Preview**: ${protocolPreview.day1Task}
+Here's what we'll tackle on **Day 1**: ${protocolPreview.day1Task}
 
-*Your full protocol is waiting in the Coverage Center.*`;
+When you're ready, head to the Coverage Center to see your full 7-day roadmap.`;
     }
 
     mioContent += `
 
 ---
 
-${patternInfo.question}
+${patternInfo.question}`;
 
-*Take your time. This is just between us.*`;
-
-    // Insert MIO's question message
-    const { data: mioMessage, error: mioError } = await supabase
-      .from('mio_insights_messages')
-      .insert({
-        thread_id: thread.id,
-        user_id: userId,
-        role: 'mio',
-        content: mioContent,
-        section_type: 'first_engagement',
-        section_energy: 'commander', // First session uses commander energy
-        reward_tier: 'standard',
-        patterns_detected: [{ pattern_name: patternInfo.name, confidence: 1.0 }],
-      })
-      .select('id')
-      .single();
+    // Insert MIO's question message using RPC function (bypasses RLS restriction on MIO role)
+    const { data: messageId, error: mioError } = await supabase
+      .rpc('inject_mio_first_engagement_message', {
+        p_thread_id: thread.id,
+        p_user_id: userId,
+        p_content: mioContent,
+        p_pattern_name: patternInfo.name,
+      });
 
     if (mioError) {
       console.error('[FirstEngagement] Error inserting MIO question:', mioError);
       return { success: false, error: mioError.message };
     }
+
+    const mioMessage = { id: messageId };
 
     console.log('[FirstEngagement] MIO question injected for user:', userId);
     return { success: true, messageId: mioMessage.id };

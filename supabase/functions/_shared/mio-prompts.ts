@@ -545,6 +545,64 @@ If they need a protocol, suggest ONE specific one with time commitment.
 }
 
 // ============================================================================
+// MIO VS CHATGPT CURATED RESPONSE
+// ============================================================================
+
+/**
+ * Curated response for "ChatGPT VS MIO?" template question
+ * Based on 5 Key Differences document
+ */
+export const MIO_VS_CHATGPT_RESPONSE = `## I'm not ChatGPT. Here's what makes me different:
+
+**1. I See What You're Actually Doing**
+ChatGPT responds to what you *ask*. I analyze what you're *actually doing* — your practice times, your patterns, your consistency gaps. I can tell you that you've been logging at 11:47 PM for 7 days straight and what that reveals about your Success Sabotage pattern.
+
+**2. I Predict Before You Ask**
+ChatGPT waits for you to describe a problem. I run 15 forensic capabilities automatically — detecting 3-day dropout risks, Week 3 danger zones, and breakthrough probability. I know when you're about to quit before you do.
+
+**3. I Speak Your Pattern Language**
+ChatGPT uses generic psychology. I use YOUR Identity Collision framework:
+- **Past Prison**: Your history creates invisible barriers
+- **Success Sabotage**: You pull back right before breakthrough
+- **Compass Crisis**: Unclear direction creates paralysis
+
+**4. I Generate Neural Rewiring Protocols**
+ChatGPT gives tips. I build 7-day protocols based on YOUR patterns, YOUR dropout risk, and YOUR breakthrough probability — with specific daily actions.
+
+**5. I Hold You Accountable to Yourself**
+ChatGPT accepts whatever you tell it. I cross-reference what you SAID in your assessment with what you're ACTUALLY DOING in your practices. I see when you're performing your identity instead of proving it.
+
+*What pattern would you like me to analyze?*`;
+
+/**
+ * Detection triggers for MIO difference question
+ */
+export const MIO_DIFFERENCE_TRIGGERS = [
+  'chatgpt vs mio',
+  'mio vs chatgpt',
+  'chatgpt versus mio',
+  'mio versus chatgpt',
+  'how is mio different',
+  'how are you different',
+  'what makes mio different',
+  'what makes you different',
+  'difference between mio and chatgpt',
+  'difference between chatgpt and mio'
+];
+
+/**
+ * Check if user is asking about MIO vs ChatGPT difference
+ */
+export function isAskingAboutMIODifference(message: string): boolean {
+  const normalizedMessage = message.toLowerCase().trim();
+  return MIO_DIFFERENCE_TRIGGERS.some(trigger =>
+    normalizedMessage.includes(trigger) ||
+    normalizedMessage === trigger + '?' ||
+    normalizedMessage === trigger
+  );
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 

@@ -138,40 +138,40 @@ const CATEGORIES: Category[] = [
     label: 'CAREER',
     hook: 'I know I\'m capable of more',
     icon: Briefcase,
-    gradient: 'from-blue-500/40 to-cyan-500/20',
-    borderColor: 'border-blue-500/60',
+    gradient: 'from-blue-400/90 to-cyan-400/70',
+    borderColor: 'border-blue-400',
   },
   {
     id: 'relationships',
     label: 'RELATIONSHIPS',
     hook: 'I keep repeating the same patterns',
     icon: Heart,
-    gradient: 'from-pink-500/40 to-rose-500/20',
-    borderColor: 'border-pink-500/60',
+    gradient: 'from-pink-400/90 to-rose-400/70',
+    borderColor: 'border-pink-400',
   },
   {
     id: 'health',
     label: 'HEALTH',
     hook: 'I start strong but can\'t maintain',
     icon: Activity,
-    gradient: 'from-green-500/40 to-emerald-500/20',
-    borderColor: 'border-green-500/60',
+    gradient: 'from-green-400/90 to-emerald-400/70',
+    borderColor: 'border-green-400',
   },
   {
     id: 'wealth',
     label: 'WEALTH',
     hook: 'I earn it but can\'t keep it',
     icon: DollarSign,
-    gradient: 'from-yellow-500/40 to-amber-500/20',
-    borderColor: 'border-yellow-500/60',
+    gradient: 'from-yellow-400/90 to-amber-400/70',
+    borderColor: 'border-yellow-400',
   },
   {
     id: 'purpose',
     label: 'PURPOSE',
     hook: 'I feel like I\'m meant for more--but I don\'t know what',
     icon: Compass,
-    gradient: 'from-purple-500/40 to-violet-500/20',
-    borderColor: 'border-purple-500/60',
+    gradient: 'from-purple-400/90 to-violet-400/70',
+    borderColor: 'border-purple-400',
   },
 ];
 
@@ -181,36 +181,36 @@ const PATTERNS: Pattern[] = [
     emoji: '',
     name: 'PAST PRISON',
     description: 'Your history defines your limits',
-    gradient: 'from-orange-500/40 to-red-600/20',
-    borderColor: 'border-orange-500/60',
-    textColor: 'text-orange-400',
+    gradient: 'from-orange-400/90 to-red-400/70',
+    borderColor: 'border-orange-400',
+    textColor: 'text-orange-600',
   },
   {
     id: 'success_sabotage',
     emoji: '',
     name: 'SUCCESS SABOTAGE',
     description: 'You pull back right before breakthrough',
-    gradient: 'from-yellow-500/40 to-amber-600/20',
-    borderColor: 'border-yellow-500/60',
-    textColor: 'text-yellow-400',
+    gradient: 'from-yellow-400/90 to-amber-400/70',
+    borderColor: 'border-yellow-400',
+    textColor: 'text-yellow-600',
   },
   {
     id: 'compass_crisis',
     emoji: '',
     name: 'COMPASS CRISIS',
     description: 'You\'re moving fast but in circles',
-    gradient: 'from-cyan-500/40 to-blue-600/20',
-    borderColor: 'border-cyan-500/60',
-    textColor: 'text-cyan-400',
+    gradient: 'from-cyan-400/90 to-blue-400/70',
+    borderColor: 'border-cyan-400',
+    textColor: 'text-cyan-600',
   },
   {
     id: 'energy_dysregulation',
     emoji: '',
     name: 'ENERGY DYSREGULATION',
     description: 'Exhausted despite doing everything right',
-    gradient: 'from-violet-500/40 to-purple-600/20',
-    borderColor: 'border-violet-500/60',
-    textColor: 'text-violet-400',
+    gradient: 'from-violet-400/90 to-purple-400/70',
+    borderColor: 'border-violet-400',
+    textColor: 'text-violet-600',
   },
 ];
 
@@ -474,22 +474,23 @@ function ScreenCategories({ onNext }: { onNext: () => void }) {
             >
               <Card
                 className={`
-                  bg-gradient-to-r ${category.gradient} ${category.borderColor}
-                  border backdrop-blur-xl p-3.5 rounded-xl
-                  flex items-center gap-3 transition-all duration-150
+                  relative overflow-hidden
+                  bg-gradient-to-r ${category.gradient}
+                  border-3 p-3.5 rounded-xl
+                  flex items-center gap-3 transition-all duration-200
                   ${isSelected
-                    ? 'ring-2 ring-mi-gold scale-[1.02] border-mi-gold/50'
-                    : 'hover:scale-[1.01] hover:border-white/30'}
+                    ? 'border-white shadow-lg shadow-white/30 scale-[1.02]'
+                    : 'border-transparent opacity-70 hover:opacity-90 hover:scale-[1.01]'}
                 `}
               >
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-lg bg-white/30 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-gray-800" />
                 </div>
                 <div className="text-left flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-white tracking-wide">
+                  <h3 className="font-bold text-sm text-gray-900 tracking-wide">
                     {category.label}
                   </h3>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-700 truncate">
                     "{category.hook}"
                   </p>
                 </div>
@@ -499,7 +500,9 @@ function ScreenCategories({ onNext }: { onNext: () => void }) {
                     animate={{ scale: 1 }}
                     className="flex-shrink-0"
                   >
-                    <CheckCircle className="w-5 h-5 text-mi-gold" />
+                    <div className="w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
                   </motion.div>
                 )}
               </Card>
@@ -695,31 +698,36 @@ function ScreenPatterns({ onNext }: { onNext: () => void }) {
             >
               <Card
                 className={`
-                  bg-gradient-to-br ${pattern.gradient} ${pattern.borderColor}
-                  border backdrop-blur-xl p-4 rounded-xl
-                  flex flex-col items-center gap-2 transition-all duration-150
-                  min-h-[120px] justify-center
+                  relative overflow-hidden
+                  bg-gradient-to-br ${pattern.gradient}
+                  border-3 p-4 rounded-xl
+                  flex flex-col items-center gap-2 transition-all duration-200
+                  min-h-[130px] justify-center
                   ${isSelected
-                    ? 'ring-2 ring-mi-gold scale-[1.03] border-mi-gold/50'
-                    : 'hover:scale-[1.02] hover:border-white/30'}
+                    ? 'border-white shadow-lg shadow-white/30 scale-[1.03]'
+                    : 'border-transparent opacity-70 hover:opacity-90 hover:scale-[1.02]'}
                 `}
               >
+                {/* Selection checkmark badge - top right corner */}
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="absolute top-2 right-2 z-10"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="relative">
                   <Icon className={`w-7 h-7 ${pattern.textColor}`} />
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1"
-                    >
-                      <CheckCircle className="w-4 h-4 text-mi-gold fill-mi-gold" />
-                    </motion.div>
-                  )}
                 </div>
                 <h3 className={`font-bold text-xs ${pattern.textColor} tracking-wider text-center`}>
                   {pattern.name}
                 </h3>
-                <p className="text-[10px] text-gray-400 text-center leading-tight">
+                <p className="text-[10px] text-gray-700 text-center leading-tight">
                   "{pattern.description}"
                 </p>
               </Card>
