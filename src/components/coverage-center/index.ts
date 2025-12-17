@@ -80,6 +80,9 @@ export {
 export { TemperamentUnlockCard } from './TemperamentUnlockCard';
 export { SubPatternUnlockCard } from './SubPatternUnlockCard';
 
+// Wiring Details Sheet (P6.5 - Internal Wiring Results)
+export { WiringDetailsSheet } from './WiringDetailsSheet';
+
 // Assessments Tab (P2 - Your Assessments)
 export { AssessmentsTab } from './AssessmentsTab';
 
@@ -89,6 +92,9 @@ export {
   IdentityCollisionGripCompact,
   type GripStrength,
 } from './IdentityCollisionGrip';
+
+// Pattern Summary Sheet (P6.5 - Assessment Result Modal)
+export { default as PatternSummarySheet } from './PatternSummarySheet';
 
 // Default exports for convenience
 export { default as CoverageStreakDefault } from './CoverageStreak';
@@ -103,3 +109,4 @@ export { default as TransformationMetricsDefault } from './TransformationMetrics
 export { default as ActiveCoachProtocolCardDefault } from './ActiveCoachProtocolCard';
 export { default as CoachProtocolHistoryDefault } from './CoachProtocolHistory';
 export { default as DashboardCoverageCardDefault } from './DashboardCoverageCard';
+export { default as WiringDetailsSheetDefault } from './WiringDetailsSheet';

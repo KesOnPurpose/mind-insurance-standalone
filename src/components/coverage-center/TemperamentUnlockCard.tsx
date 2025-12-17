@@ -7,7 +7,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Lock, ArrowRight, Check, Flame, BookOpen, Heart, Wrench } from 'lucide-react';
+import { Sparkles, Lock, ArrowRight, Check, Flame, BookOpen, Heart, Wrench, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ interface TemperamentUnlockCardProps {
   temperament?: TemperamentType | null;
   isLoading?: boolean;
   className?: string;
+  onCompletedClick?: () => void;
 }
 
 // Mind Insurance themed colors for each wiring type
@@ -74,6 +75,7 @@ export function TemperamentUnlockCard({
   temperament,
   isLoading,
   className,
+  onCompletedClick,
 }: TemperamentUnlockCardProps) {
   const navigate = useNavigate();
 
@@ -103,7 +105,14 @@ export function TemperamentUnlockCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className={cn('bg-mi-navy-light border-mi-cyan/30 overflow-hidden', className)}>
+        <Card
+          className={cn(
+            'bg-mi-navy-light border-mi-cyan/30 overflow-hidden',
+            onCompletedClick && 'cursor-pointer hover:border-mi-cyan/50 transition-colors',
+            className
+          )}
+          onClick={onCompletedClick}
+        >
           <div className={cn('h-1 w-full bg-gradient-to-r', config.gradient)} />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -118,10 +127,15 @@ export function TemperamentUnlockCard({
                 </div>
                 <CardTitle className="text-lg text-white">Your Internal Wiring</CardTitle>
               </div>
-              <Badge variant="outline" className={cn('text-xs', config.badge)}>
-                <Check className="h-3 w-3 mr-1" />
-                Discovered
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={cn('text-xs', config.badge)}>
+                  <Check className="h-3 w-3 mr-1" />
+                  Discovered
+                </Badge>
+                {onCompletedClick && (
+                  <ChevronRight className="h-5 w-5 text-gray-500" />
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { buildProtocolGenerationContext } from './mioAvatarContextService';
 
 // ============================================================================
 // TYPES
@@ -396,6 +397,8 @@ async function getUserName(userId: string): Promise<string> {
  * Trigger N8n First Protocol Generation webhook
  * This creates the 7-day protocol in mio_weekly_protocols table
  *
+ * Enhanced with avatar_context for progressive personalization (P6.5)
+ *
  * @param data - User and assessment data
  * @returns Promise<void>
  *
@@ -412,10 +415,40 @@ async function triggerFirstProtocolGeneration(data: {
 
   console.log('[identityCollisionService] Triggering First Protocol Generation webhook for user:', data.user_id);
 
+  // Build enhanced context with avatar data (if available) for progressive personalization
+  let enhancedPayload: Record<string, unknown> = { ...data };
+
+  try {
+    const avatarContext = await buildProtocolGenerationContext(data.user_id, data.user_name);
+
+    // Merge avatar context into payload for N8n
+    enhancedPayload = {
+      ...data,
+      // Avatar context (populated if assessments complete, null fields otherwise)
+      avatar_context: avatarContext.avatar_context,
+      // Practice behavior analysis
+      practice_insights: avatarContext.practice_insights,
+      // Previous protocol context
+      previous_protocol: avatarContext.previous_protocol,
+      // Metadata
+      assessments_completed: avatarContext.assessments_completed,
+      triggered_by: 'identity_collision_completion',
+    };
+
+    console.log('[identityCollisionService] Enhanced payload with avatar context:', {
+      hasAvatar: !!avatarContext.avatar_context.avatar_name,
+      assessmentsCompleted: avatarContext.assessments_completed,
+      streakCount: avatarContext.practice_insights.streak_count,
+    });
+  } catch (contextError) {
+    console.warn('[identityCollisionService] Could not build avatar context, using basic payload:', contextError);
+    // Continue with basic payload if context building fails
+  }
+
   const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(enhancedPayload),
   });
 
   if (!response.ok) {

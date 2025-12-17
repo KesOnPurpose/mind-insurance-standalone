@@ -27,9 +27,7 @@ import {
   ChevronUp,
   AlertTriangle,
   Sparkles,
-  Clock,
   Target,
-  Heart,
   Activity,
   Users,
   Calendar,
@@ -71,27 +69,27 @@ const PILLAR_COLORS: Record<string, string> = {
 
 const PATTERN_STYLES: Record<string, { gradient: string; icon: string; color: string }> = {
   past_prison: {
-    gradient: 'from-red-500 via-orange-500 to-yellow-500',
+    gradient: 'from-mi-cyan via-purple-500 to-violet-600',
     icon: '🔓',
-    color: 'text-red-400',
+    color: 'text-mi-cyan',
   },
   success_sabotage: {
-    gradient: 'from-yellow-500 via-amber-500 to-orange-500',
+    gradient: 'from-mi-gold via-amber-500 to-orange-500',
     icon: '🎯',
-    color: 'text-yellow-400',
+    color: 'text-mi-gold',
   },
   compass_crisis: {
-    gradient: 'from-blue-500 via-indigo-500 to-purple-500',
+    gradient: 'from-blue-500 via-mi-cyan to-teal-400',
     icon: '🧭',
-    color: 'text-blue-400',
+    color: 'text-mi-cyan',
   },
 };
 
 const TEMPERAMENT_STYLES: Record<string, { icon: string; color: string }> = {
-  warrior: { icon: '⚔️', color: 'text-red-400' },
-  sage: { icon: '🦉', color: 'text-purple-400' },
-  connector: { icon: '🤝', color: 'text-green-400' },
-  builder: { icon: '🏗️', color: 'text-blue-400' },
+  warrior: { icon: '⚔️', color: 'text-mi-gold' },
+  sage: { icon: '🦉', color: 'text-mi-cyan' },
+  connector: { icon: '🤝', color: 'text-mi-cyan' },
+  builder: { icon: '🏗️', color: 'text-mi-gold' },
 };
 
 // ============================================================================
@@ -107,7 +105,6 @@ export default function AvatarRevealPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFourPillars, setShowFourPillars] = useState(false);
   const [showCosts, setShowCosts] = useState(false);
-  const [showProtocol, setShowProtocol] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
 
   const fullAvatar = avatarData.fullAvatar;
@@ -402,101 +399,6 @@ export default function AvatarRevealPage() {
               </Collapsible>
             </motion.div>
 
-            {/* Neural Rewiring Protocol */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 }}
-            >
-              <Collapsible open={showProtocol} onOpenChange={setShowProtocol}>
-                <Card className="bg-mi-navy-light border-emerald-500/20">
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base text-white flex items-center gap-2">
-                          <Brain className="h-5 w-5 text-emerald-400" />
-                          Neural Rewiring Protocol
-                          <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                            {fullAvatar.neuralRewiringProtocol.practices.length} Practices
-                          </Badge>
-                        </CardTitle>
-                        {showProtocol ? (
-                          <ChevronUp className="h-5 w-5 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="pt-0 space-y-4">
-                      {/* Time Investment */}
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                        <Clock className="h-4 w-4 text-emerald-400" />
-                        <span className="text-sm text-emerald-400 font-medium">
-                          Time Investment: {fullAvatar.premiumTime}
-                        </span>
-                      </div>
-
-                      {/* Practices */}
-                      {fullAvatar.neuralRewiringProtocol.practices.map((practice, index) => (
-                        <div
-                          key={index}
-                          className="p-4 rounded-lg bg-white/5 border border-gray-700"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-white font-semibold text-sm">
-                              {practice.name}
-                            </h4>
-                            <Badge variant="outline" className="text-xs">
-                              {practice.duration} • {practice.frequency}
-                            </Badge>
-                          </div>
-                          <p className="text-gray-400 text-xs whitespace-pre-line mb-2">
-                            {practice.instructions}
-                          </p>
-                          <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                            <p className="text-xs text-emerald-400">
-                              <span className="font-semibold">Expected: </span>
-                              {practice.expectedOutcome}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Emergency Protocol */}
-                      <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
-                        <h4 className="text-red-400 font-semibold text-sm mb-2 flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4" />
-                          Emergency Protocol
-                        </h4>
-                        <p className="text-gray-400 text-xs mb-2">
-                          <span className="font-semibold">Trigger: </span>
-                          {fullAvatar.neuralRewiringProtocol.emergencyProtocol.trigger}
-                        </p>
-                        <ol className="space-y-1">
-                          {fullAvatar.neuralRewiringProtocol.emergencyProtocol.steps.map((step, i) => (
-                            <li key={i} className="text-xs text-gray-300 flex items-start gap-2">
-                              <span className="text-red-400 font-bold">{i + 1}.</span>
-                              {step}
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-
-                      {/* ROI */}
-                      <div className="p-3 rounded-lg bg-mi-gold/10 border border-mi-gold/20">
-                        <p className="text-xs text-mi-gold">
-                          <span className="font-semibold">ROI: </span>
-                          {fullAvatar.roi}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            </motion.div>
-
             {/* Transformation Timeline */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -558,6 +460,52 @@ export default function AvatarRevealPage() {
                   </CollapsibleContent>
                 </Card>
               </Collapsible>
+            </motion.div>
+
+            {/* MIO Personalization Preview */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4 }}
+            >
+              <Card className="bg-mi-navy-light border-mi-cyan/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base text-white flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-mi-cyan" />
+                    How MIO Uses Your Avatar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-gray-400 text-sm mb-4">
+                    Your avatar data powers personalized coaching:
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-mi-cyan flex-shrink-0" />
+                      Daily check-in prompts tailored to your pattern
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-mi-cyan flex-shrink-0" />
+                      Pattern interruption at optimal timing
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-mi-cyan flex-shrink-0" />
+                      7-day neural rewiring protocols
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-mi-cyan flex-shrink-0" />
+                      Emergency support when triggers detected
+                    </li>
+                  </ul>
+                  <Button
+                    className="w-full mt-4 bg-mi-cyan hover:bg-mi-cyan-dark text-mi-navy font-semibold"
+                    onClick={() => navigate('/mind-insurance/chat')}
+                  >
+                    Chat with MIO
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
         )}

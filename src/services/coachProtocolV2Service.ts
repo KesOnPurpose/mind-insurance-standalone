@@ -2,6 +2,7 @@
 // Multi-week coach protocol management with MIO integration
 
 import { supabase } from '@/integrations/supabase/client';
+import { buildProtocolGenerationContext } from './mioAvatarContextService';
 import type {
   CoachProtocolV2,
   CoachProtocolV2WithTasks,
@@ -771,6 +772,9 @@ export async function pauseMIOForUser(userId: string): Promise<MIOPauseResult> {
 
 /**
  * Resume MIO for user when coach protocol ends
+ *
+ * Enhanced with avatar_context for progressive personalization (P6.5)
+ * The N8n webhook now receives full avatar data to generate more personalized protocols.
  */
 export async function resumeMIOForUser(
   userId: string,
@@ -799,7 +803,7 @@ export async function resumeMIOForUser(
     }
 
     // Build context about the completed coach protocol
-    const context = assignment ? {
+    const coachContext = assignment ? {
       title: assignment.protocol?.title || 'Unknown',
       days_completed: assignment.days_completed,
       days_skipped: assignment.days_skipped,
@@ -808,36 +812,60 @@ export async function resumeMIOForUser(
       ),
     } : undefined;
 
+    // Build enhanced avatar context for progressive personalization (P6.5)
+    let avatarGenerationContext: Awaited<ReturnType<typeof buildProtocolGenerationContext>> | null = null;
+    try {
+      avatarGenerationContext = await buildProtocolGenerationContext(userId);
+      console.log('[resumeMIOForUser] Built avatar context:', {
+        hasAvatar: !!avatarGenerationContext.avatar_context.avatar_name,
+        assessmentsCompleted: avatarGenerationContext.assessments_completed,
+        streakCount: avatarGenerationContext.practice_insights.streak_count,
+      });
+    } catch (contextError) {
+      console.warn('[resumeMIOForUser] Could not build avatar context:', contextError);
+      // Continue without avatar context - webhook will still work
+    }
+
     // Trigger N8n webhook to generate new MIO protocol
-    // This creates a fresh AI-generated protocol with context from completed coach protocol
+    // This creates a fresh AI-generated protocol with context from completed coach protocol + avatar
     const webhookUrl = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
 
     try {
+      const webhookPayload = {
+        target_type: 'specific_users',
+        target_config: {
+          user_ids: [userId],
+        },
+        triggered_by: 'coach_protocol_completion',
+        // Completed coach protocol context
+        context: coachContext ? {
+          completed_protocol_title: coachContext.title,
+          days_completed: coachContext.days_completed,
+          days_skipped: coachContext.days_skipped,
+          completion_percentage: coachContext.completion_percentage,
+        } : undefined,
+        // Avatar context for progressive personalization (P6.5)
+        ...(avatarGenerationContext && {
+          avatar_context: avatarGenerationContext.avatar_context,
+          practice_insights: avatarGenerationContext.practice_insights,
+          previous_protocol: avatarGenerationContext.previous_protocol,
+          assessments_completed: avatarGenerationContext.assessments_completed,
+        }),
+      };
+
       const webhookResponse = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          target_type: 'specific_users',
-          target_config: {
-            user_ids: [userId],
-          },
-          triggered_by: 'coach_protocol_completion',
-          context: context ? {
-            completed_protocol_title: context.title,
-            days_completed: context.days_completed,
-            days_skipped: context.days_skipped,
-            completion_percentage: context.completion_percentage,
-          } : undefined,
-        }),
+        body: JSON.stringify(webhookPayload),
       });
 
       if (!webhookResponse.ok) {
         console.warn('[resumeMIOForUser] Webhook returned non-OK status:', webhookResponse.status);
         // Don't fail the function - MIO will be generated on next scheduled run
       } else {
-        console.log('[resumeMIOForUser] Successfully triggered MIO generation webhook');
+        console.log('[resumeMIOForUser] Successfully triggered MIO generation webhook with avatar context');
       }
     } catch (webhookErr) {
       console.error('[resumeMIOForUser] Failed to trigger MIO generation webhook:', webhookErr);
@@ -846,7 +874,7 @@ export async function resumeMIOForUser(
 
     return {
       success: true,
-      completed_coach_protocol_context: context,
+      completed_coach_protocol_context: coachContext,
     };
   } catch (err) {
     return {

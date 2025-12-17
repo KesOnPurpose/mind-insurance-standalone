@@ -2,28 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Shield, Trophy, Brain, Mic, ClipboardCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, Brain, Mic } from 'lucide-react';
 import { useVaultRecordings } from '@/hooks/useVaultRecordings';
 import { useVaultPractices } from '@/hooks/useVaultPractices';
-import { useVaultAssessments } from '@/hooks/useVaultAssessments';
-import { useAuth } from '@/contexts/AuthContext';
-import {
-  useUserInvitations,
-  usePendingInvitationsCount,
-  useHasAnyInvitations,
-  ASSESSMENT_INFO,
-  type AssessmentInvitation,
-} from '@/hooks/useAssessmentInvitations';
 import { VaultStats } from '@/components/vault/VaultStats';
 import { RecordingList } from '@/components/vault/RecordingList';
 import { PatternList } from '@/components/vault/PatternList';
 import { VictoryList } from '@/components/vault/VictoryList';
-import { AssessmentList } from '@/components/vault/AssessmentList';
 
 const VaultPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('recordings');
 
   // Voice recordings from voice_recordings table
@@ -43,29 +31,11 @@ const VaultPage = () => {
     error: practicesError
   } = useVaultPractices();
 
-  // Assessments from various assessment tables
-  const {
-    data: assessmentsData,
-    isLoading: assessmentsLoading,
-  } = useVaultAssessments();
-
-  // Assessment invitations - for showing/hiding Assessments tab
-  const { data: hasInvitations } = useHasAnyInvitations(user?.id);
-  const { data: pendingCount } = usePendingInvitationsCount(user?.id);
-  const { data: invitations } = useUserInvitations(user?.id);
-
-  // Get pending invitations for the banner
-  const pendingInvitations = invitations?.filter(inv => inv.status === 'pending') || [];
-
-  // Show assessments tab if user has invitations OR has completed assessments
-  const showAssessmentsTab = hasInvitations || (assessmentsData?.assessments?.length ?? 0) > 0;
-
   const patterns = practicesData?.patterns || [];
   const victories = practicesData?.victories || [];
   const patternStats = practicesData?.patternStats || { caught: 0, total: 0, successRate: 0 };
-  const assessments = assessmentsData?.assessments || [];
 
-  const isLoading = recordingsLoading || practicesLoading || assessmentsLoading;
+  const isLoading = recordingsLoading || practicesLoading;
   const error = recordingsError || practicesError;
 
   if (error) {
@@ -128,44 +98,9 @@ const VaultPage = () => {
           isLoading={isLoading}
         />
 
-        {/* Assessment Invitation Banner - shows when user has pending invitations */}
-        {pendingInvitations.length > 0 && (
-          <div className="bg-gradient-to-r from-mi-cyan/20 to-mi-gold/20 border border-mi-cyan/40 rounded-lg p-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-mi-cyan" />
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <h3 className="font-medium text-white">
-                  {pendingInvitations.length === 1
-                    ? 'You have a new assessment ready'
-                    : `You have ${pendingInvitations.length} assessments ready`}
-                </h3>
-                <p className="text-sm text-gray-400">
-                  {pendingInvitations[0].reason || ASSESSMENT_INFO[pendingInvitations[0].assessment_type as keyof typeof ASSESSMENT_INFO]?.description || 'Unlock deeper insights about your patterns'}
-                </p>
-              </div>
-              <Button
-                onClick={() => {
-                  const firstPending = pendingInvitations[0];
-                  const info = ASSESSMENT_INFO[firstPending.assessment_type as keyof typeof ASSESSMENT_INFO];
-                  if (info?.path) {
-                    navigate(info.path);
-                  } else {
-                    setActiveTab('assessments');
-                  }
-                }}
-                className="bg-mi-cyan hover:bg-mi-cyan/90 text-white shrink-0"
-              >
-                {pendingInvitations.length === 1 ? 'Take Assessment' : 'View Assessments'}
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Tabs: Recordings, Patterns, Victories */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-4 bg-mi-navy-light border border-mi-cyan/20 h-auto p-1">
+          <TabsList className="w-full grid grid-cols-3 bg-mi-navy-light border border-mi-cyan/20 h-auto p-1">
             <TabsTrigger value="recordings" className="gap-1 sm:gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300 flex-col sm:flex-row py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Mic className="w-4 h-4" />
               <span className="hidden xs:inline">Recordings</span>
@@ -188,20 +123,6 @@ const VaultPage = () => {
                 {victories.length}
               </span>
             </TabsTrigger>
-            {showAssessmentsTab && (
-              <TabsTrigger value="assessments" className="gap-1 sm:gap-1.5 data-[state=active]:bg-purple-500 data-[state=active]:text-white text-gray-300 relative flex-col sm:flex-row py-2 px-1 sm:px-3 text-xs sm:text-sm col-span-3 sm:col-span-1">
-                <ClipboardCheck className="w-4 h-4" />
-                <span>Assessments</span>
-                <span className="text-[10px] sm:text-xs bg-mi-navy px-1 sm:px-1.5 py-0.5 rounded-full">
-                  {assessments.length}
-                </span>
-                {(pendingCount ?? 0) > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center bg-mi-gold text-black text-[10px] sm:text-xs font-bold border-0">
-                    {pendingCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            )}
           </TabsList>
 
           {/* Recordings Tab */}
@@ -230,17 +151,6 @@ const VaultPage = () => {
               isLoading={practicesLoading}
             />
           </TabsContent>
-
-          {/* Assessments Tab - Only rendered if tab is shown */}
-          {showAssessmentsTab && (
-            <TabsContent value="assessments" className="mt-4">
-              <AssessmentList
-                assessments={assessments}
-                isLoading={assessmentsLoading}
-                pendingInvitations={pendingInvitations}
-              />
-            </TabsContent>
-          )}
         </Tabs>
       </div>
     </div>
