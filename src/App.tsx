@@ -10,8 +10,8 @@ import { ConversationProvider } from "@/contexts/ConversationContext";
 import { ConversationsProvider } from "@/contexts/ConversationsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
-import { AssessmentGuard } from "@/components/AssessmentGuard";
-import { AccessGate } from "@/components/AccessGate";
+// MI STANDALONE: AccessGate removed - uses gh_approved_users which is GH-specific
+// MI STANDALONE: AssessmentGuard removed - IdentityCollisionGuard handles MI assessment gating
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { ConfigurationRequired } from "@/components/ConfigurationRequired";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -107,56 +107,57 @@ const App = () => {
 
                       {/* Mind Insurance Identity Collision Assessment - entry point for new users */}
                       {/* IMPORTANT: requireAssessment=false to prevent infinite redirect loop */}
-                      <Route path="/mind-insurance/assessment" element={<ProtectedRoute requireAssessment={false}><AccessGate><IdentityCollisionAssessmentPage /></AccessGate></ProtectedRoute>} />
+                      {/* MI STANDALONE: No AccessGate - legacy MI users shouldn't need gh_approved_users */}
+                      <Route path="/mind-insurance/assessment" element={<ProtectedRoute requireAssessment={false}><IdentityCollisionAssessmentPage /></ProtectedRoute>} />
 
                       {/* Legacy Inner Wiring route - redirect to Temperament Assessment */}
                       <Route path="/mind-insurance/inner-wiring" element={<Navigate to="/mind-insurance/temperament-assessment" replace />} />
 
                       {/* Mental Pillar Baseline Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/mental-pillar-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><MentalPillarAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/mental-pillar-assessment" element={<ProtectedRoute><IdentityCollisionGuard><MentalPillarAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Main Mind Insurance Hub - default after login */}
-                      <Route path="/mind-insurance" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Mind Insurance Core Routes */}
-                      <Route path="/mind-insurance/practice" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MindInsurancePracticePage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/championship" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practice" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MindInsurancePracticePage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/championship" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
                       <Route path="/mind-insurance/insights" element={<Navigate to="/mind-insurance/coverage" replace />} />
-                      <Route path="/mind-insurance/coverage" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><CoverageCenterPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/coverage" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CoverageCenterPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
                       {/* First Session - NO assessment guards, accessible immediately after login */}
-                      <Route path="/mind-insurance/first-session" element={<ProtectedRoute><AccessGate><FirstSessionPage /></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/vault" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><VaultPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/insight/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><InsightRevealPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/protocol/:protocolId" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><ProtocolDetailPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/coach-protocol" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><CoachProtocolDetailPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/first-session" element={<ProtectedRoute><FirstSessionPage /></ProtectedRoute>} />
+                      <Route path="/mind-insurance/vault" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><VaultPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/insight/:protocolId" element={<ProtectedRoute><IdentityCollisionGuard><InsightRevealPage /></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/protocol/:protocolId" element={<ProtectedRoute><IdentityCollisionGuard><ProtocolDetailPage /></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/coach-protocol" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CoachProtocolDetailPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Mind Insurance Practice Routes */}
-                      <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><PatternCheck /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><ReinforceIdentity /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><OutcomeVisualization /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><TriggerReset /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><EnergyAudit /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><CelebrateWins /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><PatternCheck /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><ReinforceIdentity /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><OutcomeVisualization /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><TriggerReset /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><EnergyAudit /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CelebrateWins /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* MIO Insights Thread route */}
-                      <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Temperament Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/temperament-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><TemperamentAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/temperament-assessment" element={<ProtectedRoute><IdentityCollisionGuard><TemperamentAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Sub-Pattern Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/sub-pattern-assessment" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SubPatternAssessmentPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/sub-pattern-assessment" element={<ProtectedRoute><IdentityCollisionGuard><SubPatternAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Avatar Reveal - shows combined assessment results */}
-                      <Route path="/mind-insurance/avatar" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><AvatarRevealPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/avatar" element={<ProtectedRoute><IdentityCollisionGuard><AvatarRevealPage /></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* Chat - MI specific */}
-                      <Route path="/mind-insurance/chat" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><ChatPage /></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/mind-insurance/chat" element={<ProtectedRoute><IdentityCollisionGuard><ChatPage /></IdentityCollisionGuard></ProtectedRoute>} />
 
                       {/* User Settings & Profile */}
-                      <Route path="/settings" element={<ProtectedRoute><AccessGate><AssessmentGuard><IdentityCollisionGuard><SidebarLayout><SettingsPage /></SidebarLayout></IdentityCollisionGuard></AssessmentGuard></AccessGate></ProtectedRoute>} />
-                      <Route path="/profile" element={<ProtectedRoute><AccessGate><AssessmentGuard><ProfilePage /></AssessmentGuard></AccessGate></ProtectedRoute>} />
+                      <Route path="/settings" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><SettingsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
                       {/* Admin routes */}
                       <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
@@ -165,7 +166,7 @@ const App = () => {
                       <Route path="/admin/reports" element={<ProtectedRoute><AdminRoute><ReportManagement /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/assessments" element={<ProtectedRoute><AdminRoute><AssessmentCenter /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/knowledge-base" element={<ProtectedRoute><AdminRoute><AdminKnowledgeBase /></AdminRoute></ProtectedRoute>} />
-                      <Route path="/admin/users" element={<ProtectedRoute><AccessGate requiredTier="admin"><UserManagement /></AccessGate></ProtectedRoute>} />
+                      <Route path="/admin/users" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
 
                       {/* 404 catch-all - must be last */}
                       <Route path="*" element={<NotFound />} />

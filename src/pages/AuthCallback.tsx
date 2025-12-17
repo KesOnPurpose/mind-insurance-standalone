@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { detectAndMergeProviderAccounts } from '@/services/providerMergeService';
+import { getUserSource, getSignupDomain } from '@/services/domainDetectionService';
 import { toast } from 'sonner';
 
 const AuthCallback = () => {
@@ -28,12 +29,61 @@ const AuthCallback = () => {
 
       // Use primary user_id for redirect logic (in case of merge)
       const userId = mergeResult.primary_user_id || session.user.id;
+
+      // Ensure user_source is set for OAuth signups
+      // OAuth providers can't pass custom metadata, so we update the profile here
+      await ensureUserSource(userId);
+
       await smartRedirect(userId);
 
     } catch (error) {
       console.error('AuthCallback: Provider merge failed, continuing with original user:', error);
       // Graceful fallback: continue with current session user_id
+      await ensureUserSource(session.user.id);
       await smartRedirect(session.user.id);
+    }
+  };
+
+  // Ensure user_source is set for OAuth signups (can't pass metadata during OAuth)
+  const ensureUserSource = async (userId: string) => {
+    try {
+      // Check if user_source is already set
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('user_source')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.log('AuthCallback: Could not check user_source:', profileError.message);
+        return;
+      }
+
+      // If user_source is unknown or missing, update it from current domain
+      if (!profile?.user_source || profile.user_source === 'unknown') {
+        const userSource = getUserSource();
+        const signupDomain = getSignupDomain();
+
+        console.log('AuthCallback: Setting user_source to:', userSource, 'from domain:', signupDomain);
+
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({
+            user_source: userSource,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+
+        if (updateError) {
+          console.error('AuthCallback: Failed to update user_source:', updateError);
+        } else {
+          console.log('AuthCallback: user_source updated successfully');
+        }
+      } else {
+        console.log('AuthCallback: user_source already set to:', profile.user_source);
+      }
+    } catch (err) {
+      console.error('AuthCallback: Error in ensureUserSource:', err);
     }
   };
 

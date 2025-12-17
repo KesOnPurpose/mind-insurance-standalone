@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getUserSource, getSignupDomain } from '@/services/domainDetectionService';
 
 // Link any external assessments when user signs in/up
 async function linkExternalAssessmentsOnAuth(userId: string, userEmail: string) {
@@ -154,11 +155,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      // Capture user_source from current domain for multi-product tracking
+      const userSource = getUserSource();
+      const signupDomain = getSignupDomain();
+
+      console.log('[AuthContext] signUp with user_source:', userSource, 'domain:', signupDomain);
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            user_source: userSource,
+            signup_domain: signupDomain,
+          }
         }
       });
 
