@@ -61,8 +61,13 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (requireAssessment && assessmentStatus === 'not_completed' && location.pathname !== '/assessment') {
-    return <Navigate to="/assessment" replace />;
+  // MI Standalone: Redirect to MI-specific assessment route
+  // Also check for both legacy and new assessment paths to prevent infinite loops
+  const isOnAssessmentPage = location.pathname === '/assessment' ||
+                              location.pathname === '/mind-insurance/assessment';
+
+  if (requireAssessment && assessmentStatus === 'not_completed' && !isOnAssessmentPage) {
+    return <Navigate to="/mind-insurance/assessment" replace />;
   }
 
   return <>{children}</>;

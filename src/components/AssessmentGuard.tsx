@@ -104,10 +104,14 @@ export const AssessmentGuard: React.FC<AssessmentGuardProps> = ({ children }) =>
   // Check if assessment is completed
   const assessmentDone = isAssessmentCompleted(onboardingStatus);
 
-  if (!assessmentDone) {
-    console.log('[AssessmentGuard] Assessment not completed - redirecting to /assessment');
+  // MI Standalone: Check for both legacy and new assessment paths to prevent infinite loops
+  const isOnAssessmentPage = location.pathname === '/assessment' ||
+                              location.pathname === '/mind-insurance/assessment';
+
+  if (!assessmentDone && !isOnAssessmentPage) {
+    console.log('[AssessmentGuard] Assessment not completed - redirecting to /mind-insurance/assessment');
     // Preserve the intended destination so we can redirect after assessment
-    return <Navigate to="/assessment" state={{ from: location }} replace />;
+    return <Navigate to="/mind-insurance/assessment" state={{ from: location }} replace />;
   }
 
   // Assessment completed - allow access

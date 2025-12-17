@@ -106,7 +106,8 @@ const App = () => {
                       <Route path="/mind-insurance/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
 
                       {/* Mind Insurance Identity Collision Assessment - entry point for new users */}
-                      <Route path="/mind-insurance/assessment" element={<ProtectedRoute><AccessGate><IdentityCollisionAssessmentPage /></AccessGate></ProtectedRoute>} />
+                      {/* IMPORTANT: requireAssessment=false to prevent infinite redirect loop */}
+                      <Route path="/mind-insurance/assessment" element={<ProtectedRoute requireAssessment={false}><AccessGate><IdentityCollisionAssessmentPage /></AccessGate></ProtectedRoute>} />
 
                       {/* Legacy Inner Wiring route - redirect to Temperament Assessment */}
                       <Route path="/mind-insurance/inner-wiring" element={<Navigate to="/mind-insurance/temperament-assessment" replace />} />
