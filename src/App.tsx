@@ -96,6 +96,11 @@ const App = () => {
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
 
+                      {/* Legacy route redirects - for backwards compatibility with Grouphome routes */}
+                      <Route path="/assessment" element={<Navigate to="/mind-insurance/assessment" replace />} />
+                      <Route path="/chat" element={<Navigate to="/mind-insurance/chat" replace />} />
+                      <Route path="/dashboard" element={<Navigate to="/mind-insurance" replace />} />
+
                       {/* External Assessment - Public, no auth required */}
                       <Route path="/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
                       <Route path="/mind-insurance/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
