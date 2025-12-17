@@ -524,11 +524,13 @@ export async function removeAssignment(assignmentId: string): Promise<void> {
 
 /**
  * Get user's active coach protocols (primary and secondary)
+ * Now includes visibility-based auto-available protocols
  */
 export async function getUserActiveProtocols(
   userId: string
 ): Promise<UserCoachProtocolsResponse> {
-  const { data, error } = await supabase
+  // 1. Get explicit assignments (existing logic)
+  const { data: assignmentData, error: assignmentError } = await supabase
     .from('user_coach_protocol_assignments')
     .select(`
       *,
@@ -537,12 +539,48 @@ export async function getUserActiveProtocols(
     .eq('user_id', userId)
     .eq('status', 'active');
 
-  if (error) throw error;
+  if (assignmentError) throw assignmentError;
 
-  const assignments = data as (UserCoachProtocolAssignment & {
+  const assignments = (assignmentData || []) as (UserCoachProtocolAssignment & {
     protocol: CoachProtocolV2;
   })[];
 
+  // 2. Get auto-available protocols (visibility = 'all_users' and published)
+  const { data: autoAvailable, error: autoError } = await supabase
+    .from('coach_protocols_v2')
+    .select('*')
+    .eq('visibility', 'all_users')
+    .eq('status', 'published');
+
+  if (autoError) throw autoError;
+
+  // 3. Create virtual assignments for auto-available protocols user doesn't have
+  const existingProtocolIds = new Set(assignments.map(a => a.protocol_id));
+
+  const virtualAssignments = (autoAvailable || [])
+    .filter(p => !existingProtocolIds.has(p.id))
+    .map(protocol => ({
+      id: `virtual-${protocol.id}`,
+      user_id: userId,
+      protocol_id: protocol.id,
+      coach_id: protocol.coach_id,
+      assignment_slot: 'primary' as AssignmentSlot,
+      status: 'active' as const,
+      current_week: 1,
+      current_day: 1,
+      days_completed: 0,
+      days_skipped: 0,
+      total_tasks_completed: 0,
+      started_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      protocol,
+    }));
+
+  // 4. Combine assignments (explicit first, then virtual)
+  const allAssignments = [...assignments, ...virtualAssignments];
+
+  // 5. Build progress
   const buildProgress = (
     assignment: UserCoachProtocolAssignment,
     protocol: CoachProtocolV2
@@ -563,13 +601,57 @@ export async function getUserActiveProtocols(
     };
   };
 
-  const primary = assignments.find((a) => a.assignment_slot === 'primary');
-  const secondary = assignments.find((a) => a.assignment_slot === 'secondary');
+  const primary = allAssignments.find((a) => a.assignment_slot === 'primary');
+  const secondary = allAssignments.find((a) => a.assignment_slot === 'secondary');
 
   return {
     primary: primary ? buildProgress(primary, primary.protocol) : null,
     secondary: secondary ? buildProgress(secondary, secondary.protocol) : null,
   };
+}
+
+/**
+ * Ensure user has a real assignment (convert virtual to real if needed)
+ * Call this when user interacts with a protocol (completes a task, etc.)
+ */
+export async function ensureRealAssignment(
+  userId: string,
+  protocolId: string
+): Promise<UserCoachProtocolAssignment> {
+  // Check if real assignment exists
+  const { data: existing } = await supabase
+    .from('user_coach_protocol_assignments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('protocol_id', protocolId)
+    .maybeSingle();
+
+  if (existing) return existing;
+
+  // Get protocol to get coach_id
+  const { data: protocol } = await supabase
+    .from('coach_protocols_v2')
+    .select('coach_id')
+    .eq('id', protocolId)
+    .single();
+
+  // Create real assignment
+  const { data: newAssignment, error } = await supabase
+    .from('user_coach_protocol_assignments')
+    .insert({
+      user_id: userId,
+      protocol_id: protocolId,
+      coach_id: protocol?.coach_id,
+      assignment_slot: 'primary',
+      status: 'active',
+      current_week: 1,
+      current_day: 1,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return newAssignment;
 }
 
 /**
@@ -656,8 +738,24 @@ export async function getTodayTasks(
 export async function completeTask(
   request: CompleteTaskRequest
 ): Promise<CompleteTaskResponse> {
+  let assignmentId = request.assignment_id;
+
+  // Handle virtual assignments (from all_users visibility protocols)
+  if (assignmentId.startsWith('virtual-')) {
+    const protocolId = assignmentId.replace('virtual-', '');
+
+    if (!request.user_id) {
+      throw new Error('user_id is required for virtual assignments. Pass user_id in the request.');
+    }
+
+    // Create real assignment before completing task
+    const realAssignment = await ensureRealAssignment(request.user_id, protocolId);
+    assignmentId = realAssignment.id;
+    console.log('[completeTask] Created real assignment from virtual:', assignmentId);
+  }
+
   const { data, error } = await supabase.rpc('complete_coach_protocol_task', {
-    p_assignment_id: request.assignment_id,
+    p_assignment_id: assignmentId,
     p_task_id: request.task_id,
     p_notes: request.notes,
     p_response_data: request.response_data || {},

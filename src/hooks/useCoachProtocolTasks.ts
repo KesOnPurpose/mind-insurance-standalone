@@ -110,6 +110,7 @@ export function useCoachProtocolTasks(): UseCoachProtocolTasksReturn {
         const result = await completeTask({
           assignment_id: assignmentId,
           task_id: taskId,
+          user_id: user?.id, // Required for virtual assignments (all_users visibility)
           notes: data?.notes,
           response_data: data?.response_data,
           time_spent_minutes: data?.time_spent_minutes,

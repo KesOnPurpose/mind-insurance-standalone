@@ -431,6 +431,7 @@ export interface AssignmentResult {
 export interface CompleteTaskRequest {
   assignment_id: string;
   task_id: string;
+  user_id?: string; // Required for virtual assignments (all_users visibility protocols)
   notes?: string;
   response_data?: Record<string, unknown>;
   time_spent_minutes?: number;
