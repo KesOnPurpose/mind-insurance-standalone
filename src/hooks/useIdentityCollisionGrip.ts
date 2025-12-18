@@ -174,20 +174,36 @@ export function useIdentityCollisionGrip(): UseIdentityCollisionGripReturn {
       let practices: RecentPractice[] = [];
 
       // Try mio_protocol_completions first (preferred table)
+      // Note: Uses response_data JSONB column, not practice_response
       const { data, error: fetchError } = await supabase
         .from('mio_protocol_completions')
-        .select('practice_response, completed_at')
+        .select('response_data, was_skipped, completed_at')
         .eq('user_id', user.id)
         .gte('completed_at', sevenDaysAgo.toISOString())
         .order('completed_at', { ascending: false });
 
       if (!fetchError && data) {
-        // Map to expected format
-        practices = (data || []).map(p => ({
-          practice_response: p.practice_response,
-          is_complete: true,
-          created_at: p.completed_at,
-        }));
+        // Map response_data to expected format
+        // Infer practice_response from response_data and was_skipped
+        practices = (data || []).map(p => {
+          const responseData = p.response_data as Record<string, unknown> | null;
+          let practiceResponse: string | null = null;
+
+          if (p.was_skipped) {
+            practiceResponse = 'forgot';
+          } else if (responseData?.reflection_text) {
+            const wordCount = (responseData.word_count as number) || 0;
+            practiceResponse = wordCount >= 20 ? 'yes_multiple' : wordCount > 0 ? 'yes_once' : 'tried';
+          } else {
+            practiceResponse = 'tried';
+          }
+
+          return {
+            practice_response: practiceResponse,
+            is_complete: !p.was_skipped,
+            created_at: p.completed_at,
+          };
+        });
       } else {
         // Table doesn't exist or query failed - try daily_practices as fallback
         console.warn('[useIdentityCollisionGrip] mio_protocol_completions not available, trying daily_practices');
