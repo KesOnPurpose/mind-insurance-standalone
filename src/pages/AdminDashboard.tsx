@@ -4,7 +4,7 @@ import { ShieldCheck, Users, BarChart3, Settings, Activity } from 'lucide-react'
 import { AnalyticsDashboard } from '@/components/admin/analytics';
 import { Button } from '@/components/ui/button';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { useMIAccessControl } from '@/hooks/useMIAccessControl';
 
 // ============================================================================
 // ADMIN DASHBOARD
@@ -19,7 +19,7 @@ type DashboardView = 'analytics' | 'permissions';
 
 export default function AdminDashboard() {
   const { adminUser, isSuperAdmin } = useAdmin();
-  const { tier } = useAccessControl();
+  const { tier } = useMIAccessControl();
   const [view, setView] = useState<DashboardView>('analytics');
 
   if (!adminUser) {

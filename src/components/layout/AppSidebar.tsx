@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { useMIAccessControl } from '@/hooks/useMIAccessControl';
 
 // Import context-specific panels
 import { MindInsurancePanel } from './sidebar-panels/MindInsurancePanel';
@@ -73,7 +73,7 @@ function getSectionLabel(mode: SidebarMode): string {
  */
 export function AppSidebar({ mode }: AppSidebarProps) {
   const { user, signOut } = useAuth();
-  const { canAccessAdminPanel } = useAccessControl();
+  const { canAccessAdminPanel } = useMIAccessControl();
   const navigate = useNavigate();
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();

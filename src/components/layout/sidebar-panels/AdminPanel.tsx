@@ -18,7 +18,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
+import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
 import { Badge } from '@/components/ui/badge';
 
 const ADMIN_NAV_ITEMS: Array<{
@@ -26,7 +26,7 @@ const ADMIN_NAV_ITEMS: Array<{
   href: string;
   icon: any;
   description: string;
-  requiredTier?: 'admin' | 'super_admin' | 'owner';
+  requiredTier?: 'admin' | 'super_admin';
 }> = [
   {
     title: 'Dashboard',
@@ -79,7 +79,7 @@ const ADMIN_NAV_ITEMS: Array<{
 export function AdminPanel() {
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { tier, isOwner, isSuperAdmin, isAdmin, hasTierAccess } = useAccessControl();
+  const { tier, isSuperAdmin, isAdmin, hasTierAccess } = useMIAccessControl();
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -112,11 +112,11 @@ export function AdminPanel() {
               {tier?.replace('_', ' ') || 'Loading...'}
             </p>
           </div>
-          {isOwner && (
-            <Badge variant="default" className="bg-purple-500">Owner</Badge>
+          {isSuperAdmin && (
+            <Badge variant="default" className="bg-purple-500">Super Admin</Badge>
           )}
-          {isSuperAdmin && !isOwner && (
-            <Badge variant="default" className="bg-blue-500">Super</Badge>
+          {isAdmin && !isSuperAdmin && (
+            <Badge variant="default" className="bg-blue-500">Admin</Badge>
           )}
         </div>
       </div>

@@ -1,18 +1,40 @@
-# Lovable.dev Application Development
+# Mind Insurance Standalone - $100M Product
 
 ## Project Overview
 
-**Application**: Grouphome App (Mind Insurance)
+**Application**: Mind Insurance Standalone (mymindinsurance.com)
 **Platform**: Lovable.dev
 **Tech Stack**: React 18, TypeScript (strict), Vite, ShadCN UI, Tailwind CSS
-**Database**: Supabase (`hpyodaugrkctagkrfofj.supabase.co`)
+**Database**: Supabase (`hpyodaugrkctagkrfofj.supabase.co`) - **SHARED with Grouphome**
+**N8n Workflows**: `https://n8n-n8n.vq00fr.easypanel.host` - **SHARED with Grouphome**
 **Sync Method**: GitHub ← → Lovable (bidirectional)
+
+### User Source Tag System (CRITICAL)
+**Filter for Mind Insurance users**: `user_profiles.user_source = 'mi_standalone'`
+- `'mi_standalone'` = Mind Insurance app users (mymindinsurance.com)
+- `'gh_user'` = Grouphome4newbies app users
+- `'unknown'` = Legacy/unknown source
 
 ---
 
-## CRITICAL: Multi-Agent Team Architecture
+## CRITICAL: 10-Agent Team Architecture
 
-**This is a $100M product. Development uses a TEAM of specialized agents, not a single agent.**
+**This is a $100M product. Development uses a TEAM of 10 specialized agents, not a single agent.**
+
+### Agent Team Roster (10 Agents)
+
+| # | Agent | Special Power | Primary Focus |
+|---|-------|---------------|---------------|
+| 1 | **Coordinator** | Central governance | Task decomposition, conflict resolution |
+| 2 | **Senior React Developer** | Visual validation | Components, TypeScript strict, mobile-first |
+| 3 | **Backend/API Architect** | Database expertise | Supabase, RLS, Edge Functions, `mi_standalone` filtering |
+| 4 | **Security Auditor** | **VETO POWER** | OWASP, SOC2, HIPAA, compliance |
+| 5 | **QA Data Validator** | Release blocking | Testing, accessibility, zero-miss |
+| 6 | **N8n Workflow Architect** | Chatbot expert | Workflows, automation, MIO/Nette/ME |
+| 7 | **DevOps Engineer** | Deployment control | CI/CD, Cloudflare, monitoring |
+| 8 | **Documentation Manager** | Synthesis power | ADRs, guides, knowledge base |
+| 9 | **Analytics Engineer** | Metrics insight | Dashboards, KPIs, cost tracking |
+| 10 | **MIO Oracle Specialist** | Forensic psychology | Behavioral analysis, dropout risk, protocols |
 
 ### Agent Knowledge Base (ALWAYS Reference)
 
@@ -28,6 +50,36 @@
 **Specialized Agent Protocols:**
 6. **`/Context/AGENT-SECURITY-AUDITOR.md`** - OWASP, SOC2, HIPAA, **VETO POWER**
 7. **`/Context/AGENT-QA-VALIDATOR.md`** - Testing, accessibility, zero-miss detection
+8. **`/Context/AGENT-COORDINATOR.md`** - Task decomposition, priority hierarchy
+9. **`/Context/AGENT-BACKEND-ARCHITECT.md`** - Database schema, `mi_standalone` tag system
+10. **`/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md`** - N8n workflows, MIO chatbot
+11. **`/Context/AGENT-MIO-ORACLE.md`** - 15 forensic capabilities, behavioral analysis
+12. **`/Context/AGENT-DEVOPS-ENGINEER.md`** - Cloudflare Pages, Wrangler deployment
+13. **`/Context/AGENT-ANALYTICS-ENGINEER.md`** - Metrics, dashboards, cost tracking
+
+### Troubleshooting Folder (Support & Diagnostics)
+
+**`/Troubleshooting/CLAUDE.md`** - Master troubleshooting reference
+
+**Slash Commands:**
+| Command | Purpose |
+|---------|---------|
+| `/check-user [email]` | User access diagnostic |
+| `/check-workflow [id]` | N8n workflow status |
+| `/check-mio [user_id]` | MIO behavioral analysis (15 capabilities) |
+| `/check-protocol [user_id]` | Protocol status and completions |
+| `/diagnose [issue]` | Multi-system diagnostic |
+| `/analyze-patterns` | Proactive pattern detection |
+
+**Specialized Skills:**
+| Skill | Expertise |
+|-------|-----------|
+| `ticket-resolver` | Customer support (15+ years) |
+| `backend-diagnostician` | Supabase, RLS, Edge Functions |
+| `frontend-troubleshooter` | React 18, TypeScript, Components |
+| `n8n-workflow-debugger` | N8n automation, chatbot |
+| `mio-behavioral-analyst` | 15 forensic capabilities, dropout detection |
+| `protocol-debugger` | 7-day protocol lifecycle |
 
 ---
 
@@ -42,9 +94,14 @@ TASK TYPE                           → DELEGATE TO
 ─────────────────────────────────────────────────────────────
 UI/Component/Styling/Responsive    → @senior-react-developer
 Pattern/Insight/Behavioral/MIO     → @mio-mind-insurance-oracle
+Database/Supabase/RLS/Schema       → Backend Architect (Context file)
+N8n Workflows/Chatbot/Automation   → N8n Workflow Architect (Context file)
+Deployment/Cloudflare/CI-CD        → DevOps Engineer (Context file)
+Metrics/Analytics/KPIs             → Analytics Engineer (Context file)
 Research/Multi-step/Code Search    → general-purpose
 Codebase Exploration/File Search   → Explore
 Planning/Analysis                  → Plan
+Support Tickets/User Issues        → Troubleshooting skills
 ```
 
 ### Proactive Agent Usage
@@ -58,12 +115,20 @@ Planning/Analysis                  → Plan
 - Mobile-first responsive design
 
 **@mio-mind-insurance-oracle** - Use AUTOMATICALLY when:
-- Analyzing user behavioral patterns
-- Detecting dropout risk
+- Analyzing user behavioral patterns (15 forensic capabilities)
+- Detecting dropout risk (3-day rule, Week 3 danger zone)
 - Breakthrough probability scoring
 - Identity collision analysis
 - Forensic psychological insights
 - Intervention protocol design
+- Neural rewiring protocol generation
+
+**Troubleshooting Skills** - Use when:
+- User can't access the app → `/check-user [email]`
+- Protocol stuck/not advancing → `/check-protocol [user_id]`
+- MIO not responding → `/check-workflow 0qiaQWEaDXbCxkhK`
+- User at dropout risk → `/check-mio [user_id]`
+- System-wide issues → `/analyze-patterns`
 
 ### Parallel Agent Execution
 
@@ -73,6 +138,11 @@ Example: "Build user settings page with security review"
 1. @senior-react-developer → Component design
 2. Explore → Check existing patterns
 3. general-purpose → Security threat model
+
+Example: "Diagnose user access issue"
+1. `/check-user` → Auth chain diagnostic
+2. `/check-protocol` → Protocol status
+3. `/check-mio` → Behavioral analysis
 
 **Read `/Context/PARALLEL-EXECUTION-GUIDE.md` for safe parallelization rules.**
 
@@ -649,3 +719,61 @@ Build and scale this $100M Mind Insurance product with **world-class AI agent te
 - Run parallel operations for maximum speed
 - Enforce quality gates without compromise
 - **User approval required for ALL GitHub pushes. No exceptions.**
+
+---
+
+## Future Infrastructure Migration Notes
+
+### Database Migration (Planned)
+**Current State**: Shared Supabase project with Grouphome
+- Project URL: `https://hpyodaugrkctagkrfofj.supabase.co`
+- Service Role Key: Shared (see credentials above)
+
+**Future State**: Dedicated Mind Insurance Supabase project
+- Project URL: `[NEW_MI_PROJECT_ID].supabase.co`
+- Action Required: Update all API_KEY and BASE_URL references in:
+  - `/Troubleshooting/.claude/skills/*/SKILL.md`
+  - `/Troubleshooting/.claude/commands/*.md`
+  - `/Troubleshooting/CLAUDE.md`
+  - All Edge Functions and client code
+
+### N8n Workflow Migration (Planned)
+**Current State**: Shared N8n instance
+- Instance URL: `https://n8n-n8n.vq00fr.easypanel.host`
+- API Key: Shared with Grouphome
+
+**Future State**: Dedicated Mind Insurance N8n instance
+- Instance URL: `[NEW_MI_N8N_URL]`
+- Action Required: Update all N8N_KEY and N8N_URL references in:
+  - `/Troubleshooting/.claude/skills/n8n-workflow-debugger/SKILL.md`
+  - `/Troubleshooting/.claude/commands/check-workflow.md`
+  - `/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md`
+
+### Key Workflows to Migrate
+| Workflow ID | Name | Priority |
+|-------------|------|----------|
+| `0qiaQWEaDXbCxkhK` | Unified Chat - MIO/Nette/ME | **CRITICAL** |
+| `56JoMTczqhHS3eME` | MIO Weekly Report Generator | HIGH |
+| `Sp5RhDpa8xFPnlWI` | MIO Insights Reply | HIGH |
+| `niEwlbKoTiQF1sO9` | Protocol-Day-Advancement-Daily | HIGH |
+
+### Migration Checklist
+```
+DATABASE MIGRATION:
+[ ] Create new Supabase project
+[ ] Migrate schema (all MI-specific tables)
+[ ] Update RLS policies
+[ ] Migrate user data (WHERE user_source = 'mi_standalone')
+[ ] Update all credentials in codebase
+[ ] Test all Edge Functions
+[ ] Verify MIO chatbot functionality
+
+N8N MIGRATION:
+[ ] Deploy new N8n instance
+[ ] Export workflow configurations
+[ ] Import to new instance
+[ ] Update credentials (Supabase, Anthropic, etc.)
+[ ] Test all 4 workflows
+[ ] Update webhook URLs in frontend
+[ ] Verify MIO chatbot responses
+```

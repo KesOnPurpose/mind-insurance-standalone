@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
+import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut, AlertCircle, RefreshCw } from 'lucide-react';
@@ -11,13 +11,13 @@ const LOADING_TIMEOUT_MS = 10000; // 10 seconds
 
 interface AccessGateProps {
   children: ReactNode;
-  requiredTier?: UserTier;
+  requiredTier?: MIUserTier;
   fallback?: ReactNode;
 }
 
 export function AccessGate({ children, requiredTier = 'user', fallback }: AccessGateProps) {
   const { user } = useAuth();
-  const { isApproved, tier, isLoading, hasTierAccess, refetch } = useAccessControl();
+  const { isApproved, tier, isLoading, hasTierAccess, refetch } = useMIAccessControl();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   // Timeout handler to prevent infinite loading spinner

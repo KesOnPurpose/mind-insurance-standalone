@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { useMIAccessControl } from '@/hooks/useMIAccessControl';
 import { useConversationsContext } from '@/contexts/ConversationsContext';
 import { useConversationContext } from '@/contexts/ConversationContext';
 import { useProduct, ProductType } from '@/contexts/ProductContext';
@@ -80,7 +80,7 @@ export function ChatSidebar() {
     selectConversation,
   } = useConversationContext();
 
-  const { canAccessAdminPanel } = useAccessControl();
+  const { canAccessAdminPanel } = useMIAccessControl();
 
   // MIO Insights Thread selection state
   const [isMIOInsightsActive, setIsMIOInsightsActive] = useState(false);

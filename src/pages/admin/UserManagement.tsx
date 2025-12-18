@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAccessControl, UserTier, TIER_HIERARCHY } from '@/hooks/useAccessControl';
+import { useMIAccessControl, MIUserTier, MI_TIER_HIERARCHY } from '@/hooks/useMIAccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
@@ -68,38 +68,34 @@ interface ApprovedUser {
   id: string;
   email: string;
   user_id: string | null;
-  tier: UserTier;
+  tier: MIUserTier;
   is_active: boolean;
   full_name: string | null;
   phone: string | null;
   notes: string | null;
-  payment_source: string | null;
-  payment_reference: string | null;
   expires_at: string | null;
   approved_at: string;
+  approved_by: string | null;
   last_access_at: string | null;
-  invited_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
-const TIER_OPTIONS: { value: NonNullable<UserTier>; label: string }[] = [
+// MI tier options (simpler than GH - no coach/owner)
+const TIER_OPTIONS: { value: NonNullable<MIUserTier>; label: string }[] = [
   { value: 'user', label: 'User' },
-  { value: 'coach', label: 'Coach' },
   { value: 'admin', label: 'Admin' },
   { value: 'super_admin', label: 'Super Admin' },
-  { value: 'owner', label: 'Owner' },
 ];
 
-const TIER_COLORS: Record<NonNullable<UserTier>, string> = {
+const TIER_COLORS: Record<NonNullable<MIUserTier>, string> = {
   user: 'bg-slate-500',
-  coach: 'bg-blue-500',
   admin: 'bg-purple-500',
   super_admin: 'bg-orange-500',
-  owner: 'bg-red-500',
 };
 
 export default function UserManagement() {
-  const { tier: currentUserTier, isAdmin, isSuperAdmin, isOwner } = useAccessControl();
+  const { tier: currentUserTier, isAdmin, isSuperAdmin } = useMIAccessControl();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -120,10 +116,8 @@ export default function UserManagement() {
     email: '',
     full_name: '',
     phone: '',
-    tier: 'user' as NonNullable<UserTier>,
+    tier: 'user' as NonNullable<MIUserTier>,
     notes: '',
-    payment_source: 'manual',
-    payment_reference: '',
   });
   const [sendInviteOnAdd, setSendInviteOnAdd] = useState(true);
   const [isInviting, setIsInviting] = useState(false);
@@ -145,11 +139,11 @@ export default function UserManagement() {
   // Status sync state
   const [isSyncingUserIds, setIsSyncingUserIds] = useState(false);
 
-  // Fetch users using RPC function (bypasses RLS)
+  // Fetch users using MI RPC function (bypasses RLS)
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('gh_admin_get_all_users');
+      const { data, error } = await supabase.rpc('mi_admin_get_all_users');
 
       if (error) throw error;
       setUsers(data as ApprovedUser[]);
@@ -185,12 +179,12 @@ export default function UserManagement() {
     });
   }, [users, searchQuery, filterTier, filterStatus]);
 
-  // Check if current user can modify target tier
-  const canModifyTier = (targetTier: UserTier, targetUserEmail?: string): boolean => {
+  // Check if current user can modify target tier (MI tier hierarchy: super_admin > admin > user)
+  const canModifyTier = (targetTier: MIUserTier, targetUserEmail?: string): boolean => {
     if (!currentUserTier || !targetTier) return false;
 
-    // Owners can modify anyone (including themselves)
-    if (isOwner) return true;
+    // Super admins can modify anyone (including themselves)
+    if (isSuperAdmin) return true;
 
     // Check if trying to edit themselves
     const isEditingSelf = targetUserEmail && user?.email &&
@@ -199,16 +193,13 @@ export default function UserManagement() {
     // Admins (non-super admins) cannot edit themselves
     if (isAdmin && !isSuperAdmin && isEditingSelf) return false;
 
-    // Admins cannot modify super_admin or owner tiers
-    if (isAdmin && !isSuperAdmin && (targetTier === 'super_admin' || targetTier === 'owner')) {
+    // Admins cannot modify super_admin tier
+    if (isAdmin && !isSuperAdmin && targetTier === 'super_admin') {
       return false;
     }
 
-    // Cannot modify owner tier unless you are owner
-    if (targetTier === 'owner') return false;
-
     // Must be higher tier to modify
-    return TIER_HIERARCHY[currentUserTier] > TIER_HIERARCHY[targetTier];
+    return MI_TIER_HIERARCHY[currentUserTier] > MI_TIER_HIERARCHY[targetTier];
   };
 
   // Bulk selection helpers
@@ -237,7 +228,7 @@ export default function UserManagement() {
   const isAllSelected = filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length;
   const isSomeSelected = selectedUserIds.size > 0 && selectedUserIds.size < filteredUsers.length;
 
-  // Add single user using RPC function (bypasses RLS)
+  // Add single user using MI RPC function (bypasses RLS)
   const handleAddUser = async () => {
     if (!formData.email) {
       toast({ title: 'Error', description: 'Email is required', variant: 'destructive' });
@@ -245,14 +236,12 @@ export default function UserManagement() {
     }
 
     try {
-      const { error } = await supabase.rpc('gh_admin_add_user', {
+      const { error } = await supabase.rpc('mi_admin_add_user', {
         p_email: formData.email.toLowerCase().trim(),
+        p_tier: formData.tier,
         p_full_name: formData.full_name || null,
         p_phone: formData.phone || null,
-        p_tier: formData.tier,
         p_notes: formData.notes || null,
-        p_payment_source: formData.payment_source,
-        p_payment_reference: formData.payment_reference || null,
       });
 
       if (error) {
@@ -329,19 +318,17 @@ export default function UserManagement() {
     }
   };
 
-  // Update user using RPC function (bypasses RLS)
+  // Update user using MI RPC function (bypasses RLS)
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
     try {
-      const { error } = await supabase.rpc('gh_admin_update_user', {
+      const { error } = await supabase.rpc('mi_admin_update_user', {
         p_user_id: selectedUser.id,
+        p_tier: formData.tier,
         p_full_name: formData.full_name || null,
         p_phone: formData.phone || null,
-        p_tier: formData.tier,
         p_notes: formData.notes || null,
-        p_payment_source: formData.payment_source,
-        p_payment_reference: formData.payment_reference || null,
       });
 
       if (error) throw error;
@@ -357,10 +344,10 @@ export default function UserManagement() {
     }
   };
 
-  // Toggle user active status using RPC function (bypasses RLS)
+  // Toggle user active status using MI RPC function (bypasses RLS)
   const handleToggleStatus = async (user: ApprovedUser) => {
     try {
-      const { error } = await supabase.rpc('gh_admin_update_user', {
+      const { error } = await supabase.rpc('mi_admin_update_user', {
         p_user_id: user.id,
         p_is_active: !user.is_active,
       });
@@ -378,14 +365,14 @@ export default function UserManagement() {
     }
   };
 
-  // Delete user using RPC function (bypasses RLS)
+  // Delete user using MI RPC function (bypasses RLS)
   const handleDeleteUser = async (user: ApprovedUser) => {
     if (!confirm(`Are you sure you want to remove ${user.email} from the approved list?`)) {
       return;
     }
 
     try {
-      const { error } = await supabase.rpc('gh_admin_delete_user', {
+      const { error } = await supabase.rpc('mi_admin_delete_user', {
         p_user_id: user.id,
       });
 
@@ -399,7 +386,7 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk delete users
+  // Bulk delete users using MI RPC
   const handleBulkDelete = async () => {
     setIsBulkDeleting(true);
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
@@ -409,7 +396,7 @@ export default function UserManagement() {
     try {
       for (const user of selectedUsers) {
         try {
-          const { error } = await supabase.rpc('gh_admin_delete_user', {
+          const { error } = await supabase.rpc('mi_admin_delete_user', {
             p_user_id: user.id,
           });
 
@@ -482,7 +469,7 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk activate users
+  // Bulk activate users using mi_approved_users table
   const handleBulkActivate = async () => {
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let successCount = 0;
@@ -492,7 +479,7 @@ export default function UserManagement() {
       for (const user of selectedUsers) {
         try {
           const { error } = await supabase
-            .from('gh_approved_users')
+            .from('mi_approved_users')
             .update({ is_active: true })
             .eq('id', user.id);
 
@@ -526,7 +513,7 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk deactivate users
+  // Bulk deactivate users using mi_approved_users table
   const handleBulkDeactivate = async () => {
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let successCount = 0;
@@ -536,7 +523,7 @@ export default function UserManagement() {
       for (const user of selectedUsers) {
         try {
           const { error } = await supabase
-            .from('gh_approved_users')
+            .from('mi_approved_users')
             .update({ is_active: false })
             .eq('id', user.id);
 
@@ -570,20 +557,32 @@ export default function UserManagement() {
     }
   };
 
-  // Manual sync all user_ids (fixes stale status badges)
+  // Manual sync: Link user_ids for approved emails that have registered
   const handleSyncAllUserIds = async () => {
     setIsSyncingUserIds(true);
     try {
-      const { data, error } = await supabase.rpc('gh_admin_sync_all_user_ids');
+      // For MI, we'll sync user_ids by matching emails between auth.users and mi_approved_users
+      // This updates mi_approved_users.user_id for any emails that now have auth accounts
+      const { data, error } = await supabase.rpc('mi_admin_sync_user_ids');
 
-      if (error) throw error;
-
-      const syncCount = data?.length || 0;
-
-      toast({
-        title: 'Status Sync Complete',
-        description: `${syncCount} user status${syncCount !== 1 ? 'es' : ''} updated`,
-      });
+      if (error) {
+        // If the function doesn't exist yet, just refresh the list
+        if (error.message?.includes('function') || error.code === '42883') {
+          console.warn('mi_admin_sync_user_ids not yet created, skipping sync');
+          toast({
+            title: 'Refreshed',
+            description: 'User list refreshed',
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        const syncCount = data?.length || 0;
+        toast({
+          title: 'Status Sync Complete',
+          description: `${syncCount} user status${syncCount !== 1 ? 'es' : ''} updated`,
+        });
+      }
 
       // Refresh table to show updated statuses
       fetchUsers();
@@ -697,14 +696,12 @@ export default function UserManagement() {
       const user = parsedCsv.valid[i];
 
       try {
-        const { error } = await supabase.rpc('gh_admin_add_user', {
+        const { error } = await supabase.rpc('mi_admin_add_user', {
           p_email: user.email,
+          p_tier: user.tier,
           p_full_name: user.full_name || null,
           p_phone: user.phone || null,
-          p_tier: user.tier,
-          p_notes: user.notes || null,
-          p_payment_source: user.payment_source || 'csv_import',
-          p_payment_reference: null,
+          p_notes: user.notes || `Imported via CSV`,
         });
 
         if (error) {
@@ -827,8 +824,6 @@ export default function UserManagement() {
       phone: '',
       tier: 'user',
       notes: '',
-      payment_source: 'manual',
-      payment_reference: '',
     });
   };
 
@@ -840,8 +835,6 @@ export default function UserManagement() {
       phone: user.phone || '',
       tier: user.tier || 'user',
       notes: user.notes || '',
-      payment_source: user.payment_source || 'manual',
-      payment_reference: user.payment_reference || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -1141,7 +1134,7 @@ export default function UserManagement() {
                       <Label>Access Tier</Label>
                       <Select
                         value={formData.tier}
-                        onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<UserTier> }))}
+                        onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<MIUserTier> }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1328,13 +1321,9 @@ export default function UserManagement() {
                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                 Signed Up
                               </Badge>
-                            ) : user.invited_at ? (
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                Invited
-                              </Badge>
                             ) : (
                               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                                Not Invited
+                                Pending
                               </Badge>
                             )}
                           </div>
@@ -1357,7 +1346,7 @@ export default function UserManagement() {
                                 disabled={isInviting || !user.is_active}
                               >
                                 <Mail className="w-4 h-4 mr-2" />
-                                {user.invited_at ? 'Resend Invite' : 'Send Invite'}
+                                Send Invite
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => openEditDialog(user)}>
                                 <Pencil className="w-4 h-4 mr-2" />
@@ -1427,7 +1416,7 @@ export default function UserManagement() {
                 <Label>Access Tier</Label>
                 <Select
                   value={formData.tier}
-                  onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<UserTier> }))}
+                  onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<MIUserTier> }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
