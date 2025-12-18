@@ -85,6 +85,7 @@ const WIRING_DISPLAY: Record<string, string> = {
 
 /**
  * Get user's avatar context from their assessment results
+ * Uses avatar_assessments table which consolidates all assessment data
  */
 export async function getAvatarContext(userId: string): Promise<AvatarContext> {
   const emptyContext: AvatarContext = {
@@ -101,56 +102,61 @@ export async function getAvatarContext(userId: string): Promise<AvatarContext> {
   };
 
   try {
-    // Fetch all assessment data in parallel
-    const [collisionResult, temperamentResult, subPatternResult] = await Promise.all([
-      supabase
-        .from('identity_collision_results')
-        .select('primary_pattern, confidence')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single(),
-      supabase
-        .from('temperament_results')
-        .select('primary_temperament, secondary_temperament')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single(),
-      supabase
-        .from('sub_pattern_results')
-        .select('primary_sub_pattern, secondary_sub_pattern')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single(),
-    ]);
+    // Fetch from avatar_assessments table (consolidated assessment data)
+    const { data: avatarAssessment, error } = await supabase
+      .from('avatar_assessments')
+      .select('primary_pattern, temperament, sub_pattern_scores, avatar_type')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    const collision = collisionResult.data;
-    const temperament = temperamentResult.data;
-    const subPattern = subPatternResult.data;
+    if (error) {
+      console.error('[mioAvatarContextService] Error fetching avatar assessment:', error);
+      return emptyContext;
+    }
+
+    if (!avatarAssessment) {
+      return emptyContext;
+    }
+
+    // Extract sub-pattern data from sub_pattern_scores JSONB
+    const subPatternScores = avatarAssessment.sub_pattern_scores as Record<string, number> | null;
+    let primarySubPattern: string | null = null;
+    let secondarySubPattern: string | null = null;
+
+    if (subPatternScores && Object.keys(subPatternScores).length > 0) {
+      // Sort sub-patterns by score to find primary and secondary
+      const sortedSubPatterns = Object.entries(subPatternScores)
+        .sort(([, a], [, b]) => (b || 0) - (a || 0));
+      primarySubPattern = sortedSubPatterns[0]?.[0] || null;
+      secondarySubPattern = sortedSubPatterns[1]?.[0] || null;
+    }
 
     // Build avatar context
     const context: AvatarContext = {
       ...emptyContext,
-      pattern: collision?.primary_pattern || null,
-      pattern_display: collision?.primary_pattern
-        ? PATTERN_DISPLAY[collision.primary_pattern] || collision.primary_pattern
+      pattern: avatarAssessment.primary_pattern || null,
+      pattern_display: avatarAssessment.primary_pattern
+        ? PATTERN_DISPLAY[avatarAssessment.primary_pattern] || avatarAssessment.primary_pattern
         : null,
-      sub_pattern: subPattern?.primary_sub_pattern || null,
-      sub_pattern_secondary: subPattern?.secondary_sub_pattern || null,
-      wiring_primary: temperament?.primary_temperament || null,
-      wiring_secondary: temperament?.secondary_temperament || null,
+      sub_pattern: primarySubPattern,
+      sub_pattern_secondary: secondarySubPattern,
+      wiring_primary: avatarAssessment.temperament || null,
+      wiring_secondary: null, // Secondary temperament not stored in current schema
     };
 
-    // Check if avatar is complete (all 3 assessments)
-    context.is_complete = !!(collision?.primary_pattern && temperament?.primary_temperament && subPattern?.primary_sub_pattern);
+    // Check if avatar is complete (has pattern and temperament at minimum)
+    context.is_complete = !!(avatarAssessment.primary_pattern && avatarAssessment.temperament);
 
     // If complete, look up the full avatar for neural rewiring data
-    if (context.is_complete && context.pattern && context.sub_pattern && context.wiring_primary) {
+    if (context.is_complete && context.pattern && context.wiring_primary) {
+      // Use sub_pattern if available, otherwise use a default based on pattern
+      const subPatternForLookup = context.sub_pattern || getDefaultSubPattern(context.pattern);
+
       const matchedAvatar = findMatchingAvatar(
         context.pattern as 'past_prison' | 'success_sabotage' | 'compass_crisis',
-        context.sub_pattern as Parameters<typeof findMatchingAvatar>[1],
+        subPatternForLookup as Parameters<typeof findMatchingAvatar>[1],
         context.wiring_primary as 'warrior' | 'sage' | 'connector' | 'builder'
       );
 
@@ -168,12 +174,25 @@ export async function getAvatarContext(userId: string): Promise<AvatarContext> {
   }
 }
 
+/**
+ * Get default sub-pattern based on primary collision pattern
+ */
+function getDefaultSubPattern(pattern: string): string {
+  const defaults: Record<string, string> = {
+    past_prison: 'guilt_anchor',
+    success_sabotage: 'last_minute_pullback',
+    compass_crisis: 'paralysis_by_options',
+  };
+  return defaults[pattern] || 'guilt_anchor';
+}
+
 // ============================================================================
 // PRACTICE INSIGHTS
 // ============================================================================
 
 /**
  * Analyze user's practice patterns from protocol completions
+ * Uses actual database schema: mio_protocol_completions has response_data (JSONB), not practice_response
  */
 export async function getPracticeInsights(userId: string): Promise<PracticeInsights> {
   const emptyInsights: PracticeInsights = {
@@ -192,12 +211,12 @@ export async function getPracticeInsights(userId: string): Promise<PracticeInsig
   };
 
   try {
-    // Fetch practice data
+    // Fetch practice data - using correct column names from actual schema
     const [completionsResult, streakResult, protocolsResult, practicesResult] = await Promise.all([
-      // Protocol day completions
+      // Protocol day completions - use response_data JSONB, not practice_response
       supabase
         .from('mio_protocol_completions')
-        .select('completed_at, practice_response')
+        .select('completed_at, response_data, was_skipped')
         .eq('user_id', userId)
         .order('completed_at', { ascending: false }),
       // Streak data
@@ -205,7 +224,7 @@ export async function getPracticeInsights(userId: string): Promise<PracticeInsig
         .from('coverage_streaks')
         .select('current_streak')
         .eq('user_id', userId)
-        .single(),
+        .maybeSingle(),
       // Completed protocols count
       supabase
         .from('mio_weekly_protocols')
@@ -237,11 +256,26 @@ export async function getPracticeInsights(userId: string): Promise<PracticeInsig
       }
     }
 
-    // Calculate practice response breakdown
+    // Calculate practice response breakdown from response_data JSONB
+    // Structure: { word_count, submitted_at, reflection_text, time_spent_writing_seconds }
     const breakdown = { yes_multiple: 0, yes_once: 0, tried: 0, forgot: 0 };
     completions.forEach(c => {
-      if (c.practice_response && Object.prototype.hasOwnProperty.call(breakdown, c.practice_response)) {
-        breakdown[c.practice_response as keyof typeof breakdown]++;
+      const responseData = c.response_data as Record<string, unknown> | null;
+      // Infer response type from completion data
+      if (c.was_skipped) {
+        breakdown.forgot++;
+      } else if (responseData?.reflection_text) {
+        // Has reflection = completed properly
+        const wordCount = (responseData.word_count as number) || 0;
+        if (wordCount >= 20) {
+          breakdown.yes_multiple++;
+        } else if (wordCount > 0) {
+          breakdown.yes_once++;
+        } else {
+          breakdown.tried++;
+        }
+      } else {
+        breakdown.tried++;
       }
     });
 
@@ -279,30 +313,31 @@ export async function getPracticeInsights(userId: string): Promise<PracticeInsig
 
 /**
  * Get context from the user's most recently completed protocol
+ * Uses actual schema: mio_protocol_completions has 'notes' column, not 'moment_captured'
  */
 export async function getPreviousProtocolContext(userId: string): Promise<PreviousProtocolContext | null> {
   try {
-    const { data: protocol } = await supabase
+    const { data: protocol, error: protocolError } = await supabase
       .from('mio_weekly_protocols')
       .select('title, days_completed, days_skipped, status')
       .eq('user_id', userId)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (!protocol) return null;
+    if (protocolError || !protocol) return null;
 
-    // Fetch moments captured from this protocol
+    // Fetch notes (key moments) from this protocol - column is 'notes', not 'moment_captured'
     const { data: completions } = await supabase
       .from('mio_protocol_completions')
-      .select('moment_captured')
+      .select('notes')
       .eq('user_id', userId)
-      .not('moment_captured', 'is', null)
+      .not('notes', 'is', null)
       .order('completed_at', { ascending: false })
       .limit(5);
 
-    const moments = completions?.map(c => c.moment_captured).filter(Boolean) as string[] || [];
+    const moments = completions?.map(c => c.notes).filter(Boolean) as string[] || [];
     const totalDays = (protocol.days_completed || 0) + (protocol.days_skipped || 0);
     const completionPct = totalDays > 0
       ? Math.round(((protocol.days_completed || 0) / totalDays) * 100)
