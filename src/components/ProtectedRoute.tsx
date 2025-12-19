@@ -22,10 +22,12 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
       }
 
       try {
-        const { data: onboarding, error } = await supabase
-          .from('user_onboarding')
-          .select('onboarding_step, assessment_completed_at')
-          .eq('user_id', user.id)
+        // Check user_profiles for MI assessment completion
+        // This is more reliable than user_onboarding which may be empty
+        const { data: profile, error } = await supabase
+          .from('user_profiles')
+          .select('mind_insurance_assessment_completed_at, collision_patterns')
+          .eq('id', user.id)
           .single();
 
         if (error && error.code !== 'PGRST116') {
@@ -34,8 +36,11 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
           return;
         }
 
-        const isCompleted = onboarding?.assessment_completed_at != null || 
-          ['assessment_complete', 'assessment_skipped', 'welcome_shown', 'roadmap_visited'].includes(onboarding?.onboarding_step || '');
+        // Assessment is complete if either:
+        // 1. mind_insurance_assessment_completed_at is set, OR
+        // 2. collision_patterns is populated (legacy check)
+        const isCompleted = profile?.mind_insurance_assessment_completed_at != null ||
+          profile?.collision_patterns != null;
 
         setAssessmentStatus(isCompleted ? 'completed' : 'not_completed');
       } catch (err) {
@@ -49,7 +54,8 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     }
   }, [user?.id, requireAssessment]);
 
-  if (loading || (requireAssessment && assessmentStatus === 'loading')) {
+  // First, handle auth loading state
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -57,8 +63,18 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     );
   }
 
+  // If not authenticated, redirect to auth page (check this BEFORE assessment status)
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // Now we know user exists, check assessment status loading
+  if (requireAssessment && assessmentStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   // MI Standalone: Redirect to MI-specific assessment route

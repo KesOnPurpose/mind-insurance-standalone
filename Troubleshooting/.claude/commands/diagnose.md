@@ -3,6 +3,23 @@ description: Multi-system diagnostic for any Mind Insurance issue - automaticall
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
+## CLOUDFLARE DEPLOYMENT SAFETY (MANDATORY)
+
+**BLOCKED DOMAINS - NEVER push without EXPLICIT user approval:**
+- `mindhouse-prodigy.pages.dev`
+- `grouphome4newbies.com`
+- `a24397ef.mindhouse-prodigy.pages.dev`
+
+**ALLOWED - Staging ONLY:**
+- `https://staging.mindinsurancechallange.pages.dev/`
+
+**Before ANY Cloudflare/Wrangler deployment:**
+1. Verify target is `staging.mindinsurancechallange.pages.dev`
+2. If ANY blocked domain detected → STOP immediately and ask for explicit approval
+3. Production deployments are FORBIDDEN without user confirmation
+
+---
+
 # Multi-System Diagnostic: $ARGUMENTS
 
 Analyzing issue: **$ARGUMENTS**

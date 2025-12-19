@@ -544,20 +544,22 @@ export async function saveFirstEngagementToThread(
  */
 export async function hasCompletedFirstEngagement(userId: string): Promise<boolean> {
   try {
+    // Use limit(1) instead of single() to avoid 406 error if multiple rows exist
     const { data, error } = await supabase
       .from('mio_insights_messages')
       .select('id')
       .eq('user_id', userId)
       .eq('section_type', 'first_engagement')
       .eq('role', 'user')
-      .single();
+      .limit(1);
 
-    // PGRST116 = no rows found (user hasn't completed)
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('[FirstEngagement] Error checking completion:', error);
+      return false;
     }
 
-    return !!data;
+    // Return true if any messages exist
+    return data && data.length > 0;
   } catch (error) {
     console.error('[FirstEngagement] Unexpected error checking completion:', error);
     return false;
@@ -569,20 +571,24 @@ export async function hasCompletedFirstEngagement(userId: string): Promise<boole
  */
 export async function getFirstEngagementResponse(userId: string): Promise<MIOInsightsMessage | null> {
   try {
+    // Use limit(1) instead of single() to avoid 406 error if multiple rows exist
+    // Order by created_at desc to get the most recent response
     const { data, error } = await supabase
       .from('mio_insights_messages')
       .select('*')
       .eq('user_id', userId)
       .eq('section_type', 'first_engagement')
       .eq('role', 'user')
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('[FirstEngagement] Error fetching response:', error);
       return null;
     }
 
-    return data as MIOInsightsMessage | null;
+    // Return first item or null
+    return (data && data.length > 0 ? data[0] : null) as MIOInsightsMessage | null;
   } catch (error) {
     console.error('[FirstEngagement] Unexpected error fetching response:', error);
     return null;

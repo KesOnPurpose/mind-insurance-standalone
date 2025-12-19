@@ -9,6 +9,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 import { getTodayInTimezone } from '@/utils/timezoneUtils';
 import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
+import { AnimatePresence } from 'framer-motion';
+
+// Protocol Unlock System
+import { useUnstartedProtocol } from '@/hooks/useUnstartedProtocol';
+import { ProtocolUnlockModal } from '@/components/coverage-center/ProtocolUnlockModal';
+import { ProtocolReadyBadge } from '@/components/coverage-center/ProtocolReadyBadge';
+import { startProtocol } from '@/services/mioInsightProtocolService';
+
+// Hub Tour System
+import { useHubTour } from '@/hooks/useHubTour';
+import { TourHighlight, TourTooltip, TourOfferDialog } from '@/components/tour';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -21,6 +32,11 @@ interface DailyPracticeStatus {
  *
  * This page is dedicated to the daily PROTECT Method practice.
  * All protocol content (MIO + Coach) has been moved to Coverage Center.
+ *
+ * Features:
+ * - Protocol Unlock Modal (shown when unstarted protocol exists)
+ * - Protocol Ready Badge (floating + dot after modal dismissed)
+ * - 4-Step Hub Tour (Practice Center, Coverage Center, My Evidence, MIO)
  */
 export default function MindInsuranceHub() {
   const navigate = useNavigate();
@@ -32,6 +48,34 @@ export default function MindInsuranceHub() {
     points: 0
   });
   const [loading, setLoading] = useState(true);
+
+  // Protocol Unlock System
+  const {
+    unstartedProtocol,
+    hasUnstartedProtocol,
+    isNewUser,
+    isReturningUser,
+    shouldShowModal,
+    dismissModal,
+    showBadge,
+    refreshProtocol,
+  } = useUnstartedProtocol();
+
+  // Hub Tour System
+  const {
+    isActive: isTourActive,
+    stepData,
+    currentStep,
+    totalSteps,
+    startTour,
+    nextStep,
+    skipTour,
+    completeTour,
+    hasCompletedTour,
+  } = useHubTour();
+
+  // State for tour offer after modal
+  const [showTourOffer, setShowTourOffer] = useState(false);
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -85,6 +129,49 @@ export default function MindInsuranceHub() {
     }
   };
 
+  // Handle "Begin Day 1" from Protocol Unlock Modal
+  const handleBeginDay1 = async () => {
+    if (!unstartedProtocol?.id) return;
+
+    // Start the protocol
+    await startProtocol(unstartedProtocol.id);
+    await refreshProtocol();
+
+    // Dismiss the modal
+    dismissModal();
+
+    // If tour not completed, offer it
+    if (!hasCompletedTour) {
+      setShowTourOffer(true);
+    } else {
+      // Navigate directly to Coverage Center
+      navigate('/mind-insurance/coverage');
+    }
+  };
+
+  // Handle "Remind Me Later" from Protocol Unlock Modal
+  const handleRemindLater = () => {
+    dismissModal();
+  };
+
+  // Handle tour start from Tour Offer Dialog
+  const handleStartTour = () => {
+    setShowTourOffer(false);
+    startTour();
+  };
+
+  // Handle skip tour from Tour Offer Dialog
+  const handleSkipTour = () => {
+    setShowTourOffer(false);
+    navigate('/mind-insurance/coverage');
+  };
+
+  // Handle tour completion - navigate to Coverage Center
+  const handleTourComplete = () => {
+    completeTour();
+    navigate('/mind-insurance/coverage');
+  };
+
   const progressPercentage = (practiceStatus.completed / practiceStatus.total) * 100;
 
   if (loading) {
@@ -97,115 +184,169 @@ export default function MindInsuranceHub() {
 
   return (
     <MindInsuranceErrorBoundary fallbackTitle="Error loading Mind Insurance Hub" showHomeButton={false}>
-    <div className="min-h-screen bg-mi-navy">
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
-              <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
-              Mind Insurance
-            </h1>
-            <p className="text-sm sm:text-base text-gray-400 mt-1">
-              Your daily PROTECT practice hub
-            </p>
-          </div>
-          <Badge
-            variant="outline"
-            className={`text-sm sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 border-mi-navy-light w-fit ${getChampionshipColor(userStats.championshipLevel)}`}
-          >
-            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-            {userStats.championshipLevel}
-          </Badge>
-        </div>
+      {/* Protocol Unlock Modal */}
+      <ProtocolUnlockModal
+        isOpen={shouldShowModal && hasUnstartedProtocol}
+        protocol={unstartedProtocol}
+        variant={isNewUser ? 'new_user' : 'returning_user'}
+        onBeginDay1={handleBeginDay1}
+        onRemindLater={handleRemindLater}
+        onClose={dismissModal}
+      />
 
-        {/* Today's Practice Status */}
-        <Card className="p-6 bg-mi-navy-light border-mi-cyan/30">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
-                <Calendar className="w-5 h-5 text-mi-cyan" />
-                Today's Practice
-              </h2>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-mi-gold">{practiceStatus.points}</p>
-                <p className="text-sm text-gray-400">points earned</p>
-              </div>
-            </div>
+      {/* Tour Offer Dialog (after Begin Day 1) */}
+      <TourOfferDialog
+        isOpen={showTourOffer}
+        onStartTour={handleStartTour}
+        onSkip={handleSkipTour}
+      />
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-300">
-                <span>{practiceStatus.completed} of {practiceStatus.total} completed</span>
-                <span className="font-semibold text-mi-cyan">{Math.round(progressPercentage)}%</span>
-              </div>
-              <div className="h-3 w-full bg-mi-cyan/20 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-mi-cyan rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+      {/* Tour Overlay (when active) */}
+      <AnimatePresence>
+        {isTourActive && stepData && (
+          <>
+            <TourHighlight
+              targetSelector={stepData.targetSelector}
+              isActive={isTourActive}
+            />
+            <TourTooltip
+              step={stepData}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              onNext={currentStep === totalSteps - 1 ? handleTourComplete : nextStep}
+              onSkip={skipTour}
+              onComplete={handleTourComplete}
+            />
+          </>
+        )}
+      </AnimatePresence>
 
-            <Button
-              onClick={() => navigate('/mind-insurance/practice')}
-              className="w-full bg-mi-cyan hover:bg-mi-cyan-dark text-white"
-              size="lg"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {practiceStatus.completed === 0 ? 'Start Today\'s Practice' : 'Continue Practice'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Streak Tracker */}
-          <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-400">Current Streak</h3>
-              <p className="text-3xl font-bold text-mi-gold">{userStats.streak} days</p>
-              <p className="text-sm text-gray-400">Keep it going!</p>
-            </div>
-          </Card>
-
-          {/* Total Points */}
-          <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-400">Total Points</h3>
-              <p className="text-3xl font-bold text-mi-gold">{userStats.totalPoints}</p>
-              <p className="text-sm text-gray-400">
-                {userStats.totalPoints < 150 && 'Next level: 150 points (Silver)'}
-                {userStats.totalPoints >= 150 && userStats.totalPoints < 300 && 'Next level: 300 points (Gold)'}
-                {userStats.totalPoints >= 300 && userStats.totalPoints < 450 && 'Next level: 450 points (Platinum)'}
-                {userStats.totalPoints >= 450 && 'Maximum level achieved!'}
+      <div className="min-h-screen bg-mi-navy">
+        <div className="container mx-auto p-4 md:p-6 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
+                Mind Insurance
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400 mt-1">
+                Your daily PROTECT practice hub
               </p>
             </div>
-          </Card>
-        </div>
-
-        {/* Coverage Center Link */}
-        <Card
-          className="p-4 bg-mi-navy-light border-mi-cyan/30 cursor-pointer hover:border-mi-cyan/50 transition-all"
-          onClick={() => navigate('/mind-insurance/coverage')}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-mi-cyan" />
-              </div>
-              <div>
-                <p className="font-medium text-white">Coverage Center</p>
-                <p className="text-sm text-gray-400">View your protocols and progress</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30">
-              View
+            <Badge
+              variant="outline"
+              className={`text-sm sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 border-mi-navy-light w-fit ${getChampionshipColor(userStats.championshipLevel)}`}
+            >
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              {userStats.championshipLevel}
             </Badge>
           </div>
-        </Card>
 
+          {/* Today's Practice Status - Tour Target: practice */}
+          <Card
+            data-tour-target="practice"
+            className="p-6 bg-mi-navy-light border-mi-cyan/30"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
+                  <Calendar className="w-5 h-5 text-mi-cyan" />
+                  Today's Practice
+                </h2>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-mi-gold">{practiceStatus.points}</p>
+                  <p className="text-sm text-gray-400">points earned</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-300">
+                  <span>{practiceStatus.completed} of {practiceStatus.total} completed</span>
+                  <span className="font-semibold text-mi-cyan">{Math.round(progressPercentage)}%</span>
+                </div>
+                <div className="h-3 w-full bg-mi-cyan/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-mi-cyan rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={() => navigate('/mind-insurance/practice')}
+                className="w-full bg-mi-cyan hover:bg-mi-cyan-dark text-white"
+                size="lg"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {practiceStatus.completed === 0 ? 'Start Today\'s Practice' : 'Continue Practice'}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Streak Tracker */}
+            <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-400">Current Streak</h3>
+                <p className="text-3xl font-bold text-mi-gold">{userStats.streak} days</p>
+                <p className="text-sm text-gray-400">Keep it going!</p>
+              </div>
+            </Card>
+
+            {/* Total Points */}
+            <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-400">Total Points</h3>
+                <p className="text-3xl font-bold text-mi-gold">{userStats.totalPoints}</p>
+                <p className="text-sm text-gray-400">
+                  {userStats.totalPoints < 150 && 'Next level: 150 points (Silver)'}
+                  {userStats.totalPoints >= 150 && userStats.totalPoints < 300 && 'Next level: 300 points (Gold)'}
+                  {userStats.totalPoints >= 300 && userStats.totalPoints < 450 && 'Next level: 450 points (Platinum)'}
+                  {userStats.totalPoints >= 450 && 'Maximum level achieved!'}
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          {/* Coverage Center Link - Tour Target: coverage */}
+          <Card
+            data-tour-target="coverage"
+            className="relative p-4 bg-mi-navy-light border-mi-cyan/30 cursor-pointer hover:border-mi-cyan/50 transition-all"
+            onClick={() => navigate('/mind-insurance/coverage')}
+          >
+            {/* Badge dot when protocol ready */}
+            {showBadge && <ProtocolReadyBadge variant="dot" />}
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-mi-cyan" />
+                </div>
+                <div>
+                  <p className="font-medium text-white">Coverage Center</p>
+                  <p className="text-sm text-gray-400">View your protocols and progress</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30">
+                View
+              </Badge>
+            </div>
+          </Card>
+
+        </div>
       </div>
-    </div>
+
+      {/* Floating badge (when modal dismissed and tour not active) */}
+      <AnimatePresence>
+        {showBadge && unstartedProtocol && !isTourActive && (
+          <ProtocolReadyBadge
+            variant="floating"
+            onView={() => navigate('/mind-insurance/coverage')}
+          />
+        )}
+      </AnimatePresence>
     </MindInsuranceErrorBoundary>
   );
 }

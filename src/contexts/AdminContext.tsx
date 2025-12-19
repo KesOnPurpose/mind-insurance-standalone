@@ -89,54 +89,36 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setIsLoading(true);
 
-      // Query mi_approved_users table (MI Standalone access control)
-      const { data, error } = await supabase
-        .from('mi_approved_users')
-        .select('id, user_id, tier, is_active, created_at, last_access_at')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
+      // Use RPC function to avoid RLS infinite recursion
+      // The mi_get_current_user_access function uses SECURITY DEFINER to bypass RLS
+      const { data, error } = await supabase.rpc('mi_get_current_user_access');
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No matching user found
-          console.log('[AdminContext] User not found in mi_approved_users');
-          setAdminUser(null);
-        } else if (error.code === '42501' || error.message?.includes('406') || error.message?.includes('permission denied')) {
-          // RLS policy denied access
-          console.log('[AdminContext] User does not have admin permissions (RLS denied)');
-          setAdminUser(null);
-        } else {
-          // Unexpected error - log but fail gracefully
-          console.error('[AdminContext] Unexpected error fetching admin user:', error);
-          setAdminUser(null);
-        }
-      } else if (data) {
-        // Only set as admin if tier is admin or super_admin
+        // RPC function might not exist or other error
+        console.error('[AdminContext] Error calling mi_get_current_user_access:', error);
+        setAdminUser(null);
+      } else if (data && data.is_approved && data.tier) {
         const tier = data.tier as string;
+        // Only set as admin if tier is admin or super_admin
         if (tier === 'admin' || tier === 'super_admin') {
-          console.log('[AdminContext] Admin user loaded:', tier);
+          console.log('[AdminContext] Admin user loaded via RPC:', tier);
           setAdminUser({
-            id: data.id,
-            user_id: data.user_id || '',
+            id: data.user?.id || user.id,
+            user_id: user.id,
             role: tier as AdminRole,
             permissions: getPermissionsForTier(tier),
-            created_at: data.created_at || '',
-            last_login_at: data.last_access_at,
-            is_active: data.is_active,
+            created_at: data.approved_at || new Date().toISOString(),
+            last_login_at: null,
+            is_active: true,
           });
-
-          // Update last_access_at timestamp
-          await supabase
-            .from('mi_approved_users')
-            .update({ last_access_at: new Date().toISOString() })
-            .eq('id', data.id);
         } else {
           // User tier = not an admin
           console.log('[AdminContext] User is not an admin (tier:', tier, ')');
           setAdminUser(null);
         }
       } else {
+        // User not found or not approved
+        console.log('[AdminContext] User not in mi_approved_users or not approved');
         setAdminUser(null);
       }
     } catch (error) {

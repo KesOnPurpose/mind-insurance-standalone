@@ -1,13 +1,19 @@
 // CoachProtocolTabs Component
 // Displays user's active coach protocols in Primary/Secondary tabs
+//
+// Premium Glass-Morphism Styling: CYAN accents (differentiates from MIO's gold)
+// Visual Language: Coach protocols = Cyan, MIO protocols = Gold
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   BookOpen,
   Calendar,
   CheckCircle,
   Clock,
   ChevronRight,
+  Sparkles,
+  Users,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CoachProtocolDayView } from './CoachProtocolDayView';
 import { useCoachProtocols } from '@/hooks/useCoachProtocols';
 import { useCoachProtocolTasks } from '@/hooks/useCoachProtocolTasks';
+import { cn } from '@/lib/utils';
 import type { AssignmentSlot } from '@/types/coach-protocol';
 
 interface CoachProtocolTabsProps {
@@ -64,12 +71,20 @@ export function CoachProtocolTabs({ onProtocolComplete }: CoachProtocolTabsProps
 
   if (isLoading) {
     return (
-      <Card className="bg-mi-navy-light border border-mi-gold/30">
+      <Card className={cn(
+        "overflow-hidden",
+        "bg-mi-navy/80 backdrop-blur-xl",
+        "border border-mi-cyan/20",
+        "shadow-[0_8px_32px_rgba(5,195,221,0.1)]"
+      )}>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-pulse text-gray-400">
-              Loading coach protocols...
-            </div>
+          <div className="flex items-center justify-center gap-3">
+            <motion.div
+              className="w-5 h-5 rounded-full bg-mi-cyan/30"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <span className="text-gray-400">Loading coach protocols...</span>
           </div>
         </CardContent>
       </Card>
@@ -96,12 +111,20 @@ export function CoachProtocolTabs({ onProtocolComplete }: CoachProtocolTabsProps
     // This fixes the race condition where protocols load before tasks
     if (!slotData || tasksLoading) {
       return (
-        <Card className="bg-mi-navy-light border border-mi-gold/30">
+        <Card className={cn(
+          "overflow-hidden",
+          "bg-mi-navy/80 backdrop-blur-xl",
+          "border border-mi-cyan/20",
+          "shadow-[0_8px_32px_rgba(5,195,221,0.1)]"
+        )}>
           <CardContent className="p-6">
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-pulse text-gray-400">
-                Loading today's tasks...
-              </div>
+            <div className="flex items-center justify-center gap-3 py-8">
+              <motion.div
+                className="w-5 h-5 rounded-full bg-mi-cyan/30"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-gray-400">Loading today's tasks...</span>
             </div>
           </CardContent>
         </Card>
@@ -128,33 +151,77 @@ export function CoachProtocolTabs({ onProtocolComplete }: CoachProtocolTabsProps
   }
 
   return (
-    <Card className="bg-mi-navy-light border border-mi-gold/30">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+    <Card className={cn(
+      "relative overflow-hidden",
+      // Premium glass-morphism effect
+      "bg-mi-navy/80 backdrop-blur-xl",
+      "border border-mi-cyan/20",
+      "shadow-[0_8px_32px_rgba(5,195,221,0.15),0_0_60px_rgba(5,195,221,0.08)]"
+    )}>
+      {/* Animated gradient border glow */}
+      <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+        <div className="absolute inset-[-2px] bg-gradient-to-br from-mi-cyan/20 via-transparent to-cyan-400/20 opacity-50" />
+      </div>
+
+      <CardHeader className="pb-2 relative z-10">
+        {/* Background gradient mesh */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-gradient-to-br from-mi-cyan/15 to-transparent blur-2xl" />
+          <div className="absolute -bottom-5 -right-5 w-32 h-32 rounded-full bg-cyan-400/10 blur-xl" />
+        </div>
+
+        <div className="flex items-center justify-between relative z-10">
           <CardTitle className="flex items-center gap-2 text-lg text-white">
-            <BookOpen className="h-5 w-5 text-mi-gold" />
-            Coach Protocols
+            <div className={cn(
+              "p-1.5 rounded-lg",
+              "bg-gradient-to-br from-mi-cyan/30 to-cyan-400/20",
+              "border border-mi-cyan/30"
+            )}>
+              <Users className="h-4 w-4 text-mi-cyan" />
+            </div>
+            <span className="text-mi-cyan">Coach Protocols</span>
           </CardTitle>
+          <Sparkles className="h-4 w-4 text-mi-cyan/50" />
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 relative z-10">
         <Tabs value={activeSlot} onValueChange={(v) => setActiveSlot(v as AssignmentSlot)}>
-          <TabsList className="grid w-full grid-cols-2 mb-4 bg-mi-navy/50">
-            <TabsTrigger value="primary" disabled={!protocols.primary} className="data-[state=active]:bg-mi-gold/20 data-[state=active]:text-mi-gold text-gray-400">
+          <TabsList className={cn(
+            "grid w-full grid-cols-2 mb-4",
+            "bg-white/5 backdrop-blur-sm",
+            "border border-mi-cyan/10"
+          )}>
+            <TabsTrigger
+              value="primary"
+              disabled={!protocols.primary}
+              className={cn(
+                "data-[state=active]:bg-mi-cyan/20 data-[state=active]:text-mi-cyan",
+                "data-[state=active]:shadow-[0_0_10px_rgba(5,195,221,0.3)]",
+                "text-gray-400 transition-all duration-300"
+              )}
+            >
               <div className="flex items-center gap-2">
                 <span>Primary</span>
                 {protocols.primary && (
-                  <Badge className="text-xs bg-mi-gold/20 text-mi-gold border-mi-gold/30">
+                  <Badge className="text-xs bg-mi-cyan/20 text-mi-cyan border-mi-cyan/30">
                     {getSlotTasks('primary').completedCount}/{getSlotTasks('primary').totalCount}
                   </Badge>
                 )}
               </div>
             </TabsTrigger>
-            <TabsTrigger value="secondary" disabled={!protocols.secondary} className="data-[state=active]:bg-mi-gold/20 data-[state=active]:text-mi-gold text-gray-400">
+            <TabsTrigger
+              value="secondary"
+              disabled={!protocols.secondary}
+              className={cn(
+                "data-[state=active]:bg-mi-cyan/20 data-[state=active]:text-mi-cyan",
+                "data-[state=active]:shadow-[0_0_10px_rgba(5,195,221,0.3)]",
+                "text-gray-400 transition-all duration-300"
+              )}
+            >
               <div className="flex items-center gap-2">
                 <span>Secondary</span>
                 {protocols.secondary && (
-                  <Badge className="text-xs bg-mi-gold/20 text-mi-gold border-mi-gold/30">
+                  <Badge className="text-xs bg-mi-cyan/20 text-mi-cyan border-mi-cyan/30">
                     {getSlotTasks('secondary').completedCount}/{getSlotTasks('secondary').totalCount}
                   </Badge>
                 )}
@@ -208,23 +275,35 @@ function ProtocolSlotCard({ protocol, tasks, onExpand }: ProtocolSlotCardProps) 
   const isAllTodayComplete = tasks.allCompleted;
 
   return (
-    <div
-      className="p-4 rounded-lg bg-mi-navy/50 border border-mi-gold/20 cursor-pointer hover:bg-mi-navy/70 hover:border-mi-gold/40 transition-all"
+    <motion.div
+      className={cn(
+        "p-4 rounded-xl cursor-pointer transition-all",
+        // Premium glass card
+        "bg-white/5 backdrop-blur-sm",
+        "border border-mi-cyan/20",
+        "hover:bg-white/8 hover:border-mi-cyan/40",
+        "hover:shadow-[0_4px_20px_rgba(5,195,221,0.15)]",
+        "group"
+      )}
       onClick={onExpand}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           {/* Protocol Title */}
-          <h4 className="font-semibold text-base text-white">{protocol.protocol.title}</h4>
+          <h4 className="font-semibold text-base text-white group-hover:text-mi-cyan transition-colors">
+            {protocol.protocol.title}
+          </h4>
 
           {/* Week/Day Info */}
           <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
             <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4 text-mi-gold" />
+              <Calendar className="h-4 w-4 text-mi-cyan" />
               Week {protocol.assignment.current_week}, Day {protocol.assignment.current_day}
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4 text-mi-gold" />
+              <Clock className="h-4 w-4 text-cyan-400" />
               {protocol.progress.days_remaining} days left
             </div>
           </div>
@@ -232,43 +311,51 @@ function ProtocolSlotCard({ protocol, tasks, onExpand }: ProtocolSlotCardProps) 
           {/* Today's Progress */}
           <div className="flex items-center gap-2 mt-3">
             {isAllTodayComplete ? (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Today Complete
               </Badge>
             ) : (
-              <Badge className="bg-mi-gold/20 text-mi-gold border-mi-gold/30">
+              <Badge className="bg-mi-cyan/20 text-mi-cyan border-mi-cyan/30">
                 {tasks.completedCount}/{tasks.totalCount} tasks today
               </Badge>
             )}
           </div>
 
-          {/* Overall Progress */}
+          {/* Overall Progress - Cyan gradient */}
           <div className="mt-3 space-y-1">
             <div className="flex justify-between text-xs text-gray-400">
               <span>Overall Progress</span>
-              <span className="text-mi-gold">{Math.round(progressPercent)}%</span>
+              <span className="text-mi-cyan font-medium">{Math.round(progressPercent)}%</span>
             </div>
-            <div className="h-2 bg-mi-gold/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-mi-gold rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
+            <div className="h-2 bg-mi-cyan/10 rounded-full overflow-hidden border border-mi-cyan/20">
+              <motion.div
+                className="h-full bg-gradient-to-r from-mi-cyan to-cyan-400 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
               />
             </div>
           </div>
         </div>
 
-        <ChevronRight className="h-5 w-5 text-mi-gold ml-4" />
+        <ChevronRight className="h-5 w-5 text-mi-cyan ml-4 group-hover:translate-x-1 transition-transform" />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function EmptySlot({ slot }: { slot: AssignmentSlot }) {
   return (
-    <div className="p-6 text-center text-gray-500 bg-mi-navy/30 rounded-lg border border-mi-navy-light">
-      <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50 text-mi-gold/50" />
-      <p className="text-sm">No {slot} protocol assigned</p>
+    <div className={cn(
+      "p-6 text-center rounded-xl",
+      "bg-white/5 backdrop-blur-sm",
+      "border border-mi-cyan/10 border-dashed"
+    )}>
+      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-mi-cyan/10 flex items-center justify-center">
+        <BookOpen className="h-6 w-6 text-mi-cyan/50" />
+      </div>
+      <p className="text-sm text-gray-500">No {slot} protocol assigned</p>
     </div>
   );
 }

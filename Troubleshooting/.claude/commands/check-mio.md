@@ -3,6 +3,23 @@ description: Run MIO behavioral analysis on a user - detect dropout risk, breakt
 allowed-tools: Bash, Read, Grep
 ---
 
+## CLOUDFLARE DEPLOYMENT SAFETY (MANDATORY)
+
+**BLOCKED DOMAINS - NEVER push without EXPLICIT user approval:**
+- `mindhouse-prodigy.pages.dev`
+- `grouphome4newbies.com`
+- `a24397ef.mindhouse-prodigy.pages.dev`
+
+**ALLOWED - Staging ONLY:**
+- `https://staging.mindinsurancechallange.pages.dev/`
+
+**Before ANY Cloudflare/Wrangler deployment:**
+1. Verify target is `staging.mindinsurancechallange.pages.dev`
+2. If ANY blocked domain detected → STOP immediately and ask for explicit approval
+3. Production deployments are FORBIDDEN without user confirmation
+
+---
+
 # MIO Behavioral Analysis: $ARGUMENTS
 
 Running 15-capability forensic analysis for user: **$ARGUMENTS**

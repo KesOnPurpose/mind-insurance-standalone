@@ -3,9 +3,11 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useIdentityCollisionStatus, hasCompletedCollisionAssessment } from '@/hooks/useIdentityCollisionStatus';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Maximum time to wait for loading states before redirecting to assessment
+// Maximum time to wait for loading states before showing retry UI
+// Reduced to 10s to match other guards - 30s was masking real issues
 const LOADING_TIMEOUT_MS = 10000; // 10 seconds
 
 // ============================================================================
@@ -22,72 +24,11 @@ interface IdentityCollisionGuardProps {
 }
 
 export const IdentityCollisionGuard: React.FC<IdentityCollisionGuardProps> = ({ children }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isLoading: adminLoading } = useAdmin();
-  const { data: collisionStatus, isLoading: statusLoading } = useIdentityCollisionStatus(user?.id);
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
-
-  // Show loading spinner while checking auth, admin status, or collision status
-  const isLoading = authLoading || adminLoading || statusLoading;
-
-  // Timeout handler to prevent infinite loading spinner
-  // If loading takes longer than LOADING_TIMEOUT_MS, redirect to assessment
-  useEffect(() => {
-    if (isLoading && !loadingTimedOut) {
-      const timeout = setTimeout(() => {
-        console.warn('[IdentityCollisionGuard] Loading timeout exceeded - redirecting to assessment');
-        setLoadingTimedOut(true);
-      }, LOADING_TIMEOUT_MS);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, loadingTimedOut]);
-
-  // If loading timed out, redirect to assessment page
-  if (loadingTimedOut && location.pathname !== '/mind-insurance/assessment') {
-    console.log('[IdentityCollisionGuard] Timeout redirect to assessment');
-    return <Navigate to="/mind-insurance/assessment" state={{ from: location }} replace />;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-mi-navy">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-mi-cyan" />
-          <p className="text-gray-400 text-sm">Checking your profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Not authenticated - let ProtectedRoute handle this
-  if (!user) {
-    return <>{children}</>;
-  }
-
-  // ADMIN BYPASS: Admins can skip assessment for testing/support
-  if (isAdmin) {
-    console.log('[IdentityCollisionGuard] Admin user - bypassing assessment requirement');
-    return <>{children}</>;
-  }
-
-  // Don't redirect if we're already on the assessment page
-  if (location.pathname === '/mind-insurance/assessment') {
-    return <>{children}</>;
-  }
-
-  // Check if assessment is completed
-  const hasPattern = hasCompletedCollisionAssessment(collisionStatus);
-
-  if (!hasPattern) {
-    console.log('[IdentityCollisionGuard] Assessment not completed - redirecting to /mind-insurance/assessment');
-    // Preserve the intended destination so we can redirect after assessment
-    return <Navigate to="/mind-insurance/assessment" state={{ from: location }} replace />;
-  }
-
-  // Assessment completed - allow access
+  // TEMPORARY FIX: Guard completely disabled to unblock users stuck in infinite loop
+  // TODO: Re-enable after root cause is identified and fixed
+  // Date disabled: 2025-12-18
+  // Reason: Users with completed assessments (data in DB) still getting redirected
+  console.log('[IdentityCollisionGuard] DISABLED - allowing all users through');
   return <>{children}</>;
 };
 

@@ -45,6 +45,7 @@ import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
 import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
 import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
 import MIOInsightsPage from "./pages/mind-insurance/MIOInsightsPage";
+import DebugProtocolStatus from "./pages/mind-insurance/DebugProtocolStatus";
 import MentalPillarAssessmentPage from "./pages/mind-insurance/MentalPillarAssessmentPage";
 import TemperamentAssessmentPage from "./pages/mind-insurance/TemperamentAssessmentPage";
 import SubPatternAssessmentPage from "./pages/mind-insurance/SubPatternAssessmentPage";
@@ -68,7 +69,101 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// ============================================================================
+// AUTO CACHE CLEAR ON VERSION CHANGE + MOBILE CACHE BUST
+// ============================================================================
+// Clears localStorage/sessionStorage when a new version is deployed
+// This fixes issues where stale cached data causes infinite loops or errors
+// Increment this version when deploying fixes that require cache clearing
+const APP_VERSION = '2025.12.18.5'; // EMERGENCY: Disabled IdentityCollisionGuard to unblock users
+
+// MOBILE CACHE BUST: Check for ?clearcache=1 in URL
+// Send users this link: https://mymindinsurance.com/?clearcache=1
+const checkUrlCacheBust = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('clearcache') === '1') {
+      console.log('[App] URL cache bust triggered - clearing all caches...');
+
+      // Clear everything
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Clear service worker caches if any
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+
+      // Unregister service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
+        });
+      }
+
+      // Set the new version so they don't get stuck
+      localStorage.setItem('mi_app_version', APP_VERSION);
+
+      // Remove the clearcache param and reload to clean URL
+      params.delete('clearcache');
+      const cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.location.replace(cleanUrl);
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.warn('[App] URL cache bust failed:', e);
+    return false;
+  }
+};
+
+const checkVersionAndClearCache = () => {
+  try {
+    const storedVersion = localStorage.getItem('mi_app_version');
+    if (storedVersion !== APP_VERSION) {
+      console.log(`[App] Version changed: ${storedVersion} → ${APP_VERSION}, clearing cache...`);
+      // Preserve certain keys if needed
+      const keysToPreserve = ['supabase.auth.token']; // Keep auth token
+      const preserved: Record<string, string | null> = {};
+      keysToPreserve.forEach(key => {
+        preserved[key] = localStorage.getItem(key);
+      });
+
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Restore preserved keys
+      Object.entries(preserved).forEach(([key, value]) => {
+        if (value) localStorage.setItem(key, value);
+      });
+
+      // Set new version
+      localStorage.setItem('mi_app_version', APP_VERSION);
+
+      // Reload to apply fresh state
+      window.location.reload();
+      return true; // Signal that reload is happening
+    }
+    return false;
+  } catch (e) {
+    console.warn('[App] Cache clear check failed:', e);
+    return false;
+  }
+};
+
+// Run URL cache bust check FIRST (for mobile users with old cached JS)
+// Then run version check (for users who got the new JS)
+const isReloading = checkUrlCacheBust() || checkVersionAndClearCache();
+
 const App = () => {
+  // If we're reloading due to version change, show nothing
+  if (isReloading) {
+    return null;
+  }
+
   if (!isSupabaseConfigured) {
     return <ConfigurationRequired />;
   }
@@ -142,6 +237,9 @@ const App = () => {
 
                       {/* MIO Insights Thread route */}
                       <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+
+                      {/* Debug Protocol Status - temporary diagnostic page */}
+                      <Route path="/mind-insurance/debug-protocol" element={<ProtectedRoute><SidebarLayout><DebugProtocolStatus /></SidebarLayout></ProtectedRoute>} />
 
                       {/* Temperament Assessment - requires Identity Collision first */}
                       <Route path="/mind-insurance/temperament-assessment" element={<ProtectedRoute><IdentityCollisionGuard><TemperamentAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />

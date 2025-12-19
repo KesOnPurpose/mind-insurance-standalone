@@ -3,6 +3,23 @@ description: Run complete user access diagnostic across auth.users, mi_approved_
 allowed-tools: Bash, Read, Grep
 ---
 
+## CLOUDFLARE DEPLOYMENT SAFETY (MANDATORY)
+
+**BLOCKED DOMAINS - NEVER push without EXPLICIT user approval:**
+- `mindhouse-prodigy.pages.dev`
+- `grouphome4newbies.com`
+- `a24397ef.mindhouse-prodigy.pages.dev`
+
+**ALLOWED - Staging ONLY:**
+- `https://staging.mindinsurancechallange.pages.dev/`
+
+**Before ANY Cloudflare/Wrangler deployment:**
+1. Verify target is `staging.mindinsurancechallange.pages.dev`
+2. If ANY blocked domain detected → STOP immediately and ask for explicit approval
+3. Production deployments are FORBIDDEN without user confirmation
+
+---
+
 # Check User Access: $ARGUMENTS
 
 Running complete diagnostic for Mind Insurance user: **$ARGUMENTS**

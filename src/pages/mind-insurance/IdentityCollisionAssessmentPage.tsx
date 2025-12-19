@@ -335,13 +335,18 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
   }, [answers, currentStep]);
 
   // Save mutation
+  // CRITICAL FIX: We must wait for cache to be invalidated AND refetched before navigation
+  // Otherwise the IdentityCollisionGuard sees stale data and redirects back here (infinite loop)
   const saveMutation = useMutation({
     mutationFn: async (assessmentResult: AssessmentResult) => {
       if (!user?.id) throw new Error('User not authenticated');
       return saveAssessmentResult({ userId: user.id, result: assessmentResult });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['identityCollisionStatus'] });
+    onSuccess: async () => {
+      // Wait for cache to be invalidated AND refetched to prevent race condition
+      await queryClient.invalidateQueries({ queryKey: ['identityCollisionStatus'] });
+      // Force refetch to ensure fresh data is loaded before navigation
+      await queryClient.refetchQueries({ queryKey: ['identityCollisionStatus'], type: 'active' });
       clearProgress();
     },
   });
@@ -442,8 +447,10 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
     // After assessment completion, go to MIO Insights thread for first engagement
     // MIO will inject the first engagement message with protocol preview
     // User responds in thread, then is directed to Coverage Center
+    // CRITICAL: justCompletedAssessment flag tells IdentityCollisionGuard to bypass check
+    // This is a backup safety measure in case cache refetch hasn't completed yet
     navigate('/mind-insurance/mio-insights', {
-      state: { showFirstEngagement: true },
+      state: { showFirstEngagement: true, justCompletedAssessment: true },
       replace: true
     });
   };

@@ -144,6 +144,7 @@ export function MindInsurancePanel() {
       {/* Ask MIO Button */}
       <div className="px-2 py-2">
         <Button
+          data-tour-target="sidebar-mio"
           onClick={() => handleNavigate('/mind-insurance/chat')}
           className="w-full justify-start gap-2 bg-mi-cyan hover:bg-mi-cyan/90 text-white"
         >
@@ -192,9 +193,12 @@ export function MindInsurancePanel() {
         <nav className="space-y-1">
           {MI_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
+            // Extract tour target from path: /mind-insurance/coverage -> sidebar-coverage
+            const tourTarget = `sidebar-${path.split('/').pop()}`;
             return (
               <button
                 key={path}
+                data-tour-target={tourTarget}
                 onClick={() => handleNavigate(path)}
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",

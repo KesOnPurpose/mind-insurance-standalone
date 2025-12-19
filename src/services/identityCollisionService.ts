@@ -242,6 +242,7 @@ export async function saveAssessmentResult(
 
     // 2. Update user_profiles.collision_patterns for quick access
     // NOW INCLUDES intro_selections from the pre-assessment intro screens
+    // ALSO sets mind_insurance_assessment_completed_at to mark assessment as done
     const { error: profileError } = await supabase
       .from('user_profiles')
       .update({
@@ -259,6 +260,9 @@ export async function saveAssessmentResult(
             selected_at: new Date().toISOString(),
           } : undefined,
         },
+        // Mark MI assessment as completed - prevents redirect loop in ProtectedRoute
+        mind_insurance_assessment_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
