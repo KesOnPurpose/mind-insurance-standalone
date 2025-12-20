@@ -10,19 +10,34 @@ import {
   CheckCircle,
   ArrowLeft,
   Clock,
-  Globe
+  Globe,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } from '@/utils/passwordValidator';
 
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updatePassword } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Password form state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+
+  // Password validation
+  const passwordValidation = validatePassword(newPassword);
+  const passwordsMatch = newPassword === confirmPassword && newPassword.length > 0;
 
   const [formData, setFormData] = useState({
     timezone: '',
@@ -111,6 +126,29 @@ export function SettingsPage() {
     setFormData(originalData);
   };
 
+  const handleSetPassword = async () => {
+    if (!passwordValidation.isValid || !passwordsMatch) return;
+
+    setIsSettingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setIsSettingPassword(false);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Password Set!',
+        description: 'You can now sign in with your email and password.',
+      });
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px] bg-mi-navy">
@@ -192,9 +230,9 @@ export function SettingsPage() {
               <div className="text-sm">
                 <p className="font-medium text-white">Practice Time Windows</p>
                 <ul className="text-white/60 mt-1 space-y-1">
-                  <li>🌅 Championship Setup: 3am - 10am</li>
-                  <li>🏎️ NASCAR Pit Stop: 10am - 3pm</li>
-                  <li>🏆 Victory Lap: 3pm - 10pm</li>
+                  <li>Championship Setup: 3am - 10am</li>
+                  <li>NASCAR Pit Stop: 10am - 3pm</li>
+                  <li>Victory Lap: 3pm - 10pm</li>
                 </ul>
               </div>
             </div>
@@ -259,6 +297,128 @@ export function SettingsPage() {
             <Globe className="h-4 w-4 mr-2" />
             Auto-detect My Timezone
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Account Security - Set Password */}
+      <Card className="bg-mi-navy-light border-mi-cyan/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Lock className="h-5 w-5 text-mi-cyan" />
+            Account Security
+          </CardTitle>
+          <CardDescription className="text-white/60">
+            Set a password to sign in with email and password instead of magic links
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-mi-navy rounded-lg p-4 border border-mi-cyan/20">
+            <p className="text-sm text-white/70">
+              Setting a password allows you to sign in directly without waiting for a magic link email.
+              This is faster and more reliable.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* New Password */}
+            <div className="space-y-2">
+              <Label htmlFor="new-password" className="text-white">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10 bg-mi-navy border-mi-cyan/30 text-white placeholder:text-white/40"
+                  disabled={isSettingPassword}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 text-white/60 hover:text-white hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isSettingPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Password Strength Indicator */}
+              {newPassword && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 bg-mi-navy rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          passwordValidation.strength === 'weak' ? 'bg-red-500' :
+                          passwordValidation.strength === 'fair' ? 'bg-orange-500' :
+                          passwordValidation.strength === 'good' ? 'bg-yellow-500' :
+                          passwordValidation.strength === 'strong' ? 'bg-green-500' :
+                          'bg-green-600'
+                        }`}
+                        style={{ width: getPasswordStrengthWidth(passwordValidation.score) }}
+                      />
+                    </div>
+                    <span className={`text-sm capitalize ${getPasswordStrengthColor(passwordValidation.strength)}`}>
+                      {passwordValidation.strength}
+                    </span>
+                  </div>
+                  {passwordValidation.feedback.length > 0 && (
+                    <ul className="text-xs text-white/50 space-y-1">
+                      {passwordValidation.feedback.map((feedback, index) => (
+                        <li key={index}>• {feedback}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="bg-mi-navy border-mi-cyan/30 text-white placeholder:text-white/40"
+                disabled={isSettingPassword}
+              />
+              {confirmPassword && !passwordsMatch && (
+                <p className="text-xs text-red-400">Passwords do not match</p>
+              )}
+              {confirmPassword && passwordsMatch && (
+                <p className="text-xs text-green-400">Passwords match</p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              onClick={handleSetPassword}
+              disabled={isSettingPassword || !passwordValidation.isValid || !passwordsMatch}
+              className="w-full bg-mi-cyan hover:bg-mi-cyan/80 text-mi-navy font-semibold"
+            >
+              {isSettingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Setting Password...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 mr-2" />
+                  Set Password
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
