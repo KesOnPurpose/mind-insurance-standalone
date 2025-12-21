@@ -416,22 +416,29 @@ export default function ReinforceIdentity() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Recording Button */}
-              <div className="flex flex-col items-center space-y-4">
+              <div className="flex flex-col items-center space-y-6">
                 <VoiceActivityIndicator isRecording={isRecording} volume={currentVolume}>
                   <Button
                     size="lg"
                     variant={isRecording ? 'destructive' : 'default'}
-                    className="w-32 h-32 rounded-full"
+                    className="w-48 h-48 md:w-56 md:h-56 rounded-full shadow-lg shadow-mi-cyan/20 hover:shadow-mi-cyan/40 transition-all duration-300"
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={loading}
                   >
                     {isRecording ? (
-                      <MicOff className="h-12 w-12" />
+                      <MicOff style={{ width: '80px', height: '80px' }} />
                     ) : (
-                      <Mic className="h-12 w-12" />
+                      <Mic style={{ width: '80px', height: '80px' }} />
                     )}
                   </Button>
                 </VoiceActivityIndicator>
+
+                {/* Tap instruction */}
+                {!isRecording && !hasRecording && (
+                  <p className="text-mi-cyan text-sm font-medium animate-pulse">
+                    Tap to start recording
+                  </p>
+                )}
 
                 {/* Recording Status */}
                 {isRecording && (

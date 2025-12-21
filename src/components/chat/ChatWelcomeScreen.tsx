@@ -5,6 +5,7 @@ import { Send } from 'lucide-react';
 import { COACHES, CoachType } from '@/types/coach';
 import { useProduct } from '@/contexts/ProductContext';
 import { cn } from '@/lib/utils';
+import { VoiceInputButton } from './VoiceInputButton';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
@@ -158,6 +159,12 @@ export const ChatWelcomeScreen = ({
                 isMindInsurance && "text-white placeholder:text-gray-500"
               )}
               disabled={isLoading}
+            />
+            <VoiceInputButton
+              onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+              onTranscriptUpdate={(text) => setInput(text)}
+              disabled={isLoading}
+              variant={isMindInsurance ? 'mi' : 'default'}
             />
             <Button
               onClick={handleSend}

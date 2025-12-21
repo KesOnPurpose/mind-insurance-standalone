@@ -157,8 +157,10 @@ export function VoiceInputButton({
       setIsListening(false);
 
       // Send final transcript if we have one
+      // Only call onTranscript if onTranscriptUpdate is NOT provided
+      // (to avoid duplication when real-time updates already set the value)
       const finalText = finalTranscriptRef.current.trim();
-      if (finalText) {
+      if (finalText && !onTranscriptUpdate) {
         onTranscript(finalText);
       }
 
