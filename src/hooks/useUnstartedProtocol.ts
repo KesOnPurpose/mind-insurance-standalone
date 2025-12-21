@@ -37,6 +37,7 @@ export interface UnstartedProtocolData {
 
 export interface UseUnstartedProtocolReturn {
   unstartedProtocol: UnstartedProtocolData | null;
+  activeProtocol: UnstartedProtocolData | null;  // Protocol data for active (started) protocols
   isLoading: boolean;
   hasUnstartedProtocol: boolean;
   isNewUser: boolean;         // Has completed first engagement with MIO
@@ -45,6 +46,11 @@ export interface UseUnstartedProtocolReturn {
   dismissModal: () => void;
   showBadge: boolean;
   refreshProtocol: () => Promise<void>;
+  setModalDelay: () => void;  // Set 30-min delay (call when tour completes)
+  // Daily modal support (for active protocols)
+  currentDay: number;                  // Current day of active protocol (1-7)
+  shouldShowDailyModal: boolean;       // Show modal for current day
+  dismissDailyModal: () => void;       // Dismiss daily modal for today
 }
 
 // ============================================================================
@@ -54,7 +60,10 @@ export interface UseUnstartedProtocolReturn {
 const MODAL_DISMISSED_KEY_PREFIX = 'protocol_unlock_modal_dismissed_';
 const MODAL_DISMISSED_AT_KEY_PREFIX = 'protocol_unlock_modal_dismissed_at_';
 const BADGE_DISMISSED_KEY_PREFIX = 'protocol_badge_dismissed_';
+const DAILY_MODAL_SHOWN_KEY_PREFIX = 'protocol_daily_modal_shown_';
+const MODAL_DELAY_KEY = 'protocol_modal_delayed_until';
 const MODAL_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MODAL_DELAY_MS = 30 * 60 * 1000; // 30 minutes delay after tour
 const BADGE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ============================================================================
@@ -74,6 +83,80 @@ function getModalDismissedAtKey(protocolId: string): string {
 
 function getBadgeDismissedKey(protocolId: string): string {
   return `${BADGE_DISMISSED_KEY_PREFIX}${protocolId}`;
+}
+
+/**
+ * Get today's date as YYYY-MM-DD string for daily modal tracking
+ */
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Check if modal is in delay period (after tour completion)
+ * Returns true if we're still within the delay window
+ */
+function isModalDelayed(): boolean {
+  try {
+    const delayedUntil = localStorage.getItem(MODAL_DELAY_KEY);
+    if (!delayedUntil) return false;
+    const delayEndTime = parseInt(delayedUntil, 10);
+    const isDelayed = Date.now() < delayEndTime;
+    if (isDelayed) {
+      const remainingMs = delayEndTime - Date.now();
+      console.log('[useUnstartedProtocol] Modal delayed for', Math.round(remainingMs / 1000 / 60), 'more minutes');
+    }
+    return isDelayed;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Set modal delay (called when tour completes to prevent overwhelming user)
+ */
+function setModalDelayFn(): void {
+  try {
+    const delayUntil = Date.now() + MODAL_DELAY_MS;
+    localStorage.setItem(MODAL_DELAY_KEY, delayUntil.toString());
+    console.log('[useUnstartedProtocol] Modal delayed for 30 minutes');
+  } catch (error) {
+    console.error('[useUnstartedProtocol] Error setting modal delay:', error);
+  }
+}
+
+/**
+ * Get localStorage key for daily modal shown check
+ * Format: protocol_daily_modal_shown_{protocolId}_{date}
+ */
+function getDailyModalShownKey(protocolId: string, date: string): string {
+  return `${DAILY_MODAL_SHOWN_KEY_PREFIX}${protocolId}_${date}`;
+}
+
+/**
+ * Check if daily modal has been shown today
+ */
+function hasDailyModalBeenShownToday(protocolId: string): boolean {
+  try {
+    const today = getTodayDateString();
+    const key = getDailyModalShownKey(protocolId, today);
+    return localStorage.getItem(key) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Mark daily modal as shown for today
+ */
+function markDailyModalShown(protocolId: string): void {
+  try {
+    const today = getTodayDateString();
+    const key = getDailyModalShownKey(protocolId, today);
+    localStorage.setItem(key, 'true');
+  } catch (error) {
+    console.error('[useUnstartedProtocol] Error marking daily modal shown:', error);
+  }
 }
 
 /**
@@ -230,7 +313,20 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
     return statusOk && notStarted && noDaysCompleted;
   }, [protocol]);
 
-  // Computed: Transform protocol to simplified data structure
+  // Computed: Is this an active (started but not completed) protocol?
+  const isActiveProtocol = useMemo(() => {
+    if (!protocol) return false;
+    // Protocol is active if:
+    // - It has been started (started_at is not null)
+    // - It's not completed (days_completed < 7)
+    // - Status is active (if defined)
+    const hasStarted = protocol.started_at !== null;
+    const notCompleted = (protocol.days_completed ?? 0) < 7;
+    const statusOk = protocol.status === undefined || protocol.status === 'active';
+    return hasStarted && notCompleted && statusOk;
+  }, [protocol]);
+
+  // Computed: Transform protocol to simplified data structure (for unstarted)
   const unstartedProtocolData = useMemo((): UnstartedProtocolData | null => {
     if (!protocol || !isUnstartedProtocol) return null;
 
@@ -246,6 +342,22 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
     };
   }, [protocol, isUnstartedProtocol, patternStatus?.primaryPattern]);
 
+  // Computed: Transform protocol to simplified data structure (for active - daily modal)
+  const activeProtocolData = useMemo((): UnstartedProtocolData | null => {
+    if (!protocol || !isActiveProtocol) return null;
+
+    return {
+      id: protocol.id,
+      title: protocol.title,
+      insightSummary: protocol.insight_summary,
+      whyItMatters: protocol.why_it_matters,
+      neuralPrinciple: protocol.neural_principle,
+      patternType: normalizePatternType(patternStatus?.primaryPattern ?? null),
+      daysTotal: protocol.day_tasks?.length || 7,
+      createdAt: protocol.created_at,
+    };
+  }, [protocol, isActiveProtocol, patternStatus?.primaryPattern]);
+
   // Computed: User type classification
   const isNewUser = hasFirstEngagement === true;
   const isReturningUser = hasFirstEngagement === false && isUnstartedProtocol;
@@ -254,7 +366,8 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
   // Only show if:
   // 1. There's an unstarted protocol
   // 2. Modal hasn't been dismissed (or 24h cooldown passed)
-  // 3. User has completed first engagement (for new user modal)
+  // 3. Modal is not in delay period (after tour completion)
+  // 4. User has completed first engagement (for new user modal)
   //    OR is a returning user without first engagement
   const shouldShowModal = useMemo(() => {
     if (!isUnstartedProtocol || !protocol?.id) return false;
@@ -262,6 +375,9 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
 
     // Don't show modal until we know engagement status
     if (hasFirstEngagement === null) return false;
+
+    // Check if modal is in delay period (after tour completion)
+    if (isModalDelayed()) return false;
 
     // Show modal if user completed first engagement (new user)
     // OR if user is returning without first engagement
@@ -278,6 +394,39 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
 
     return shouldShowBadgeForProtocol(protocol.id, protocol.created_at);
   }, [isUnstartedProtocol, protocol, modalDismissed]);
+
+  // ========== DAILY MODAL SUPPORT (for active protocols) ==========
+
+  // Computed: Current day of the active protocol (1-7)
+  // Days completed + 1 = current day user should be on
+  const currentDay = useMemo(() => {
+    if (!protocol || !isActiveProtocol) return 1;
+    const daysCompleted = protocol.days_completed ?? 0;
+    // Current day is days_completed + 1, capped at 7
+    return Math.min(daysCompleted + 1, 7);
+  }, [protocol, isActiveProtocol]);
+
+  // State: Track if daily modal was dismissed today
+  const [dailyModalDismissed, setDailyModalDismissed] = useState<boolean>(() => {
+    if (!protocol?.id) return false;
+    return hasDailyModalBeenShownToday(protocol.id);
+  });
+
+  // Update daily modal dismissed state when protocol changes
+  useEffect(() => {
+    if (protocol?.id) {
+      setDailyModalDismissed(hasDailyModalBeenShownToday(protocol.id));
+    }
+  }, [protocol?.id]);
+
+  // Computed: Should show daily modal?
+  // Show if: active protocol, not shown today, not on day 1 (handled by main modal)
+  const shouldShowDailyModal = useMemo(() => {
+    if (!isActiveProtocol || !protocol?.id) return false;
+    if (dailyModalDismissed) return false;
+    // Only show daily modal for days 2-7 (day 1 is handled by main unlock modal)
+    return currentDay > 1;
+  }, [isActiveProtocol, protocol?.id, dailyModalDismissed, currentDay]);
 
   // Debug: Log computed values when they change
   useEffect(() => {
@@ -312,6 +461,15 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
     }
   }, [protocol?.id]);
 
+  // Dismiss daily modal handler (marks as shown for today)
+  const dismissDailyModal = useCallback(() => {
+    if (!protocol?.id) return;
+
+    markDailyModalShown(protocol.id);
+    setDailyModalDismissed(true);
+    console.log('[useUnstartedProtocol] Daily modal dismissed for protocol:', protocol.id, 'day:', currentDay);
+  }, [protocol?.id, currentDay]);
+
   // Refresh protocol data (exposed for manual refresh)
   const refreshProtocol = useCallback(async () => {
     await fetchProtocolData();
@@ -319,6 +477,7 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
 
   return {
     unstartedProtocol: unstartedProtocolData,
+    activeProtocol: activeProtocolData,
     isLoading,
     hasUnstartedProtocol: isUnstartedProtocol,
     isNewUser,
@@ -327,6 +486,11 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
     dismissModal,
     showBadge,
     refreshProtocol,
+    setModalDelay: setModalDelayFn,  // Call when tour completes to delay modal 30 min
+    // Daily modal support
+    currentDay,
+    shouldShowDailyModal,
+    dismissDailyModal,
   };
 }
 

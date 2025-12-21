@@ -17,6 +17,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import type { TourStep, TourPosition } from '@/hooks/useHubTour';
 
@@ -178,9 +179,12 @@ export function TourTooltip({
   if (!position) return null;
 
   // Build position style
+  // z-index 70 to be above sidebar sheet (z-50) and tour highlight (z-60)
+  // pointer-events: auto ensures clicks are captured
   const positionStyle: React.CSSProperties = {
     position: 'fixed',
-    zIndex: 50,
+    zIndex: 70,
+    pointerEvents: 'auto',
     ...(position.top !== undefined && { top: position.top }),
     ...(position.bottom !== undefined && { bottom: position.bottom }),
     ...(position.left !== undefined && { left: position.left }),
@@ -192,26 +196,28 @@ export function TourTooltip({
       ref={tooltipRef}
       style={positionStyle}
       className={cn(
-        'w-[340px] p-0 rounded-2xl overflow-hidden',
-        // Premium glass-morphism effect
-        'backdrop-blur-xl bg-mi-navy/80',
-        'border border-mi-cyan/20',
-        'shadow-[0_8px_32px_rgba(5,195,221,0.15),0_0_80px_rgba(5,195,221,0.08)]'
+        'w-[340px] sm:w-[380px] p-0 rounded-2xl overflow-hidden',
+        // SOLID background for strong contrast (not glass-morphism)
+        'bg-gradient-to-br from-mi-navy via-mi-navy-light to-mi-navy',
+        // STRONGER border for visibility
+        'border-2 border-mi-cyan/60',
+        // STRONGER shadow for depth
+        'shadow-[0_8px_40px_rgba(5,195,221,0.4),0_0_100px_rgba(5,195,221,0.2)]'
       )}
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
     >
-      {/* Animated gradient border glow */}
+      {/* Animated gradient border glow - STRONGER */}
       <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-[-2px] bg-gradient-to-br from-mi-cyan/30 via-transparent to-mi-gold/30 opacity-50" />
+        <div className="absolute inset-[-2px] bg-gradient-to-br from-mi-cyan/50 via-transparent to-mi-gold/50 opacity-70" />
       </div>
 
-      {/* Background gradient mesh */}
+      {/* Background gradient mesh - STRONGER */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-gradient-to-br from-mi-cyan/20 to-transparent opacity-40 blur-2xl" />
-        <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-mi-gold/10 blur-xl" />
+        <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-gradient-to-br from-mi-cyan/30 to-transparent opacity-60 blur-2xl" />
+        <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-mi-gold/20 blur-xl" />
       </div>
 
       {/* Floating particles */}
@@ -250,9 +256,19 @@ export function TourTooltip({
       {/* Content */}
       <div className="relative p-5">
         {/* Top gradient accent line */}
-        <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-mi-cyan/50 to-transparent" />
+        <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-mi-cyan/70 to-transparent" />
 
-        {/* Step indicator with gold gradient on active */}
+        {/* TOUR Badge + Step indicator */}
+        <div className="flex items-center gap-3 mb-4">
+          <Badge className="bg-mi-cyan text-mi-navy font-bold px-2.5 py-0.5 text-xs uppercase tracking-wide shadow-lg shadow-mi-cyan/30">
+            Tour
+          </Badge>
+          <span className="text-mi-cyan text-sm font-medium">
+            Step {currentStep + 1} of {totalSteps}
+          </span>
+        </div>
+
+        {/* Step progress dots */}
         <div className="flex gap-1.5 mb-4">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <motion.div
@@ -261,12 +277,12 @@ export function TourTooltip({
               animate={{ scale: 1 }}
               transition={{ delay: i * 0.05 }}
               className={cn(
-                'h-1.5 rounded-full transition-all duration-300',
+                'h-2 rounded-full transition-all duration-300',
                 i === currentStep
-                  ? 'w-8 bg-gradient-to-r from-mi-cyan to-mi-gold shadow-sm shadow-mi-cyan/50'
+                  ? 'w-10 bg-gradient-to-r from-mi-cyan to-mi-gold shadow-md shadow-mi-cyan/50'
                   : i < currentStep
-                  ? 'w-2 bg-mi-cyan/60'
-                  : 'w-2 bg-white/20'
+                  ? 'w-3 bg-mi-cyan/70'
+                  : 'w-3 bg-white/30'
               )}
             />
           ))}
@@ -274,8 +290,8 @@ export function TourTooltip({
 
         {/* Title with sparkles icon */}
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4 text-mi-gold" />
-          <h3 className="text-lg font-bold text-white">{step.title}</h3>
+          <Sparkles className="h-5 w-5 text-mi-gold" />
+          <h3 className="text-xl font-bold text-white">{step.title}</h3>
         </div>
 
         {/* Description */}
@@ -317,10 +333,6 @@ export function TourTooltip({
           </Button>
         </div>
 
-        {/* Step counter */}
-        <div className="absolute bottom-5 left-5 text-xs text-gray-500">
-          Step {currentStep + 1} of {totalSteps}
-        </div>
       </div>
     </motion.div>
   );

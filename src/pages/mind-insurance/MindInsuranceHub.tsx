@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Calendar, Trophy, Play, TrendingUp } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +19,8 @@ import { startProtocol } from '@/services/mioInsightProtocolService';
 
 // Hub Tour System
 import { useHubTour } from '@/hooks/useHubTour';
-import { TourHighlight, TourTooltip, TourOfferDialog } from '@/components/tour';
+import { TourHighlight, TourTooltip, TourOfferDialog, TourSidebarController } from '@/components/tour';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -40,6 +41,7 @@ interface DailyPracticeStatus {
  */
 export default function MindInsuranceHub() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: progressData, isLoading: progressLoading } = useMindInsuranceProgress();
   const [practiceStatus, setPracticeStatus] = useState<DailyPracticeStatus>({
@@ -52,6 +54,7 @@ export default function MindInsuranceHub() {
   // Protocol Unlock System
   const {
     unstartedProtocol,
+    activeProtocol,
     hasUnstartedProtocol,
     isNewUser,
     isReturningUser,
@@ -59,6 +62,11 @@ export default function MindInsuranceHub() {
     dismissModal,
     showBadge,
     refreshProtocol,
+    setModalDelay,  // Delay modal 30 min after tour
+    // Daily modal support
+    currentDay,
+    shouldShowDailyModal,
+    dismissDailyModal,
   } = useUnstartedProtocol();
 
   // Hub Tour System
@@ -73,6 +81,9 @@ export default function MindInsuranceHub() {
     completeTour,
     hasCompletedTour,
   } = useHubTour();
+
+  // Sidebar control for mobile tour (open sidebar for Steps 2-4)
+  const { setOpenMobile, isMobile } = useSidebar();
 
   // State for tour offer after modal
   const [showTourOffer, setShowTourOffer] = useState(false);
@@ -96,6 +107,20 @@ export default function MindInsuranceHub() {
       setLoading(false);
     }
   }, [progressLoading]);
+
+  // Auto-start tour when arriving from assessment with startTour flag
+  useEffect(() => {
+    const state = location.state as { startTour?: boolean; justCompletedAssessment?: boolean } | null;
+    if (state?.startTour && !hasCompletedTour && !loading) {
+      // Small delay for page to fully render before starting tour
+      const timeout = setTimeout(() => {
+        startTour();
+        // Clear the location state to prevent re-triggering on refresh
+        window.history.replaceState({}, document.title);
+      }, 400);
+      return () => clearTimeout(timeout);
+    }
+  }, [location.state, hasCompletedTour, loading, startTour]);
 
   const fetchDailyStatus = async () => {
     if (!user?.id) return;
@@ -163,13 +188,48 @@ export default function MindInsuranceHub() {
   // Handle skip tour from Tour Offer Dialog
   const handleSkipTour = () => {
     setShowTourOffer(false);
+    skipTour();
+    // Navigate to MIO Insights for first engagement message
+    navigate('/mind-insurance/mio-insights', {
+      state: { fromTour: true, showFirstEngagement: true }
+    });
+  };
+
+  // Handle tour completion - close sidebar on mobile, then navigate to MIO Insights
+  const handleTourComplete = () => {
+    completeTour();
+
+    // Delay the Protocol Unlock Modal by 30 minutes to reduce overwhelm
+    // User can explore MIO chat first, then modal appears on next visit
+    setModalDelay();
+
+    // On mobile, close sidebar before navigating (with delay for animation)
+    if (isMobile) {
+      setOpenMobile(false);
+      // Small delay to allow sidebar close animation
+      setTimeout(() => {
+        navigate('/mind-insurance/mio-insights', {
+          state: { fromTour: true, showFirstEngagement: true }
+        });
+      }, 300);
+    } else {
+      // Navigate to MIO Insights after "Meet MIO" step to show first engagement message
+      navigate('/mind-insurance/mio-insights', {
+        state: { fromTour: true, showFirstEngagement: true }
+      });
+    }
+  };
+
+  // Handle daily modal "Begin Day X"
+  const handleBeginDayX = async () => {
+    // Dismiss the daily modal and navigate to coverage center
+    dismissDailyModal();
     navigate('/mind-insurance/coverage');
   };
 
-  // Handle tour completion - navigate to Coverage Center
-  const handleTourComplete = () => {
-    completeTour();
-    navigate('/mind-insurance/coverage');
+  // Handle daily modal "Remind Later"
+  const handleDailyRemindLater = () => {
+    dismissDailyModal();
   };
 
   const progressPercentage = (practiceStatus.completed / practiceStatus.total) * 100;
@@ -184,7 +244,7 @@ export default function MindInsuranceHub() {
 
   return (
     <MindInsuranceErrorBoundary fallbackTitle="Error loading Mind Insurance Hub" showHomeButton={false}>
-      {/* Protocol Unlock Modal */}
+      {/* Protocol Unlock Modal (for unstarted protocols - Day 1) */}
       <ProtocolUnlockModal
         isOpen={shouldShowModal && hasUnstartedProtocol}
         protocol={unstartedProtocol}
@@ -194,11 +254,29 @@ export default function MindInsuranceHub() {
         onClose={dismissModal}
       />
 
+      {/* Daily Protocol Modal (for active protocols - Days 2-7) */}
+      <ProtocolUnlockModal
+        isOpen={shouldShowDailyModal && !shouldShowModal}
+        protocol={activeProtocol}
+        variant="daily"
+        currentDay={currentDay}
+        onBeginDay1={handleBeginDayX}
+        onRemindLater={handleDailyRemindLater}
+        onClose={dismissDailyModal}
+      />
+
       {/* Tour Offer Dialog (after Begin Day 1) */}
       <TourOfferDialog
         isOpen={showTourOffer}
         onStartTour={handleStartTour}
         onSkip={handleSkipTour}
+      />
+
+      {/* Tour Sidebar Controller (opens sidebar on mobile for Steps 2-4) */}
+      <TourSidebarController
+        currentStep={currentStep}
+        isActive={isTourActive}
+        totalSteps={totalSteps}
       />
 
       {/* Tour Overlay (when active) */}
@@ -309,31 +387,6 @@ export default function MindInsuranceHub() {
               </div>
             </Card>
           </div>
-
-          {/* Coverage Center Link - Tour Target: coverage */}
-          <Card
-            data-tour-target="coverage"
-            className="relative p-4 bg-mi-navy-light border-mi-cyan/30 cursor-pointer hover:border-mi-cyan/50 transition-all"
-            onClick={() => navigate('/mind-insurance/coverage')}
-          >
-            {/* Badge dot when protocol ready */}
-            {showBadge && <ProtocolReadyBadge variant="dot" />}
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-mi-cyan/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-mi-cyan" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">Coverage Center</p>
-                  <p className="text-sm text-gray-400">View your protocols and progress</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30">
-                View
-              </Badge>
-            </div>
-          </Card>
 
         </div>
       </div>

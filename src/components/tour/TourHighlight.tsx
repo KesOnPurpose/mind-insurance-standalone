@@ -31,6 +31,7 @@ interface HighlightRect {
   height: number;
 }
 
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -45,44 +46,96 @@ const BORDER_RADIUS = 12; // Border radius for the cutout
 export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) {
   const [rect, setRect] = useState<HighlightRect | null>(null);
 
-  // Find and track target element position
+  // Find and track target element position with RETRY mechanism
+  // Critical fix for timing race condition: sidebar elements don't exist
+  // until ~800ms after setOpenMobile(true) is called
   useEffect(() => {
     if (!isActive) {
       setRect(null);
       return;
     }
 
-    const targetElement = document.querySelector(targetSelector);
-    if (!targetElement) {
-      console.warn('[TourHighlight] Target element not found:', targetSelector);
-      return;
-    }
+    let attempts = 0;
+    const maxAttempts = 20; // 20 * 100ms = 2 seconds max wait
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let isFound = false;
+    let cleanupFn: (() => void) | null = null;
 
-    const updateRect = () => {
-      const domRect = targetElement.getBoundingClientRect();
-      setRect({
-        top: domRect.top - PADDING,
-        left: domRect.left - PADDING,
-        width: domRect.width + PADDING * 2,
-        height: domRect.height + PADDING * 2,
-      });
+    const findElement = (): boolean => {
+      const targetElement = document.querySelector(targetSelector);
+
+      if (targetElement) {
+        isFound = true;
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        console.log('[TourHighlight] Element found after', attempts, 'attempts:', targetSelector);
+
+        const updateRect = () => {
+          const domRect = targetElement.getBoundingClientRect();
+          setRect({
+            top: domRect.top - PADDING,
+            left: domRect.left - PADDING,
+            width: domRect.width + PADDING * 2,
+            height: domRect.height + PADDING * 2,
+          });
+        };
+
+        // Initial position
+        updateRect();
+
+        // Update on resize/scroll
+        window.addEventListener('resize', updateRect);
+        window.addEventListener('scroll', updateRect, true);
+
+        // Also observe for DOM changes
+        const observer = new MutationObserver(updateRect);
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        cleanupFn = () => {
+          window.removeEventListener('resize', updateRect);
+          window.removeEventListener('scroll', updateRect, true);
+          observer.disconnect();
+        };
+
+        return true;
+      } else {
+        attempts++;
+        if (attempts <= 5 || attempts % 5 === 0) {
+          console.log(`[TourHighlight] Attempt ${attempts}/${maxAttempts} - Target not found:`, targetSelector);
+        }
+
+        if (attempts >= maxAttempts) {
+          console.warn('[TourHighlight] Max attempts reached, target never found:', targetSelector);
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+        return false;
+      }
     };
 
-    // Initial position
-    updateRect();
+    // Try immediately first
+    const foundImmediately = findElement();
 
-    // Update on resize/scroll
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect, true);
-
-    // Also observe for DOM changes
-    const observer = new MutationObserver(updateRect);
-    observer.observe(document.body, { childList: true, subtree: true });
+    // If not found, start polling every 100ms
+    if (!foundImmediately) {
+      intervalId = setInterval(() => {
+        if (!isFound) {
+          findElement();
+        }
+      }, 100);
+    }
 
     return () => {
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect, true);
-      observer.disconnect();
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      if (cleanupFn) {
+        cleanupFn();
+      }
     };
   }, [targetSelector, isActive]);
 
@@ -91,7 +144,7 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-40 pointer-events-auto"
+        className="fixed inset-0 z-[60] pointer-events-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -122,10 +175,10 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
               />
             </mask>
 
-            {/* Cyan glow filter */}
+            {/* Cyan glow filter - MAX intensity */}
             <filter id="tour-glow-cyan" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feFlood floodColor="#05C3DD" floodOpacity="0.7" result="color" />
+              <feGaussianBlur stdDeviation="12" result="blur" />
+              <feFlood floodColor="#05C3DD" floodOpacity="1.0" result="color" />
               <feComposite in="color" in2="blur" operator="in" result="glow" />
               <feMerge>
                 <feMergeNode in="glow" />
@@ -133,10 +186,10 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
               </feMerge>
             </filter>
 
-            {/* Gold glow filter */}
+            {/* Gold glow filter - MAX intensity */}
             <filter id="tour-glow-gold" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="8" result="blur" />
-              <feFlood floodColor="#F5A623" floodOpacity="0.4" result="color" />
+              <feGaussianBlur stdDeviation="14" result="blur" />
+              <feFlood floodColor="#F5A623" floodOpacity="0.8" result="color" />
               <feComposite in="color" in2="blur" operator="in" result="glow" />
               <feMerge>
                 <feMergeNode in="glow" />
@@ -144,14 +197,14 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
               </feMerge>
             </filter>
 
-            {/* Combined dual glow */}
+            {/* Combined dual glow - MAX intensity */}
             <filter id="tour-glow-dual" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1" />
-              <feFlood floodColor="#05C3DD" floodOpacity="0.6" result="cyan" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+              <feFlood floodColor="#05C3DD" floodOpacity="1.0" result="cyan" />
               <feComposite in="cyan" in2="blur1" operator="in" result="cyanGlow" />
 
-              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur2" />
-              <feFlood floodColor="#F5A623" floodOpacity="0.3" result="gold" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur2" />
+              <feFlood floodColor="#F5A623" floodOpacity="0.7" result="gold" />
               <feComposite in="gold" in2="blur2" operator="in" result="goldGlow" />
 
               <feMerge>
@@ -162,13 +215,13 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
             </filter>
           </defs>
 
-          {/* Dark overlay with mask applied */}
+          {/* Dark overlay with mask applied - 85% opacity */}
           <rect
             x="0"
             y="0"
             width="100%"
             height="100%"
-            fill="rgba(0, 0, 0, 0.75)"
+            fill="rgba(0, 0, 0, 0.85)"
             mask="url(#tour-highlight-mask)"
           />
 

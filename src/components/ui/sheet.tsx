@@ -5,6 +5,40 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// ============================================================================
+// TOUR MODE CONTEXT
+// ============================================================================
+// When hub tour is highlighting sidebar elements (steps 2-4), we need to hide
+// the Sheet overlay so the highlighted items are fully visible (not dimmed)
+
+interface SheetTourContextValue {
+  isTourHighlightingSidebar: boolean;
+  setTourHighlightingSidebar: (value: boolean) => void;
+}
+
+const SheetTourContext = React.createContext<SheetTourContextValue>({
+  isTourHighlightingSidebar: false,
+  setTourHighlightingSidebar: () => {},
+});
+
+function SheetTourProvider({ children }: { children: React.ReactNode }) {
+  const [isTourHighlightingSidebar, setTourHighlightingSidebar] = React.useState(false);
+
+  return (
+    <SheetTourContext.Provider value={{ isTourHighlightingSidebar, setTourHighlightingSidebar }}>
+      {children}
+    </SheetTourContext.Provider>
+  );
+}
+
+function useSheetTour() {
+  return React.useContext(SheetTourContext);
+}
+
+// ============================================================================
+// SHEET COMPONENTS
+// ============================================================================
+
 const Sheet = SheetPrimitive.Root;
 
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -16,16 +50,23 @@ const SheetPortal = SheetPrimitive.Portal;
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const { isTourHighlightingSidebar } = useSheetTour();
+
+  return (
+    <SheetPrimitive.Overlay
+      className={cn(
+        "fixed inset-0 z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        // Hide overlay when tour is highlighting sidebar elements
+        // This prevents the bg-black/80 from dimming the highlighted items
+        isTourHighlightingSidebar ? "bg-transparent" : "bg-black/80",
+        className,
+      )}
+      {...props}
+      ref={ref}
+    />
+  );
+});
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
@@ -103,5 +144,7 @@ export {
   SheetOverlay,
   SheetPortal,
   SheetTitle,
+  SheetTourProvider,
   SheetTrigger,
+  useSheetTour,
 };

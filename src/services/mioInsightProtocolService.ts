@@ -22,6 +22,19 @@ import type {
 } from '@/types/protocol';
 
 // ============================================================================
+// DAY STATUS TYPES
+// ============================================================================
+
+/**
+ * Day status for protocol day locking system
+ * - completed: User finished this day's task
+ * - skipped: Day was auto-skipped (missed deadline)
+ * - available: Day is unlocked and ready to complete
+ * - locked: Day is not yet available (future day)
+ */
+export type DayStatus = 'completed' | 'skipped' | 'available' | 'locked';
+
+// ============================================================================
 // GET OPERATIONS
 // ============================================================================
 
@@ -278,6 +291,152 @@ export function calculateCurrentProtocolDay(
   const diffTime = now.getTime() - created.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return Math.min(Math.max(diffDays, 1), 7);
+}
+
+// ============================================================================
+// DAY LOCKING SYSTEM
+// ============================================================================
+
+/**
+ * Get the status of a specific protocol day
+ *
+ * Day Locking Rules:
+ * - Days unlock at midnight based on protocol creation date
+ * - Each day becomes available 24 hours after the previous day unlocked
+ * - Missed days are auto-marked as 'skipped' (not failed)
+ * - Users can only complete available days (not locked/future days)
+ *
+ * @param protocol - The protocol with progress data
+ * @param dayNumber - The day to check (1-7)
+ * @returns DayStatus: 'completed' | 'skipped' | 'available' | 'locked'
+ */
+export function getDayStatus(
+  protocol: MIOInsightProtocolWithProgress,
+  dayNumber: number
+): DayStatus {
+  // Check if day was completed
+  const completion = protocol.completions?.find(
+    (c) => c.day_number === dayNumber
+  );
+
+  // If there's a completion record
+  if (completion) {
+    if (completion.was_skipped) return 'skipped';
+    return 'completed';
+  }
+
+  // Calculate which day is currently available based on time elapsed
+  const currentUnlockedDay = calculateCurrentProtocolDay(protocol.created_at);
+
+  // Day is available if it's on or before the current unlocked day
+  if (dayNumber <= currentUnlockedDay) {
+    return 'available';
+  }
+
+  // Future day - still locked
+  return 'locked';
+}
+
+/**
+ * Get the unlock date for a specific protocol day
+ *
+ * Days unlock at midnight based on protocol creation date:
+ * - Day 1: Available immediately (on creation date)
+ * - Day 2: Unlocks at midnight after Day 1
+ * - Day 3: Unlocks at midnight 2 days after creation
+ * - etc.
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to get unlock date for (1-7)
+ * @returns Date when this day unlocks
+ */
+export function getUnlockDate(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): Date {
+  const createdAt = new Date(protocol.created_at);
+  const unlockDate = new Date(createdAt);
+
+  // Day 1 unlocks immediately (day 0 offset)
+  // Day 2 unlocks 1 day after creation
+  // Day N unlocks (N-1) days after creation
+  unlockDate.setDate(unlockDate.getDate() + dayNumber - 1);
+
+  // Set to midnight (start of day)
+  unlockDate.setHours(0, 0, 0, 0);
+
+  return unlockDate;
+}
+
+/**
+ * Check if a specific day is currently unlocked
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to check (1-7)
+ * @returns true if the day is unlocked (available or completed)
+ */
+export function isDayUnlocked(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): boolean {
+  const currentDay = calculateCurrentProtocolDay(protocol.created_at);
+  return dayNumber <= currentDay;
+}
+
+/**
+ * Get formatted unlock text for locked days
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to get text for (1-7)
+ * @returns Human-readable unlock text (e.g., "Unlocks Tomorrow", "Unlocks in 3 days")
+ */
+export function getUnlockText(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): string {
+  const unlockDate = getUnlockDate(protocol, dayNumber);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const unlock = new Date(
+    unlockDate.getFullYear(),
+    unlockDate.getMonth(),
+    unlockDate.getDate()
+  );
+
+  const diffTime = unlock.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return 'Available Now';
+  if (diffDays === 1) return 'Unlocks Tomorrow';
+  return `Unlocks in ${diffDays} days`;
+}
+
+/**
+ * Get all day statuses for a protocol (for UI display)
+ *
+ * @param protocol - The protocol with progress data
+ * @returns Array of { day, status, unlockText } for all 7 days
+ */
+export function getAllDayStatuses(
+  protocol: MIOInsightProtocolWithProgress
+): Array<{ day: number; status: DayStatus; unlockText: string }> {
+  return Array.from({ length: 7 }, (_, i) => {
+    const dayNumber = i + 1;
+    const status = getDayStatus(protocol, dayNumber);
+    const unlockText = status === 'locked'
+      ? getUnlockText(protocol, dayNumber)
+      : status === 'available'
+        ? 'Available Now'
+        : status === 'completed'
+          ? 'Completed'
+          : 'Skipped';
+
+    return {
+      day: dayNumber,
+      status,
+      unlockText,
+    };
+  });
 }
 
 // ============================================================================
@@ -674,6 +833,13 @@ export const mioInsightProtocolService = {
   markInsightViewed,
   startProtocol,
   calculateCurrentProtocolDay,
+
+  // Day locking system
+  getDayStatus,
+  getUnlockDate,
+  isDayUnlocked,
+  getUnlockText,
+  getAllDayStatuses,
 
   // Admin/Coach operations
   muteProtocol,

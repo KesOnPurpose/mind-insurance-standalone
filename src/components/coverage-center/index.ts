@@ -96,6 +96,9 @@ export {
 // Pattern Summary Sheet (P6.5 - Assessment Result Modal)
 export { default as PatternSummarySheet } from './PatternSummarySheet';
 
+// Protocol Unlock Modal (Hub Tour System - Begin Day 1)
+export { ProtocolUnlockModal } from './ProtocolUnlockModal';
+
 // Default exports for convenience
 export { default as CoverageStreakDefault } from './CoverageStreak';
 export { default as SkipTokensDisplayDefault } from './SkipTokensDisplay';

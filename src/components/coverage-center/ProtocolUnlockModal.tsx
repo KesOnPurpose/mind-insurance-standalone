@@ -44,9 +44,10 @@ interface ProtocolUnlockModalProps {
   isOpen: boolean;
   onClose: () => void;
   protocol: UnstartedProtocolData | null;
-  variant: 'new_user' | 'returning_user';
+  variant: 'new_user' | 'returning_user' | 'daily';
   onBeginDay1: () => Promise<void>;
   onRemindLater: () => void;
+  currentDay?: number;  // 1-7, required for 'daily' variant
 }
 
 // ============================================================================
@@ -95,6 +96,17 @@ const RETURNING_USER_CONTENT = {
   subheadline: 'Your personalized transformation protocol is waiting. 7 days to rewire the patterns holding you back.',
 };
 
+/**
+ * Generate content for daily modal based on day number
+ */
+function getDailyContent(day: number) {
+  return {
+    headline: `Day ${day} is Ready`,
+    subheadline: `Your transformation continues. Today's practice builds on yesterday's progress. Each day strengthens the new neural pathways.`,
+    ctaText: `Begin Day ${day}`,
+  };
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -106,6 +118,7 @@ export function ProtocolUnlockModal({
   variant,
   onBeginDay1,
   onRemindLater,
+  currentDay = 1,
 }: ProtocolUnlockModalProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +130,8 @@ export function ProtocolUnlockModal({
 
   // Determine content based on variant
   const isNewUser = variant === 'new_user';
+  const isDaily = variant === 'daily';
+  const dailyContent = isDaily ? getDailyContent(currentDay) : null;
 
   const handleBeginDay1 = async () => {
     setIsStarting(true);
@@ -141,7 +156,9 @@ export function ProtocolUnlockModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          "sm:max-w-lg p-0 overflow-hidden",
+          "w-[95%] sm:max-w-lg p-0",
+          // Fix mobile viewport cutoff
+          "max-h-[90vh] overflow-y-auto",
           // Premium glass-morphism effect
           "bg-mi-navy/80 backdrop-blur-xl",
           "border border-mi-cyan/20",
@@ -238,7 +255,9 @@ export function ProtocolUnlockModal({
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <DialogTitle className="text-2xl sm:text-3xl font-bold">
-                {isNewUser ? (
+                {isDaily && dailyContent ? (
+                  <span className="text-mi-gold">{dailyContent.headline}</span>
+                ) : isNewUser ? (
                   <span className="text-white">{patternContent.headline}</span>
                 ) : (
                   <>
@@ -255,7 +274,11 @@ export function ProtocolUnlockModal({
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <DialogDescription className="text-gray-300 text-base leading-relaxed">
-                {isNewUser ? patternContent.subheadline : RETURNING_USER_CONTENT.subheadline}
+                {isDaily && dailyContent
+                  ? dailyContent.subheadline
+                  : isNewUser
+                  ? patternContent.subheadline
+                  : RETURNING_USER_CONTENT.subheadline}
               </DialogDescription>
             </motion.div>
           </DialogHeader>
@@ -302,22 +325,32 @@ export function ProtocolUnlockModal({
             {/* 7-Day Transformation Preview */}
             <div className="flex items-center gap-3 pt-3 border-t border-white/10">
               <Clock className="h-4 w-4 text-mi-cyan flex-shrink-0" />
-              <span className="text-sm text-gray-400">7-day transformation journey</span>
+              <span className="text-sm text-gray-400">
+                {isDaily ? `Day ${currentDay} of 7` : '7-day transformation journey'}
+              </span>
               <div className="flex gap-1.5 ml-auto">
-                {[...Array(7)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.5 + i * 0.05 }}
-                    className={cn(
-                      'w-2.5 h-2.5 rounded-full',
-                      i === 0
-                        ? 'bg-gradient-to-r from-mi-cyan to-mi-gold shadow-sm shadow-mi-cyan/50'
-                        : 'bg-white/20 border border-white/10'
-                    )}
-                  />
-                ))}
+                {[...Array(7)].map((_, i) => {
+                  const dayNum = i + 1;
+                  const isCompleted = isDaily && dayNum < currentDay;
+                  const isCurrent = isDaily ? dayNum === currentDay : dayNum === 1;
+
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.5 + i * 0.05 }}
+                      className={cn(
+                        'w-2.5 h-2.5 rounded-full',
+                        isCompleted
+                          ? 'bg-emerald-500 border border-emerald-400/50'
+                          : isCurrent
+                          ? 'bg-gradient-to-r from-mi-cyan to-mi-gold shadow-sm shadow-mi-cyan/50'
+                          : 'bg-white/20 border border-white/10'
+                      )}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -357,7 +390,7 @@ export function ProtocolUnlockModal({
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                {patternContent.ctaText}
+                {isDaily && dailyContent ? dailyContent.ctaText : patternContent.ctaText}
                 <ChevronRight className="h-5 w-5" />
               </span>
             )}

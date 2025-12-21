@@ -34,6 +34,7 @@ import {
   StreakProtectedDialog,
   AssessmentsTab,
   IdentityCollisionGrip,
+  ProtocolUnlockModal,
 } from '@/components/coverage-center';
 
 // Hooks
@@ -44,9 +45,10 @@ import { useSubPatternStatus } from '@/hooks/useSubPatternStatus';
 import { useIdentityCollisionStatus } from '@/hooks/useIdentityCollisionStatus';
 import { useMentalPillarAssessmentStatus } from '@/hooks/useMentalPillarAssessment';
 import { useIdentityCollisionGrip } from '@/hooks/useIdentityCollisionGrip';
+import { useUnstartedProtocol } from '@/hooks/useUnstartedProtocol';
 
 // Services
-import { getActiveInsightProtocol } from '@/services/mioInsightProtocolService';
+import { getActiveInsightProtocol, startProtocol } from '@/services/mioInsightProtocolService';
 import { getUserMilestones } from '@/services/coverageStreakService';
 import { getUserActiveProtocols } from '@/services/coachProtocolV2Service';
 
@@ -118,6 +120,17 @@ export default function CoverageCenterPage() {
     patternName,
     isLoading: gripLoading,
   } = useIdentityCollisionGrip();
+
+  // Protocol Unlock Modal (for unstarted protocols)
+  // Shows after 30-min delay when user visits Coverage Center
+  const {
+    unstartedProtocol,
+    hasUnstartedProtocol,
+    isNewUser,
+    shouldShowModal: shouldShowUnlockModal,
+    dismissModal: dismissUnlockModal,
+    refreshProtocol: refreshUnstartedProtocol,
+  } = useUnstartedProtocol();
 
   // Local state
   const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
@@ -243,6 +256,30 @@ export default function CoverageCenterPage() {
   const handleViewProtocol = useCallback((protocolId: string) => {
     navigate(`/mind-insurance/protocol/${protocolId}`);
   }, [navigate]);
+
+  // Handle "Begin Day 1" from Protocol Unlock Modal
+  const handleBeginDay1 = useCallback(async () => {
+    if (!unstartedProtocol?.id) return;
+
+    try {
+      await startProtocol(unstartedProtocol.id);
+      await refreshUnstartedProtocol();
+      dismissUnlockModal();
+      // Refresh the page data to show the now-started protocol
+      await fetchActiveProtocol();
+      toast({
+        title: 'Protocol Started!',
+        description: 'Your 7-day transformation journey begins now.',
+      });
+    } catch (error) {
+      console.error('[CoverageCenterPage] Error starting protocol:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start protocol. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [unstartedProtocol?.id, refreshUnstartedProtocol, dismissUnlockModal, fetchActiveProtocol, toast]);
 
   // ============================================================================
   // DERIVED STATE
@@ -419,6 +456,16 @@ export default function CoverageCenterPage() {
           onClose={() => setShowStreakProtectedDialog(false)}
           streakCount={currentStreak}
           tokensRemaining={Math.max(0, skipTokens - 1)}
+        />
+
+        {/* Protocol Unlock Modal - shows after 30-min delay post-tour */}
+        <ProtocolUnlockModal
+          isOpen={shouldShowUnlockModal && hasUnstartedProtocol}
+          protocol={unstartedProtocol}
+          variant={isNewUser ? 'new_user' : 'returning_user'}
+          onBeginDay1={handleBeginDay1}
+          onRemindLater={dismissUnlockModal}
+          onClose={dismissUnlockModal}
         />
       </div>
     </div>

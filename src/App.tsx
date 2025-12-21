@@ -13,6 +13,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 // MI STANDALONE: AccessGate removed - uses gh_approved_users which is GH-specific
 // MI STANDALONE: AssessmentGuard removed - IdentityCollisionGuard handles MI assessment gating
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
+import { SheetTourProvider } from "@/components/ui/sheet";
 import { ConfigurationRequired } from "@/components/ConfigurationRequired";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
@@ -177,10 +178,11 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
-              <ProductProvider>
-                <ConversationProvider>
-                  <ConversationsProvider>
-                    <Routes>
+              <SheetTourProvider>
+                <ProductProvider>
+                  <ConversationProvider>
+                    <ConversationsProvider>
+                      <Routes>
                       {/* Landing - MI-specific */}
                       <Route path="/" element={<MILandingPage />} />
 
@@ -268,10 +270,11 @@ const App = () => {
 
                       {/* 404 catch-all - must be last */}
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </ConversationsProvider>
-                </ConversationProvider>
-              </ProductProvider>
+                      </Routes>
+                    </ConversationsProvider>
+                  </ConversationProvider>
+                </ProductProvider>
+              </SheetTourProvider>
             </BrowserRouter>
           </TooltipProvider>
         </AdminProvider>

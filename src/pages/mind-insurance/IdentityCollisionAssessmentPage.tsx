@@ -442,15 +442,16 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
     }
   };
 
-  // Handle continue after results - redirect to MIO Insights thread
+  // Handle continue after results - redirect to Hub for tour, then MIO
   const handleContinue = () => {
-    // After assessment completion, go to MIO Insights thread for first engagement
-    // MIO will inject the first engagement message with protocol preview
-    // User responds in thread, then is directed to Coverage Center
+    // NEW FLOW: Assessment → Hub (with tour) → MIO Chat → Protocol Modal
+    // 1. Navigate to Hub with startTour flag
+    // 2. Hub auto-starts the 4-step tour
+    // 3. Tour ends at "Meet MIO" step → navigates to MIO chat
+    // 4. MIO presents protocol in chat
     // CRITICAL: justCompletedAssessment flag tells IdentityCollisionGuard to bypass check
-    // This is a backup safety measure in case cache refetch hasn't completed yet
-    navigate('/mind-insurance/mio-insights', {
-      state: { showFirstEngagement: true, justCompletedAssessment: true },
+    navigate('/mind-insurance', {
+      state: { startTour: true, justCompletedAssessment: true },
       replace: true
     });
   };

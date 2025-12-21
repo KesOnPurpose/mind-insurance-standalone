@@ -30,6 +30,8 @@ import {
   PenLine,
   Cloud,
   Star,
+  Lock,
+  Minus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +45,9 @@ import {
   skipToDay,
   calculateCurrentProtocolDay,
   updateProtocolReflection,
+  getDayStatus,
+  getUnlockText,
+  type DayStatus,
 } from '@/services/mioInsightProtocolService';
 import type { MIOInsightProtocolWithProgress, MIOInsightDayTask, MIOProtocolCompletion } from '@/types/protocol';
 import { toast } from 'sonner';
@@ -300,10 +305,14 @@ export default function ProtocolDetailPage() {
             const completion = protocol.completions.find(
               (c) => c.day_number === dayNumber
             );
-            const isComplete = completion && !completion.was_skipped;
-            const wasSkipped = completion?.was_skipped;
-            const isCurrent = dayNumber === protocol.current_day && !isCompleted;
-            const isFuture = dayNumber > protocol.current_day;
+            // Use day locking service for status determination
+            const dayStatus = getDayStatus(protocol, dayNumber);
+            const unlockText = getUnlockText(protocol, dayNumber);
+            const isComplete = dayStatus === 'completed';
+            const wasSkipped = dayStatus === 'skipped';
+            const isLocked = dayStatus === 'locked';
+            const isAvailable = dayStatus === 'available';
+            const isCurrent = isAvailable && dayNumber === protocol.current_day && !isCompleted;
             const isExpanded = expandedDay === dayNumber;
 
             return (
@@ -316,17 +325,21 @@ export default function ProtocolDetailPage() {
                 <DayAccordion
                   task={task}
                   dayNumber={dayNumber}
+                  dayStatus={dayStatus}
+                  unlockText={unlockText}
                   isComplete={isComplete}
                   wasSkipped={wasSkipped}
+                  isLocked={isLocked}
                   isCurrent={isCurrent}
-                  isFuture={isFuture}
                   isExpanded={isExpanded}
-                  onToggle={() =>
-                    setExpandedDay(isExpanded ? null : dayNumber)
-                  }
+                  onToggle={() => {
+                    // Prevent toggling locked days
+                    if (isLocked) return;
+                    setExpandedDay(isExpanded ? null : dayNumber);
+                  }}
                   onComplete={() => handleCompleteDay(dayNumber)}
                   isCompleting={completingDay === dayNumber}
-                  disabled={isMuted || (!isCurrent && !isComplete)}
+                  disabled={isMuted || isLocked || (!isCurrent && !isComplete)}
                   protocolId={protocol.id}
                   completion={completion}
                   onReflectionChange={handleReflectionChange}
@@ -382,10 +395,12 @@ export default function ProtocolDetailPage() {
 interface DayAccordionProps {
   task: MIOInsightDayTask;
   dayNumber: number;
+  dayStatus: DayStatus;
+  unlockText: string;
   isComplete: boolean;
   wasSkipped?: boolean;
+  isLocked: boolean;
   isCurrent: boolean;
-  isFuture: boolean;
   isExpanded: boolean;
   onToggle: () => void;
   onComplete: () => void;
@@ -400,10 +415,12 @@ interface DayAccordionProps {
 function DayAccordion({
   task,
   dayNumber,
+  dayStatus,
+  unlockText,
   isComplete,
   wasSkipped,
+  isLocked,
   isCurrent,
-  isFuture,
   isExpanded,
   onToggle,
   onComplete,
@@ -503,7 +520,11 @@ function DayAccordion({
       return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
     }
     if (wasSkipped) {
-      return <Circle className="w-5 h-5 text-gray-500" />;
+      // Dash icon for skipped days (shows skip token was used)
+      return <Minus className="w-5 h-5 text-gray-500" />;
+    }
+    if (isLocked) {
+      return <Lock className="w-5 h-5 text-gray-500" />;
     }
     if (isCurrent) {
       return (
@@ -516,7 +537,8 @@ function DayAccordion({
         </div>
       );
     }
-    return <Circle className="w-5 h-5 text-gray-600" />;
+    // Available but not current
+    return <Circle className="w-5 h-5 text-mi-cyan" />;
   };
 
   const getCardStyle = () => {
@@ -533,7 +555,11 @@ function DayAccordion({
     if (wasSkipped) {
       return 'bg-white/5 backdrop-blur-sm border-gray-700/30 opacity-60';
     }
-    return 'bg-white/5 backdrop-blur-sm border-white/10';
+    if (isLocked) {
+      return 'bg-white/3 backdrop-blur-sm border-gray-700/20 opacity-50 cursor-not-allowed';
+    }
+    // Available (not current) - visible but less prominent
+    return 'bg-white/5 backdrop-blur-sm border-mi-cyan/20';
   };
 
   const existingReflection = completion?.response_data?.reflection_text as string | undefined;
@@ -544,8 +570,14 @@ function DayAccordion({
         "overflow-hidden transition-all rounded-2xl border",
         getCardStyle()
       )}>
-        <CollapsibleTrigger asChild>
-          <button className="w-full p-4 flex items-center justify-between text-left">
+        <CollapsibleTrigger asChild disabled={isLocked}>
+          <button
+            className={cn(
+              "w-full p-4 flex items-center justify-between text-left",
+              isLocked && "cursor-not-allowed"
+            )}
+            onClick={isLocked ? (e) => e.preventDefault() : undefined}
+          >
             <div className="flex items-center gap-3">
               {getStatusIcon()}
               <div>
@@ -557,6 +589,8 @@ function DayAccordion({
                         ? 'text-emerald-400'
                         : isCurrent
                         ? 'text-white'
+                        : isLocked
+                        ? 'text-gray-500'
                         : 'text-gray-300'
                     )}
                   >
@@ -576,14 +610,31 @@ function DayAccordion({
                       Skipped
                     </Badge>
                   )}
+                  {isLocked && (
+                    <Badge className="bg-gray-700/30 text-gray-500 border-0 text-xs">
+                      {unlockText}
+                    </Badge>
+                  )}
                 </div>
-                <p className="text-sm text-gray-400">{task.theme}</p>
+                <p className={cn(
+                  "text-sm",
+                  isLocked ? "text-gray-600" : "text-gray-400"
+                )}>
+                  {task.theme}
+                </p>
               </div>
             </div>
-            {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
+            {/* Only show chevron for unlocked days */}
+            {!isLocked && (
+              isExpanded ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )
+            )}
+            {/* Show lock icon for locked days */}
+            {isLocked && (
+              <Lock className="w-4 h-4 text-gray-600" />
             )}
           </button>
         </CollapsibleTrigger>

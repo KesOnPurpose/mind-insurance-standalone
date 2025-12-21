@@ -30,6 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CoverageStreakBadge } from './CoverageStreak';
 import type { MIOInsightProtocolWithProgress, MIOInsightDayTask } from '@/types/protocol';
 import type { ActiveProtocolSummary } from '@/types/coverage';
+import { getDayStatus, type DayStatus } from '@/services/mioInsightProtocolService';
 
 // ============================================================================
 // TYPES
@@ -50,16 +51,14 @@ interface ActiveMIOProtocolCardProps {
 
 function getDayProgressItems(
   protocol: MIOInsightProtocolWithProgress
-): Array<{ day: number; completed: boolean; isToday: boolean }> {
+): Array<{ day: number; status: DayStatus; isToday: boolean }> {
   return Array.from({ length: 7 }, (_, i) => {
     const day = i + 1;
-    const completion = protocol.completions.find(
-      (c) => c.day_number === day && !c.was_skipped
-    );
+    const status = getDayStatus(protocol, day);
     return {
       day,
-      completed: !!completion,
-      isToday: day === protocol.current_day,
+      status,
+      isToday: status === 'available' && day === protocol.current_day,
     };
   });
 }
@@ -150,23 +149,40 @@ export function ActiveMIOProtocolCard({
             <span className="font-medium text-white">{progressPercent}% complete</span>
           </div>
 
-          {/* Day progress dots */}
+          {/* Day progress dots with lock state indicators */}
           <div className="flex items-center gap-1.5">
             {dayProgress.map((day) => (
               <div
                 key={day.day}
                 className={cn(
-                  'flex-1 h-2 rounded-full transition-all',
-                  day.completed
+                  'flex-1 h-2 rounded-full transition-all relative',
+                  day.status === 'completed'
                     ? 'bg-mi-cyan'
+                    : day.status === 'skipped'
+                    ? 'bg-gray-500'
                     : day.isToday
                     ? 'bg-mi-gold animate-pulse'
-                    : 'bg-mi-navy'
+                    : day.status === 'locked'
+                    ? 'bg-mi-navy border border-gray-700'
+                    : 'bg-mi-cyan/30' // available but not today
                 )}
                 title={`Day ${day.day}: ${
-                  day.completed ? 'Completed' : day.isToday ? 'Today' : 'Upcoming'
+                  day.status === 'completed'
+                    ? 'Completed'
+                    : day.status === 'skipped'
+                    ? 'Skipped'
+                    : day.isToday
+                    ? 'Today'
+                    : day.status === 'locked'
+                    ? 'Locked'
+                    : 'Available'
                 }`}
-              />
+              >
+                {/* Small lock indicator for locked days */}
+                {day.status === 'locked' && (
+                  <Lock className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 text-gray-600" />
+                )}
+              </div>
             ))}
           </div>
         </div>

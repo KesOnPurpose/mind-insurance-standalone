@@ -54,25 +54,32 @@ export const TOUR_STEPS: TourStep[] = [
     position: 'bottom',
   },
   {
+    id: 'menu',
+    targetSelector: '[data-sidebar="trigger"]',
+    title: 'Open Menu',
+    description: 'Tap here to open the navigation menu. Coverage Center, My Evidence, and MIO are all inside.',
+    position: 'right',
+  },
+  {
     id: 'coverage',
     targetSelector: '[data-tour-target="sidebar-coverage"]',
     title: 'Coverage Center',
     description: 'View your MIO protocol and track your 7-day transformation journey. This is where your personalized insights come to life.',
-    position: 'right',
+    position: 'bottom',
   },
   {
     id: 'evidence',
     targetSelector: '[data-tour-target="sidebar-vault"]',
     title: 'My Evidence',
     description: 'Save insights and track proof of your transformation. Your wins and breakthroughs are stored here as evidence of growth.',
-    position: 'right',
+    position: 'bottom',
   },
   {
     id: 'mio',
     targetSelector: '[data-tour-target="sidebar-mio"]',
     title: 'Meet MIO',
     description: 'Your AI coach is always here. Tap to chat with MIO anytime you need guidance or want to explore your patterns.',
-    position: 'right',
+    position: 'bottom',
   },
 ];
 
@@ -88,6 +95,41 @@ const TOUR_SKIPPED_KEY = 'mi_hub_tour_skipped';
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Scrolls the page to bring the target element into view
+ * Called when tour advances to each step
+ * Uses requestAnimationFrame + setTimeout for reliable DOM timing on mobile
+ */
+function scrollToTarget(stepIndex: number): void {
+  const selector = TOUR_STEPS[stepIndex]?.targetSelector;
+  if (!selector) return;
+
+  // Use requestAnimationFrame + setTimeout for reliable DOM timing
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const element = document.querySelector(selector);
+      if (element) {
+        // Check if element is actually visible (not hidden by CSS)
+        const rect = element.getBoundingClientRect();
+        const isVisible = rect.width > 0 && rect.height > 0;
+
+        if (isVisible) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+          });
+          console.log('[useHubTour] Scrolled to target:', selector);
+        } else {
+          console.warn('[useHubTour] Target element not visible:', selector);
+        }
+      } else {
+        console.warn('[useHubTour] Target element not found:', selector);
+      }
+    }, 50); // Small delay for layout to settle
+  });
+}
 
 function getTourCompletedStatus(): boolean {
   try {
@@ -186,6 +228,8 @@ export function useHubTour(): UseHubTourReturn {
     setIsActive(true);
     saveCurrentStep(0);
     console.log('[useHubTour] Tour started');
+    // Scroll to first target after small delay for render
+    setTimeout(() => scrollToTarget(0), 150);
   }, []);
 
   // Go to next step
@@ -195,6 +239,9 @@ export function useHubTour(): UseHubTourReturn {
       setCurrentStep(next);
       saveCurrentStep(next);
       console.log('[useHubTour] Next step:', next);
+      // Longer delay for sidebar steps (2-4) to allow sidebar animation to complete
+      const delay = next >= 2 ? 500 : 150;
+      setTimeout(() => scrollToTarget(next), delay);
     } else {
       // Last step - complete the tour
       markTourCompleted();
