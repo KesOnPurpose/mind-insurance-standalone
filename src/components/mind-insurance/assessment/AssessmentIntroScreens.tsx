@@ -42,7 +42,17 @@ import {
   Eye,
   Trophy,
   Rocket,
+  Phone,
+  MessageSquare,
+  Bell,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { createGhlContact } from '@/hooks/useGhlContactSync';
 
 // ============================================================================
 // LOCALSTORAGE KEYS - Export for parent component access
@@ -773,7 +783,280 @@ function ScreenPatterns({ onNext }: { onNext: () => void }) {
 }
 
 // ============================================================================
-// SCREEN 6: PROTECT METHOD (NEW - THE SOLUTION)
+// SCREEN 6: PHONE CAPTURE (EARLY ONBOARDING - Peak Curiosity Moment)
+// ============================================================================
+// Behavioral Science Principles:
+// - Peak Curiosity: User just identified their patterns
+// - Reciprocity: We showed patterns → they want MORE
+// - Before Fatigue: Before 40+ assessment questions
+// - Est. Completion: ~85-90% (vs ~50% at Avatar Reveal)
+// ============================================================================
+
+function ScreenPhoneCapture({ onNext }: { onNext: () => void }) {
+  const { user, profile, refreshProfile } = useAuth();
+  const [phone, setPhone] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Skip if user already has a GHL contact ID
+  const alreadyHasPhone = profile?.ghl_contact_id || profile?.phone;
+
+  // Format phone number as user types
+  const handlePhoneChange = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) {
+      setPhone(digits);
+    } else if (digits.length <= 6) {
+      setPhone(`(${digits.slice(0, 3)}) ${digits.slice(3)}`);
+    } else {
+      setPhone(`(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`);
+    }
+  };
+
+  // Submit handler
+  const handleSubmit = async () => {
+    setError(null);
+
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    if (!consent) {
+      setError('Please agree to receive SMS messages');
+      return;
+    }
+
+    if (!user?.id || !user?.email) {
+      // Guest user - just proceed (phone will be captured later)
+      onNext();
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await createGhlContact(
+        user.id,
+        user.email,
+        `+1${digits}`,
+        profile?.full_name || undefined
+      );
+
+      if (!result?.success) {
+        setError(result?.message || 'Failed to enable SMS notifications');
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      // Brief celebration before continuing
+      setTimeout(() => {
+        onNext();
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setIsLoading(false);
+    }
+  };
+
+  // If user already has phone, auto-skip this screen
+  useEffect(() => {
+    if (alreadyHasPhone) {
+      onNext();
+    }
+  }, [alreadyHasPhone, onNext]);
+
+  // Don't render if already has phone
+  if (alreadyHasPhone) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[65vh] px-4 text-center">
+      {success ? (
+        // Success State
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-8"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="w-20 h-20 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center"
+          >
+            <CheckCircle className="h-10 w-10 text-emerald-400" />
+          </motion.div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            You're All Set!
+          </h3>
+          <p className="text-gray-400 text-sm">
+            MIO will text you when your first protocol is ready.
+          </p>
+        </motion.div>
+      ) : (
+        <>
+          {/* Icon */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="w-16 h-16 mb-4 relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-mi-cyan to-mi-gold rounded-xl blur-lg opacity-40 animate-pulse" />
+            <div className="relative bg-mi-navy-light rounded-xl p-4 border border-mi-cyan/40">
+              <Bell className="w-8 h-8 text-mi-cyan" />
+            </div>
+          </motion.div>
+
+          {/* Title */}
+          <motion.h2
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="text-xl sm:text-2xl font-bold text-white mb-2"
+          >
+            Stay on Track
+          </motion.h2>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="text-sm text-gray-300 max-w-sm mb-6"
+          >
+            Your patterns are identified. Now let's make sure you don't fall back into them.
+          </motion.p>
+
+          {/* Value Prop Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+            className="w-full max-w-sm mb-6"
+          >
+            <Card className="bg-mi-navy-light border border-white/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-mi-cyan/10 flex-shrink-0">
+                  <MessageSquare className="h-5 w-5 text-mi-cyan" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-medium text-sm mb-1">
+                    Get a daily nudge via text
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    30-second check-ins that catch your patterns before they run.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Phone Input */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="w-full max-w-sm space-y-4 mb-6"
+          >
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input
+                type="tel"
+                placeholder="(555) 555-5555"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                className="pl-10 h-12 bg-mi-navy-light border-gray-700 text-white placeholder:text-gray-500 focus:border-mi-cyan focus:ring-mi-cyan/20 text-base"
+              />
+            </div>
+
+            {/* TCPA Consent */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 text-left">
+              <Checkbox
+                id="sms-consent-intro"
+                checked={consent}
+                onCheckedChange={(checked) => setConsent(checked === true)}
+                className="mt-0.5"
+              />
+              <Label
+                htmlFor="sms-consent-intro"
+                className="text-xs text-gray-400 leading-relaxed cursor-pointer"
+              >
+                I agree to receive SMS messages from Mind Insurance (max 2/week).
+                Reply STOP to unsubscribe. Msg & data rates may apply.
+              </Label>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <p className="text-sm text-red-400">{error}</p>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+            className="w-full max-w-sm space-y-3"
+          >
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading || !consent || phone.replace(/\D/g, '').length !== 10}
+              className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-mi-cyan to-mi-cyan-dark hover:from-mi-cyan-dark hover:to-mi-cyan text-mi-navy disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Setting Up...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Text Me My Protocol
+                </>
+              )}
+            </Button>
+
+            {/* Skip Option */}
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={isLoading}
+              className="w-full text-center text-sm text-gray-500 hover:text-gray-400 transition-colors py-2"
+            >
+              Skip for now
+              <span className="text-xs block text-gray-600">
+                (you can add later in Settings)
+              </span>
+            </button>
+          </motion.div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// SCREEN 7: PROTECT METHOD (THE SOLUTION)
 // ============================================================================
 
 function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
@@ -1019,13 +1302,14 @@ export function AssessmentIntroScreens({
   onSkip,
 }: AssessmentIntroScreensProps) {
   const screens = [
-    ScreenMIOIntro,        // Screen 1: Mind Insurance Intro (NEW)
+    ScreenMIOIntro,        // Screen 1: Mind Insurance Intro
     ScreenHook,            // Screen 2: The Hook
     ScreenCategories,      // Screen 3: Category Selection
     ScreenExplained,       // Screen 4: Identity Collision Explained
     ScreenPatterns,        // Screen 5: Pattern Cards
-    ScreenPROTECTMethod,   // Screen 6: PROTECT Method (NEW)
-    ScreenPolicyPreview,   // Screen 7: Policy Preview
+    ScreenPhoneCapture,    // Screen 6: Phone Capture (Peak Curiosity Moment)
+    ScreenPROTECTMethod,   // Screen 7: PROTECT Method
+    ScreenPolicyPreview,   // Screen 8: Policy Preview
   ];
   const totalSteps = screens.length;
   const CurrentScreen = screens[currentStep];
