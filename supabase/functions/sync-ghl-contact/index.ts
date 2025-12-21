@@ -137,7 +137,12 @@ async function createGhlContact(
       firstName,
       lastName,
       source: 'Mind Insurance App',
-      tags: ['mind-insurance', 'app-signup']
+      tags: [
+        'mind-insurance',
+        'app-signup',
+        'mio-onboarding-started',
+        phone ? 'mio-sms-opted-in' : undefined
+      ].filter(Boolean)
     };
 
     console.log('[GHL Create] Creating contact with:', JSON.stringify(requestBody));

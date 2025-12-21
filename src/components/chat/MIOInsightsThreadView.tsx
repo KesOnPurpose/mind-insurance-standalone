@@ -23,6 +23,7 @@ import { Card } from '@/components/ui/card';
 import { useMIOInsightsThread } from '@/hooks/useMIOInsightsThread';
 import { useFirstSessionStatus } from '@/hooks/useFirstSessionStatus';
 import { MIOInsightMessage } from './MIOInsightMessage';
+import { VoiceInputButton } from './VoiceInputButton';
 import { cn } from '@/lib/utils';
 
 interface MIOInsightsThreadViewProps {
@@ -319,20 +320,30 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
       {/* Input Area */}
       <div className="p-4 border-t border-[#05c3dd]/20 bg-[#132337]">
         <div className="flex gap-2">
-          <Textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Reply to MIO..."
-            disabled={isSending}
-            className={cn(
-              "flex-1 min-h-[44px] max-h-[120px] resize-none",
-              "bg-[#0a1929] border-[#05c3dd]/30 text-white placeholder:text-gray-500",
-              "focus:border-[#05c3dd] focus:ring-[#05c3dd]/20"
-            )}
-            rows={1}
-          />
+          <div className="relative flex-1">
+            <Textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Reply to MIO..."
+              disabled={isSending}
+              className={cn(
+                "flex-1 min-h-[44px] max-h-[120px] resize-none pr-10",
+                "bg-[#0a1929] border-[#05c3dd]/30 text-white placeholder:text-gray-500",
+                "focus:border-[#05c3dd] focus:ring-[#05c3dd]/20"
+              )}
+              rows={1}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <VoiceInputButton
+                onTranscript={(text) => setInputValue(prev => prev ? `${prev} ${text}` : text)}
+                onTranscriptUpdate={(text) => setInputValue(text)}
+                disabled={isSending}
+                variant="mi"
+              />
+            </div>
+          </div>
 
           <Button
             onClick={handleSend}

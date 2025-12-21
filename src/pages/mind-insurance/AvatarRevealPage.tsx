@@ -13,7 +13,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft,
   Brain,
@@ -44,6 +44,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useAvatarData } from '@/hooks/useAvatarData';
 import { cn } from '@/lib/utils';
+import { tagOnboardingComplete, tagPattern } from '@/services/ghlTagService';
 
 // ============================================================================
 // PILLAR ICONS
@@ -107,7 +108,43 @@ export default function AvatarRevealPage() {
   const [showCosts, setShowCosts] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
 
+  // Track if GHL tags have been applied to prevent duplicate calls
+  const hasTaggedRef = useRef(false);
+
   const fullAvatar = avatarData.fullAvatar;
+
+  // Tag GHL contact when avatar is complete
+  useEffect(() => {
+    const applyGhlTags = async () => {
+      if (!user?.id || !avatarData.isComplete || hasTaggedRef.current) return;
+
+      hasTaggedRef.current = true;
+
+      try {
+        // Tag onboarding complete
+        await tagOnboardingComplete(user.id);
+
+        // Tag pattern if available
+        if (avatarData.primaryPattern?.name) {
+          const patternMap: Record<string, 'past-prison' | 'success-sabotage' | 'compass-crisis'> = {
+            past_prison: 'past-prison',
+            success_sabotage: 'success-sabotage',
+            compass_crisis: 'compass-crisis'
+          };
+          const patternTag = patternMap[avatarData.primaryPattern.name];
+          if (patternTag) {
+            await tagPattern(user.id, patternTag);
+          }
+        }
+
+        console.log('[Avatar] GHL tags applied for completed onboarding');
+      } catch (error) {
+        console.error('[Avatar] Failed to apply GHL tags:', error);
+      }
+    };
+
+    applyGhlTags();
+  }, [user?.id, avatarData.isComplete, avatarData.primaryPattern?.name]);
 
   // Loading state
   if (authLoading || isLoading) {

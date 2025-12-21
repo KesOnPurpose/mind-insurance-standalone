@@ -6,6 +6,7 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { AssessmentActionCard } from "@/components/chat/AssessmentActionCard";
+import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
 import { CoachType, COACHES } from "@/types/coach";
 import { type AssessmentType } from "@/hooks/useAssessmentInvitations";
 import { useAuth } from "@/contexts/AuthContext";
@@ -552,14 +553,24 @@ function ChatPageContent() {
               )}
 
               <div className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                  placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                  className={`flex-1 ${isMindInsurance ? 'mi-input' : ''}`}
-                  disabled={isTyping || isLoadingHistory}
-                />
+                <div className="relative flex-1 flex items-center">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                    placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
+                    className={`flex-1 pr-10 ${isMindInsurance ? 'mi-input' : ''}`}
+                    disabled={isTyping || isLoadingHistory}
+                  />
+                  <div className="absolute right-1">
+                    <VoiceInputButton
+                      onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                      onTranscriptUpdate={(text) => setInput(text)}
+                      disabled={isTyping || isLoadingHistory}
+                      variant={isMindInsurance ? 'mi' : 'default'}
+                    />
+                  </div>
+                </div>
                 <Button
                   onClick={handleSend}
                   size="icon"

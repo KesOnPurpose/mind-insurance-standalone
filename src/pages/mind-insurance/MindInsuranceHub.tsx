@@ -22,6 +22,9 @@ import { useHubTour } from '@/hooks/useHubTour';
 import { TourHighlight, TourTooltip, TourOfferDialog, TourSidebarController } from '@/components/tour';
 import { useSidebar } from '@/components/ui/sidebar';
 
+// Push Notifications
+import { PushNotificationPrompt } from '@/components/mind-insurance/notifications/PushNotificationPrompt';
+
 interface DailyPracticeStatus {
   completed: number;
   total: number;
@@ -387,6 +390,9 @@ export default function MindInsuranceHub() {
               </div>
             </Card>
           </div>
+
+          {/* Push Notification Banner - Shows if not subscribed */}
+          <PushNotificationPrompt variant="banner" />
 
         </div>
       </div>
