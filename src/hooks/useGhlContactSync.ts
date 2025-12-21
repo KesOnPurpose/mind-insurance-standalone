@@ -150,6 +150,7 @@ export async function createGhlContact(
         phone,
         full_name: fullName,
         create_if_not_found: true,
+        send_welcome_sms: true, // Send welcome SMS on opt-in
       },
     });
 

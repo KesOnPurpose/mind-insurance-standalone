@@ -13,7 +13,8 @@ import {
   Globe,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  MessageSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } from '@/utils/passwordValidator';
 import { isMindInsuranceDomain } from '@/services/domainDetectionService';
+import { SmsOptIn } from '@/components/settings/SmsOptIn';
 
 export function SettingsPage() {
   const { user, updatePassword } = useAuth();
@@ -398,6 +400,22 @@ export function SettingsPage() {
                 )}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* SMS Notifications - MI Theme */}
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <MessageSquare className="h-5 w-5 text-mi-cyan" />
+              SMS Notifications
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Receive protocol reminders via text message
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SmsOptIn />
           </CardContent>
         </Card>
       </div>

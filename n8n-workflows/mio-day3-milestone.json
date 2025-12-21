@@ -1,0 +1,103 @@
+{
+  "name": "[MIO] Day 3 Milestone - 72-Hour Celebration",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-day3-milestone",
+      "name": "7:30 AM Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/send-protocol-reminder",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"trigger_type\": \"day3_milestone\",\n  \"source\": \"n8n\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "call-edge-function",
+      "name": "Call send-protocol-reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log results for monitoring\nconst response = $input.first().json;\n\nconsole.log('Day 3 Milestone Results:', JSON.stringify(response, null, 2));\n\nreturn {\n  json: {\n    success: response.success,\n    timestamp: response.timestamp || new Date().toISOString(),\n    users_notified: response.users_notified || 0,\n    sms_sent: response.sms_sent || 0,\n    push_sent: response.push_sent || 0,\n    trigger_type: 'day3_milestone',\n    message: response.success \n      ? `72-hour milestone: Sent ${response.sms_sent || 0} celebration SMS` \n      : 'No users eligible for 72-hour milestone'\n  }\n};"
+      },
+      "id": "log-results",
+      "name": "Log Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "7:30 AM Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Call send-protocol-reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call send-protocol-reminder": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "MIO",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Notifications",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "active": false,
+  "meta": {
+    "instanceId": "mio-notifications"
+  },
+  "pinData": {}
+}

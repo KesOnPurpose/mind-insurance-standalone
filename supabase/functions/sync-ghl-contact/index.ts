@@ -23,6 +23,7 @@ interface SyncRequest {
   phone?: string;
   full_name?: string;
   create_if_not_found?: boolean; // If true, create GHL contact if not found
+  send_welcome_sms?: boolean; // If true, send welcome SMS after linking
 }
 
 interface GhlContact {
@@ -42,6 +43,14 @@ interface GhlSearchResponse {
   };
 }
 
+interface SyncResponse {
+  success: boolean;
+  ghl_contact_id: string | null;
+  source: 'existing' | 'matched' | 'created' | 'not_found';
+  message?: string;
+  welcome_sms_sent?: boolean;
+}
+
 // ============================================================================
 // GHL API - Search Contacts
 // ============================================================================
@@ -52,39 +61,48 @@ async function searchGhlContacts(
   privateToken: string
 ): Promise<GhlContact | null> {
   try {
-    // Search by email
-    const url = new URL('https://services.leadconnectorhq.com/contacts/search');
-    url.searchParams.set('locationId', locationId);
-    url.searchParams.set('query', email);
-    url.searchParams.set('limit', '1');
+    // Use POST /contacts/search with email filter (v2 API)
+    console.log('[GHL Search] Searching for:', email, 'at location:', locationId);
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
+    const response = await fetch('https://services.leadconnectorhq.com/contacts/search', {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${privateToken}`,
         'Content-Type': 'application/json',
         'Version': '2021-07-28'
-      }
+      },
+      body: JSON.stringify({
+        locationId,
+        pageLimit: 1,
+        filters: [
+          {
+            field: 'email',
+            operator: 'eq',
+            value: email
+          }
+        ]
+      })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[GHL Search] Error:', response.status, errorText);
+
+      if (response.status === 403) {
+        console.error('[GHL Search] Token may lack contacts.readonly scope or location access');
+      }
+
       return null;
     }
 
-    const data: GhlSearchResponse = await response.json();
+    const data = await response.json();
+    console.log('[GHL Search] Response:', JSON.stringify(data).slice(0, 300));
 
+    // Response format: { contacts: [...], total: N }
     if (data.contacts && data.contacts.length > 0) {
-      // Find exact email match (search may return partial matches)
-      const exactMatch = data.contacts.find(
-        c => c.email?.toLowerCase() === email.toLowerCase()
-      );
-
-      if (exactMatch) {
-        console.log('[GHL Search] Found exact match:', exactMatch.id, exactMatch.email);
-        return exactMatch;
-      }
+      const contact = data.contacts[0];
+      console.log('[GHL Search] Found contact:', contact.id, contact.email);
+      return contact;
     }
 
     console.log('[GHL Search] No contact found for:', email);
@@ -112,6 +130,18 @@ async function createGhlContact(
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
 
+    const requestBody = {
+      locationId,
+      email,
+      phone: phone || undefined,
+      firstName,
+      lastName,
+      source: 'Mind Insurance App',
+      tags: ['mind-insurance', 'app-signup']
+    };
+
+    console.log('[GHL Create] Creating contact with:', JSON.stringify(requestBody));
+
     const response = await fetch('https://services.leadconnectorhq.com/contacts/', {
       method: 'POST',
       headers: {
@@ -119,29 +149,69 @@ async function createGhlContact(
         'Content-Type': 'application/json',
         'Version': '2021-07-28'
       },
-      body: JSON.stringify({
-        locationId,
-        email,
-        phone: phone || undefined,
-        firstName,
-        lastName,
-        source: 'Mind Insurance App',
-        tags: ['mind-insurance', 'app-signup']
-      })
+      body: JSON.stringify(requestBody)
     });
 
+    const responseText = await response.text();
+    console.log('[GHL Create] Response status:', response.status, 'Body:', responseText.slice(0, 500));
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[GHL Create] Error:', response.status, errorText);
+      console.error('[GHL Create] Error:', response.status, responseText);
       return null;
     }
 
-    const data = await response.json();
+    const data = JSON.parse(responseText);
     console.log('[GHL Create] Created contact:', data.contact?.id);
     return data.contact;
   } catch (error) {
     console.error('[GHL Create] Exception:', error);
     return null;
+  }
+}
+
+// ============================================================================
+// GHL API - Send SMS
+// ============================================================================
+
+async function sendWelcomeSms(
+  contactId: string,
+  firstName: string | undefined,
+  locationId: string,
+  privateToken: string
+): Promise<boolean> {
+  try {
+    const name = firstName || 'there';
+    const message = `Hey ${name}! 🧠 MIO here from Mind Insurance. Your SMS notifications are now active. You'll receive protocol reminders to help you stay on track with your transformation. Reply STOP anytime to opt out.`;
+
+    console.log('[GHL SMS] Sending welcome SMS to contact:', contactId);
+
+    const response = await fetch('https://services.leadconnectorhq.com/conversations/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${privateToken}`,
+        'Content-Type': 'application/json',
+        'Version': '2021-07-28'
+      },
+      body: JSON.stringify({
+        type: 'SMS',
+        contactId,
+        message
+      })
+    });
+
+    const responseText = await response.text();
+    console.log('[GHL SMS] Response status:', response.status, 'Body:', responseText.slice(0, 300));
+
+    if (!response.ok) {
+      console.error('[GHL SMS] Error sending welcome SMS:', response.status, responseText);
+      return false;
+    }
+
+    console.log('[GHL SMS] Welcome SMS sent successfully to contact:', contactId);
+    return true;
+  } catch (error) {
+    console.error('[GHL SMS] Exception:', error);
+    return false;
   }
 }
 
@@ -179,9 +249,9 @@ serve(async (req) => {
 
     // Parse request
     const request: SyncRequest = await req.json();
-    const { user_id, email, phone, full_name, create_if_not_found } = request;
+    const { user_id, email, phone, full_name, create_if_not_found, send_welcome_sms } = request;
 
-    console.log('[Sync] Request:', { user_id, email, create_if_not_found });
+    console.log('[Sync] Request:', { user_id, email, create_if_not_found, send_welcome_sms });
 
     if (!user_id || !email) {
       return new Response(
@@ -221,12 +291,17 @@ serve(async (req) => {
     let ghlContact = await searchGhlContacts(email, ghlLocationId, ghlPrivateToken);
 
     // If not found and create_if_not_found is true, create new contact
+    console.log('[Sync] Contact search result:', ghlContact ? 'found' : 'not found');
+    console.log('[Sync] create_if_not_found:', create_if_not_found, 'phone:', phone ? 'provided' : 'not provided');
+
     if (!ghlContact && create_if_not_found && phone) {
-      console.log('[Sync] Creating new GHL contact for:', email);
+      console.log('[Sync] Creating new GHL contact for:', email, 'with phone:', phone);
       ghlContact = await createGhlContact(email, phone, full_name, ghlLocationId, ghlPrivateToken);
+      console.log('[Sync] Create result:', ghlContact ? 'success' : 'failed');
     }
 
     if (!ghlContact) {
+      console.log('[Sync] Returning not_found response');
       return new Response(
         JSON.stringify({
           success: false,
@@ -261,11 +336,24 @@ serve(async (req) => {
 
     console.log('[Sync] Successfully linked user', user_id, 'to GHL contact', ghlContact.id);
 
+    // Send welcome SMS if requested and contact has a phone number
+    let welcomeSmsSent = false;
+    if (send_welcome_sms && ghlContact.phone) {
+      console.log('[Sync] Sending welcome SMS to:', ghlContact.phone);
+      welcomeSmsSent = await sendWelcomeSms(
+        ghlContact.id,
+        ghlContact.firstName || full_name?.split(' ')[0],
+        ghlLocationId,
+        ghlPrivateToken
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         ghl_contact_id: ghlContact.id,
-        source: create_if_not_found && !ghlContact ? 'created' : 'matched',
+        source: create_if_not_found ? 'created' : 'matched',
+        welcome_sms_sent: welcomeSmsSent,
         ghl_contact: {
           id: ghlContact.id,
           email: ghlContact.email,

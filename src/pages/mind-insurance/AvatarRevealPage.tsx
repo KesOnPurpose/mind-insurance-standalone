@@ -13,7 +13,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Brain,
@@ -44,6 +44,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useAvatarData } from '@/hooks/useAvatarData';
 import { cn } from '@/lib/utils';
+import { PhoneCaptureModal } from '@/components/onboarding/PhoneCaptureModal';
 
 // ============================================================================
 // PILLAR ICONS
@@ -98,7 +99,7 @@ const TEMPERAMENT_STYLES: Record<string, { icon: string; color: string }> = {
 
 export default function AvatarRevealPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { avatarData, isLoading } = useAvatarData();
 
   // Collapsible state
@@ -107,7 +108,32 @@ export default function AvatarRevealPage() {
   const [showCosts, setShowCosts] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
 
+  // Phone capture modal state
+  const [showPhoneCaptureModal, setShowPhoneCaptureModal] = useState(false);
+  const [hasSeenPhoneModal, setHasSeenPhoneModal] = useState(false);
+
   const fullAvatar = avatarData.fullAvatar;
+
+  // Show phone capture modal when avatar is complete and user hasn't linked GHL yet
+  // This is the "Celebration Moment" - optimal time for phone capture (behavioral science)
+  useEffect(() => {
+    const shouldShowModal =
+      avatarData.isComplete &&
+      !profile?.ghl_contact_id &&
+      !hasSeenPhoneModal &&
+      !authLoading &&
+      !isLoading;
+
+    if (shouldShowModal) {
+      // Delay slightly to allow the avatar reveal animation to complete
+      const timer = setTimeout(() => {
+        setShowPhoneCaptureModal(true);
+        setHasSeenPhoneModal(true);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [avatarData.isComplete, profile?.ghl_contact_id, hasSeenPhoneModal, authLoading, isLoading]);
 
   // Loading state
   if (authLoading || isLoading) {
@@ -744,6 +770,22 @@ export default function AvatarRevealPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Phone Capture Modal - Shows at "Celebration Moment" after Avatar Reveal */}
+      <PhoneCaptureModal
+        isOpen={showPhoneCaptureModal}
+        onClose={() => setShowPhoneCaptureModal(false)}
+        onSuccess={(contactId) => {
+          console.log('[AvatarReveal] Phone captured, GHL contact:', contactId);
+          setShowPhoneCaptureModal(false);
+        }}
+        onSkip={() => {
+          console.log('[AvatarReveal] User skipped phone capture');
+          setShowPhoneCaptureModal(false);
+        }}
+        avatarName={avatarData.avatarName || undefined}
+        patternName={avatarData.primaryPattern?.displayName || undefined}
+      />
     </div>
   );
 }
