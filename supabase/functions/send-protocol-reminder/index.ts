@@ -29,12 +29,13 @@ interface ProtocolUser {
   current_day: number;
   title: string;
   created_at: string;
-  user_profile: {
-    id: string;
-    full_name: string | null;
-    phone: string | null;
-    ghl_contact_id: string | null;
-  };
+}
+
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  ghl_contact_id: string | null;
 }
 
 interface NotificationResult {
@@ -211,31 +212,19 @@ serve(async (req) => {
 
     console.log('[Reminder] Request:', { trigger_type, source, targetUserId });
 
-    // Query users with active protocols that need reminders today
-    let query = supabase
+    // Query active protocols
+    let protocolQuery = supabase
       .from('mio_weekly_protocols')
-      .select(`
-        id,
-        user_id,
-        current_day,
-        title,
-        created_at,
-        user_profile:user_profiles!inner (
-          id,
-          full_name,
-          phone,
-          ghl_contact_id
-        )
-      `)
+      .select('id, user_id, current_day, title, created_at')
       .eq('status', 'active')
       .lte('current_day', 7);
 
     // If targeting a specific user
     if (targetUserId) {
-      query = query.eq('user_id', targetUserId);
+      protocolQuery = protocolQuery.eq('user_id', targetUserId);
     }
 
-    const { data: protocols, error: queryError } = await query;
+    const { data: protocols, error: queryError } = await protocolQuery;
 
     if (queryError) {
       console.error('[Reminder] Query error:', queryError);
@@ -258,6 +247,27 @@ serve(async (req) => {
 
     console.log('[Reminder] Found', protocols.length, 'active protocols');
 
+    // Get unique user IDs and fetch their profiles
+    const userIds = [...new Set(protocols.map(p => p.user_id))];
+    const { data: userProfiles, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id, full_name, phone, ghl_contact_id')
+      .in('id', userIds);
+
+    if (profileError) {
+      console.error('[Reminder] Profile query error:', profileError);
+    }
+
+    // Create a map of user profiles
+    const profileMap = new Map<string, UserProfile>();
+    if (userProfiles) {
+      for (const profile of userProfiles) {
+        profileMap.set(profile.id, profile);
+      }
+    }
+
+    console.log('[Reminder] Found', profileMap.size, 'user profiles');
+
     // Track results
     const results: NotificationResult[] = [];
     let pushSent = 0;
@@ -265,9 +275,10 @@ serve(async (req) => {
     const errors: string[] = [];
 
     // Process each protocol
-    for (const protocol of protocols as unknown as ProtocolUser[]) {
+    for (const protocol of protocols as ProtocolUser[]) {
       const dayNumber = protocol.current_day;
       const userId = protocol.user_id;
+      const userProfile = profileMap.get(userId);
 
       // Get day-specific message
       const message = DAY_MESSAGES[dayNumber] || DAY_MESSAGES[1];
@@ -304,14 +315,14 @@ serve(async (req) => {
         (!pushSuccess && trigger_type === 'day7_final') // Day 7 final push
       );
 
-      if (shouldSendSms && protocol.user_profile?.ghl_contact_id && ghlPrivateToken && ghlLocationId) {
+      if (shouldSendSms && userProfile?.ghl_contact_id && ghlPrivateToken && ghlLocationId) {
         try {
           const smsMessage = trigger_type === 'missed_2_days'
             ? `Your protocol is waiting. Pick up where you left off: https://mymindinsurance.com/protocol`
             : `${message.title}: ${message.body}\n\nStart now: https://mymindinsurance.com/protocol`;
 
           smsSuccess = await sendGhlSms(
-            protocol.user_profile.ghl_contact_id,
+            userProfile.ghl_contact_id,
             smsMessage,
             ghlLocationId,
             ghlPrivateToken

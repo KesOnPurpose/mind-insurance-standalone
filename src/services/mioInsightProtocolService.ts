@@ -281,6 +281,11 @@ export async function startProtocol(protocolId: string): Promise<void> {
  * - created_at = actual creation timestamp (correct)
  * - assigned_week_start = Monday of creation week (causes mid-week skip issues)
  *
+ * Day Unlocking Logic (midnight-based):
+ * - Day 1: Available immediately on creation day
+ * - Day 2: Unlocks at midnight after creation day
+ * - Day N: Unlocks at midnight (N-1) days after creation
+ *
  * Returns 1-7 (day number), capped at 7
  */
 export function calculateCurrentProtocolDay(
@@ -288,9 +293,29 @@ export function calculateCurrentProtocolDay(
 ): number {
   const created = new Date(createdAt);
   const now = new Date();
-  const diffTime = now.getTime() - created.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return Math.min(Math.max(diffDays, 1), 7);
+
+  // Normalize both dates to midnight (start of day) for accurate day counting
+  const createdMidnight = new Date(
+    created.getFullYear(),
+    created.getMonth(),
+    created.getDate()
+  );
+  const nowMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  // Calculate difference in days (0 on creation day, 1 the next day, etc.)
+  const diffTime = nowMidnight.getTime() - createdMidnight.getTime();
+  const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  // Day 1 is available on creation day (daysSinceCreation = 0)
+  // Day 2 is available the next day (daysSinceCreation = 1)
+  // etc.
+  const currentDay = daysSinceCreation + 1;
+
+  return Math.min(Math.max(currentDay, 1), 7);
 }
 
 // ============================================================================
