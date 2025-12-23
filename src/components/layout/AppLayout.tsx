@@ -17,7 +17,7 @@ import { AppLauncher, CurrentProductBadge } from './AppLauncher';
 import { BottomNav } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -74,10 +74,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             )}
 
             {/* Support Modal */}
-            <SupportModal 
-              open={isSupportOpen} 
-              onOpenChange={setIsSupportOpen} 
-              userEmail={user?.email} 
+            <SupportModal
+              open={isSupportOpen}
+              onOpenChange={setIsSupportOpen}
+              userEmail={user?.email}
             />
 
             {/* User Profile & Settings */}
@@ -116,84 +116,98 @@ export function AppLayout({ children }: AppLayoutProps) {
 }
 
 // Support Modal Component
-function SupportModal({ 
-  open, 
-  onOpenChange, 
-  userEmail 
-}: { 
-  open: boolean; 
+function SupportModal({
+  open,
+  onOpenChange,
+  userEmail
+}: {
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail?: string;
 }) {
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const formData = new FormData(e.currentTarget);
-  
-  // Convert FormData to JSON object
-  const jsonData: any = {
-    name: formData.get('name'),
-    phone: formData.get('phone'),
-    email: formData.get('email'),
-    suggestions: formData.get('suggestions'),
-  };
+    const formData = new FormData(e.currentTarget);
 
-  // Convert file to base64 if exists
-  if (file) {
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      
-      jsonData.attachment = {
-        filename: file.name,
-        mimeType: file.type,
-        data: base64
+    // Convert FormData to JSON object
+    const jsonData: {
+      name: FormDataEntryValue | null;
+      phone: FormDataEntryValue | null;
+      email: FormDataEntryValue | null;
+      suggestions: FormDataEntryValue | null;
+      attachment?: {
+        filename: string;
+        mimeType: string;
+        data: string;
       };
-    } catch (error) {
-      console.error('Error reading file:', error);
+    } = {
+      name: formData.get('name'),
+      phone: formData.get('phone'),
+      email: formData.get('email'),
+      suggestions: formData.get('suggestions'),
+    };
+
+    // Convert file to base64 if exists
+    if (file) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        jsonData.attachment = {
+          filename: file.name,
+          mimeType: file.type,
+          data: base64
+        };
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
     }
-  }
 
-  try {
-    const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support1', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(jsonData),
-    });
-
-    if (response.ok) {
-      toast({
-        title: "Request Sent",
-        description: "We have received your support request and will contact you shortly.",
+    try {
+      const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jsonData),
       });
+
+      // Parse response body
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch {
+        // If response is not JSON, treat as text
+        responseData = await response.text();
+      }
+
+      // Check if request was successful
+      if (!response.ok) {
+        console.error('Webhook error:', response.status, responseData);
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      // Success - show toast and reset form
+      toast.success("We have received your support request and will contact you shortly.");
       onOpenChange(false);
-      setFile(null); // Reset file
-      e.currentTarget.reset(); // Reset form
-    } else {
-      throw new Error('Failed to send request');
+      setFile(null);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error('Support request error:', error);
+      toast.error("Failed to send support request. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error(error);
-    toast({
-      title: "Error",
-      description: "Failed to send support request. Please try again later.",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -209,7 +223,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             Fill out the form below to reach our support team. We'll get back to you via email.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -221,36 +235,36 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <Input id="phone" name="phone" type="tel" placeholder="+1234567890" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              name="email" 
-              type="email" 
-              defaultValue={userEmail || ''} 
-              placeholder="you@example.com" 
-              required 
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={userEmail || ''}
+              placeholder="you@example.com"
+              required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="suggestions">How can we help?</Label>
-            <Textarea 
-              id="suggestions" 
-              name="suggestions" 
-              placeholder="Please describe your issue or suggestion..." 
+            <Textarea
+              id="suggestions"
+              name="suggestions"
+              placeholder="Please describe your issue or suggestion..."
               className="min-h-[100px]"
-              required 
+              required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="attachment">Attachment (Optional)</Label>
             <div className="flex items-center gap-2">
-              <Input 
-                id="attachment" 
-                type="file" 
+              <Input
+                id="attachment"
+                type="file"
                 className="cursor-pointer"
                 onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
               />
