@@ -141,7 +141,7 @@ function SupportModal({
     }
 
     try {
-      const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support', {
+      const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support1', {
         method: 'POST',
         body: formData,
       });
