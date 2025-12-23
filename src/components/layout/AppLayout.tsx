@@ -129,45 +129,71 @@ function SupportModal({
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    
-    // Append the actual file object if it exists (FormData might not catch file input directly depending on implementation, ensuring it here is safer)
-    if (file) {
-      formData.set('attachment', file);
-    }
-
-    try {
-      const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support1', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Request Sent",
-          description: "We have received your support request and will contact you shortly.",
-        });
-        onOpenChange(false);
-        setFile(null); // Reset file
-      } else {
-        throw new Error('Failed to send request');
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Failed to send support request. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const formData = new FormData(e.currentTarget);
+  
+  // Convert FormData to JSON object
+  const jsonData: any = {
+    name: formData.get('name'),
+    phone: formData.get('phone'),
+    email: formData.get('email'),
+    suggestions: formData.get('suggestions'),
   };
 
+  // Convert file to base64 if exists
+  if (file) {
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      jsonData.attachment = {
+        filename: file.name,
+        mimeType: file.type,
+        data: base64
+      };
+    } catch (error) {
+      console.error('Error reading file:', error);
+    }
+  }
+
+  try {
+    const response = await fetch('https://n8n-n8n.vq00fr.easypanel.host/webhook/support1', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jsonData),
+    });
+
+    if (response.ok) {
+      toast({
+        title: "Request Sent",
+        description: "We have received your support request and will contact you shortly.",
+      });
+      onOpenChange(false);
+      setFile(null); // Reset file
+      e.currentTarget.reset(); // Reset form
+    } else {
+      throw new Error('Failed to send request');
+    }
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: "Error",
+      description: "Failed to send support request. Please try again later.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
