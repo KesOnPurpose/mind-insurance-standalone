@@ -49,9 +49,9 @@ const ForgotPasswordPage = () => {
                 <div className="w-12 h-12 rounded-2xl bg-gradient-hero flex items-center justify-center mb-4">
                   <Mail className="w-6 h-6 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Reset your password</CardTitle>
+                <CardTitle className="text-2xl">Set or Reset Password</CardTitle>
                 <CardDescription>
-                  Enter your email address and we'll send you a link to reset your password
+                  If you previously used Magic Links or forgot your password, enter your email below to set a new one.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -81,7 +81,7 @@ const ForgotPasswordPage = () => {
                     className="w-full"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                    {isLoading ? 'Sending...' : 'Send Password Setup Link'}
                   </Button>
 
                   <div className="text-center">
@@ -103,11 +103,10 @@ const ForgotPasswordPage = () => {
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Check your email</h2>
                 <p className="text-muted-foreground mb-6">
-                  We've sent a password reset link to{' '}
-                  <span className="font-semibold text-foreground">{email}</span>
+                  We've sent a link to <span className="font-semibold text-foreground">{email}</span>
                 </p>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Click the link in the email to reset your password. The link will expire in 1 hour.
+                  Click the link in the email to set your permanent password.
                 </p>
                 <div className="space-y-3">
                   <Button
