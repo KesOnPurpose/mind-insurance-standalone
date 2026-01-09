@@ -5,11 +5,13 @@ import { Send } from 'lucide-react';
 import { COACHES, CoachType } from '@/types/coach';
 import { useProduct } from '@/contexts/ProductContext';
 import { cn } from '@/lib/utils';
+import { VoiceInputButton } from './VoiceInputButton';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
+  userTimezone?: string;
 }
 
 // Product-specific quick actions
@@ -21,9 +23,9 @@ const QUICK_ACTIONS: Record<string, string[]> = {
     "Tell me about your journey"
   ],
   'mind-insurance': [
+    "ChatGPT VS MIO?",
     "Help me see my patterns",
     "Why do I keep repeating mistakes?",
-    "Explain the PROTECT practice",
     "What is identity collision?"
   ],
   'me-wealth': [
@@ -34,8 +36,22 @@ const QUICK_ACTIONS: Record<string, string[]> = {
   ]
 };
 
-const getTimeBasedGreeting = (): string => {
-  const hour = new Date().getHours();
+const getTimeBasedGreeting = (userTimezone?: string): string => {
+  const now = new Date();
+  let hour: number;
+
+  if (userTimezone) {
+    // Get hour in user's timezone
+    const hourStr = now.toLocaleString('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: userTimezone
+    });
+    hour = parseInt(hourStr, 10);
+  } else {
+    hour = now.getHours();
+  }
+
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
@@ -59,7 +75,8 @@ const getCoachForProduct = (product: string): CoachType => {
 export const ChatWelcomeScreen = ({
   userName,
   onSendMessage,
-  isLoading = false
+  isLoading = false,
+  userTimezone
 }: ChatWelcomeScreenProps) => {
   const [input, setInput] = useState('');
   const { currentProduct } = useProduct();
@@ -67,7 +84,7 @@ export const ChatWelcomeScreen = ({
   const coach = COACHES[activeCoach];
   const quickActions = QUICK_ACTIONS[currentProduct] || QUICK_ACTIONS['grouphome'];
   const firstName = getFirstName(userName);
-  const greeting = getTimeBasedGreeting();
+  const greeting = getTimeBasedGreeting(userTimezone);
 
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
@@ -142,6 +159,12 @@ export const ChatWelcomeScreen = ({
                 isMindInsurance && "text-white placeholder:text-gray-500"
               )}
               disabled={isLoading}
+            />
+            <VoiceInputButton
+              onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+              onTranscriptUpdate={(text) => setInput(text)}
+              disabled={isLoading}
+              variant={isMindInsurance ? 'mi' : 'default'}
             />
             <Button
               onClick={handleSend}

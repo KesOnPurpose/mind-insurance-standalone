@@ -1,0 +1,889 @@
+/**
+ * MIO Insight Protocol Service
+ * Phase 27: Weekly AI-Generated Protocols from MIO Insights
+ *
+ * This service handles:
+ * - Fetching active protocols for users
+ * - Completing protocol days
+ * - Tracking progress
+ * - Getting today's task for display
+ */
+
+import { supabase } from '@/integrations/supabase/client';
+import type {
+  MIOInsightProtocol,
+  MIOInsightProtocolWithProgress,
+  MIOProtocolCompletion,
+  MIOInsightDayTask,
+  TodayProtocolTask,
+  CompleteProtocolDayRequest,
+  CompleteProtocolDayResponse,
+  N8nMIOInsightProtocolPayload,
+} from '@/types/protocol';
+
+// ============================================================================
+// DAY STATUS TYPES
+// ============================================================================
+
+/**
+ * Day status for protocol day locking system
+ * - completed: User finished this day's task
+ * - skipped: Day was auto-skipped (missed deadline)
+ * - available: Day is unlocked and ready to complete
+ * - locked: Day is not yet available (future day)
+ */
+export type DayStatus = 'completed' | 'skipped' | 'available' | 'locked';
+
+// ============================================================================
+// GET OPERATIONS
+// ============================================================================
+
+/**
+ * Get the user's currently active MIO insight protocol
+ */
+export async function getActiveInsightProtocol(
+  userId: string
+): Promise<MIOInsightProtocolWithProgress | null> {
+  // Use RPC function with SECURITY DEFINER to bypass RLS issues
+  const { data: rpcResult, error: rpcError } = await supabase
+    .rpc('get_active_mio_protocol', { p_user_id: userId });
+
+  if (rpcError) {
+    console.error('Error fetching active protocol via RPC:', rpcError);
+    return null;
+  }
+
+  // RPC returns array, get first result
+  const protocol = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+
+  if (!protocol) {
+    return null;
+  }
+
+  // Fetch completions
+  const { data: completions } = await supabase
+    .from('mio_protocol_completions')
+    .select('*')
+    .eq('protocol_id', protocol.id)
+    .order('day_number', { ascending: true });
+
+  // Calculate today's task - normalize success_criteria to always be an array
+  const rawDayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  const dayTasks = rawDayTasks.map((task) => ({
+    ...task,
+    success_criteria: Array.isArray(task.success_criteria)
+      ? task.success_criteria
+      : typeof task.success_criteria === 'string' && task.success_criteria
+        ? [task.success_criteria]
+        : [],
+  }));
+  const currentDay = protocol.current_day || 1;
+  const todayTask = dayTasks.find((t) => t.day === currentDay);
+  const todayCompletion = completions?.find(
+    (c) => c.day_number === currentDay && !c.was_skipped
+  );
+
+  return {
+    ...protocol,
+    day_tasks: dayTasks,
+    completions: (completions || []) as MIOProtocolCompletion[],
+    today_task: todayTask,
+    is_today_completed: !!todayCompletion,
+  } as MIOInsightProtocolWithProgress;
+}
+
+/**
+ * Get a specific protocol by ID with progress
+ */
+export async function getProtocolById(
+  protocolId: string
+): Promise<MIOInsightProtocolWithProgress | null> {
+  // Use RPC function with SECURITY DEFINER to bypass RLS issues
+  const { data: rpcResult, error: rpcError } = await supabase
+    .rpc('get_protocol_with_progress', { p_protocol_id: protocolId });
+
+  if (rpcError) {
+    console.error('Error fetching protocol via RPC:', rpcError);
+    return null;
+  }
+
+  if (!rpcResult) {
+    return null;
+  }
+
+  // RPC returns { protocol, completions } structure
+  const protocol = rpcResult.protocol;
+  const completions = rpcResult.completions || [];
+
+  if (!protocol) {
+    return null;
+  }
+
+  // Normalize success_criteria to always be an array
+  const rawDayTasks = protocol.day_tasks as MIOInsightDayTask[];
+  const dayTasks = rawDayTasks.map((task: MIOInsightDayTask) => ({
+    ...task,
+    success_criteria: Array.isArray(task.success_criteria)
+      ? task.success_criteria
+      : typeof task.success_criteria === 'string' && task.success_criteria
+        ? [task.success_criteria]
+        : [],
+  }));
+  const currentDay = protocol.current_day || 1;
+  const todayTask = dayTasks.find((t: MIOInsightDayTask) => t.day === currentDay);
+  const todayCompletion = completions.find(
+    (c: MIOProtocolCompletion) => c.day_number === currentDay && !c.was_skipped
+  );
+
+  return {
+    ...protocol,
+    day_tasks: dayTasks,
+    completions: completions as MIOProtocolCompletion[],
+    today_task: todayTask,
+    is_today_completed: !!todayCompletion,
+  } as MIOInsightProtocolWithProgress;
+}
+
+/**
+ * Get all protocols for a user (for history view)
+ */
+export async function getUserProtocols(
+  userId: string,
+  limit = 10
+): Promise<MIOInsightProtocol[]> {
+  const { data, error } = await supabase
+    .from('mio_weekly_protocols')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching user protocols:', error);
+    return [];
+  }
+
+  return (data || []).map((p) => ({
+    ...p,
+    day_tasks: p.day_tasks as MIOInsightDayTask[],
+  })) as MIOInsightProtocol[];
+}
+
+/**
+ * Get today's protocol task for display in the hub
+ * Returns null if no active protocol or today is complete
+ */
+export async function getTodayProtocolTask(
+  userId: string
+): Promise<TodayProtocolTask | null> {
+  const protocol = await getActiveInsightProtocol(userId);
+
+  if (!protocol || !protocol.today_task) {
+    return null;
+  }
+
+  return {
+    protocol_id: protocol.id,
+    protocol_title: protocol.title,
+    day_number: protocol.current_day,
+    total_days: 7,
+    task: protocol.today_task,
+    is_completed: protocol.is_today_completed,
+    days_completed: protocol.days_completed,
+    insight_summary: protocol.insight_summary,
+  };
+}
+
+// ============================================================================
+// COMPLETION OPERATIONS
+// ============================================================================
+
+/**
+ * Complete a protocol day
+ */
+export async function completeProtocolDay(
+  request: CompleteProtocolDayRequest
+): Promise<CompleteProtocolDayResponse> {
+  // Use the database function for atomic operation
+  const { data, error } = await supabase.rpc('complete_protocol_day', {
+    p_protocol_id: request.protocol_id,
+    p_day_number: request.day_number,
+    p_response_data: request.response_data || {},
+    p_notes: request.notes || null,
+    p_time_spent: request.time_spent_minutes || null,
+  });
+
+  if (error) {
+    console.error('Error completing protocol day:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+
+  return data as CompleteProtocolDayResponse;
+}
+
+/**
+ * Skip to a specific day (auto-skips missed days)
+ */
+export async function skipToDay(
+  protocolId: string,
+  targetDay: number
+): Promise<{ success: boolean; days_skipped?: number; error?: string }> {
+  const { data, error } = await supabase.rpc('skip_to_current_protocol_day', {
+    p_protocol_id: protocolId,
+    p_target_day: targetDay,
+  });
+
+  if (error) {
+    console.error('Error skipping to day:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data;
+}
+
+// ============================================================================
+// PROGRESS TRACKING
+// ============================================================================
+
+/**
+ * Mark insight as viewed (for analytics)
+ */
+export async function markInsightViewed(protocolId: string): Promise<void> {
+  await supabase
+    .from('mio_weekly_protocols')
+    .update({ insight_viewed_at: new Date().toISOString() })
+    .eq('id', protocolId)
+    .is('insight_viewed_at', null);
+}
+
+/**
+ * Start the protocol (mark first task as started)
+ */
+export async function startProtocol(protocolId: string): Promise<void> {
+  const now = new Date().toISOString();
+  await supabase
+    .from('mio_weekly_protocols')
+    .update({
+      started_at: now,
+      first_task_started_at: now,
+    })
+    .eq('id', protocolId)
+    .is('started_at', null);
+}
+
+/**
+ * Calculate current protocol day based on creation date
+ *
+ * IMPORTANT: Pass protocol.created_at, NOT protocol.assigned_week_start
+ * - created_at = actual creation timestamp (correct)
+ * - assigned_week_start = Monday of creation week (causes mid-week skip issues)
+ *
+ * Day Unlocking Logic (midnight-based):
+ * - Day 1: Available immediately on creation day
+ * - Day 2: Unlocks at midnight after creation day
+ * - Day N: Unlocks at midnight (N-1) days after creation
+ *
+ * Returns 1-7 (day number), capped at 7
+ */
+export function calculateCurrentProtocolDay(
+  createdAt: string | Date
+): number {
+  const created = new Date(createdAt);
+  const now = new Date();
+
+  // Normalize both dates to midnight (start of day) for accurate day counting
+  const createdMidnight = new Date(
+    created.getFullYear(),
+    created.getMonth(),
+    created.getDate()
+  );
+  const nowMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  // Calculate difference in days (0 on creation day, 1 the next day, etc.)
+  const diffTime = nowMidnight.getTime() - createdMidnight.getTime();
+  const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  // Day 1 is available on creation day (daysSinceCreation = 0)
+  // Day 2 is available the next day (daysSinceCreation = 1)
+  // etc.
+  const currentDay = daysSinceCreation + 1;
+
+  return Math.min(Math.max(currentDay, 1), 7);
+}
+
+// ============================================================================
+// DAY LOCKING SYSTEM
+// ============================================================================
+
+/**
+ * Get the status of a specific protocol day
+ *
+ * Day Locking Rules:
+ * - Days unlock at midnight based on protocol creation date
+ * - Each day becomes available 24 hours after the previous day unlocked
+ * - Missed days are auto-marked as 'skipped' (not failed)
+ * - Users can only complete available days (not locked/future days)
+ *
+ * @param protocol - The protocol with progress data
+ * @param dayNumber - The day to check (1-7)
+ * @returns DayStatus: 'completed' | 'skipped' | 'available' | 'locked'
+ */
+export function getDayStatus(
+  protocol: MIOInsightProtocolWithProgress,
+  dayNumber: number
+): DayStatus {
+  // Check if day was completed
+  const completion = protocol.completions?.find(
+    (c) => c.day_number === dayNumber
+  );
+
+  // If there's a completion record
+  if (completion) {
+    if (completion.was_skipped) return 'skipped';
+    return 'completed';
+  }
+
+  // Calculate which day is currently available based on time elapsed
+  const currentUnlockedDay = calculateCurrentProtocolDay(protocol.created_at);
+
+  // Day is available if it's on or before the current unlocked day
+  if (dayNumber <= currentUnlockedDay) {
+    return 'available';
+  }
+
+  // Future day - still locked
+  return 'locked';
+}
+
+/**
+ * Get the unlock date for a specific protocol day
+ *
+ * Days unlock at midnight based on protocol creation date:
+ * - Day 1: Available immediately (on creation date)
+ * - Day 2: Unlocks at midnight after Day 1
+ * - Day 3: Unlocks at midnight 2 days after creation
+ * - etc.
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to get unlock date for (1-7)
+ * @returns Date when this day unlocks
+ */
+export function getUnlockDate(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): Date {
+  const createdAt = new Date(protocol.created_at);
+  const unlockDate = new Date(createdAt);
+
+  // Day 1 unlocks immediately (day 0 offset)
+  // Day 2 unlocks 1 day after creation
+  // Day N unlocks (N-1) days after creation
+  unlockDate.setDate(unlockDate.getDate() + dayNumber - 1);
+
+  // Set to midnight (start of day)
+  unlockDate.setHours(0, 0, 0, 0);
+
+  return unlockDate;
+}
+
+/**
+ * Check if a specific day is currently unlocked
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to check (1-7)
+ * @returns true if the day is unlocked (available or completed)
+ */
+export function isDayUnlocked(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): boolean {
+  const currentDay = calculateCurrentProtocolDay(protocol.created_at);
+  return dayNumber <= currentDay;
+}
+
+/**
+ * Get formatted unlock text for locked days
+ *
+ * @param protocol - The protocol to check
+ * @param dayNumber - The day to get text for (1-7)
+ * @returns Human-readable unlock text (e.g., "Unlocks Tomorrow", "Unlocks in 3 days")
+ */
+export function getUnlockText(
+  protocol: MIOInsightProtocolWithProgress | MIOInsightProtocol,
+  dayNumber: number
+): string {
+  const unlockDate = getUnlockDate(protocol, dayNumber);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const unlock = new Date(
+    unlockDate.getFullYear(),
+    unlockDate.getMonth(),
+    unlockDate.getDate()
+  );
+
+  const diffTime = unlock.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return 'Available Now';
+  if (diffDays === 1) return 'Unlocks Tomorrow';
+  return `Unlocks in ${diffDays} days`;
+}
+
+/**
+ * Get all day statuses for a protocol (for UI display)
+ *
+ * @param protocol - The protocol with progress data
+ * @returns Array of { day, status, unlockText } for all 7 days
+ */
+export function getAllDayStatuses(
+  protocol: MIOInsightProtocolWithProgress
+): Array<{ day: number; status: DayStatus; unlockText: string }> {
+  return Array.from({ length: 7 }, (_, i) => {
+    const dayNumber = i + 1;
+    const status = getDayStatus(protocol, dayNumber);
+    const unlockText = status === 'locked'
+      ? getUnlockText(protocol, dayNumber)
+      : status === 'available'
+        ? 'Available Now'
+        : status === 'completed'
+          ? 'Completed'
+          : 'Skipped';
+
+    return {
+      day: dayNumber,
+      status,
+      unlockText,
+    };
+  });
+}
+
+// ============================================================================
+// ADMIN/COACH OPERATIONS
+// ============================================================================
+
+/**
+ * Mute a protocol (coach action)
+ */
+export async function muteProtocol(
+  protocolId: string,
+  mutedBy: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  const { data, error } = await supabase.rpc('mute_mio_protocol', {
+    p_protocol_id: protocolId,
+    p_muted_by: mutedBy,
+    p_reason: reason,
+  });
+
+  if (error) {
+    console.error('Error muting protocol:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data;
+}
+
+/**
+ * Unmute a protocol
+ */
+export async function unmuteProtocol(
+  protocolId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('mio_weekly_protocols')
+    .update({
+      muted_by_coach: false,
+      muted_at: null,
+      muted_by: null,
+      muted_reason: null,
+      status: 'active',
+    })
+    .eq('id', protocolId);
+
+  if (error) {
+    console.error('Error unmuting protocol:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// ============================================================================
+// PROTOCOL CREATION (for n8n webhook)
+// ============================================================================
+
+/**
+ * Create a new insight protocol (called by n8n workflow)
+ */
+export async function createInsightProtocol(
+  payload: N8nMIOInsightProtocolPayload
+): Promise<{ success: boolean; protocol_id?: string; error?: string }> {
+  // Deactivate any existing active protocols for this user
+  await supabase
+    .from('mio_weekly_protocols')
+    .update({ status: 'expired' })
+    .eq('user_id', payload.user_id)
+    .eq('status', 'active');
+
+  // Create the new protocol
+  const { data, error } = await supabase
+    .from('mio_weekly_protocols')
+    .insert({
+      user_id: payload.user_id,
+      report_id: payload.report_id,
+      protocol_type: 'insight_based',
+      title: payload.title,
+      insight_summary: payload.insight_summary,
+      why_it_matters: payload.why_it_matters,
+      neural_principle: payload.neural_principle,
+      day_tasks: payload.day_tasks,
+      source: 'n8n_weekly',
+      source_context: payload.source_context || {},
+      rag_chunks_used: payload.rag_chunks_used || [],
+      capability_triggers: payload.capability_triggers || [],
+      confidence_score: payload.confidence_score,
+      status: 'active',
+      current_day: 1,
+      days_completed: 0,
+      days_skipped: 0,
+      muted_by_coach: false,
+      week_number: getWeekNumber(new Date()),
+      year: new Date().getFullYear(),
+      assigned_week_start: getWeekStart(new Date()).toISOString(),
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Error creating insight protocol:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, protocol_id: data?.id };
+}
+
+// ============================================================================
+// COACH PROTOCOL INTEGRATION
+// ============================================================================
+
+/**
+ * Check if user has an active coach protocol
+ * If so, MIO protocols should be paused/skipped
+ */
+export async function checkForActiveCoachProtocol(
+  userId: string
+): Promise<{ hasActiveCoachProtocol: boolean; coachProtocolTitle?: string; assignmentId?: string }> {
+  const { data, error } = await supabase
+    .from('user_coach_protocol_assignments')
+    .select(`
+      id,
+      protocol:coach_protocols_v2(title)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { hasActiveCoachProtocol: false };
+  }
+
+  return {
+    hasActiveCoachProtocol: true,
+    coachProtocolTitle: (data.protocol as { title: string })?.title,
+    assignmentId: data.id,
+  };
+}
+
+/**
+ * Pause MIO protocol when a coach protocol is assigned
+ */
+export async function pauseMIOForCoachProtocol(
+  userId: string,
+  coachAssignmentId: string
+): Promise<{ success: boolean; pausedProtocolId?: string; error?: string }> {
+  // Find active MIO protocol
+  const { data: activeMio, error: findError } = await supabase
+    .from('mio_weekly_protocols')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (findError) {
+    console.error('Error finding active MIO protocol:', findError);
+    return { success: false, error: findError.message };
+  }
+
+  if (!activeMio) {
+    // No active MIO protocol to pause
+    return { success: true };
+  }
+
+  // Pause the MIO protocol
+  const { error: pauseError } = await supabase
+    .from('mio_weekly_protocols')
+    .update({
+      status: 'paused',
+      paused_by_coach_protocol_id: coachAssignmentId,
+    })
+    .eq('id', activeMio.id);
+
+  if (pauseError) {
+    console.error('Error pausing MIO protocol:', pauseError);
+    return { success: false, error: pauseError.message };
+  }
+
+  return { success: true, pausedProtocolId: activeMio.id };
+}
+
+/**
+ * Resume MIO protocol when coach protocol ends
+ * Can optionally generate a new MIO protocol with coach protocol context
+ */
+export async function resumeMIOAfterCoachProtocol(
+  userId: string,
+  coachAssignmentId: string,
+  completedProtocolContext?: { title: string; weeksCompleted: number; tasksCompleted: number }
+): Promise<{ success: boolean; resumedProtocolId?: string; generatedNew?: boolean; error?: string }> {
+  // Find paused MIO protocol linked to this coach assignment
+  const { data: pausedMio, error: findError } = await supabase
+    .from('mio_weekly_protocols')
+    .select('id, status, current_day')
+    .eq('user_id', userId)
+    .eq('paused_by_coach_protocol_id', coachAssignmentId)
+    .maybeSingle();
+
+  if (findError) {
+    console.error('Error finding paused MIO protocol:', findError);
+    return { success: false, error: findError.message };
+  }
+
+  if (pausedMio) {
+    // Resume the paused MIO protocol
+    const { error: resumeError } = await supabase
+      .from('mio_weekly_protocols')
+      .update({
+        status: 'active',
+        paused_by_coach_protocol_id: null,
+      })
+      .eq('id', pausedMio.id);
+
+    if (resumeError) {
+      console.error('Error resuming MIO protocol:', resumeError);
+      return { success: false, error: resumeError.message };
+    }
+
+    return { success: true, resumedProtocolId: pausedMio.id, generatedNew: false };
+  }
+
+  // No paused protocol found - a new MIO will be generated by the weekly n8n workflow
+  // The workflow can optionally include completedProtocolContext in the prompt
+  return { success: true, generatedNew: true };
+}
+
+/**
+ * Get coach protocol context for MIO prompt injection
+ * This context is used when generating MIO insights to reference the user's coach protocol
+ */
+export async function getCoachProtocolContextForMIO(userId: string): Promise<{
+  hasCoachProtocol: boolean;
+  protocolTitle?: string;
+  currentWeek?: number;
+  currentDay?: number;
+  todayTasks?: string[];
+  completionRate?: number;
+} | null> {
+  const { data: assignment, error } = await supabase
+    .from('user_coach_protocol_assignments')
+    .select(`
+      id,
+      current_week,
+      current_day,
+      days_completed,
+      total_tasks_completed,
+      protocol:coach_protocols_v2(id, title, total_weeks)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !assignment) {
+    return null;
+  }
+
+  const protocol = assignment.protocol as { id: string; title: string; total_weeks: number };
+
+  // Get today's tasks
+  const { data: tasks } = await supabase
+    .from('coach_protocol_tasks_v2')
+    .select('title')
+    .eq('protocol_id', protocol.id)
+    .eq('week_number', assignment.current_week)
+    .eq('day_number', assignment.current_day);
+
+  const totalDays = protocol.total_weeks * 7;
+  const completionRate = Math.round((assignment.days_completed / totalDays) * 100);
+
+  return {
+    hasCoachProtocol: true,
+    protocolTitle: protocol.title,
+    currentWeek: assignment.current_week,
+    currentDay: assignment.current_day,
+    todayTasks: (tasks || []).map((t) => t.title),
+    completionRate,
+  };
+}
+
+// ============================================================================
+// REFLECTION OPERATIONS
+// ============================================================================
+
+/**
+ * Update the reflection text for a completed protocol day
+ * Used when user edits their reflection after initial completion
+ */
+export async function updateProtocolReflection(
+  completionId: string,
+  reflectionText: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // First get the existing response_data to preserve any other fields
+    const { data: existing, error: fetchError } = await supabase
+      .from('mio_protocol_completions')
+      .select('response_data')
+      .eq('id', completionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Merge the new reflection with existing response_data
+    const updatedResponseData = {
+      ...(existing?.response_data || {}),
+      reflection_text: reflectionText,
+      last_edited_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('mio_protocol_completions')
+      .update({
+        response_data: updatedResponseData,
+        notes: reflectionText, // backup in notes field
+      })
+      .eq('id', completionId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to update reflection:', err);
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function getWeekNumber(date: Date): number {
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+// ============================================================================
+// REAL-TIME SUBSCRIPTION
+// ============================================================================
+
+/**
+ * Subscribe to protocol updates for a user
+ */
+export function subscribeToProtocolUpdates(
+  userId: string,
+  onUpdate: (protocol: MIOInsightProtocol) => void
+) {
+  return supabase
+    .channel(`protocol-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'mio_weekly_protocols',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        if (payload.new) {
+          onUpdate(payload.new as MIOInsightProtocol);
+        }
+      }
+    )
+    .subscribe();
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export const mioInsightProtocolService = {
+  // Get operations
+  getActiveInsightProtocol,
+  getProtocolById,
+  getUserProtocols,
+  getTodayProtocolTask,
+
+  // Completion operations
+  completeProtocolDay,
+  skipToDay,
+
+  // Progress tracking
+  markInsightViewed,
+  startProtocol,
+  calculateCurrentProtocolDay,
+
+  // Day locking system
+  getDayStatus,
+  getUnlockDate,
+  isDayUnlocked,
+  getUnlockText,
+  getAllDayStatuses,
+
+  // Admin/Coach operations
+  muteProtocol,
+  unmuteProtocol,
+
+  // Creation (for n8n)
+  createInsightProtocol,
+
+  // Reflection operations
+  updateProtocolReflection,
+
+  // Real-time
+  subscribeToProtocolUpdates,
+
+  // Coach Protocol Integration
+  checkForActiveCoachProtocol,
+  pauseMIOForCoachProtocol,
+  resumeMIOAfterCoachProtocol,
+  getCoachProtocolContextForMIO,
+};
+
+export default mioInsightProtocolService;

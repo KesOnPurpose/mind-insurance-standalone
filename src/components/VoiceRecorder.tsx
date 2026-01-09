@@ -33,26 +33,43 @@ export function VoiceRecorder({ onComplete, minDuration = 30 }: VoiceRecorderPro
     };
   }, [audioUrl]);
 
+  // Helper to get supported mimeType for MediaRecorder
+  // iOS Safari doesn't support webm, needs mp4
+  const getSupportedMimeType = (): string => {
+    if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+    if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
+    return ''; // Let browser choose default
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      
+
+      const mimeType = getSupportedMimeType();
+      const recorderOptions: MediaRecorderOptions = {};
+      if (mimeType) {
+        recorderOptions.mimeType = mimeType;
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions);
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        // Use the actual mimeType from the recorder
+        const actualMimeType = mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type: actualMimeType });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        
+
         stream.getTracks().forEach(track => track.stop());
       };
       
@@ -131,14 +148,18 @@ export function VoiceRecorder({ onComplete, minDuration = 30 }: VoiceRecorderPro
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      
+
+      // Determine file extension based on blob type
+      const blobType = audioBlob.type || 'audio/webm';
+      const extension = blobType.includes('mp4') ? 'mp4' : blobType.includes('webm') ? 'webm' : 'audio';
+
       const timestamp = Date.now();
-      const fileName = `${user.id}/identity_statements/${timestamp}.webm`;
-      
+      const fileName = `${user.id}/identity_statements/${timestamp}.${extension}`;
+
       const { data, error } = await supabase.storage
         .from('voice-recordings')
         .upload(fileName, audioBlob, {
-          contentType: 'audio/webm',
+          contentType: blobType,
           upsert: false
         });
       

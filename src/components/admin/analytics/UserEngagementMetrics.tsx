@@ -322,9 +322,15 @@ export const UserEngagementMetrics: React.FC<UserEngagementMetricsProps> = ({
                 {metrics.engagement_trend === 'down' && (
                   <>
                     <TrendingDown className="h-5 w-5 text-red-600" />
-                    <span className="text-lg font-semibold text-red-600">
-                      -{metrics.trend_percentage.toFixed(1)}%
-                    </span>
+                    {metrics.trend_percentage === 100 ? (
+                      <span className="text-lg font-semibold text-amber-600">
+                        No recent activity
+                      </span>
+                    ) : (
+                      <span className="text-lg font-semibold text-red-600">
+                        -{metrics.trend_percentage.toFixed(1)}%
+                      </span>
+                    )}
                   </>
                 )}
                 {metrics.engagement_trend === 'stable' && (

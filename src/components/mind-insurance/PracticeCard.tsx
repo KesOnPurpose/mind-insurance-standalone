@@ -3,6 +3,7 @@ import { CheckCircle, Clock, Lock as LockIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PracticeType } from '@/types/practices';
 import { PRACTICE_CONFIG } from '@/types/practices';
+import { PROTECTInfoTooltip, type PROTECTLetter } from './PROTECTInfoTooltip';
 
 interface PracticeCardProps {
   practiceType: PracticeType;
@@ -81,11 +82,14 @@ export const PracticeCard = ({
               {PRACTICE_ICONS[practiceType]}
             </div>
 
-            {/* Practice Name */}
+            {/* Practice Name with Info Tooltip */}
             <div>
-              <h3 className="font-semibold text-base text-white">
-                {practice.name}
-              </h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-base text-white">
+                  {practice.name}
+                </h3>
+                <PROTECTInfoTooltip letter={practiceType as PROTECTLetter} />
+              </div>
               <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
                 {practice.description}
               </p>

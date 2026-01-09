@@ -61,6 +61,9 @@ interface MIOReportAutomation {
   next_run_at: string | null;
   created_at: string;
   updated_at: string;
+  // Phase 2: Journey-aware targeting
+  journey_mode: 'immediate' | 'milestone' | null;
+  milestone_days: number[] | null;
 }
 
 interface AutomationFormData {
@@ -71,6 +74,9 @@ interface AutomationFormData {
   schedule_type: 'manual' | 'daily' | 'weekly' | 'event_based';
   schedule_config: Record<string, any>;
   n8n_webhook_url: string;
+  // Phase 2: Journey-aware targeting
+  journey_mode: 'immediate' | 'milestone';
+  milestone_days: number[];
 }
 
 const SCHEDULE_TYPE_CONFIG = {
@@ -97,6 +103,48 @@ const DAYS_OF_WEEK = [
   { value: '6', label: 'Saturday' },
 ];
 
+// Phase 2: Journey mode configuration
+const JOURNEY_MODE_CONFIG = {
+  immediate: {
+    label: 'Immediate',
+    description: 'Run for all users in target group right now',
+  },
+  milestone: {
+    label: 'At Milestones',
+    description: 'Only run for users at specific journey milestones (weekly throughout their journey)',
+  },
+};
+
+// Lifetime milestone options - weekly checkpoints for entire journey
+const MILESTONE_DAY_OPTIONS = [
+  // Month 1 (Weeks 1-4)
+  { value: 7, label: 'Day 7', description: 'Week 1', category: 'month1' },
+  { value: 14, label: 'Day 14', description: 'Week 2', category: 'month1' },
+  { value: 21, label: 'Day 21', description: 'Week 3', category: 'month1' },
+  { value: 28, label: 'Day 28', description: 'Week 4', category: 'month1' },
+  // Month 2 (Weeks 5-8)
+  { value: 35, label: 'Day 35', description: 'Week 5', category: 'month2' },
+  { value: 42, label: 'Day 42', description: 'Week 6', category: 'month2' },
+  { value: 49, label: 'Day 49', description: 'Week 7', category: 'month2' },
+  { value: 56, label: 'Day 56', description: 'Week 8', category: 'month2' },
+  // Month 3 (Weeks 9-12)
+  { value: 63, label: 'Day 63', description: 'Week 9', category: 'month3' },
+  { value: 70, label: 'Day 70', description: 'Week 10', category: 'month3' },
+  { value: 77, label: 'Day 77', description: 'Week 11', category: 'month3' },
+  { value: 84, label: 'Day 84', description: 'Week 12', category: 'month3' },
+  // Quarter 2 key milestones (Months 4-6)
+  { value: 90, label: 'Day 90', description: '3 Months', category: 'quarterly' },
+  { value: 120, label: 'Day 120', description: '4 Months', category: 'quarterly' },
+  { value: 150, label: 'Day 150', description: '5 Months', category: 'quarterly' },
+  { value: 180, label: 'Day 180', description: '6 Months', category: 'quarterly' },
+  // Long-term milestones
+  { value: 270, label: 'Day 270', description: '9 Months', category: 'longterm' },
+  { value: 365, label: 'Day 365', description: '1 Year', category: 'longterm' },
+];
+
+// Default milestone days - weekly for first 8 weeks, then monthly
+const DEFAULT_MILESTONE_DAYS = [7, 14, 21, 28, 35, 42, 49, 56, 90, 180, 365];
+
 export function ReportAutomationConfig() {
   const { toast } = useToast();
 
@@ -108,6 +156,9 @@ export function ReportAutomationConfig() {
   const [editingAutomation, setEditingAutomation] = useState<MIOReportAutomation | null>(null);
   const [userCount, setUserCount] = useState<number | null>(null);
 
+  // Default webhook URL for MIO Report Generator
+  const DEFAULT_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
+
   // Form state
   const [formData, setFormData] = useState<AutomationFormData>({
     name: '',
@@ -116,7 +167,10 @@ export function ReportAutomationConfig() {
     target_config: {},
     schedule_type: 'manual',
     schedule_config: { time: '09:00' },
-    n8n_webhook_url: '',
+    n8n_webhook_url: DEFAULT_WEBHOOK_URL,
+    // Phase 2: Journey mode defaults - lifetime milestones
+    journey_mode: 'immediate',
+    milestone_days: DEFAULT_MILESTONE_DAYS,
   });
 
   // Fetch automations on mount
@@ -163,6 +217,9 @@ export function ReportAutomationConfig() {
         schedule_config: formData.schedule_config,
         n8n_webhook_url: formData.n8n_webhook_url || null,
         is_active: true,
+        // Phase 2: Journey mode fields
+        journey_mode: formData.journey_mode,
+        milestone_days: formData.milestone_days,
       });
 
       if (error) throw error;
@@ -194,6 +251,9 @@ export function ReportAutomationConfig() {
           schedule_type: formData.schedule_type,
           schedule_config: formData.schedule_config,
           n8n_webhook_url: formData.n8n_webhook_url || null,
+          // Phase 2: Journey mode fields
+          journey_mode: formData.journey_mode,
+          milestone_days: formData.milestone_days,
         })
         .eq('id', editingAutomation.id);
 
@@ -264,6 +324,9 @@ export function ReportAutomationConfig() {
           target_type: automation.target_type,
           target_config: automation.target_config,
           triggered_by: 'admin_manual',
+          // Phase 2: Journey mode parameters - lifetime milestones
+          journey_mode: automation.journey_mode || 'immediate',
+          milestone_days: automation.milestone_days || DEFAULT_MILESTONE_DAYS,
         }),
       });
 
@@ -297,7 +360,10 @@ export function ReportAutomationConfig() {
       target_config: {},
       schedule_type: 'manual',
       schedule_config: { time: '09:00' },
-      n8n_webhook_url: '',
+      n8n_webhook_url: DEFAULT_WEBHOOK_URL,
+      // Phase 2: Reset journey mode - lifetime milestones
+      journey_mode: 'immediate',
+      milestone_days: DEFAULT_MILESTONE_DAYS,
     });
     setUserCount(null);
   };
@@ -312,6 +378,9 @@ export function ReportAutomationConfig() {
       schedule_type: automation.schedule_type,
       schedule_config: automation.schedule_config || { time: '09:00' },
       n8n_webhook_url: automation.n8n_webhook_url || '',
+      // Phase 2: Load journey mode from automation - fallback to lifetime milestones
+      journey_mode: automation.journey_mode || 'immediate',
+      milestone_days: automation.milestone_days || DEFAULT_MILESTONE_DAYS,
     });
   };
 
@@ -403,6 +472,17 @@ export function ReportAutomationConfig() {
                       <Badge variant="outline">
                         {SCHEDULE_TYPE_CONFIG[automation.schedule_type].label}
                       </Badge>
+                      {automation.journey_mode === 'milestone' && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                          {(() => {
+                            const days = automation.milestone_days || DEFAULT_MILESTONE_DAYS;
+                            if (days.length <= 4) {
+                              return `Milestones: ${days.map(d => `D${d}`).join(', ')}`;
+                            }
+                            return `${days.length} milestones (D${days[0]}-D${days[days.length - 1]})`;
+                          })()}
+                        </Badge>
+                      )}
                     </div>
 
                     {automation.description && (
@@ -561,6 +641,217 @@ export function ReportAutomationConfig() {
                 Estimated target: <strong>{userCount}</strong> user{userCount !== 1 ? 's' : ''}
               </div>
             )}
+
+            {/* Phase 2: Journey Mode Selection */}
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+              <div className="space-y-2">
+                <Label>Journey Mode</Label>
+                <p className="text-xs text-muted-foreground">
+                  Control when reports are generated based on user journey progress
+                </p>
+                <Select
+                  value={formData.journey_mode}
+                  onValueChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      journey_mode: v as 'immediate' | 'milestone',
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(JOURNEY_MODE_CONFIG).map(([mode, config]) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div className="flex flex-col">
+                          <span>{config.label}</span>
+                          <span className="text-xs text-muted-foreground">{config.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Milestone Days Picker - only shown when milestone mode selected */}
+              {formData.journey_mode === 'milestone' && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Milestone Days</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Select which journey milestones trigger report generation
+                    </p>
+                  </div>
+
+                  {/* Quick select buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, milestone_days: [7, 14, 21, 28] })}
+                    >
+                      First Month Only
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, milestone_days: [7, 14, 21, 28, 35, 42, 49, 56] })}
+                    >
+                      First 8 Weeks
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, milestone_days: DEFAULT_MILESTONE_DAYS })}
+                    >
+                      Lifetime (Recommended)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, milestone_days: MILESTONE_DAY_OPTIONS.map(o => o.value) })}
+                    >
+                      All Milestones
+                    </Button>
+                  </div>
+
+                  {/* Month 1 */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Month 1 (Weeks 1-4)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MILESTONE_DAY_OPTIONS.filter(o => o.category === 'month1').map((option) => {
+                        const isSelected = formData.milestone_days.includes(option.value);
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              const newDays = isSelected
+                                ? formData.milestone_days.filter((d) => d !== option.value)
+                                : [...formData.milestone_days, option.value].sort((a, b) => a - b);
+                              setFormData({ ...formData, milestone_days: newDays });
+                            }}
+                            className={`px-3 py-2 rounded-md border text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background hover:bg-muted border-input'
+                            }`}
+                          >
+                            <span className="font-medium">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Month 2 */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Month 2 (Weeks 5-8)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MILESTONE_DAY_OPTIONS.filter(o => o.category === 'month2').map((option) => {
+                        const isSelected = formData.milestone_days.includes(option.value);
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              const newDays = isSelected
+                                ? formData.milestone_days.filter((d) => d !== option.value)
+                                : [...formData.milestone_days, option.value].sort((a, b) => a - b);
+                              setFormData({ ...formData, milestone_days: newDays });
+                            }}
+                            className={`px-3 py-2 rounded-md border text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background hover:bg-muted border-input'
+                            }`}
+                          >
+                            <span className="font-medium">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Month 3 */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Month 3 (Weeks 9-12)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MILESTONE_DAY_OPTIONS.filter(o => o.category === 'month3').map((option) => {
+                        const isSelected = formData.milestone_days.includes(option.value);
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              const newDays = isSelected
+                                ? formData.milestone_days.filter((d) => d !== option.value)
+                                : [...formData.milestone_days, option.value].sort((a, b) => a - b);
+                              setFormData({ ...formData, milestone_days: newDays });
+                            }}
+                            className={`px-3 py-2 rounded-md border text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background hover:bg-muted border-input'
+                            }`}
+                          >
+                            <span className="font-medium">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Quarterly + Long-term */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Long-term Milestones</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MILESTONE_DAY_OPTIONS.filter(o => o.category === 'quarterly' || o.category === 'longterm').map((option) => {
+                        const isSelected = formData.milestone_days.includes(option.value);
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              const newDays = isSelected
+                                ? formData.milestone_days.filter((d) => d !== option.value)
+                                : [...formData.milestone_days, option.value].sort((a, b) => a - b);
+                              setFormData({ ...formData, milestone_days: newDays });
+                            }}
+                            className={`px-3 py-2 rounded-md border text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background hover:bg-muted border-input'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">{option.label}</span>
+                              <span className="text-xs opacity-70">{option.description}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Selected count */}
+                  <p className="text-sm text-muted-foreground">
+                    {formData.milestone_days.length} milestone{formData.milestone_days.length !== 1 ? 's' : ''} selected
+                  </p>
+
+                  {formData.milestone_days.length === 0 && (
+                    <p className="text-xs text-amber-600">
+                      Select at least one milestone day
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Schedule Type */}
             <div className="space-y-2">

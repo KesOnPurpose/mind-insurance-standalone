@@ -65,6 +65,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getAllMIOReports,
@@ -78,15 +79,51 @@ import type {
   MIOReportType,
   MIOReportDisplayStatus,
   MIOReportContent,
+  MIOInsightProtocol,
+  MIOInsightProtocolWithProgress,
+  MIOInsightDayTask,
 } from '@/types/protocol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReportAutomationConfig, UserGroupManager } from '@/components/admin/reports';
+import { Progress } from '@/components/ui/progress';
+import { getProtocolById, muteProtocol, unmuteProtocol } from '@/services/mioInsightProtocolService';
+import { CheckCircle2, PauseCircle, PlayCircle } from 'lucide-react';
 
 interface UserProfile {
-  id: string;
+  id: string;              // gh_approved_users.id (for React key)
   full_name: string | null;
   email: string | null;
-  avatar_url: string | null;
+  user_id: string;         // user_profiles.id (for report generation)
+  tier: string;
+}
+
+interface MIOUserGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  group_type: 'auto' | 'custom';
+}
+
+// Helper to call the admin-group-management Edge Function
+async function callAdminGroupAPI(action: string, data?: Record<string, any>) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await supabase.functions.invoke('admin-group-management', {
+    body: { action, data },
+  });
+
+  if (response.error) {
+    throw new Error(response.error.message || 'API call failed');
+  }
+
+  if (!response.data?.success) {
+    throw new Error(response.data?.error || 'Operation failed');
+  }
+
+  return response.data;
 }
 
 const REPORT_TYPE_CONFIG: Record<
@@ -102,11 +139,20 @@ const REPORT_TYPE_CONFIG: Record<
   custom: { label: 'Custom', icon: <FileText />, color: 'text-gray-500' },
 };
 
-type AdminTab = 'reports' | 'automations' | 'groups';
+type AdminTab = 'reports' | 'automations' | 'groups' | 'protocols';
+
+// Extended protocol type for admin view with user info
+interface AdminProtocolView extends MIOInsightProtocol {
+  user_profiles?: {
+    full_name: string | null;
+    email: string | null;
+  };
+}
 
 export default function ReportManagement() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<AdminTab>('reports');
@@ -128,10 +174,22 @@ export default function ReportManagement() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Group selection for report generation
+  const [groups, setGroups] = useState<MIOUserGroup[]>([]);
+  const [targetMode, setTargetMode] = useState<'user' | 'group'>('user');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+
+  // Protocols tab state
+  const [protocols, setProtocols] = useState<AdminProtocolView[]>([]);
+  const [selectedProtocol, setSelectedProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
+  const [isLoadingProtocols, setIsLoadingProtocols] = useState(false);
+
   // Fetch data on mount
   useEffect(() => {
     fetchReports();
     fetchUsers();
+    fetchGroups();
+    fetchProtocols();
   }, []);
 
   const fetchReports = async () => {
@@ -152,31 +210,96 @@ export default function ReportManagement() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, email, avatar_url')
-        .order('email', { ascending: true });
-
-      if (error) throw error;
-
-      // Sort to prioritize users with names, then by name/email
-      const sortedUsers = (data || []).sort((a, b) => {
-        const aHasName = a.full_name && a.full_name.trim().length > 0;
-        const bHasName = b.full_name && b.full_name.trim().length > 0;
-
-        // Users with names come first
-        if (aHasName && !bHasName) return -1;
-        if (!aHasName && bHasName) return 1;
-
-        // Then sort by name or email
-        const aDisplay = aHasName ? a.full_name : (a.email || '');
-        const bDisplay = bHasName ? b.full_name : (b.email || '');
-        return aDisplay.localeCompare(bDisplay);
-      });
-
-      setUsers(sortedUsers);
+      // Use Edge Function to bypass RLS on gh_approved_users
+      // Returns all active users with user_id populated (signed up)
+      const result = await callAdminGroupAPI('list_users');
+      setUsers((result.data || []) as UserProfile[]);
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const result = await callAdminGroupAPI('list_groups');
+      setGroups((result.data || []) as MIOUserGroup[]);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
+
+  const fetchProtocols = async () => {
+    try {
+      setIsLoadingProtocols(true);
+      const { data, error } = await supabase
+        .from('mio_weekly_protocols')
+        .select('*, user_profiles!mio_weekly_protocols_user_id_fkey(full_name, email)')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setProtocols((data || []) as AdminProtocolView[]);
+    } catch (error) {
+      console.error('Error fetching protocols:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load protocols',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingProtocols(false);
+    }
+  };
+
+  const loadProtocolDetail = async (protocolId: string) => {
+    const protocol = await getProtocolById(protocolId);
+    setSelectedProtocol(protocol);
+  };
+
+  const handleMuteProtocol = async (protocolId: string, reason: string) => {
+    if (!user?.id) return;
+    try {
+      setIsProcessing(true);
+      await muteProtocol(protocolId, user.id, reason);
+      toast({ title: 'Success', description: 'Protocol muted' });
+      fetchProtocols();
+      setSelectedProtocol(null);
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to mute protocol', variant: 'destructive' });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUnmuteProtocol = async (protocolId: string) => {
+    try {
+      setIsProcessing(true);
+      await unmuteProtocol(protocolId);
+      toast({ title: 'Success', description: 'Protocol unmuted' });
+      fetchProtocols();
+      setSelectedProtocol(null);
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to unmute protocol', variant: 'destructive' });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const getProtocolStatusBadge = (status: string, muted?: boolean) => {
+    if (muted) {
+      return <Badge className="bg-amber-500">Muted</Badge>;
+    }
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500">Active</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500">Completed</Badge>;
+      case 'expired':
+        return <Badge variant="outline">Expired</Badge>;
+      case 'skipped':
+        return <Badge variant="secondary">Skipped</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -223,20 +346,52 @@ export default function ReportManagement() {
     }
   };
 
-  // n8n webhook URL for MIO report generation
-  const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-v5';
+  // n8n webhook URL for MIO report generation (improved workflow with 15 capabilities)
+  const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/mio-report-generator';
 
-  // Generate report for selected user via n8n workflow
+  // Generate report for selected user or group via n8n workflow
   const handleGenerateReport = async () => {
-    if (!selectedUserId) {
+    if (targetMode === 'user' && !selectedUserId) {
       toast({ title: 'Error', description: 'Please select a user', variant: 'destructive' });
+      return;
+    }
+    if (targetMode === 'group' && !selectedGroupId) {
+      toast({ title: 'Error', description: 'Please select a group', variant: 'destructive' });
       return;
     }
 
     setIsGenerating(true);
     try {
-      const user = users.find(u => u.id === selectedUserId);
-      const userName = user?.full_name || user?.email || 'User';
+      let webhookPayload: Record<string, any>;
+      let targetDescription: string;
+
+      if (targetMode === 'user') {
+        const user = users.find(u => u.id === selectedUserId);
+        const userName = user?.full_name || user?.email || 'User';
+        targetDescription = userName;
+        webhookPayload = {
+          target_type: 'individual',
+          target_config: {
+            user_ids: [user?.user_id], // Use user_id which maps to user_profiles.id
+          },
+          report_type: selectedReportType,
+          triggered_by: 'admin_manual',
+          requester_id: user?.user_id,
+          user_name: userName,
+        };
+      } else {
+        const group = groups.find(g => g.id === selectedGroupId);
+        targetDescription = group?.name || 'Group';
+        webhookPayload = {
+          target_type: 'custom_group',
+          target_config: {
+            group_id: selectedGroupId,
+          },
+          report_type: selectedReportType,
+          triggered_by: 'admin_manual',
+          group_name: targetDescription,
+        };
+      }
 
       // Trigger n8n workflow via webhook
       const response = await fetch(N8N_WEBHOOK_URL, {
@@ -244,16 +399,7 @@ export default function ReportManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          target_type: 'individual',
-          target_config: {
-            user_ids: [selectedUserId],
-          },
-          report_type: selectedReportType,
-          triggered_by: 'admin_manual',
-          requester_id: user?.id,
-          user_name: userName,
-        }),
+        body: JSON.stringify(webhookPayload),
       });
 
       if (!response.ok) {
@@ -264,10 +410,14 @@ export default function ReportManagement() {
 
       toast({
         title: 'Report Generation Started',
-        description: `MIO is analyzing ${userName}'s data. The report will appear shortly.`
+        description: targetMode === 'user'
+          ? `MIO is analyzing ${targetDescription}'s data. The report will appear shortly.`
+          : `MIO is generating reports for all members of "${targetDescription}". Reports will appear shortly.`
       });
       setShowGenerateDialog(false);
       setSelectedUserId('');
+      setSelectedGroupId('');
+      setTargetMode('user');
 
       // Refresh reports after a delay to allow n8n to complete
       setTimeout(() => fetchReports(), 5000);
@@ -619,10 +769,14 @@ export default function ReportManagement() {
       <div className="space-y-6">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminTab)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Reports
+            </TabsTrigger>
+            <TabsTrigger value="protocols" className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              Protocols
             </TabsTrigger>
             <TabsTrigger value="automations" className="flex items-center gap-2">
               <Zap className="h-4 w-4" />
@@ -847,6 +1001,147 @@ export default function ReportManagement() {
           <TabsContent value="groups">
             <UserGroupManager />
           </TabsContent>
+
+          {/* Protocols Tab */}
+          <TabsContent value="protocols" className="space-y-6">
+            {/* Refresh Button */}
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={fetchProtocols} disabled={isLoadingProtocols}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoadingProtocols ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+
+            {/* Protocol Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Protocols</p>
+                      <p className="text-2xl font-bold">{protocols.length}</p>
+                    </div>
+                    <Brain className="h-8 w-8 text-cyan-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {protocols.filter(p => p.status === 'active' && !p.muted_by_coach).length}
+                      </p>
+                    </div>
+                    <PlayCircle className="h-8 w-8 text-green-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Completed</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {protocols.filter(p => p.status === 'completed').length}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="h-8 w-8 text-blue-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg Completion</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {protocols.length > 0
+                          ? `${Math.round(
+                              (protocols.reduce((sum, p) => sum + (p.days_completed || 0), 0) /
+                                (protocols.length * 7)) *
+                                100
+                            )}%`
+                          : '0%'}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-purple-500 opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Protocols List */}
+            {isLoadingProtocols ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : protocols.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Brain className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No protocols yet</h3>
+                  <p className="text-muted-foreground">
+                    Protocols are generated automatically by MIO when reports are created
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {protocols.map((protocol) => (
+                  <Card
+                    key={protocol.id}
+                    className={`hover:shadow-md transition-shadow cursor-pointer ${
+                      protocol.muted_by_coach ? 'border-amber-300 bg-amber-50/50' : ''
+                    }`}
+                    onClick={() => loadProtocolDetail(protocol.id)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Brain className="h-5 w-5 text-cyan-500" />
+                            <h3 className="text-lg font-semibold truncate">{protocol.title}</h3>
+                            {getProtocolStatusBadge(protocol.status, protocol.muted_by_coach)}
+                          </div>
+                          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                            {protocol.insight_summary}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              {protocol.user_profiles?.full_name ||
+                                protocol.user_profiles?.email ||
+                                protocol.user_id.slice(0, 8) + '...'}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Week {protocol.week_number}, {protocol.year}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              Day {protocol.current_day}/7 ({protocol.days_completed} done)
+                            </span>
+                          </div>
+                        </div>
+                        {/* Progress indicator */}
+                        <div className="flex items-center gap-2">
+                          <Progress
+                            value={((protocol.days_completed || 0) / 7) * 100}
+                            className="w-20 h-2"
+                          />
+                          <span className="text-sm text-muted-foreground w-10">
+                            {Math.round(((protocol.days_completed || 0) / 7) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* Generate Report Dialog */}
@@ -858,73 +1153,150 @@ export default function ReportManagement() {
                 Generate MIO Report
               </DialogTitle>
               <DialogDescription>
-                Select a user and report type to generate a behavioral analysis report.
+                Select a user or group and report type to generate behavioral analysis reports.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* User Picker */}
+              {/* Target Mode Toggle */}
               <div className="space-y-2">
-                <Label>Select User</Label>
-                <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={userSearchOpen}
-                      className="w-full justify-between"
-                    >
-                      {selectedUser ? (
-                        <span className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {selectedUser.full_name || selectedUser.email}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Search for a user...</span>
-                      )}
-                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search users..."
-                        value={userSearchQuery}
-                        onValueChange={setUserSearchQuery}
-                      />
-                      <CommandList>
-                        <CommandEmpty>No users found.</CommandEmpty>
-                        <CommandGroup>
-                          {filteredUsers.slice(0, 10).map((user) => {
-                            const hasName = user.full_name && user.full_name.trim().length > 0;
-                            // Use searchable string as value so Command's built-in filter works
-                            const searchValue = `${user.full_name || ''} ${user.email || ''}`.trim();
-                            return (
-                              <CommandItem
-                                key={user.id}
-                                value={searchValue}
-                                onSelect={() => {
-                                  setSelectedUserId(user.id);
-                                  setUserSearchOpen(false);
-                                  setUserSearchQuery('');
-                                }}
-                              >
-                                <User className="mr-2 h-4 w-4" />
-                                <div className="flex flex-col">
-                                  <span>{hasName ? user.full_name : (user.email || 'Unknown user')}</span>
-                                  {hasName && user.email && (
-                                    <span className="text-xs text-muted-foreground">{user.email}</span>
-                                  )}
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Label>Generate Report For</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={targetMode === 'user' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setTargetMode('user');
+                      setSelectedGroupId('');
+                    }}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Individual User
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={targetMode === 'group' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setTargetMode('group');
+                      setSelectedUserId('');
+                    }}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    User Group
+                  </Button>
+                </div>
               </div>
+
+              {/* User Picker - shown when targetMode is 'user' */}
+              {targetMode === 'user' && (
+                <div className="space-y-2">
+                  <Label>Select User</Label>
+                  <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={userSearchOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedUser ? (
+                          <span className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {selectedUser.full_name || selectedUser.email}
+                            <Badge variant="outline" className="text-xs ml-1">{selectedUser.tier}</Badge>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Search for a user...</span>
+                        )}
+                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[350px] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search by name or email..."
+                          value={userSearchQuery}
+                          onValueChange={setUserSearchQuery}
+                        />
+                        <CommandList className="max-h-[300px]">
+                          <CommandEmpty>No users found.</CommandEmpty>
+                          <CommandGroup heading={`${filteredUsers.length} users${userSearchQuery ? ' matching' : ' total'}`}>
+                            {filteredUsers.slice(0, 50).map((user) => {
+                              const hasName = user.full_name && user.full_name.trim().length > 0;
+                              const searchValue = `${user.full_name || ''} ${user.email || ''}`.trim();
+                              return (
+                                <CommandItem
+                                  key={user.id}
+                                  value={searchValue}
+                                  onSelect={() => {
+                                    setSelectedUserId(user.id);
+                                    setUserSearchOpen(false);
+                                    setUserSearchQuery('');
+                                  }}
+                                >
+                                  <User className="mr-2 h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="flex items-center gap-2">
+                                      {hasName ? user.full_name : (user.email || 'Unknown user')}
+                                      <Badge variant="outline" className="text-xs">{user.tier}</Badge>
+                                    </span>
+                                    {hasName && user.email && (
+                                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                            {filteredUsers.length > 50 && (
+                              <div className="px-2 py-1.5 text-xs text-muted-foreground text-center border-t">
+                                Type to search {filteredUsers.length - 50} more users...
+                              </div>
+                            )}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {/* Group Picker - shown when targetMode is 'group' */}
+              {targetMode === 'group' && (
+                <div className="space-y-2">
+                  <Label>Select Group</Label>
+                  <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a user group..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groups.length === 0 ? (
+                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                          No groups available. Create one in the User Groups tab.
+                        </div>
+                      ) : (
+                        groups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            <span className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              {group.name}
+                              <Badge variant="outline" className="text-xs">{group.group_type}</Badge>
+                            </span>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {selectedGroupId && (
+                    <p className="text-xs text-muted-foreground">
+                      Reports will be generated for all members in this group.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Report Type */}
               <div className="space-y-2">
@@ -958,7 +1330,10 @@ export default function ReportManagement() {
               <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleGenerateReport} disabled={isGenerating || !selectedUserId}>
+              <Button
+                onClick={handleGenerateReport}
+                disabled={isGenerating || (targetMode === 'user' ? !selectedUserId : !selectedGroupId)}
+              >
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -967,7 +1342,7 @@ export default function ReportManagement() {
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Report
+                    Generate Report{targetMode === 'group' ? 's' : ''}
                   </>
                 )}
               </Button>
@@ -1088,6 +1463,185 @@ export default function ReportManagement() {
                     <p>Source: {selectedReport.source}</p>
                     {selectedReport.confidence_score && (
                       <p>Confidence: {(selectedReport.confidence_score * 100).toFixed(0)}%</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Protocol Detail Dialog */}
+        <Dialog open={!!selectedProtocol} onOpenChange={() => setSelectedProtocol(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            {selectedProtocol && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-cyan-500" />
+                    {selectedProtocol.title}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Week {selectedProtocol.week_number}, {selectedProtocol.year} •{' '}
+                    Day {selectedProtocol.current_day}/7 • {selectedProtocol.days_completed} completed
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {/* Status & Actions */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getProtocolStatusBadge(selectedProtocol.status, selectedProtocol.muted_by_coach)}
+                      <Progress
+                        value={(selectedProtocol.days_completed / 7) * 100}
+                        className="w-24 h-2"
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {Math.round((selectedProtocol.days_completed / 7) * 100)}%
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      {selectedProtocol.muted_by_coach ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUnmuteProtocol(selectedProtocol.id)}
+                          disabled={isProcessing}
+                        >
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Unmute
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const reason = prompt('Enter reason for muting this protocol:');
+                            if (reason) handleMuteProtocol(selectedProtocol.id, reason);
+                          }}
+                          disabled={isProcessing}
+                        >
+                          <PauseCircle className="mr-2 h-4 w-4" />
+                          Mute
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Muted Warning */}
+                  {selectedProtocol.muted_by_coach && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <p className="text-amber-800 text-sm">
+                        This protocol has been muted by a coach.
+                        {selectedProtocol.muted_reason && (
+                          <span className="block mt-1 text-amber-700">
+                            Reason: {selectedProtocol.muted_reason}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Insight Summary */}
+                  <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-cyan-900 mb-2">Insight Summary</h4>
+                    <p className="text-sm text-cyan-800">{selectedProtocol.insight_summary}</p>
+                  </div>
+
+                  {/* Why It Matters */}
+                  {selectedProtocol.why_it_matters && (
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold mb-2">Why It Matters</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedProtocol.why_it_matters}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Neural Principle */}
+                  {selectedProtocol.neural_principle && (
+                    <div className="border rounded-lg p-4 bg-purple-50/50">
+                      <h4 className="font-semibold mb-2 text-purple-900">Neural Principle</h4>
+                      <p className="text-sm text-purple-800 italic">
+                        "{selectedProtocol.neural_principle}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 7-Day Tasks */}
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-3">7-Day Protocol</h4>
+                    <div className="space-y-3">
+                      {selectedProtocol.day_tasks?.map((task: MIOInsightDayTask) => {
+                        const completion = selectedProtocol.completions?.find(
+                          (c) => c.day_number === task.day
+                        );
+                        const isCompleted = completion && !completion.was_skipped;
+                        const wasSkipped = completion?.was_skipped;
+                        const isCurrent = task.day === selectedProtocol.current_day;
+
+                        return (
+                          <div
+                            key={task.day}
+                            className={`p-3 rounded-lg border ${
+                              isCompleted
+                                ? 'bg-green-50 border-green-200'
+                                : wasSkipped
+                                ? 'bg-gray-50 border-gray-200 opacity-60'
+                                : isCurrent
+                                ? 'bg-cyan-50 border-cyan-300'
+                                : 'bg-white border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 mt-0.5">
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                ) : wasSkipped ? (
+                                  <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
+                                ) : isCurrent ? (
+                                  <div className="h-5 w-5 rounded-full bg-cyan-500 text-white flex items-center justify-center text-xs font-bold">
+                                    {task.day}
+                                  </div>
+                                ) : (
+                                  <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs text-gray-400">
+                                    {task.day}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm">
+                                    Day {task.day}: {task.task_title}
+                                  </span>
+                                  {isCurrent && !isCompleted && (
+                                    <Badge className="bg-cyan-500 text-xs">Current</Badge>
+                                  )}
+                                  {wasSkipped && (
+                                    <Badge variant="secondary" className="text-xs">Skipped</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">{task.theme}</p>
+                                {completion?.completed_at && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    Completed: {new Date(completion.completed_at).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="text-xs text-muted-foreground border-t pt-4">
+                    <p>User ID: {selectedProtocol.user_id}</p>
+                    <p>Source: {selectedProtocol.source}</p>
+                    <p>Created: {new Date(selectedProtocol.created_at).toLocaleString()}</p>
+                    {selectedProtocol.confidence_score && (
+                      <p>Confidence: {(selectedProtocol.confidence_score * 100).toFixed(0)}%</p>
                     )}
                   </div>
                 </div>

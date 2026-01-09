@@ -1,5 +1,6 @@
 // User Group Manager Component
 // Phase 28: Create and manage custom user groups for report targeting
+// Phase 29: Updated to use admin-group-management Edge Function for RLS bypass
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -52,10 +53,34 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper to call the admin-group-management Edge Function
+async function callAdminGroupAPI(action: string, data?: Record<string, any>) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await supabase.functions.invoke('admin-group-management', {
+    body: { action, data },
+  });
+
+  if (response.error) {
+    throw new Error(response.error.message || 'API call failed');
+  }
+
+  if (!response.data?.success) {
+    throw new Error(response.data?.error || 'Operation failed');
+  }
+
+  return response.data;
+}
+
 interface UserProfile {
-  id: string;
+  id: string;              // gh_approved_users.id (for React key)
   full_name: string | null;
   email: string | null;
+  user_id: string;         // user_profiles.id (for group membership FK)
+  tier: string;
 }
 
 interface MIOUserGroup {
@@ -132,13 +157,10 @@ export function UserGroupManager() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, email')
-        .order('full_name', { ascending: true });
-
-      if (error) throw error;
-      setUsers(data || []);
+      // Use Edge Function to bypass RLS on gh_approved_users
+      // Only returns users with user_id populated (they have signed up)
+      const result = await callAdminGroupAPI('list_users');
+      setUsers((result.data || []) as UserProfile[]);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -153,10 +175,10 @@ export function UserGroupManager() {
 
       if (error) throw error;
 
-      // Enrich with user profiles
+      // Enrich with user profiles (lookup by user_id field which maps to user_profiles.id)
       const enrichedMembers: GroupMember[] = (data || []).map((member) => ({
         ...member,
-        user_profile: users.find((u) => u.id === member.user_id),
+        user_profile: users.find((u) => u.user_id === member.user_id),
       }));
 
       setGroupMembers((prev) => ({ ...prev, [groupId]: enrichedMembers }));
@@ -173,22 +195,24 @@ export function UserGroupManager() {
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase.from('mio_user_groups').insert({
+      // Use Edge Function to bypass RLS
+      await callAdminGroupAPI('create_group', {
         name: groupName.trim(),
         description: groupDescription.trim() || null,
-        group_type: 'custom',
       });
-
-      if (error) throw error;
 
       toast({ title: 'Success', description: 'Group created successfully' });
       setShowCreateDialog(false);
       setGroupName('');
       setGroupDescription('');
       fetchGroups();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating group:', error);
-      toast({ title: 'Error', description: 'Failed to create group', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create group. Make sure you have admin access.',
+        variant: 'destructive',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -199,24 +223,25 @@ export function UserGroupManager() {
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('mio_user_groups')
-        .update({
-          name: groupName.trim(),
-          description: groupDescription.trim() || null,
-        })
-        .eq('id', editingGroup.id);
-
-      if (error) throw error;
+      // Use Edge Function to bypass RLS
+      await callAdminGroupAPI('update_group', {
+        id: editingGroup.id,
+        name: groupName.trim(),
+        description: groupDescription.trim() || null,
+      });
 
       toast({ title: 'Success', description: 'Group updated successfully' });
       setEditingGroup(null);
       setGroupName('');
       setGroupDescription('');
       fetchGroups();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating group:', error);
-      toast({ title: 'Error', description: 'Failed to update group', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update group',
+        variant: 'destructive',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -226,13 +251,17 @@ export function UserGroupManager() {
     if (!confirm('Are you sure you want to delete this group? All members will be removed.')) return;
 
     try {
-      const { error } = await supabase.from('mio_user_groups').delete().eq('id', groupId);
-      if (error) throw error;
+      // Use Edge Function to bypass RLS
+      await callAdminGroupAPI('delete_group', { id: groupId });
       toast({ title: 'Success', description: 'Group deleted' });
       fetchGroups();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting group:', error);
-      toast({ title: 'Error', description: 'Failed to delete group', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete group',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -240,42 +269,44 @@ export function UserGroupManager() {
     if (!addMemberGroupId) return;
 
     try {
-      const { error } = await supabase.from('mio_user_group_members').insert({
+      // Use Edge Function to bypass RLS
+      await callAdminGroupAPI('add_member', {
         group_id: addMemberGroupId,
         user_id: userId,
       });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast({ title: 'Info', description: 'User is already in this group' });
-          return;
-        }
-        throw error;
-      }
-
       toast({ title: 'Success', description: 'Member added to group' });
       setMemberSearchOpen(false);
       fetchGroupMembers(addMemberGroupId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding member:', error);
-      toast({ title: 'Error', description: 'Failed to add member', variant: 'destructive' });
+      // Check for duplicate error
+      if (error.message?.includes('duplicate') || error.message?.includes('23505')) {
+        toast({ title: 'Info', description: 'User is already in this group' });
+        return;
+      }
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add member',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleRemoveMember = async (groupId: string, memberId: string) => {
     try {
-      const { error } = await supabase
-        .from('mio_user_group_members')
-        .delete()
-        .eq('id', memberId);
-
-      if (error) throw error;
+      // Use Edge Function to bypass RLS
+      await callAdminGroupAPI('remove_member', { member_id: memberId });
 
       toast({ title: 'Success', description: 'Member removed from group' });
       fetchGroupMembers(groupId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing member:', error);
-      toast({ title: 'Error', description: 'Failed to remove member', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove member',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -407,25 +438,28 @@ export function UserGroupManager() {
                                 Add Member
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="start">
+                            <PopoverContent className="w-[350px] p-0" align="start">
                               <Command>
                                 <CommandInput
-                                  placeholder="Search users..."
+                                  placeholder="Search by name or email..."
                                   value={memberSearchQuery}
                                   onValueChange={setMemberSearchQuery}
                                 />
-                                <CommandList>
+                                <CommandList className="max-h-[300px]">
                                   <CommandEmpty>No users found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {filteredUsers.slice(0, 10).map((user) => (
+                                  <CommandGroup heading={`${filteredUsers.length} users${memberSearchQuery ? ' matching' : ' total'}`}>
+                                    {filteredUsers.slice(0, 50).map((user) => (
                                       <CommandItem
                                         key={user.id}
-                                        value={user.id}
-                                        onSelect={() => handleAddMember(user.id)}
+                                        value={`${user.full_name || ''} ${user.email || ''}`}
+                                        onSelect={() => handleAddMember(user.user_id)}
                                       >
                                         <User className="mr-2 h-4 w-4" />
                                         <div className="flex flex-col">
-                                          <span>{user.full_name || 'No name'}</span>
+                                          <span className="flex items-center gap-2">
+                                            {user.full_name || 'No name'}
+                                            <Badge variant="outline" className="text-xs">{user.tier}</Badge>
+                                          </span>
                                           {user.email && (
                                             <span className="text-xs text-muted-foreground">
                                               {user.email}
@@ -434,6 +468,11 @@ export function UserGroupManager() {
                                         </div>
                                       </CommandItem>
                                     ))}
+                                    {filteredUsers.length > 50 && (
+                                      <div className="px-2 py-1.5 text-xs text-muted-foreground text-center border-t">
+                                        Type to search {filteredUsers.length - 50} more users...
+                                      </div>
+                                    )}
                                   </CommandGroup>
                                 </CommandList>
                               </Command>
@@ -465,7 +504,8 @@ export function UserGroupManager() {
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {members.map((member) => {
-                              const user = users.find((u) => u.id === member.user_id);
+                              // Look up user by user_id field (maps to user_profiles.id)
+                              const user = users.find((u) => u.user_id === member.user_id);
                               return (
                                 <Badge
                                   key={member.id}

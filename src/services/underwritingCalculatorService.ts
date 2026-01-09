@@ -87,6 +87,7 @@ export function calculateSimpleOutput(inputs: CalculatorInputs): SimpleOutput {
     annualGrossRevenue: roundToCents(annualGrossRevenue),
     annualNetProfit: roundToCents(annualNetProfit),
     isViable,
+    bedCount, // Pass through for Nette's formula display
   };
 }
 

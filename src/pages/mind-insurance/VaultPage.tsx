@@ -80,16 +80,14 @@ const VaultPage = () => {
         </div>
 
         {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
-              <Shield className="w-8 h-8 text-mi-cyan" />
-              Recording Vault
-            </h1>
-            <p className="text-gray-400 mt-1">
-              Your recordings, patterns, and victories from practices
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
+            Recording Vault
+          </h1>
+          <p className="text-sm sm:text-base text-gray-400 mt-1">
+            Your recordings, patterns, and victories from practices
+          </p>
         </div>
 
         {/* Stats Grid - Updated with patterns and victories */}
@@ -102,25 +100,26 @@ const VaultPage = () => {
 
         {/* Tabs: Recordings, Patterns, Victories */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap bg-mi-navy-light border border-mi-cyan/20">
-            <TabsTrigger value="recordings" className="gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300">
+          <TabsList className="w-full grid grid-cols-3 bg-mi-navy-light border border-mi-cyan/20 h-auto p-1">
+            <TabsTrigger value="recordings" className="gap-1 sm:gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300 flex-col sm:flex-row py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Mic className="w-4 h-4" />
-              Recordings
-              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+              <span className="hidden xs:inline">Recordings</span>
+              <span className="xs:hidden text-[10px]">Audio</span>
+              <span className="text-[10px] sm:text-xs bg-mi-navy px-1 sm:px-1.5 py-0.5 rounded-full">
                 {recordings.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="patterns" className="gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300">
+            <TabsTrigger value="patterns" className="gap-1 sm:gap-1.5 data-[state=active]:bg-mi-cyan data-[state=active]:text-white text-gray-300 flex-col sm:flex-row py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Brain className="w-4 h-4" />
-              Patterns
-              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+              <span>Patterns</span>
+              <span className="text-[10px] sm:text-xs bg-mi-navy px-1 sm:px-1.5 py-0.5 rounded-full">
                 {patterns.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="victories" className="gap-1.5 data-[state=active]:bg-mi-gold data-[state=active]:text-white text-gray-300">
+            <TabsTrigger value="victories" className="gap-1 sm:gap-1.5 data-[state=active]:bg-mi-gold data-[state=active]:text-white text-gray-300 flex-col sm:flex-row py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Trophy className="w-4 h-4" />
-              Victories
-              <span className="ml-1 text-xs bg-mi-navy px-1.5 py-0.5 rounded-full">
+              <span>Wins</span>
+              <span className="text-[10px] sm:text-xs bg-mi-navy px-1 sm:px-1.5 py-0.5 rounded-full">
                 {victories.length}
               </span>
             </TabsTrigger>

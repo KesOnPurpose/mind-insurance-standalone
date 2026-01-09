@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2,Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,7 +81,7 @@ export const LoginForm = () => {
     try {
       toast({
         title: "Redirecting to Google",
-        description: "You'll be securely authenticated via Grouphomes4newbies",
+        description: "You'll be securely authenticated via Mind Insurance",
       });
 
       const { error } = await signInWithGoogle();
@@ -96,11 +96,14 @@ export const LoginForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg">
+    <Card className="w-full max-w-md mx-auto bg-mi-navy-light border-mi-cyan/20">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Grouphomes4newbies</CardTitle>
-        <CardDescription className="text-center">
-          Welcome back to your investment journey
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Shield className="w-8 h-8 text-mi-cyan" />
+          <CardTitle className="text-2xl font-bold text-white">Mind Insurance</CardTitle>
+        </div>
+        <CardDescription className="text-center text-white/70">
+          Protect your mind, transform your life
         </CardDescription>
       </CardHeader>
       <CardContent>

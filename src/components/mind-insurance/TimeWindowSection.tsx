@@ -28,6 +28,7 @@ interface TimeWindowSectionProps {
   practices: PracticeType[];
   currentTime: Date;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 export function TimeWindowSection({
@@ -35,8 +36,16 @@ export function TimeWindowSection({
   practices,
   currentTime,
   children,
+  defaultOpen = false,
 }: TimeWindowSectionProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(defaultOpen);
+
+  // Update isOpen when defaultOpen changes (for URL param navigation)
+  React.useEffect(() => {
+    if (defaultOpen) {
+      setIsOpen(true);
+    }
+  }, [defaultOpen]);
 
   // Parse time strings to compare with current time
   const parseTime = (timeString: string): Date => {
@@ -53,8 +62,17 @@ export function TimeWindowSection({
   const warningTime = new Date(endTime);
   warningTime.setMinutes(warningTime.getMinutes() - 30);
 
-  // Determine status based on current time
+  // Calculate completed practices count (moved up for status check)
+  const completedCount = practices.filter(p => p.completed).length;
+  const totalCount = practices.length;
+  const allCompleted = totalCount > 0 && completedCount === totalCount;
+
+  // Determine status based on current time and completion
   const getStatus = () => {
+    // If all practices are complete, show completed (green) regardless of time
+    if (allCompleted) {
+      return 'completed';
+    }
     if (currentTime < startTime) {
       return 'upcoming';
     } else if (currentTime >= startTime && currentTime < warningTime) {
@@ -62,7 +80,7 @@ export function TimeWindowSection({
     } else if (currentTime >= warningTime && currentTime < endTime) {
       return 'ending';
     } else {
-      return 'closed';
+      return 'closed'; // Only show red if closed AND not complete
     }
   };
 
@@ -97,6 +115,15 @@ export function TimeWindowSection({
       message: 'Ending soon',
       badgeStyle: 'bg-mi-gold/20 text-mi-gold border border-mi-gold/30',
     },
+    completed: {
+      color: 'text-green-400',
+      bgColor: 'bg-mi-navy-light',
+      borderColor: 'border-green-500/50',
+      icon: CheckCircle,
+      iconColor: 'text-green-400',
+      message: 'Complete',
+      badgeStyle: 'bg-green-500/20 text-green-400 border border-green-500/30',
+    },
     closed: {
       color: 'text-red-400',
       bgColor: 'bg-mi-navy-light',
@@ -119,9 +146,7 @@ export function TimeWindowSection({
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Calculate completed practices count
-  const completedCount = practices.filter(p => p.completed).length;
-  const totalCount = practices.length;
+  // Calculate completion percentage (completedCount and totalCount already defined above)
   const completionPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (

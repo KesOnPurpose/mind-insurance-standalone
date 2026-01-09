@@ -4,10 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // ============================================================================
-// ADMIN CONTEXT - Role-Based Access Control
+// ADMIN CONTEXT - Role-Based Access Control (MI Standalone)
 // ============================================================================
 // Manages admin authentication state and permission checking
-// Integrates with admin_users table and RLS policies
+// Uses mi_approved_users table with tier-based access (user/admin/super_admin)
 // ============================================================================
 
 interface AdminPermissions {
@@ -17,7 +17,8 @@ interface AdminPermissions {
   system: { read: boolean; configure: boolean };
 }
 
-export type AdminRole = 'super_admin' | 'analyst' | 'content_manager' | 'support';
+// MI uses tier-based roles: user, admin, super_admin
+export type AdminRole = 'super_admin' | 'admin' | 'user';
 
 interface AdminUser {
   id: string;
@@ -40,6 +41,33 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
+// Map MI tiers to permission sets
+function getPermissionsForTier(tier: string): AdminPermissions {
+  switch (tier) {
+    case 'super_admin':
+      return {
+        users: { read: true, write: true, delete: true },
+        analytics: { read: true, export: true },
+        content: { read: true, write: true, publish: true },
+        system: { read: true, configure: true },
+      };
+    case 'admin':
+      return {
+        users: { read: true, write: true, delete: false },
+        analytics: { read: true, export: true },
+        content: { read: true, write: true, publish: false },
+        system: { read: true, configure: false },
+      };
+    default: // 'user'
+      return {
+        users: { read: false, write: false, delete: false },
+        analytics: { read: false, export: false },
+        content: { read: false, write: false, publish: false },
+        system: { read: false, configure: false },
+      };
+  }
+}
+
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -61,32 +89,37 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setIsLoading(true);
 
-      // Query admin_users table (RLS policies will handle access control)
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+      // Use RPC function to avoid RLS infinite recursion
+      // The mi_get_current_user_access function uses SECURITY DEFINER to bypass RLS
+      const { data, error } = await supabase.rpc('mi_get_current_user_access');
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No matching admin user found (not an error, user is just not an admin)
-          console.log('[AdminContext] User is not an admin');
-          setAdminUser(null);
+        // RPC function might not exist or other error
+        console.error('[AdminContext] Error calling mi_get_current_user_access:', error);
+        setAdminUser(null);
+      } else if (data && data.is_approved && data.tier) {
+        const tier = data.tier as string;
+        // Only set as admin if tier is admin or super_admin
+        if (tier === 'admin' || tier === 'super_admin') {
+          console.log('[AdminContext] Admin user loaded via RPC:', tier);
+          setAdminUser({
+            id: data.user?.id || user.id,
+            user_id: user.id,
+            role: tier as AdminRole,
+            permissions: getPermissionsForTier(tier),
+            created_at: data.approved_at || new Date().toISOString(),
+            last_login_at: null,
+            is_active: true,
+          });
         } else {
-          console.error('[AdminContext] Error fetching admin user:', error);
-          throw error;
+          // User tier = not an admin
+          console.log('[AdminContext] User is not an admin (tier:', tier, ')');
+          setAdminUser(null);
         }
       } else {
-        console.log('[AdminContext] Admin user loaded:', data.role);
-        setAdminUser(data as AdminUser);
-
-        // Update last_login_at timestamp
-        await supabase
-          .from('admin_users')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', data.id);
+        // User not found or not approved
+        console.log('[AdminContext] User not in mi_approved_users or not approved');
+        setAdminUser(null);
       }
     } catch (error) {
       console.error('[AdminContext] Fatal error:', error);

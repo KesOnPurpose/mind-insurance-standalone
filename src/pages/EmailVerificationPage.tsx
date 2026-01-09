@@ -21,7 +21,7 @@ const EmailVerificationPage = () => {
   // Check if email is already verified
   useEffect(() => {
     if (user?.email_confirmed_at) {
-      window.location.href = '/dashboard';
+      window.location.href = '/mind-insurance';
     }
   }, [user]);
 
@@ -87,7 +87,7 @@ const EmailVerificationPage = () => {
           description: "Redirecting to dashboard...",
         });
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = '/mind-insurance';
         }, 2000);
       }
     };
@@ -155,7 +155,7 @@ const EmailVerificationPage = () => {
               <p className="text-sm text-muted-foreground">
                 Already verified?{' '}
                 <Link
-                  to="/dashboard"
+                  to="/mind-insurance"
                   className="text-primary hover:underline"
                   onClick={(e) => {
                     e.preventDefault();

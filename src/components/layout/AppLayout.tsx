@@ -16,8 +16,7 @@ import {
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
 import { BottomNav } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccessControl } from '@/hooks/useAccessControl';
-import { toast } from 'sonner';
+import { useMIAccessControl } from '@/hooks/useMIAccessControl';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -25,8 +24,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
-  const { canAccessAdminPanel } = useAccessControl();
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const { canAccessAdminPanel } = useMIAccessControl();
 
   return (
     <div className="min-h-screen bg-gray-50">

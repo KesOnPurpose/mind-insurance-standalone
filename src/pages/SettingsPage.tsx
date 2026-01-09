@@ -4,135 +4,83 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Settings as SettingsIcon,
-  Home,
-  Search,
-  BookOpen,
-  TrendingUp,
   Loader2,
   CheckCircle,
-  MapPin,
-  Building2,
-  Target,
   ArrowLeft,
-  RefreshCw,
-  DollarSign,
-  Handshake
+  Clock,
+  Globe,
+  Lock,
+  Eye,
+  EyeOff,
+  MessageSquare
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
-
-// Helper functions for formatting assessment data
-const formatStrategy = (strategy?: string) => {
-  if (!strategy) return 'Not Set';
-  return strategy.split('_').map(word =>
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
-};
-
-const formatPopulation = (pop: string) => {
-  const mapping: Record<string, string> = {
-    'seniors': 'Seniors',
-    'developmental-disabilities': 'Developmental Disabilities',
-    'mental-health': 'Mental Health',
-    'at-risk-youth': 'At-Risk Youth',
-    'substance-abuse': 'Substance Abuse',
-    'not-sure': 'Exploring Options'
-  };
-  return mapping[pop] || pop;
-};
-
-const formatBudget = (budget?: string) => {
-  const mapping: Record<string, string> = {
-    'less-5k': '$0 - $5,000',
-    '5k-15k': '$5,000 - $15,000',
-    '15k-30k': '$15,000 - $30,000',
-    '30k-50k': '$30,000 - $50,000',
-    'more-50k': '$50,000+'
-  };
-  return mapping[budget || ''] || 'Not Set';
-};
-
-const formatPriority = (priority?: string) => {
-  const mapping: Record<string, string> = {
-    'property_acquisition': 'Property Acquisition',
-    'operations': 'Operations Setup',
-    'comprehensive': 'Comprehensive Learning',
-    'scaling': 'Scaling & Growth'
-  };
-  return mapping[priority || ''] || 'Not Set';
-};
-
-const getStrategyIcon = (strategy?: string) => {
-  switch(strategy) {
-    case 'rental_arbitrage': return <Handshake className="h-3 w-3" />;
-    case 'ownership': return <Home className="h-3 w-3" />;
-    case 'hybrid': return <Building2 className="h-3 w-3" />;
-    default: return <Target className="h-3 w-3" />;
-  }
-};
-
-const getPopulationIcon = (pop: string) => {
-  switch(pop) {
-    case 'seniors': return '👴';
-    case 'developmental-disabilities': return '❤️';
-    case 'mental-health': return '🧠';
-    case 'at-risk-youth': return '👶';
-    case 'substance-abuse': return '💊';
-    case 'not-sure': return '🤔';
-    default: return '👥';
-  }
-};
+import { Input } from '@/components/ui/input';
+import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } from '@/utils/passwordValidator';
+import { isMindInsuranceDomain } from '@/services/domainDetectionService';
+import { SmsOptIn } from '@/components/settings/SmsOptIn';
 
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updatePassword } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const { assessment, totalTacticsCount } = usePersonalizedTactics();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Password form state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+
+  // Password validation
+  const passwordValidation = validatePassword(newPassword);
+  const passwordsMatch = newPassword === confirmPassword && newPassword.length > 0;
+
+  // Domain-based theming
+  const isMI = isMindInsuranceDomain();
+
   const [formData, setFormData] = useState({
-    ownershipModel: '',
-    targetState: '',
-    propertyStatus: '',
-    immediatePriority: '',
+    timezone: '',
   });
 
   const [originalData, setOriginalData] = useState({
-    ownershipModel: '',
-    targetState: '',
-    propertyStatus: '',
-    immediatePriority: '',
+    timezone: '',
   });
+
+  // Common US timezones for Mind Insurance practice scheduling
+  const TIMEZONE_OPTIONS = [
+    { value: 'America/New_York', label: 'Eastern Time (ET)', offset: 'UTC-5/4' },
+    { value: 'America/Chicago', label: 'Central Time (CT)', offset: 'UTC-6/5' },
+    { value: 'America/Denver', label: 'Mountain Time (MT)', offset: 'UTC-7/6' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)', offset: 'UTC-8/7' },
+    { value: 'America/Phoenix', label: 'Arizona (No DST)', offset: 'UTC-7' },
+    { value: 'America/Anchorage', label: 'Alaska Time (AKT)', offset: 'UTC-9/8' },
+    { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)', offset: 'UTC-10' },
+  ];
 
   // Fetch current settings
   useEffect(() => {
     const fetchSettings = async () => {
       if (!user?.id) return;
 
-      const { data, error } = await supabase
-        .from('user_onboarding')
-        .select('ownership_model, target_state, property_status, immediate_priority')
-        .eq('user_id', user.id)
+      // Fetch timezone from user_profiles
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('timezone')
+        .eq('id', user.id)
         .single();
 
-      if (data && !error) {
-        const settings = {
-          ownershipModel: data.ownership_model || '',
-          targetState: data.target_state || '',
-          propertyStatus: data.property_status || '',
-          immediatePriority: data.immediate_priority || '',
-        };
-        setFormData(settings);
-        setOriginalData(settings);
-      }
+      const settings = {
+        timezone: profileData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+      };
+      setFormData(settings);
+      setOriginalData(settings);
       setIsLoading(false);
     };
 
@@ -152,23 +100,21 @@ export function SettingsPage() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('user_onboarding')
+      // Update timezone in user_profiles
+      const { error: profileError } = await supabase
+        .from('user_profiles')
         .update({
-          ownership_model: formData.ownershipModel,
-          target_state: formData.targetState,
-          property_status: formData.propertyStatus,
-          immediate_priority: formData.immediatePriority,
+          timezone: formData.timezone,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
       setOriginalData(formData);
       toast({
         title: 'Settings Saved',
-        description: 'Your strategy preferences have been updated. Refresh to see changes in your roadmap.',
+        description: 'Your timezone has been updated.',
       });
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -186,24 +132,307 @@ export function SettingsPage() {
     setFormData(originalData);
   };
 
+  const handleSetPassword = async () => {
+    if (!passwordValidation.isValid || !passwordsMatch) return;
+
+    setIsSettingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setIsSettingPassword(false);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Password Set!',
+        description: 'You can now sign in with your email and password.',
+      });
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className={`flex items-center justify-center min-h-[400px] ${isMI ? 'bg-mi-navy' : ''}`}>
+        <Loader2 className={`w-8 h-8 animate-spin ${isMI ? 'text-mi-cyan' : 'text-primary'}`} />
       </div>
     );
   }
 
+  // MI Dark Theme
+  if (isMI) {
+    return (
+      <div className="space-y-6 p-6 bg-mi-navy min-h-screen">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Link to="/mind-insurance">
+                <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-mi-navy-light">
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back to Hub
+                </Button>
+              </Link>
+            </div>
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
+              <SettingsIcon className="w-8 h-8 text-mi-cyan" />
+              Settings
+            </h1>
+            <p className="text-white/60 mt-1">
+              Configure your Mind Insurance preferences
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {hasChanges && (
+              <Button variant="outline" onClick={handleReset} className="border-mi-cyan/30 text-white hover:bg-mi-navy-light">
+                Reset
+              </Button>
+            )}
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className="bg-mi-cyan hover:bg-mi-cyan/80 text-mi-navy font-semibold"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {hasChanges && (
+          <Card className="p-4 bg-mi-gold/10 border-mi-gold/30">
+            <p className="text-sm text-mi-gold">
+              You have unsaved changes. Click "Save Changes" to update your preferences.
+            </p>
+          </Card>
+        )}
+
+        {/* Timezone Settings - MI Theme */}
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Globe className="h-5 w-5 text-mi-cyan" />
+              Timezone Settings
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Your timezone determines when Mind Insurance practice windows are available
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-mi-navy rounded-lg p-4 border border-mi-cyan/20">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-mi-cyan mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-white">Practice Time Windows</p>
+                  <ul className="text-white/60 mt-1 space-y-1">
+                    <li>Championship Setup: 3am - 10am</li>
+                    <li>NASCAR Pit Stop: 10am - 3pm</li>
+                    <li>Victory Lap: 3pm - 10pm</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <RadioGroup
+              value={formData.timezone}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}
+            >
+              <div className="space-y-2">
+                {TIMEZONE_OPTIONS.map((tz) => (
+                  <div
+                    key={tz.value}
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
+                      formData.timezone === tz.value
+                        ? 'border-mi-cyan/50 bg-mi-cyan/10'
+                        : 'border-mi-cyan/10 hover:bg-mi-navy'
+                    }`}
+                  >
+                    <RadioGroupItem
+                      value={tz.value}
+                      id={`tz-${tz.value}`}
+                      className="border-mi-cyan/50 text-mi-cyan"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor={`tz-${tz.value}`} className="font-medium cursor-pointer text-white">
+                        {tz.label}
+                      </Label>
+                      <p className="text-xs text-white/40">{tz.offset}</p>
+                    </div>
+                    {formData.timezone === tz.value && (
+                      <Badge className="text-xs bg-mi-cyan/20 text-mi-cyan border-0">Current</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+
+            <Button
+              variant="default"
+              size="sm"
+              className="bg-mi-cyan hover:bg-mi-cyan/90 text-mi-navy font-medium"
+              onClick={() => {
+                const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const match = TIMEZONE_OPTIONS.find(tz => tz.value === detected);
+                if (match) {
+                  setFormData(prev => ({ ...prev, timezone: detected }));
+                  toast({ title: 'Timezone Detected', description: `Set to ${match.label}` });
+                } else {
+                  toast({ title: 'Timezone Not Found', description: `Your timezone (${detected}) is not in our list.`, variant: 'destructive' });
+                }
+              }}
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              Auto-detect My Timezone
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Account Security - MI Theme */}
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Lock className="h-5 w-5 text-mi-cyan" />
+              Account Security
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Set a password to sign in with email and password instead of magic links
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-mi-navy rounded-lg p-4 border border-mi-cyan/20">
+              <p className="text-sm text-white/70">
+                Setting a password allows you to sign in directly without waiting for a magic link email.
+                This is faster and more reliable.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password" className="text-white">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pr-10 bg-mi-navy border-mi-cyan/30 text-white placeholder:text-white/40"
+                    disabled={isSettingPassword}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 text-white/60 hover:text-white hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isSettingPassword}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {newPassword && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-mi-navy rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            passwordValidation.strength === 'weak' ? 'bg-red-500' :
+                            passwordValidation.strength === 'fair' ? 'bg-orange-500' :
+                            passwordValidation.strength === 'good' ? 'bg-yellow-500' :
+                            passwordValidation.strength === 'strong' ? 'bg-green-500' : 'bg-green-600'
+                          }`}
+                          style={{ width: getPasswordStrengthWidth(passwordValidation.score) }}
+                        />
+                      </div>
+                      <span className={`text-sm capitalize ${getPasswordStrengthColor(passwordValidation.strength)}`}>
+                        {passwordValidation.strength}
+                      </span>
+                    </div>
+                    {passwordValidation.feedback.length > 0 && (
+                      <ul className="text-xs text-white/50 space-y-1">
+                        {passwordValidation.feedback.map((feedback, index) => (
+                          <li key={index}>• {feedback}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm your new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-mi-navy border-mi-cyan/30 text-white placeholder:text-white/40"
+                  disabled={isSettingPassword}
+                />
+                {confirmPassword && !passwordsMatch && <p className="text-xs text-red-400">Passwords do not match</p>}
+                {confirmPassword && passwordsMatch && <p className="text-xs text-green-400">Passwords match</p>}
+              </div>
+
+              <Button
+                onClick={handleSetPassword}
+                disabled={isSettingPassword || !passwordValidation.isValid || !passwordsMatch}
+                className="w-full bg-mi-cyan hover:bg-mi-cyan/80 text-mi-navy font-semibold"
+              >
+                {isSettingPassword ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Setting Password...</>
+                ) : (
+                  <><Lock className="w-4 h-4 mr-2" />Set Password</>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* SMS Notifications - MI Theme */}
+        <Card className="bg-mi-navy-light border-mi-cyan/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <MessageSquare className="h-5 w-5 text-mi-cyan" />
+              SMS Notifications
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Receive protocol reminders via text message
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SmsOptIn />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Grouphome Light Theme (Default)
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Link to="/roadmap">
+            <Link to="/chat">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                Back to Roadmap
+                Back
               </Button>
             </Link>
           </div>
@@ -212,7 +441,7 @@ export function SettingsPage() {
             Settings
           </h1>
           <p className="text-muted-foreground mt-1">
-            Update your strategy preferences to personalize your journey
+            Manage your account preferences
           </p>
         </div>
         <div className="flex gap-2">
@@ -223,15 +452,9 @@ export function SettingsPage() {
           )}
           <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
             {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
             ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Save Changes
-              </>
+              <><CheckCircle className="w-4 h-4 mr-2" />Save Changes</>
             )}
           </Button>
         </div>
@@ -245,243 +468,168 @@ export function SettingsPage() {
         </Card>
       )}
 
-      {/* Roadmap Personalization Section */}
+      {/* Account Security - Light Theme */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Roadmap Personalization
+            <Lock className="h-5 w-5 text-primary" />
+            Account Security
           </CardTitle>
           <CardDescription>
-            Your roadmap is tailored based on your assessment answers
+            Set a password to sign in with email and password instead of magic links
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Strategy */}
-          {assessment?.ownership_model && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700">Strategy</Label>
-              <div className="mt-2">
-                <Badge variant="secondary" className="gap-1.5">
-                  {getStrategyIcon(assessment.ownership_model)}
-                  {formatStrategy(assessment.ownership_model)}
-                </Badge>
-              </div>
-            </div>
-          )}
-
-          {/* Target Populations */}
-          {assessment?.target_populations && assessment.target_populations.length > 0 && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700">Target Populations</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {assessment.target_populations.map((pop: string) => (
-                  <Badge key={pop} variant="outline" className="gap-1.5">
-                    <span>{getPopulationIcon(pop)}</span>
-                    {formatPopulation(pop)}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Budget Range */}
-          {assessment?.capital_available && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700">Budget Range</Label>
-              <div className="mt-2">
-                <Badge variant="secondary" className="gap-1.5">
-                  <DollarSign className="h-3 w-3" />
-                  {formatBudget(assessment.capital_available)}
-                </Badge>
-              </div>
-            </div>
-          )}
-
-          {/* Immediate Priority */}
-          {assessment?.immediate_priority && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700">Immediate Priority</Label>
-              <div className="mt-2">
-                <Badge variant="secondary" className="gap-1.5">
-                  <Target className="h-3 w-3" />
-                  {formatPriority(assessment.immediate_priority)}
-                </Badge>
-              </div>
-            </div>
-          )}
-
-          {/* Tactic Count Summary */}
-          <div className="pt-4 border-t">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-600">Tactics in your roadmap:</span>
-              <span className="font-semibold text-teal-600">
-                {totalTacticsCount} of 343
-              </span>
-            </div>
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <p className="text-sm text-blue-800">
+              Setting a password allows you to sign in directly without waiting for a magic link email.
+              This is faster and more reliable.
+            </p>
           </div>
 
-          {/* Retake Assessment Button */}
-          <div className="pt-2">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                  disabled={isSettingPassword}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isSettingPassword}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+
+              {newPassword && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          passwordValidation.strength === 'weak' ? 'bg-red-500' :
+                          passwordValidation.strength === 'fair' ? 'bg-orange-500' :
+                          passwordValidation.strength === 'good' ? 'bg-yellow-500' :
+                          passwordValidation.strength === 'strong' ? 'bg-green-500' : 'bg-green-600'
+                        }`}
+                        style={{ width: getPasswordStrengthWidth(passwordValidation.score) }}
+                      />
+                    </div>
+                    <span className={`text-sm capitalize ${getPasswordStrengthColor(passwordValidation.strength)}`}>
+                      {passwordValidation.strength}
+                    </span>
+                  </div>
+                  {passwordValidation.feedback.length > 0 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {passwordValidation.feedback.map((feedback, index) => (
+                        <li key={index}>• {feedback}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isSettingPassword}
+              />
+              {confirmPassword && !passwordsMatch && <p className="text-xs text-red-500">Passwords do not match</p>}
+              {confirmPassword && passwordsMatch && <p className="text-xs text-green-500">Passwords match</p>}
+            </div>
+
             <Button
-              variant="outline"
+              onClick={handleSetPassword}
+              disabled={isSettingPassword || !passwordValidation.isValid || !passwordsMatch}
               className="w-full"
-              onClick={() => navigate('/assessment')}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retake Assessment
+              {isSettingPassword ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Setting Password...</>
+              ) : (
+                <><Lock className="w-4 h-4 mr-2" />Set Password</>
+              )}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Ownership Strategy */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            Ownership Strategy
-          </h3>
+      {/* Timezone Settings - Light Theme */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Timezone Settings
+          </CardTitle>
+          <CardDescription>
+            Your timezone affects how times are displayed
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <RadioGroup
-            value={formData.ownershipModel}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, ownershipModel: value }))}
-          >
-            <div className="space-y-3">
-              {[
-                { value: 'rental_arbitrage', label: 'Rental Arbitrage', desc: 'Lease & sublease properties' },
-                { value: 'ownership', label: 'Property Ownership', desc: 'Purchase properties outright' },
-                { value: 'creative_financing', label: 'Creative Financing', desc: 'Subject-to, seller financing' },
-                { value: 'house_hack', label: 'House Hacking', desc: 'Live in property while operating' },
-                { value: 'hybrid', label: 'Hybrid Approach', desc: 'Combination of strategies' },
-              ].map((option) => (
-                <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50">
-                  <RadioGroupItem value={option.value} id={`own-${option.value}`} />
-                  <div className="flex-1">
-                    <Label htmlFor={`own-${option.value}`} className="font-medium cursor-pointer">
-                      {option.label}
-                    </Label>
-                    <p className="text-xs text-muted-foreground">{option.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-        </Card>
-
-        {/* Target State */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            Target State
-          </h3>
-          <RadioGroup
-            value={formData.targetState}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, targetState: value }))}
-          >
-            <div className="grid grid-cols-2 gap-2">
-              {['CA', 'TX', 'FL', 'NY', 'GA', 'AZ', 'NC', 'PA', 'OH', 'OTHER'].map((state) => (
-                <div key={state} className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50">
-                  <RadioGroupItem value={state} id={`state-${state}`} />
-                  <Label htmlFor={`state-${state}`} className="font-normal cursor-pointer">
-                    {state === 'OTHER' ? 'Other State' : state}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-        </Card>
-
-        {/* Property Status */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Home className="w-5 h-5 text-primary" />
-            Current Property Status
-          </h3>
-          <RadioGroup
-            value={formData.propertyStatus}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, propertyStatus: value }))}
+            value={formData.timezone}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}
           >
             <div className="space-y-2">
-              {[
-                { value: 'not-started', label: "Haven't started looking" },
-                { value: 'researching', label: 'Researching areas/options' },
-                { value: 'searching', label: 'Actively searching' },
-                { value: 'offer-pending', label: 'Made an offer / Negotiating' },
-                { value: 'under-contract', label: 'Under contract' },
-                { value: 'owned', label: 'I own a property' },
-                { value: 'leasing', label: "I'm leasing a property" },
-              ].map((option) => (
-                <div key={option.value} className="flex items-center space-x-3 p-2 rounded-lg border hover:bg-muted/50">
-                  <RadioGroupItem value={option.value} id={`prop-${option.value}`} />
-                  <Label htmlFor={`prop-${option.value}`} className="font-normal cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-        </Card>
-
-        {/* Immediate Priority */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            Immediate Priority
-            <Badge variant="secondary" className="text-xs">Affects tactic order</Badge>
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            This determines which tactics are shown first in your roadmap
-          </p>
-          <RadioGroup
-            value={formData.immediatePriority}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, immediatePriority: value }))}
-          >
-            <div className="space-y-3">
-              {[
-                {
-                  value: 'property_acquisition',
-                  label: 'Finding & Acquiring Property',
-                  desc: 'Property search, negotiations, landlord outreach',
-                  icon: Search,
-                  color: 'text-amber-500'
-                },
-                {
-                  value: 'operations',
-                  label: 'Operating My Property',
-                  desc: 'Licensing, setup, staffing, first residents',
-                  icon: Home,
-                  color: 'text-green-600'
-                },
-                {
-                  value: 'comprehensive',
-                  label: 'Learning All Strategies',
-                  desc: 'See all tactics in order - thorough preparation',
-                  icon: BookOpen,
-                  color: 'text-blue-500'
-                },
-                {
-                  value: 'scaling',
-                  label: 'Scaling My Operation',
-                  desc: 'Adding properties, optimizing revenue, building systems',
-                  icon: TrendingUp,
-                  color: 'text-purple-600'
-                },
-              ].map((option) => (
-                <div key={option.value} className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-muted/50">
-                  <RadioGroupItem value={option.value} id={`priority-${option.value}`} className="mt-1" />
-                  <option.icon className={`w-6 h-6 ${option.color} mt-0.5`} />
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <div
+                  key={tz.value}
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
+                    formData.timezone === tz.value
+                      ? 'border-primary/50 bg-primary/5'
+                      : 'border-border hover:bg-muted/50'
+                  }`}
+                >
+                  <RadioGroupItem value={tz.value} id={`tz-${tz.value}`} />
                   <div className="flex-1">
-                    <Label htmlFor={`priority-${option.value}`} className="font-semibold cursor-pointer block">
-                      {option.label}
+                    <Label htmlFor={`tz-${tz.value}`} className="font-medium cursor-pointer">
+                      {tz.label}
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-1">{option.desc}</p>
+                    <p className="text-xs text-muted-foreground">{tz.offset}</p>
                   </div>
+                  {formData.timezone === tz.value && (
+                    <Badge variant="secondary" className="text-xs">Current</Badge>
+                  )}
                 </div>
               ))}
             </div>
           </RadioGroup>
-        </Card>
-      </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              const match = TIMEZONE_OPTIONS.find(tz => tz.value === detected);
+              if (match) {
+                setFormData(prev => ({ ...prev, timezone: detected }));
+                toast({ title: 'Timezone Detected', description: `Set to ${match.label}` });
+              } else {
+                toast({ title: 'Timezone Not Found', description: `Your timezone (${detected}) is not in our list.`, variant: 'destructive' });
+              }
+            }}
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            Auto-detect My Timezone
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

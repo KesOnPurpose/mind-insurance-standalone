@@ -64,10 +64,9 @@ export function SidebarLayout({
   const location = useLocation();
   const mode = explicitMode || getCurrentMode(location.pathname);
 
-  // Check if we're in the Mind Insurance section for dark theme
-  const isMindInsurance = useMemo(() => {
-    return location.pathname.startsWith('/mind-insurance');
-  }, [location.pathname]);
+  // MI Standalone: Always use dark theme for all pages
+  // This includes /profile, /settings, /admin, and all /mind-insurance routes
+  const isMindInsurance = true;
 
   return (
     <SidebarProvider defaultOpen={true}>

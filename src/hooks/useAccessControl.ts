@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+// Maximum time to wait for access check before timing out
+const ACCESS_CHECK_TIMEOUT_MS = 10000; // 10 seconds
+
 export type UserTier = 'user' | 'coach' | 'admin' | 'super_admin' | 'owner' | null;
 
 interface ApprovedUser {
@@ -58,9 +61,18 @@ export function useAccessControl() {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
+      // Create timeout promise to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Access check timed out after 10 seconds'));
+        }, ACCESS_CHECK_TIMEOUT_MS);
+      });
+
       // Use RPC function to bypass RLS and get access details
-      const { data, error } = await supabase
-        .rpc('gh_get_current_user_access');
+      // Race between RPC call and timeout to prevent infinite loading
+      const rpcPromise = supabase.rpc('gh_get_current_user_access');
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
 
       if (error) {
         throw error;
@@ -128,8 +140,9 @@ export function useAccessControl() {
     // State
     ...state,
 
-    // Refresh function
+    // Refresh function (aliased as refetch for consistency with React Query pattern)
     refreshAccess: checkAccess,
+    refetch: checkAccess,
 
     // Tier checks
     hasTierAccess,

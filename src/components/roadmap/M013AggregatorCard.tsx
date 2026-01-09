@@ -18,7 +18,7 @@ interface M013AggregatorCardProps {
 }
 
 /**
- * M013AggregatorCard - Special card for Week 1 Master Checklist
+ * M013AggregatorCard - Special card for Lesson 1 Master Checklist
  *
  * Features:
  * - Shows dual progress (M001-M012 tactics + M013's own 9-step checklist)
@@ -85,7 +85,7 @@ export function M013AggregatorCard({
   const handleComplete = async () => {
     if (!canComplete) {
       if (tacticProgressPercent < 100) {
-        toast.error(`Complete all Week 1 tactics first (${completedCount}/12 done)`);
+        toast.error(`Complete all Lesson 1 tactics first (${completedCount}/12 done)`);
       } else if (stepProgressPercent < 50) {
         toast.error(`Complete ${50 - stepProgressPercent}% more of M013 checklist`);
       }
@@ -99,7 +99,7 @@ export function M013AggregatorCard({
       }
 
       onCompleteTactic('M013');
-      toast.success('🎉 Week 1 Complete! You\'re crushing it!');
+      toast.success('🎉 Lesson 1 Complete! You\'re crushing it!');
     }
   };
 
@@ -135,7 +135,7 @@ export function M013AggregatorCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-purple-600" />
-                <p className="text-sm font-semibold text-purple-900">Week 1 Tactics</p>
+                <p className="text-sm font-semibold text-purple-900">Lesson 1 Tactics</p>
               </div>
               <span className="text-xs font-medium text-purple-700">
                 {completedCount}/{totalCount} completed
@@ -182,7 +182,7 @@ export function M013AggregatorCard({
           >
             <CheckCircle className="w-4 h-4 mr-2" />
             {canComplete
-              ? 'Complete Week 1 🎉'
+              ? 'Complete Lesson 1 🎉'
               : tacticProgressPercent < 100
                 ? `Complete all 12 tactics to unlock (${completedCount}/12)`
                 : `Check off ${50 - stepProgressPercent}% more steps`

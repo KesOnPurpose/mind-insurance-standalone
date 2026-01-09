@@ -5,15 +5,19 @@ import ReactMarkdown from "react-markdown";
 import { GlossaryTooltip } from "@/components/protocol/GlossaryTooltip";
 import { useMemo, useCallback } from "react";
 import { sanitizeAIResponse } from "@/utils/sanitizeResponse";
+import { useProduct } from "@/contexts/ProductContext";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   coachType?: CoachType;
+  userTimezone?: string;
 }
 
-const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, timestamp, coachType = 'nette', userTimezone }: ChatMessageProps) => {
+  const { currentProduct } = useProduct();
+  const isMindInsurance = currentProduct === 'mind-insurance';
   const coach = COACHES[coachType];
   const isUser = role === "user";
 
@@ -49,10 +53,15 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
 
   // Render content with or without glossary tooltips
   const renderContent = () => {
+    // Mind Insurance specific prose styling for better contrast
+    const miProseClasses = isMindInsurance
+      ? "prose-headings:text-[#05c3dd] prose-strong:text-white prose-p:text-gray-100 prose-li:text-gray-100 prose-a:text-[#05c3dd]"
+      : "";
+
     // For user messages or assistant messages without glossary markup, use ReactMarkdown
     if (isUser || !hasGlossaryMarkup) {
       return (
-        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+        <div className={`text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert ${miProseClasses}`}>
           <ReactMarkdown>{displayContent}</ReactMarkdown>
         </div>
       );
@@ -61,7 +70,7 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
     // For assistant messages with glossary markup, use GlossaryTooltip
     // Note: GlossaryTooltip handles the raw text, so we pass the content directly
     return (
-      <div className="text-sm leading-relaxed">
+      <div className={`text-sm leading-relaxed ${isMindInsurance ? 'text-gray-100' : ''}`}>
         <GlossaryTooltip
           text={displayContent}
           glossaryTerms={extractedTerms}
@@ -84,7 +93,13 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
 
       <Card
         className={`p-4 max-w-[80%] ${
-          isUser ? "bg-primary text-primary-foreground" : "bg-card"
+          isUser
+            ? isMindInsurance
+              ? "bg-[#05c3dd] text-white"
+              : "bg-primary text-primary-foreground"
+            : isMindInsurance
+              ? "bg-[#132337] border border-[#05c3dd]/20 text-white"
+              : "bg-card"
         }`}
       >
         {!isUser && (
@@ -92,18 +107,26 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette' }: ChatMess
             <span className="text-xs font-semibold" style={{ color: coach.color }}>
               {coach.name}
             </span>
-            <span className="text-xs text-muted-foreground">• {coach.title}</span>
+            <span className={`text-xs ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>• {coach.title}</span>
           </div>
         )}
         {renderContent()}
         <span
           className={`text-xs mt-2 block ${
-            isUser ? "text-primary-foreground/70" : "text-muted-foreground"
+            isUser
+              ? isMindInsurance
+                ? "text-white/70"
+                : "text-primary-foreground/70"
+              : isMindInsurance
+                ? "text-gray-400"
+                : "text-muted-foreground"
           }`}
         >
-          {timestamp.toLocaleTimeString([], {
+          {timestamp.toLocaleTimeString('en-US', {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: true,
+            ...(userTimezone ? { timeZone: userTimezone } : {}),
           })}
         </span>
       </Card>

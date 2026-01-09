@@ -10,7 +10,10 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 // Quick pick options for energy drains
 const ENERGY_DRAINS_QUICK_PICKS = [
@@ -47,6 +50,8 @@ const ENERGY_BOOSTERS_QUICK_PICKS = [
 export default function EnergyAudit() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion } = useSectionCompletion();
 
   // Form state
   const [energyLevel, setEnergyLevel] = useState([5]);
@@ -57,11 +62,26 @@ export default function EnergyAudit() {
   const [eliminateCommitment, setEliminateCommitment] = useState('');
   const [addCommitment, setAddCommitment] = useState('');
   const [optimizeCommitment, setOptimizeCommitment] = useState('');
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load user timezone on mount
   useEffect(() => {
@@ -160,16 +180,14 @@ export default function EnergyAudit() {
       }
 
       const points = 4;
-      const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const practiceDate = getSafeTodayDate(userTimezone);
 
       // Check for existing practice today
       const { data: existingPractices, error: fetchError } = await supabase
-        .from('practices')
+        .from('daily_practices')
         .select('*')
         .eq('user_id', user.id)
-        .eq('practice_type', 'energy_audit')
+        .eq('practice_type', 'E')
         .eq('practice_date', practiceDate);
 
       if (fetchError) throw fetchError;
@@ -186,7 +204,7 @@ export default function EnergyAudit() {
       if (existingPractices && existingPractices.length > 0) {
         // Update existing practice
         const { error: updateError } = await supabase
-          .from('practices')
+          .from('daily_practices')
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
@@ -200,11 +218,11 @@ export default function EnergyAudit() {
       } else {
         // Create new practice
         const { error: insertError } = await supabase
-          .from('practices')
+          .from('daily_practices')
           .insert({
             user_id: user.id,
             practice_date: practiceDate,
-            practice_type: 'energy_audit',
+            practice_type: 'E',
             completed: true,
             completed_at: new Date().toISOString(),
             points_earned: points,
@@ -236,10 +254,14 @@ export default function EnergyAudit() {
         description: `You earned ${points} points.`,
       });
 
-      navigate('/mind-insurance/practices');
-    } catch (err: any) {
+      // Check if this completes the TE section and trigger MIO feedback
+      await checkCompletion('E', practiceDate);
+
+      navigate('/mind-insurance/practice?section=NASCAR_PIT_STOP');
+    } catch (err: unknown) {
       console.error('Error saving practice:', err);
-      setError(err.message || 'An error occurred while saving your practice');
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -255,7 +277,7 @@ export default function EnergyAudit() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/mind-insurance/practices')}
+                onClick={() => navigate('/mind-insurance/practice?section=NASCAR_PIT_STOP')}
                 className="text-gray-400 hover:text-white hover:bg-mi-navy"
               >
                 <ArrowLeft className="h-5 w-5" />

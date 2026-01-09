@@ -10,3 +10,5 @@ export { KnowledgeSourceInput, QuickSourceInput } from './KnowledgeSourceInput';
 export { FileUploadZone, CompactFileUpload, MultiFileUploadZone } from './FileUploadZone';
 export { ProcessingQueue, QueueWidget } from './ProcessingQueue';
 export { KnowledgeChunkTable, CompactChunkList } from './KnowledgeChunkTable';
+export { BulkUrlInput, parseBulkUrls } from './BulkUrlInput';
+export type { ParsedUrl, BulkUrlInputProps } from './BulkUrlInput';

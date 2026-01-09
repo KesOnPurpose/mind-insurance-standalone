@@ -13,23 +13,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { PracticeData } from '@/types/practices';
 import { createPractice, updatePractice, getTodayPractices, isWithinTimeWindow, calculatePracticePoints } from '@/services/practiceService';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { toast } from 'sonner';
-
-// Background audio options
-const BACKGROUND_AUDIO_OPTIONS = [
-  { value: 'relaxing-meditation-1', label: 'Relaxing Meditation 1', url: '/audio/meditation-1.mp3', icon: '🎵' },
-  { value: 'relaxing-meditation-2', label: 'Relaxing Meditation 2', url: '/audio/meditation-2.mp3', icon: '🎶' },
-  { value: 'relaxing-meditation-3', label: 'Relaxing Meditation 3', url: '/audio/meditation-3.mp3', icon: '🎼' },
-  { value: 'relaxing-meditation-4', label: 'Relaxing Meditation 4', url: '/audio/meditation-4.mp3', icon: '🎹' },
-  { value: 'silence', label: 'Silence', url: null, icon: '🔇' }
-];
+import { BACKGROUND_AUDIO_OPTIONS } from '@/constants/protect';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 const MEDITATION_DURATION = 60; // 60 seconds meditation
 
 export default function OutcomeVisualization() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
 
   // Form states
   const [outcomeDescription, setOutcomeDescription] = useState('');
@@ -41,8 +36,23 @@ export default function OutcomeVisualization() {
   // UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userTimezone, setUserTimezone] = useState('America/Los_Angeles');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
   const [existingPracticeId, setExistingPracticeId] = useState<string | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load user timezone and check for existing practice
   useEffect(() => {
@@ -62,9 +72,7 @@ export default function OutcomeVisualization() {
         }
 
         // Check for existing practice today
-        const today = new Date().toLocaleDateString('en-CA', {
-          timeZone: userTimezone
-        });
+        const today = getSafeTodayDate(userTimezone);
 
         const practices = await getTodayPractices(user.id, userTimezone);
         const existingPractice = practices.find(p => p.practice_type === 'O');
@@ -167,9 +175,7 @@ export default function OutcomeVisualization() {
         meditation_completed: meditationComplete,
       };
 
-      const today = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const today = getSafeTodayDate(userTimezone);
 
       const points = 3;
 
@@ -198,10 +204,15 @@ export default function OutcomeVisualization() {
         toast.success(`Practice completed! You earned ${points} points`);
       }
 
-      // Navigate back to practice hub
-      navigate('/mind-insurance');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving your practice');
+      // Check if this completes a section and trigger MIO feedback
+      await checkSectionCompletion('O', today);
+
+      // Navigate back to practice page
+      navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP');
+    } catch (err: unknown) {
+      console.error('Error saving practice:', err);
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       toast.error('Failed to save practice');
     } finally {
       setLoading(false);
@@ -230,7 +241,7 @@ export default function OutcomeVisualization() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/mind-insurance')}
+              onClick={() => navigate('/mind-insurance/practice')}
               aria-label="Close"
               className="text-gray-400 hover:text-white hover:bg-mi-navy"
             >

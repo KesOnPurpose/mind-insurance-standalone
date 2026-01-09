@@ -1,0 +1,231 @@
+{
+  "name": "[MIO] Incomplete Onboarding Recovery",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-recovery",
+      "name": "10 AM Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/send-onboarding-recovery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"trigger_type\": \"recovery_24h\",\n  \"source\": \"n8n\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "recovery-24h",
+      "name": "24-Hour Recovery (Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 140],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/send-onboarding-recovery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"trigger_type\": \"recovery_3d\",\n  \"source\": \"n8n\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "recovery-3d",
+      "name": "3-Day Recovery (Email + SMS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/send-onboarding-recovery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"trigger_type\": \"recovery_7d\",\n  \"source\": \"n8n\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "recovery-7d",
+      "name": "7-Day Final Push (Email + SMS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 460],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/send-onboarding-recovery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"trigger_type\": \"recovery_archive\",\n  \"source\": \"n8n\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "recovery-archive",
+      "name": "14-Day Archive (Inactive)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 620],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge results from all recovery stages\nconst items = $input.all();\n\nlet totalProcessed = 0;\nlet totalEmails = 0;\nlet totalSms = 0;\nlet totalArchived = 0;\n\nconst stages = [];\n\nfor (const item of items) {\n  const data = item.json || {};\n  totalProcessed += data.users_processed || 0;\n  totalEmails += data.emails_sent || 0;\n  totalSms += data.sms_sent || 0;\n  totalArchived += data.users_archived || 0;\n  \n  stages.push({\n    stage: data.stage,\n    users_processed: data.users_processed || 0,\n    emails_sent: data.emails_sent || 0,\n    sms_sent: data.sms_sent || 0,\n    users_archived: data.users_archived || 0\n  });\n}\n\nreturn {\n  json: {\n    success: true,\n    timestamp: new Date().toISOString(),\n    summary: {\n      total_users_processed: totalProcessed,\n      total_emails_sent: totalEmails,\n      total_sms_sent: totalSms,\n      total_users_archived: totalArchived\n    },\n    stages\n  }\n};"
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "10 AM Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "24-Hour Recovery (Email)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "3-Day Recovery (Email + SMS)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "7-Day Final Push (Email + SMS)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "14-Day Archive (Inactive)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24-Hour Recovery (Email)": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3-Day Recovery (Email + SMS)": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7-Day Final Push (Email + SMS)": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14-Day Archive (Inactive)": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "MIO",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Onboarding",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Recovery",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "active": false,
+  "meta": {
+    "instanceId": "mio-onboarding-recovery"
+  },
+  "pinData": {}
+}

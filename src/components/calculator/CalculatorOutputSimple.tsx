@@ -39,7 +39,7 @@ export function CalculatorOutputSimple({ output, riskAssessment }: CalculatorOut
   // Calculate Nette's formula components from output
   const goalProfit = output.monthlyNetProfit > 0 ? output.monthlyNetProfit : 4000; // Use actual or default goal
   const monthlyExpenses = output.totalMonthlyExpenses;
-  const numberOfBeds = Math.round(output.monthlyGrossRevenue / output.monthlyNetProfit) || 8; // Estimate from data or default
+  const numberOfBeds = output.bedCount || 6; // Use actual bed count from inputs
   const calculatedPricePerBed = (goalProfit + monthlyExpenses) / numberOfBeds;
 
   return (

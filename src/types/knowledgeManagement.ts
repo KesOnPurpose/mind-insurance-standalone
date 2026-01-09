@@ -63,8 +63,10 @@ export const SOURCE_TYPE_CONFIGS: Record<KnowledgeSourceType, SourceTypeConfig> 
 // AGENT CATEGORIES
 // ============================================================================
 
-// Nette (GroupHome) categories - stored in gh_training_chunks
+// Nette (GroupHome) categories - stored in nette_knowledge_chunks
+// Updated 2025-12-09 to match actual database categories
 export type NetteCategory =
+  | 'mentorship_training'
   | 'group_home_tactics'
   | 'licensing'
   | 'compliance'
@@ -73,6 +75,13 @@ export type NetteCategory =
   | 'staffing'
   | 'funding'
   | 'marketing'
+  | 'financial'
+  | 'legal'
+  | 'setup'
+  | 'training'
+  | 'resident_care'
+  | 'property_search'
+  | 'app_navigation'
   | 'general';
 
 // MIO (Mind Insurance) categories - stored in mio_knowledge_chunks
@@ -107,6 +116,12 @@ export interface CategoryConfig {
 }
 
 export const NETTE_CATEGORIES: Record<NetteCategory, CategoryConfig> = {
+  mentorship_training: {
+    id: 'mentorship_training',
+    label: 'Mentorship Training',
+    description: 'Keston mentorship and training content',
+    color: 'bg-amber-100 text-amber-800'
+  },
   group_home_tactics: {
     id: 'group_home_tactics',
     label: 'Group Home Tactics',
@@ -154,6 +169,48 @@ export const NETTE_CATEGORIES: Record<NetteCategory, CategoryConfig> = {
     label: 'Marketing',
     description: 'Marketing and referral strategies',
     color: 'bg-pink-100 text-pink-800'
+  },
+  financial: {
+    id: 'financial',
+    label: 'Financial',
+    description: 'Financial planning and business setup',
+    color: 'bg-lime-100 text-lime-800'
+  },
+  legal: {
+    id: 'legal',
+    label: 'Legal',
+    description: 'Legal requirements and documentation',
+    color: 'bg-slate-100 text-slate-800'
+  },
+  setup: {
+    id: 'setup',
+    label: 'Setup',
+    description: 'Initial business setup and configuration',
+    color: 'bg-cyan-100 text-cyan-800'
+  },
+  training: {
+    id: 'training',
+    label: 'Training',
+    description: 'Staff and operational training',
+    color: 'bg-indigo-100 text-indigo-800'
+  },
+  resident_care: {
+    id: 'resident_care',
+    label: 'Resident Care',
+    description: 'Resident care and support protocols',
+    color: 'bg-rose-100 text-rose-800'
+  },
+  property_search: {
+    id: 'property_search',
+    label: 'Property Search',
+    description: 'Finding and acquiring properties',
+    color: 'bg-teal-100 text-teal-800'
+  },
+  app_navigation: {
+    id: 'app_navigation',
+    label: 'App Navigation',
+    description: 'How to use the application',
+    color: 'bg-violet-100 text-violet-800'
   },
   general: {
     id: 'general',
@@ -447,7 +504,7 @@ export const AGENT_CONFIGS: Record<AgentType, AgentConfig> = {
     description: 'Group Home Expert - Tactics, licensing, compliance, operations',
     color: 'hsl(221 83% 53%)',
     gradient: 'linear-gradient(135deg, hsl(221 83% 53%), hsl(221 70% 60%))',
-    tableName: 'gh_training_chunks',
+    tableName: 'nette_knowledge_chunks', // Updated from gh_training_chunks (2025-12-09)
     categories: NETTE_CATEGORIES
   },
   mio: {

@@ -26,7 +26,12 @@ export async function uploadAudioToStorage(
   try {
     // Generate unique filename if not provided
     const timestamp = Date.now();
-    const fileExt = audioBlob.type.includes('webm') ? 'webm' : 'mp3';
+    // Support webm (Chrome/Firefox), mp4 (iOS Safari), and generic fallback
+    const fileExt = audioBlob.type.includes('webm')
+      ? 'webm'
+      : audioBlob.type.includes('mp4')
+        ? 'mp4'
+        : 'audio';
     const finalFileName = fileName || `${userId}_${timestamp}.${fileExt}`;
     const storagePath = `voice-recordings/${userId}/${finalFileName}`;
 
@@ -106,11 +111,17 @@ export async function sendAudioForTranscription(
   recordingId: string
 ): Promise<void> {
   try {
-    const N8N_WEBHOOK_URL = 'https://purposewaze.app.n8n.cloud/webhook/audioreceiver';
+    const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/audioreceiver';
 
     // Create FormData for multipart upload
     const formData = new FormData();
-    const fileName = `${Date.now()}.${audioBlob.type.includes('webm') ? 'webm' : 'mp3'}`;
+    // Support webm (Chrome/Firefox), mp4 (iOS Safari), and generic fallback
+    const fileExt = audioBlob.type.includes('webm')
+      ? 'webm'
+      : audioBlob.type.includes('mp4')
+        ? 'mp4'
+        : 'audio';
+    const fileName = `${Date.now()}.${fileExt}`;
 
     formData.append('audio', audioBlob, fileName);
     formData.append('user_id', userId);
@@ -250,14 +261,21 @@ export class AudioRecorder {
     this.startTime = Date.now();
 
     // Create MediaRecorder with preferred mime type
+    // iOS Safari doesn't support webm, falls back to mp4
     const mimeType = MediaRecorder.isTypeSupported('audio/webm')
       ? 'audio/webm'
-      : 'audio/mp3';
+      : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : ''; // Let browser choose default
 
-    this.mediaRecorder = new MediaRecorder(this.stream, {
-      mimeType,
+    const recorderOptions: MediaRecorderOptions = {
       audioBitsPerSecond: 128000
-    });
+    };
+    if (mimeType) {
+      recorderOptions.mimeType = mimeType;
+    }
+
+    this.mediaRecorder = new MediaRecorder(this.stream, recorderOptions);
 
     // Set up promise for recording completion
     this.recordingPromise = new Promise((resolve) => {

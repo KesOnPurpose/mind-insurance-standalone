@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trophy, Sparkles, Heart, Star, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { supabase } from '@/integrations/supabase/client';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
+
+// Protocol-aware components
+import { ProtocolCheckIn, ProtocolCheckInCompleted, type ProtocolCheckInData } from '@/components/protect';
+import { getActiveInsightProtocol, completeProtocolDay } from '@/services/mioInsightProtocolService';
+import type { MIOInsightProtocolWithProgress } from '@/types/protocol';
 // import { motion, AnimatePresence } from 'framer-motion'; // Package not installed
 
 // Victory celebration options with animations
@@ -54,6 +62,8 @@ const VICTORY_CELEBRATIONS = [
 export default function CelebrateWins() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion } = useSectionCompletion();
 
   // Form state
   const [championshipWin, setChampionshipWin] = useState('');
@@ -61,17 +71,56 @@ export default function CelebrateWins() {
   const [futureSelfEvidence, setFutureSelfEvidence] = useState('');
   const [championshipGratitude, setChampionshipGratitude] = useState('');
   const [victoryCelebration, setVictoryCelebration] = useState('');
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // Protocol-aware state
+  const [activeProtocol, setActiveProtocol] = useState<MIOInsightProtocolWithProgress | null>(null);
+  const [protocolLoading, setProtocolLoading] = useState(true);
+  const [protocolCheckInData, setProtocolCheckInData] = useState<ProtocolCheckInData | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Load user timezone on mount
   useEffect(() => {
     loadUserTimezone();
   }, []);
+
+  // Fetch active protocol on mount
+  useEffect(() => {
+    async function fetchProtocol() {
+      if (!user?.id) {
+        setProtocolLoading(false);
+        return;
+      }
+      try {
+        const protocol = await getActiveInsightProtocol(user.id);
+        setActiveProtocol(protocol);
+      } catch (err) {
+        console.error('[CelebrateWins] Error fetching protocol:', err);
+      } finally {
+        setProtocolLoading(false);
+      }
+    }
+    fetchProtocol();
+  }, [user?.id]);
 
   async function loadUserTimezone() {
     try {
@@ -92,16 +141,28 @@ export default function CelebrateWins() {
     }
   }
 
-  // Validate form
+  // Validate form - includes protocol check-in validation if active protocol exists
   const isFormValid = () => {
-    return (
+    const baseFormValid = (
       championshipWin.trim() !== '' &&
       microVictory.trim() !== '' &&
       futureSelfEvidence.trim() !== '' &&
       championshipGratitude.trim() !== '' &&
       victoryCelebration !== ''
     );
+
+    // If there's an active protocol that's not completed today, require protocol check-in
+    if (activeProtocol && !activeProtocol.is_today_completed) {
+      return baseFormValid && protocolCheckInData !== null;
+    }
+
+    return baseFormValid;
   };
+
+  // Handler for protocol check-in data changes
+  const handleProtocolCheckInChange = useCallback((data: ProtocolCheckInData | null) => {
+    setProtocolCheckInData(data);
+  }, []);
 
   // Handle celebration selection with animation
   const handleCelebrationSelect = (value: string) => {
@@ -128,16 +189,14 @@ export default function CelebrateWins() {
       }
 
       const points = 2;
-      const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      const practiceDate = getSafeTodayDate(userTimezone);
 
       // Check for existing practice today
       const { data: existingPractices, error: fetchError } = await supabase
-        .from('practices')
+        .from('daily_practices')
         .select('*')
         .eq('user_id', user.id)
-        .eq('practice_type', 'celebrate_wins')
+        .eq('practice_type', 'C')
         .eq('practice_date', practiceDate);
 
       if (fetchError) throw fetchError;
@@ -153,7 +212,7 @@ export default function CelebrateWins() {
       if (existingPractices && existingPractices.length > 0) {
         // Update existing practice
         const { error: updateError } = await supabase
-          .from('practices')
+          .from('daily_practices')
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
@@ -167,11 +226,11 @@ export default function CelebrateWins() {
       } else {
         // Create new practice
         const { error: insertError } = await supabase
-          .from('practices')
+          .from('daily_practices')
           .insert({
             user_id: user.id,
             practice_date: practiceDate,
-            practice_type: 'celebrate_wins',
+            practice_type: 'C',
             completed: true,
             completed_at: new Date().toISOString(),
             points_earned: points,
@@ -195,7 +254,27 @@ export default function CelebrateWins() {
           .update({
             total_points: (profile.total_points || 0) + points
           })
-          .eq('user_id', user.id);
+          .eq('id', user.id); // user_profiles.id matches auth user id
+      }
+
+      // If there's protocol check-in data, complete the protocol day
+      if (protocolCheckInData) {
+        try {
+          await completeProtocolDay({
+            protocol_id: protocolCheckInData.protocol_id,
+            day_number: protocolCheckInData.day_number,
+            response_data: {
+              practice_response: protocolCheckInData.practice_response,
+              moment_captured: protocolCheckInData.moment_captured,
+              insight_captured: protocolCheckInData.insight_captured,
+            },
+            notes: protocolCheckInData.moment_captured,
+          });
+          console.log('[CelebrateWins] Protocol day completed successfully');
+        } catch (protocolErr) {
+          console.error('[CelebrateWins] Error completing protocol day:', protocolErr);
+          // Don't fail the whole submission if protocol completion fails
+        }
       }
 
       // Show celebration animation before navigating
@@ -203,16 +282,22 @@ export default function CelebrateWins() {
 
       toast({
         title: '🎉 Victory Lap Complete!',
-        description: `You earned ${points} points. Keep celebrating those wins!`,
+        description: protocolCheckInData
+          ? `You earned ${points} points and completed your protocol check-in!`
+          : `You earned ${points} points. Keep celebrating those wins!`,
       });
 
+      // Check if this completes the CT section and trigger MIO feedback
+      await checkCompletion('C', practiceDate);
+
       setTimeout(() => {
-        navigate('/mind-insurance/practices');
+        navigate('/mind-insurance/practice?section=VICTORY_LAP');
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving practice:', err);
-      setError(err.message || 'An error occurred while saving your practice');
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -230,7 +315,7 @@ export default function CelebrateWins() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/mind-insurance/practices')}
+                onClick={() => navigate('/mind-insurance/practice?section=VICTORY_LAP')}
                 className="text-gray-400 hover:text-white hover:bg-mi-navy"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -264,6 +349,20 @@ export default function CelebrateWins() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Protocol Check-In Section - Only show if there's an active protocol */}
+        {activeProtocol && !activeProtocol.is_today_completed && (
+          <ProtocolCheckIn
+            protocol={activeProtocol}
+            isLoading={protocolLoading}
+            onChange={handleProtocolCheckInChange}
+          />
+        )}
+
+        {/* Protocol Already Completed Today */}
+        {activeProtocol && activeProtocol.is_today_completed && (
+          <ProtocolCheckInCompleted protocol={activeProtocol} />
+        )}
 
         {/* Championship Win */}
         <Card className="bg-mi-navy-light border-mi-cyan/20">

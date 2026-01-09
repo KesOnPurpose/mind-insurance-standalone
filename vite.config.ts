@@ -63,8 +63,8 @@ export default defineConfig(({ mode }) => ({
       },
     },
 
-    // Build optimizations
-    target: "es2020",
+    // Build optimizations - include Safari/iOS for mobile compatibility
+    target: ["es2020", "safari14", "ios14"],
     minify: "terser",
     terserOptions: {
       compress: {
@@ -108,9 +108,9 @@ export default defineConfig(({ mode }) => ({
       "@supabase/auth-js",
       "@supabase/functions-js",
     ],
-    // Force ESM transformation for problematic packages
+    // Force ESM transformation for problematic packages - include Safari/iOS for mobile compatibility
     esbuildOptions: {
-      target: "es2020",
+      target: ["es2020", "safari14", "ios14"],
     },
   },
 }));

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { useCanReadAnalytics, useCanExportAnalytics, useAdmin } from '@/contexts/AdminContext';
 import {
   getCachedMetric,
@@ -37,6 +37,7 @@ import type {
   DashboardKPIs,
   AnalyticsResponse,
   UserEngagementData,
+  TopUserData,
 } from '@/types/adminAnalytics';
 
 /**
@@ -441,10 +442,27 @@ export async function getResponseTimeMetrics(
   }
 }
 
+// Response type for multi-source conversation volume
+interface MultiSourceVolumeResult {
+  total_messages: number;
+  total_conversations: number;
+  nette: { messages: number; sessions: number };
+  me: { messages: number; sessions: number };
+  mio: { conversations: number; messages: number; unique_users: number };
+  unique_users_verified: number;
+  active_sessions_total: number;
+  by_agent: Record<string, number>;
+  by_day: Record<string, number>;
+  data_quality_note: string;
+}
+
 /**
  * Get dashboard KPIs
  * Returns aggregated KPIs for the admin dashboard overview
  * CACHED: 5 minute TTL (HIGHEST PRIORITY)
+ *
+ * NOTE: Uses conversation_volume_multi_source to query source tables directly
+ * for accurate conversation counts (bypasses empty agent_conversations table)
  */
 export async function getDashboardKPIs(
   timeRange: TimeRange = '7d',
@@ -464,7 +482,8 @@ export async function getDashboardKPIs(
     }
 
     // Cache miss - fetch all metrics in parallel for efficiency
-    const [cacheData, responseData, ragData, handoffData, volumeData] = await Promise.all([
+    // Use conversation_volume_multi_source for accurate counts from source tables
+    const [cacheData, responseData, ragData, handoffData, multiSourceVolumeData] = await Promise.all([
       callAnalyticsEndpoint<CacheHitRateResponse>({
         metric_type: 'cache_hit_rate',
         time_range: timeRange,
@@ -481,38 +500,66 @@ export async function getDashboardKPIs(
         metric_type: 'handoff_accuracy',
         time_range: timeRange,
       }),
-      callAnalyticsEndpoint<ConversationVolumeResponse>({
-        metric_type: 'conversation_volume',
-        time_range: '24h', // Daily active users
+      // Use multi-source endpoint to get accurate counts from chat tables
+      callAnalyticsEndpoint<{ result: MultiSourceVolumeResult }>({
+        metric_type: 'conversation_volume_multi_source',
+        time_range: timeRange,
       }),
     ]);
 
     // Calculate system health score (weighted average)
-    const cacheScore = cacheData.result.overall_rate;
-    const responseScore = Math.max(0, 100 - (responseData.result.overall_avg_ms / 20)); // 2000ms = 0 score
-    const ragScore = parseFloat(ragData.result.overall_avg_similarity) * 100;
-    const handoffScore = parseFloat(handoffData.result.overall_avg_confidence) * 100;
+    // NOTE: Cache hit rate will be 0 until proper cache tracking is implemented
+    const cacheScore = cacheData.result.overall_rate || 0;
+    const responseScore = responseData.result.overall_avg_ms
+      ? Math.max(0, 100 - (responseData.result.overall_avg_ms / 20)) // 2000ms = 0 score
+      : 50; // Default to 50 if no data
+    const ragScore = ragData.result.overall_avg_similarity
+      ? parseFloat(ragData.result.overall_avg_similarity) * 100
+      : 0;
+    const handoffScore = handoffData.result.overall_avg_confidence
+      ? parseFloat(handoffData.result.overall_avg_confidence) * 100
+      : 0;
 
     const system_health_score = (cacheScore * 0.25 + responseScore * 0.35 + ragScore * 0.25 + handoffScore * 0.15);
 
-    // Get unique users from today's conversations (simplified - would need user_id in real implementation)
-    const daily_active_users = Math.floor(volumeData.result.total_conversations / 3); // Estimate 3 conversations per user
+    // Extract multi-source volume data
+    const volumeResult = (multiSourceVolumeData as unknown as { result: MultiSourceVolumeResult }).result;
 
-    // Get real error rate from error tracking
-    const errorData = await callAnalyticsEndpoint<{ overall_error_rate: number }>({
+    // Get verified unique users from MIO (only source with real user_ids)
+    const daily_active_users = volumeResult.unique_users_verified || 0;
+
+    // Get real error rate from error tracking using selected time range
+    const errorData = await callAnalyticsEndpoint<{ result: { overall_error_rate: number; total_errors: number; total_requests: number } }>({
       metric_type: 'error_rate',
-      time_range: '24h',
+      time_range: timeRange,
     });
+
+    // Get all-time conversation count using multi-source (30d)
+    const allTimeVolumeData = await callAnalyticsEndpoint<{ result: MultiSourceVolumeResult }>({
+      metric_type: 'conversation_volume_multi_source',
+      time_range: '30d',
+    });
+
+    const allTimeResult = allTimeVolumeData.result;
 
     const result: DashboardKPIs = {
       system_health_score: Math.round(system_health_score),
       cache_efficiency: cacheData.result.overall_rate,
-      ai_quality_score: parseFloat(ragData.result.overall_avg_similarity),
-      routing_accuracy: parseFloat(handoffData.result.overall_avg_confidence) * 100,
+      ai_quality_score: parseFloat(ragData.result.overall_avg_similarity) || 0,
+      routing_accuracy: parseFloat(handoffData.result.overall_avg_confidence) * 100 || 0,
       daily_active_users,
-      total_conversations_today: volumeData.result.total_conversations,
-      avg_response_time_ms: responseData.result.overall_avg_ms,
-      error_rate: errorData.result.overall_error_rate,
+      // Use total_conversations (sessions) for "today's requests"
+      total_conversations_today: volumeResult.total_conversations || 0,
+      // Use all-time count for total
+      total_conversations_all_time: allTimeResult.total_conversations || 0,
+      // Use by_agent breakdown from multi-source
+      conversations_by_agent: allTimeResult.by_agent || {},
+      avg_response_time_ms: responseData.result.overall_avg_ms || 0,
+      error_rate: errorData.result.overall_error_rate || 0,
+      // Add new fields for enhanced display
+      total_messages: allTimeResult.total_messages || 0,
+      verified_users: allTimeResult.unique_users_verified || 0,
+      data_source: 'multi_source', // Indicates we're using direct table queries
     };
 
     // Write to cache (fire-and-forget)
@@ -816,9 +863,24 @@ export async function getUserEngagementMetrics(
       .select('user_id, created_at')
       .gte('created_at', sevenDaysAgo.toISOString());
 
-    // Calculate unique users and messages per user
-    const uniqueUsers = new Set(weeklyData?.map(d => d.user_id) || []);
-    const messagesPerUser = weeklyData ? weeklyData.length / Math.max(uniqueUsers.size, 1) : 0;
+    // Get total conversations (30d) for better messages per user calculation
+    const { count: totalConversations30d } = await supabase
+      .from('agent_conversations')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    // Get unique users in 30d for better average calculation
+    const { data: monthlyUsersData } = await supabase
+      .from('agent_conversations')
+      .select('user_id')
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    const monthlyUniqueUsers = new Set(monthlyUsersData?.map(d => d.user_id) || []);
+
+    // Calculate messages per user using monthly data (more representative)
+    const messagesPerUser = monthlyUniqueUsers.size > 0 && totalConversations30d
+      ? totalConversations30d / monthlyUniqueUsers.size
+      : 0;
 
     // Get real user engagement data from edge function
     const engagementData = await callAnalyticsEndpoint<{
@@ -859,19 +921,33 @@ export async function getUserEngagementMetrics(
       .gte('created_at', prevWeekStart.toISOString())
       .lt('created_at', sevenDaysAgo.toISOString());
 
+    const currentWeekCount = weeklyData?.length || 0;
+
+    // Calculate trend - handle edge cases gracefully
     if (prevWeekCount && prevWeekCount > 0) {
-      const currentWeekCount = weeklyData?.length || 0;
       trendPercentage = ((currentWeekCount - prevWeekCount) / prevWeekCount) * 100;
 
-      if (trendPercentage > 5) engagementTrend = 'up';
-      else if (trendPercentage < -5) engagementTrend = 'down';
+      // If current week has 0 activity but previous had some, it's a decline
+      // but we cap it at -100% and mark as "down" with special handling in UI
+      if (currentWeekCount === 0 && prevWeekCount > 0) {
+        trendPercentage = -100;
+        engagementTrend = 'down';
+      } else if (trendPercentage > 5) {
+        engagementTrend = 'up';
+      } else if (trendPercentage < -5) {
+        engagementTrend = 'down';
+      }
+    } else if (currentWeekCount > 0 && (!prevWeekCount || prevWeekCount === 0)) {
+      // New activity this week with no previous data = positive trend
+      engagementTrend = 'up';
+      trendPercentage = 100; // Show as "new growth"
     }
 
     const result: UserEngagementData = {
       daily_active_users: engagementData.result.daily_active_users,
       monthly_active_users: engagementData.result.monthly_active_users,
       dau_mau_ratio: dauMauRatio,
-      messages_per_user_monthly: Math.round(messagesPerUser * 4), // Extrapolate to monthly
+      messages_per_user_monthly: Math.round(messagesPerUser), // Already monthly calculation
       tactics_completed_weekly: engagementData.result.tactics_completed_weekly,
       avg_practice_streak_days: engagementData.result.avg_practice_streak_days,
       engagement_trend: engagementTrend,
@@ -905,6 +981,180 @@ export function useUserEngagement(
   return useQuery({
     queryKey: ['analytics', 'user-engagement', timeRange],
     queryFn: () => getUserEngagementMetrics(timeRange, adminUser?.id),
+    enabled: canRead,
+    staleTime: 60000, // 1 minute
+    refetchInterval: 300000, // Refresh every 5 minutes
+    ...options,
+  });
+}
+
+// ============================================================================
+// ANALYTICS SYNC FUNCTIONS
+// ============================================================================
+
+export interface SyncAnalyticsResult {
+  success: boolean;
+  nette_synced: number;
+  mio_synced: number;
+  me_synced: number;
+  total: number;
+  cache_invalidated?: boolean;
+  error?: string;
+  synced_at?: string;
+}
+
+/**
+ * Trigger analytics sync
+ * Calls the sync-analytics edge function to populate agent_conversations
+ * from chat history tables (nette_chat_histories, me_chat_histories, mio_conversations)
+ */
+export async function triggerAnalyticsSync(
+  fullSync: boolean = false,
+  sinceHours: number = 24
+): Promise<SyncAnalyticsResult> {
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !sessionData?.session) {
+      throw new Error('Authentication required to sync analytics');
+    }
+
+    const response = await supabase.functions.invoke('sync-analytics', {
+      body: {
+        full_sync: fullSync,
+        since_hours: sinceHours,
+      },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to sync analytics');
+    }
+
+    return response.data as SyncAnalyticsResult;
+  } catch (error) {
+    console.error('[Analytics Service] Error triggering sync:', error);
+    return {
+      success: false,
+      nette_synced: 0,
+      mio_synced: 0,
+      me_synced: 0,
+      total: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Hook to trigger analytics sync with mutation
+ */
+export function useSyncAnalytics() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ fullSync, sinceHours }: { fullSync?: boolean; sinceHours?: number } = {}) =>
+      triggerAnalyticsSync(fullSync, sinceHours),
+    onSuccess: (data) => {
+      if (data.success) {
+        // Invalidate all analytics queries to refresh with new data
+        queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      }
+    },
+  });
+}
+
+// ============================================================================
+// TOP USERS LEADERBOARD FUNCTIONS
+// ============================================================================
+
+/**
+ * Get top users by conversation count
+ * Returns the most active users with their conversation stats
+ * Uses edge function to bypass RLS and access all conversation data
+ * CACHED: 15 minute TTL
+ */
+export async function getTopUsers(
+  timeRange: TimeRange = '30d',
+  limit: number = 10,
+  adminUserId?: string
+): Promise<TopUserData[]> {
+  try {
+    // Log analytics view (fire-and-forget)
+    logAnalyticsView(adminUserId, 'top_users', {
+      time_range: timeRange,
+      limit,
+    }).catch(() => {});
+
+    // Check cache first
+    const cacheKey = `top_users_${limit}`;
+    const cached = await getCachedMetric(cacheKey, timeRange, {});
+    if (cached) {
+      console.log('[Analytics Service] Cache hit: top_users');
+      return cached;
+    }
+
+    // Call edge function to get top users (uses service role, bypasses RLS)
+    const { data, error } = await supabase.functions.invoke('get-analytics', {
+      body: {
+        metric_type: 'top_users',
+        time_range: timeRange,
+      },
+    });
+
+    if (error) {
+      console.error('[Analytics Service] Error fetching top users from edge function:', error);
+      throw error;
+    }
+
+    if (!data?.result?.users || data.result.users.length === 0) {
+      console.log('[Analytics Service] No top users data returned');
+      return [];
+    }
+
+    // Map edge function response to TopUserData format
+    const result: TopUserData[] = data.result.users
+      .slice(0, limit)
+      .map((user: {
+        user_id: string;
+        email: string | null;
+        full_name: string | null;
+        total_conversations: number;
+        favorite_agent: string;
+        last_active: string;
+        engagement_level: 'high' | 'medium' | 'low';
+      }) => ({
+        user_id: user.user_id,
+        email: user.email,
+        full_name: user.full_name,
+        total_conversations: user.total_conversations,
+        favorite_agent: user.favorite_agent as TopUserData['favorite_agent'],
+        last_active: user.last_active,
+        engagement_level: user.engagement_level,
+      }));
+
+    // Write to cache (fire-and-forget)
+    setCachedMetric(cacheKey, timeRange, {}, result, 900000).catch(() => {}); // 15 min TTL
+
+    return result;
+  } catch (error) {
+    console.error('[Analytics Service] Error fetching top users:', error);
+    throw new Error('Failed to fetch top users');
+  }
+}
+
+/**
+ * Hook to fetch top users leaderboard
+ */
+export function useTopUsers(
+  timeRange: TimeRange = '30d',
+  limit: number = 10,
+  options?: UseQueryOptions<TopUserData[]>
+): UseQueryResult<TopUserData[]> {
+  const canRead = useCanReadAnalytics();
+  const { adminUser } = useAdmin();
+
+  return useQuery({
+    queryKey: ['analytics', 'top-users', timeRange, limit],
+    queryFn: () => getTopUsers(timeRange, limit, adminUser?.id),
     enabled: canRead,
     staleTime: 60000, // 1 minute
     refetchInterval: 300000, // Refresh every 5 minutes

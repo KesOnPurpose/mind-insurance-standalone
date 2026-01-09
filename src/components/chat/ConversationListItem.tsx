@@ -19,10 +19,11 @@ interface ConversationListItemProps {
   onClick: () => void;
   onRename: (newTitle: string) => Promise<boolean>;
   onArchive: () => Promise<boolean>;
+  userTimezone?: string;
 }
 
-// Format relative time
-function formatRelativeTime(dateString: string): string {
+// Format relative time with optional timezone
+function formatRelativeTime(dateString: string, userTimezone?: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -35,7 +36,11 @@ function formatRelativeTime(dateString: string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
 
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  if (userTimezone) {
+    options.timeZone = userTimezone;
+  }
+  return date.toLocaleDateString('en-US', options);
 }
 
 export function ConversationListItem({
@@ -44,6 +49,7 @@ export function ConversationListItem({
   onClick,
   onRename,
   onArchive,
+  userTimezone,
 }: ConversationListItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(conversation.title);
@@ -183,7 +189,7 @@ export function ConversationListItem({
             "text-xs",
             isMindInsurance ? "text-gray-500" : "text-muted-foreground"
           )}>
-            {formatRelativeTime(conversation.last_message_at)}
+            {formatRelativeTime(conversation.last_message_at, userTimezone)}
           </span>
           {conversation.message_count > 0 && (
             <span className={cn(

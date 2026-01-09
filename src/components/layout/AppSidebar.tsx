@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { Plus, Settings, LogOut, Home, Map, Calendar, BookOpen, MessageSquare, User, Shield } from 'lucide-react';
+import { Settings, LogOut, User, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { COACHES } from '@/types/coach';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -12,22 +11,14 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccessControl } from '@/hooks/useAccessControl';
+import { useMIAccessControl } from '@/hooks/useMIAccessControl';
 
 // Import context-specific panels
-import { RoadmapPanel } from './sidebar-panels/RoadmapPanel';
-import { DashboardPanel } from './sidebar-panels/DashboardPanel';
 import { MindInsurancePanel } from './sidebar-panels/MindInsurancePanel';
-import { ModelWeekPanel } from './sidebar-panels/ModelWeekPanel';
-import { ResourcesPanel } from './sidebar-panels/ResourcesPanel';
-import { ResourcesHubPanel } from './sidebar-panels/ResourcesHubPanel';
-import { CalculatorPanel } from './sidebar-panels/CalculatorPanel';
 import { ProfilePanel } from './sidebar-panels/ProfilePanel';
 import { DefaultPanel } from './sidebar-panels/DefaultPanel';
 import { AdminPanel } from './sidebar-panels/AdminPanel';
-import { SidebarAppSwitcher } from './SidebarAppSwitcher';
 
 export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'admin' | 'default';
 
@@ -37,23 +28,12 @@ interface AppSidebarProps {
 
 /**
  * Context-aware sidebar panel that renders different content based on mode
+ * For MI standalone, only Mind Insurance, Profile, and Admin panels are relevant
  */
 function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
   switch (mode) {
-    case 'roadmap':
-      return <RoadmapPanel />;
-    case 'dashboard':
-      return <DashboardPanel />;
     case 'mind-insurance':
       return <MindInsurancePanel />;
-    case 'model-week':
-      return <ModelWeekPanel />;
-    case 'resources':
-      return <ResourcesHubPanel />;
-    case 'resources-documents':
-      return <ResourcesPanel />;
-    case 'resources-calculator':
-      return <CalculatorPanel />;
     case 'profile':
       return <ProfilePanel />;
     case 'admin':
@@ -62,7 +42,8 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
       // Chat mode uses ChatSidebar directly, not AppSidebar
       return null;
     default:
-      return <DefaultPanel />;
+      // Default to Mind Insurance panel for standalone app
+      return <MindInsurancePanel />;
   }
 }
 
@@ -71,49 +52,34 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
  */
 function getSectionLabel(mode: SidebarMode): string {
   switch (mode) {
-    case 'roadmap':
-      return 'Your Journey';
-    case 'dashboard':
-      return 'Quick Stats';
     case 'mind-insurance':
       return 'PROTECT Practice';
-    case 'model-week':
-      return 'This Week';
-    case 'resources':
-      return 'Resources';
-    case 'resources-documents':
-      return 'Documents';
-    case 'resources-calculator':
-      return 'Calculator Tips';
     case 'profile':
       return 'Your Profile';
     case 'admin':
       return 'Admin Panel';
     default:
-      return 'Overview';
+      return 'Mind Insurance';
   }
 }
 
 /**
- * AppSidebar - Main sidebar component with composition pattern
+ * AppSidebar - Main sidebar component for Mind Insurance standalone
  *
  * Displays:
- * 1. Header with logo and primary action button
- * 2. Context-specific panel based on current route
- * 3. Consistent navigation section
- * 4. Consistent account section
+ * 1. Header with Mind Insurance logo
+ * 2. Context-specific panel (Mind Insurance navigation)
+ * 3. Account section (Profile, Settings, Admin, Sign out)
  */
 export function AppSidebar({ mode }: AppSidebarProps) {
   const { user, signOut } = useAuth();
-  const { canAccessAdminPanel } = useAccessControl();
+  const { canAccessAdminPanel } = useMIAccessControl();
   const navigate = useNavigate();
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
 
-  // Check if we're in the Mind Insurance section for dark theme
-  const isMindInsurance = useMemo(() => {
-    return location.pathname.startsWith('/mind-insurance');
-  }, [location.pathname]);
+  // Always use MI theme for standalone app
+  const isMindInsurance = true;
 
   const handleNavigate = (path: string) => {
     if (isMobile) {
@@ -133,193 +99,45 @@ export function AppSidebar({ mode }: AppSidebarProps) {
     <Sidebar
       side="left"
       collapsible="offcanvas"
-      className={cn(isMindInsurance && "mi-sidebar-dark")}
-      style={isMindInsurance ? {
+      className="mi-sidebar-dark"
+      style={{
         borderColor: 'rgba(5, 195, 221, 0.2)',
         borderRightColor: 'rgba(5, 195, 221, 0.2)'
-      } : undefined}
+      }}
     >
       {/* Single scrollable content - everything flows together */}
-      <SidebarContent className={cn("px-2", isMindInsurance && "bg-mi-navy-light")}>
-        {/* Logo/Brand - now part of scrollable content */}
+      <SidebarContent className="px-2 bg-mi-navy-light">
+        {/* Logo/Brand - Mind Insurance */}
         <div className="p-2 pt-4">
           <Link
-            to="/chat"
-            className={cn("flex items-center gap-2 mb-4", isMindInsurance && "text-white")}
+            to="/mind-insurance"
+            className="flex items-center gap-2 mb-4 text-white"
             onClick={() => isMobile && setOpenMobile(false)}
           >
-            <div className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center",
-              isMindInsurance
-                ? "bg-gradient-to-br from-mi-cyan to-mi-cyan/60"
-                : "bg-gradient-to-br from-primary to-primary/60"
-            )}>
-              <span className="text-white font-bold text-sm">{isMindInsurance ? "MI" : "GH"}</span>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-mi-cyan to-mi-cyan/60">
+              <span className="text-white font-bold text-sm">MI</span>
             </div>
-            <span className={cn("font-semibold text-lg", isMindInsurance && "text-white")}>
-              {isMindInsurance ? "Mind Insurance" : "Grouphomes4newbies"}
+            <span className="font-semibold text-lg text-white">
+              Mind Insurance
             </span>
           </Link>
-
-          {/* Primary Action Button - Context-aware: Ask MIO in Mind Insurance, Ask Nette elsewhere */}
-          {(() => {
-            const isInMindInsurance = location.pathname.startsWith('/mind-insurance');
-            const activeCoach = isInMindInsurance ? COACHES.mio : COACHES.nette;
-
-            if (mode === 'chat') {
-              return (
-                <Button
-                  onClick={() => handleNavigate('/chat')}
-                  className="w-full justify-start gap-2"
-                  variant="outline"
-                >
-                  <Plus className="h-4 w-4" />
-                  New Chat
-                </Button>
-              );
-            }
-
-            // Route to product-appropriate chat
-            const chatRoute = isInMindInsurance ? '/mind-insurance/chat' : '/chat';
-
-            return (
-              <Button
-                onClick={() => handleNavigate(chatRoute)}
-                className={cn(
-                  "w-full justify-start gap-2 transition-colors",
-                  isMindInsurance && "bg-mi-navy-light border-mi-cyan/30 hover:bg-mi-navy text-mi-cyan hover:text-white"
-                )}
-                variant="outline"
-                style={!isMindInsurance ? {
-                  borderColor: activeCoach.color,
-                  color: activeCoach.color
-                } : undefined}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Ask {activeCoach.name}
-              </Button>
-            );
-          })()}
         </div>
 
-        <SidebarSeparator className={cn("my-2", isMindInsurance && "!bg-mi-cyan/20")} />
+        <SidebarSeparator className="my-2 !bg-mi-cyan/20" />
+
         {/* Context-Specific Panel */}
         {mode !== 'chat' && (
           <>
-            <div className={cn(
-              "text-xs font-medium px-2 py-2",
-              isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-            )}>
+            <div className="text-xs font-medium px-2 py-2 text-mi-cyan">
               {getSectionLabel(mode)}
             </div>
             <SidebarContextPanel mode={mode} />
-            <SidebarSeparator className={cn("my-3", isMindInsurance && "!bg-mi-cyan/20")} />
+            <SidebarSeparator className="my-3 !bg-mi-cyan/20" />
           </>
         )}
 
-        {/* Apps Section */}
-        <div className={cn(
-          "text-xs font-medium px-2 py-2",
-          isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-        )}>
-          Apps
-        </div>
-        <SidebarAppSwitcher />
-
-        <SidebarSeparator className={cn("my-3", isMindInsurance && "!bg-mi-cyan/20")} />
-
-        {/* Navigation Section */}
-        <div className={cn(
-          "text-xs font-medium px-2 py-2",
-          isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-        )}>
-          Navigation
-        </div>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Dashboard"
-              isActive={isActive('/dashboard')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
-            >
-              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Chat with Nette"
-              isActive={isActive('/chat')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
-            >
-              <Link to="/chat" onClick={() => isMobile && setOpenMobile(false)}>
-                <MessageSquare className="h-4 w-4" />
-                <span>Chat</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Roadmap"
-              isActive={isActive('/roadmap')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
-            >
-              <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
-                <Map className="h-4 w-4" />
-                <span>Roadmap</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Resources"
-              isActive={isActive('/resources')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
-            >
-              <Link to="/resources" onClick={() => isMobile && setOpenMobile(false)}>
-                <BookOpen className="h-4 w-4" />
-                <span>Resources</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Model Week"
-              isActive={isActive('/model-week')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
-            >
-              <Link to="/model-week" onClick={() => isMobile && setOpenMobile(false)}>
-                <Calendar className="h-4 w-4" />
-                <span>Model Week</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        <SidebarSeparator className={cn("my-2", isMindInsurance && "!bg-mi-cyan/20")} />
-
         {/* Account Section */}
-        <div className={cn(
-          "text-xs font-medium px-2 py-1",
-          isMindInsurance ? "text-mi-cyan" : "text-muted-foreground"
-        )}>
+        <div className="text-xs font-medium px-2 py-1 text-mi-cyan">
           Account
         </div>
         <SidebarMenu>
@@ -328,9 +146,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               asChild
               tooltip="Profile"
               isActive={isActive('/profile')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
+              className="text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
             >
               <Link to="/profile" onClick={() => isMobile && setOpenMobile(false)}>
                 <User className="h-4 w-4" />
@@ -343,9 +159,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               asChild
               tooltip="Settings"
               isActive={isActive('/settings')}
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-              )}
+              className="text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
             >
               <Link to="/settings" onClick={() => isMobile && setOpenMobile(false)}>
                 <Settings className="h-4 w-4" />
@@ -359,9 +173,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
                 asChild
                 tooltip="Admin"
                 isActive={isActive('/admin')}
-                className={cn(
-                  isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
-                )}
+                className="text-gray-400 hover:text-white hover:bg-mi-navy data-[active=true]:text-mi-cyan data-[active=true]:bg-mi-cyan/10"
               >
                 <Link to="/admin" onClick={() => isMobile && setOpenMobile(false)}>
                   <Shield className="h-4 w-4" />
@@ -374,9 +186,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
             <SidebarMenuButton
               onClick={handleSignOut}
               tooltip="Sign out"
-              className={cn(
-                isMindInsurance && "text-gray-400 hover:text-white hover:bg-mi-navy"
-              )}
+              className="text-gray-400 hover:text-white hover:bg-mi-navy"
             >
               <LogOut className="h-4 w-4" />
               <span>Sign out</span>
@@ -386,14 +196,8 @@ export function AppSidebar({ mode }: AppSidebarProps) {
 
         {/* User info */}
         {user && (
-          <div className={cn(
-            "mt-2 mb-4 px-2 py-2 rounded-md",
-            isMindInsurance ? "bg-mi-navy" : "bg-sidebar-accent/50"
-          )}>
-            <p className={cn(
-              "text-xs truncate",
-              isMindInsurance ? "text-gray-400" : "text-muted-foreground"
-            )}>
+          <div className="mt-2 mb-4 px-2 py-2 rounded-md bg-mi-navy">
+            <p className="text-xs truncate text-gray-400">
               {user.email}
             </p>
           </div>

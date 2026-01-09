@@ -1,8 +1,12 @@
 // CoachProtocolCard - Coach-created protocol preview card
 // Phase 26: Weekly Insights Feature
+//
+// Premium Glass-Morphism Styling: CYAN accents (differentiates from MIO's gold)
+// Visual Language: Coach protocols = Cyan, MIO protocols = Gold
 
 import { useNavigate } from 'react-router-dom';
-import { User, ChevronRight, CheckCircle, Play } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { User, ChevronRight, CheckCircle, Play, Sparkles, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,16 +24,21 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
 
   if (isLoading) {
     return (
-      <Card className={cn("bg-mi-navy-light border-mi-gold/20", className)}>
+      <Card className={cn(
+        "relative overflow-hidden",
+        "bg-mi-navy/80 backdrop-blur-xl",
+        "border border-mi-cyan/20",
+        className
+      )}>
         <CardContent className="p-5">
           <div className="animate-pulse space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-24 h-5 bg-mi-navy rounded" />
-              <div className="w-20 h-5 bg-mi-navy rounded" />
+              <div className="w-24 h-5 bg-mi-cyan/10 rounded" />
+              <div className="w-20 h-5 bg-mi-cyan/10 rounded" />
             </div>
-            <div className="w-3/4 h-6 bg-mi-navy rounded" />
-            <div className="w-full h-4 bg-mi-navy rounded" />
-            <div className="w-32 h-10 bg-mi-navy rounded mt-4" />
+            <div className="w-3/4 h-6 bg-mi-cyan/10 rounded" />
+            <div className="w-full h-4 bg-mi-cyan/10 rounded" />
+            <div className="w-32 h-10 bg-mi-cyan/10 rounded mt-4" />
           </div>
         </CardContent>
       </Card>
@@ -38,10 +47,14 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
 
   if (!protocol) {
     return (
-      <Card className={cn("bg-mi-navy-light border-mi-gold/20 border-dashed", className)}>
+      <Card className={cn(
+        "bg-white/5 backdrop-blur-sm",
+        "border border-mi-cyan/10 border-dashed",
+        className
+      )}>
         <CardContent className="p-5 flex flex-col items-center justify-center text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-mi-gold/10 flex items-center justify-center mb-3">
-            <User className="h-6 w-6 text-mi-gold" />
+          <div className="w-12 h-12 rounded-full bg-mi-cyan/10 flex items-center justify-center mb-3">
+            <Users className="h-6 w-6 text-mi-cyan/50" />
           </div>
           <h3 className="text-white font-medium mb-1">No Coach Content</h3>
           <p className="text-gray-400 text-sm">
@@ -75,34 +88,50 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
 
   return (
     <Card className={cn(
-      "bg-mi-navy-light border-mi-gold/30 hover:border-mi-gold/50 transition-all group",
+      "relative overflow-hidden group",
+      // Premium glass-morphism effect
+      "bg-mi-navy/80 backdrop-blur-xl",
+      "border border-mi-cyan/20",
+      "hover:border-mi-cyan/40",
+      "shadow-[0_8px_32px_rgba(5,195,221,0.1)]",
+      "hover:shadow-[0_8px_32px_rgba(5,195,221,0.2)]",
+      "transition-all duration-300",
       className
     )}>
-      <CardContent className="p-5">
+      {/* Animated gradient border glow */}
+      <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+        <div className="absolute inset-[-2px] bg-gradient-to-br from-mi-cyan/15 via-transparent to-cyan-400/15 opacity-50" />
+      </div>
+
+      <CardContent className="p-5 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
-              className="bg-mi-gold/10 text-mi-gold border-mi-gold/30 text-xs"
+              className={cn(
+                "text-xs",
+                "bg-mi-cyan/10 text-mi-cyan border-mi-cyan/30",
+                "shadow-[0_0_8px_rgba(5,195,221,0.15)]"
+              )}
             >
-              <User className="h-3 w-3 mr-1" />
+              <Users className="h-3 w-3 mr-1" />
               COACH CONTENT
             </Badge>
             <Badge
               variant="outline"
-              className="bg-mi-navy text-gray-400 border-gray-600 text-xs"
+              className="bg-white/5 text-gray-400 border-white/10 text-xs"
             >
               Day {currentDayNumber}
             </Badge>
           </div>
-          <span className="text-mi-gold text-sm font-medium">
+          <span className="text-mi-cyan text-sm font-medium">
             {totalCompleted}/{totalTasks} complete
           </span>
         </div>
 
         {/* Protocol Title */}
-        <h3 className="text-white font-semibold text-lg mb-1 line-clamp-1">
+        <h3 className="text-white font-semibold text-lg mb-1 line-clamp-1 group-hover:text-mi-cyan transition-colors">
           {protocol.title}
         </h3>
 
@@ -115,8 +144,12 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
 
         {/* Today's Task Preview */}
         {nextTask && (
-          <div className="mb-4 p-3 bg-mi-navy rounded-lg border border-mi-gold/10">
-            <p className="text-mi-gold/70 text-xs mb-1">
+          <div className={cn(
+            "mb-4 p-3 rounded-xl",
+            "bg-white/5 backdrop-blur-sm",
+            "border border-mi-cyan/15"
+          )}>
+            <p className="text-mi-cyan/70 text-xs mb-1">
               Today's Task ({todaysCompletedTasks}/{todaysTasks.length} done):
             </p>
             <p className="text-white/90 text-sm line-clamp-2">
@@ -132,7 +165,11 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
 
         {/* No tasks for today */}
         {todaysTasks.length === 0 && (
-          <div className="mb-4 p-3 bg-mi-navy rounded-lg border border-gray-700">
+          <div className={cn(
+            "mb-4 p-3 rounded-xl",
+            "bg-white/5 backdrop-blur-sm",
+            "border border-white/10"
+          )}>
             <p className="text-gray-400 text-sm text-center">
               No tasks scheduled for today
             </p>
@@ -143,10 +180,22 @@ export function CoachProtocolCard({ protocol, isLoading, className }: CoachProto
         <Button
           onClick={() => navigate(`/mind-insurance/insights/coach/${protocol.id}`)}
           className={cn(
-            "w-full transition-all",
+            "w-full transition-all duration-300",
             allTodayComplete && todaysTasks.length > 0
-              ? "bg-mi-navy border border-mi-gold/30 text-mi-gold hover:bg-mi-gold/10"
-              : "bg-mi-gold hover:bg-mi-gold/90 text-mi-navy font-medium"
+              ? cn(
+                  "bg-white/5 backdrop-blur-sm",
+                  "border border-emerald-500/30 text-emerald-400",
+                  "hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                )
+              : cn(
+                  "font-semibold",
+                  "bg-gradient-to-r from-mi-cyan to-cyan-400",
+                  "hover:from-mi-cyan hover:to-cyan-300",
+                  "text-mi-navy",
+                  "shadow-lg shadow-mi-cyan/30",
+                  "hover:shadow-xl hover:shadow-mi-cyan/40",
+                  "hover:scale-[1.02]"
+                )
           )}
         >
           {allTodayComplete && todaysTasks.length > 0 ? (

@@ -1,13 +1,29 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Calendar, Trophy, FileText, Play, TrendingUp, Brain } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Calendar, Trophy, Play, TrendingUp } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
+import { getTodayInTimezone } from '@/utils/timezoneUtils';
+import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
+import { AnimatePresence } from 'framer-motion';
+
+// Protocol Unlock System
+import { useUnstartedProtocol } from '@/hooks/useUnstartedProtocol';
+import { ProtocolUnlockModal } from '@/components/coverage-center/ProtocolUnlockModal';
+import { ProtocolReadyBadge } from '@/components/coverage-center/ProtocolReadyBadge';
+import { startProtocol } from '@/services/mioInsightProtocolService';
+
+// Hub Tour System
+import { useHubTour } from '@/hooks/useHubTour';
+import { TourHighlight, TourTooltip, TourOfferDialog, TourSidebarController } from '@/components/tour';
+import { useSidebar } from '@/components/ui/sidebar';
+
+// Push Notifications
+import { PushNotificationPrompt } from '@/components/mind-insurance/notifications/PushNotificationPrompt';
 
 interface DailyPracticeStatus {
   completed: number;
@@ -15,8 +31,20 @@ interface DailyPracticeStatus {
   points: number;
 }
 
+/**
+ * MindInsuranceHub - Practice Hub for PROTECT Method Only
+ *
+ * This page is dedicated to the daily PROTECT Method practice.
+ * All protocol content (MIO + Coach) has been moved to Coverage Center.
+ *
+ * Features:
+ * - Protocol Unlock Modal (shown when unstarted protocol exists)
+ * - Protocol Ready Badge (floating + dot after modal dismissed)
+ * - 4-Step Hub Tour (Practice Center, Coverage Center, My Evidence, MIO)
+ */
 export default function MindInsuranceHub() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: progressData, isLoading: progressLoading } = useMindInsuranceProgress();
   const [practiceStatus, setPracticeStatus] = useState<DailyPracticeStatus>({
@@ -24,8 +52,44 @@ export default function MindInsuranceHub() {
     total: 7,
     points: 0
   });
-  const [latestInsight, setLatestInsight] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Protocol Unlock System
+  const {
+    unstartedProtocol,
+    activeProtocol,
+    hasUnstartedProtocol,
+    isNewUser,
+    isReturningUser,
+    shouldShowModal,
+    dismissModal,
+    showBadge,
+    refreshProtocol,
+    setModalDelay,  // Delay modal 30 min after tour
+    // Daily modal support
+    currentDay,
+    shouldShowDailyModal,
+    dismissDailyModal,
+  } = useUnstartedProtocol();
+
+  // Hub Tour System
+  const {
+    isActive: isTourActive,
+    stepData,
+    currentStep,
+    totalSteps,
+    startTour,
+    nextStep,
+    skipTour,
+    completeTour,
+    hasCompletedTour,
+  } = useHubTour();
+
+  // Sidebar control for mobile tour (open sidebar for Steps 2-4)
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  // State for tour offer after modal
+  const [showTourOffer, setShowTourOffer] = useState(false);
 
   // Get stats from the hook (calculated from actual practice data)
   const userStats = {
@@ -37,7 +101,6 @@ export default function MindInsuranceHub() {
   useEffect(() => {
     if (user?.id) {
       fetchDailyStatus();
-      fetchLatestInsight();
     }
   }, [user]);
 
@@ -48,10 +111,24 @@ export default function MindInsuranceHub() {
     }
   }, [progressLoading]);
 
+  // Auto-start tour when arriving from assessment with startTour flag
+  useEffect(() => {
+    const state = location.state as { startTour?: boolean; justCompletedAssessment?: boolean } | null;
+    if (state?.startTour && !hasCompletedTour && !loading) {
+      // Small delay for page to fully render before starting tour
+      const timeout = setTimeout(() => {
+        startTour();
+        // Clear the location state to prevent re-triggering on refresh
+        window.history.replaceState({}, document.title);
+      }, 400);
+      return () => clearTimeout(timeout);
+    }
+  }, [location.state, hasCompletedTour, loading, startTour]);
+
   const fetchDailyStatus = async () => {
     if (!user?.id) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayInTimezone();
 
     const { data, error } = await supabase
       .from('daily_practices')
@@ -71,23 +148,6 @@ export default function MindInsuranceHub() {
     }
   };
 
-
-  const fetchLatestInsight = async () => {
-    if (!user?.id) return;
-
-    const { data, error } = await supabase
-      .from('mio_insights')
-      .select('title, insight_type, delivered_at, read_at')
-      .eq('user_id', user.id)
-      .order('delivered_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!error && data) {
-      setLatestInsight(data);
-    }
-  };
-
   const getChampionshipColor = (level: string) => {
     switch (level) {
       case 'PLATINUM': return 'text-purple-600';
@@ -95,6 +155,84 @@ export default function MindInsuranceHub() {
       case 'SILVER': return 'text-gray-400';
       default: return 'text-amber-700';
     }
+  };
+
+  // Handle "Begin Day 1" from Protocol Unlock Modal
+  const handleBeginDay1 = async () => {
+    if (!unstartedProtocol?.id) return;
+
+    // Start the protocol
+    await startProtocol(unstartedProtocol.id);
+    await refreshProtocol();
+
+    // Dismiss the modal
+    dismissModal();
+
+    // If tour not completed, offer it
+    if (!hasCompletedTour) {
+      setShowTourOffer(true);
+    } else {
+      // Navigate directly to Coverage Center
+      navigate('/mind-insurance/coverage');
+    }
+  };
+
+  // Handle "Remind Me Later" from Protocol Unlock Modal
+  const handleRemindLater = () => {
+    dismissModal();
+  };
+
+  // Handle tour start from Tour Offer Dialog
+  const handleStartTour = () => {
+    setShowTourOffer(false);
+    startTour();
+  };
+
+  // Handle skip tour from Tour Offer Dialog
+  const handleSkipTour = () => {
+    setShowTourOffer(false);
+    skipTour();
+    // Navigate to MIO Insights for first engagement message
+    navigate('/mind-insurance/mio-insights', {
+      state: { fromTour: true, showFirstEngagement: true }
+    });
+  };
+
+  // Handle tour completion - close sidebar on mobile, then navigate to MIO Insights
+  const handleTourComplete = () => {
+    completeTour();
+
+    // Delay the Protocol Unlock Modal by 30 minutes to reduce overwhelm
+    // User can explore MIO chat first, then modal appears on next visit
+    setModalDelay();
+
+    // On mobile, close sidebar before navigating (with delay for animation)
+    if (isMobile) {
+      setOpenMobile(false);
+      // Small delay to allow sidebar close animation
+      setTimeout(() => {
+        navigate('/mind-insurance/mio-insights', {
+          state: { fromTour: true, showFirstEngagement: true }
+        });
+      }, 300);
+    } else {
+      // Navigate to MIO Insights after "Meet MIO" step to show first engagement message
+      navigate('/mind-insurance/mio-insights', {
+        state: { fromTour: true, showFirstEngagement: true }
+      });
+    }
+  };
+
+  // Handle daily modal "Begin Day X"
+  const handleBeginDayX = async () => {
+    // Dismiss the daily modal and navigate to coverage center
+    dismissDailyModal();
+    navigate('/mind-insurance/coverage');
+  };
+
+  // Handle daily modal "Remind Later"
+  const handleDailyRemindLater = () => {
+    dismissDailyModal();
   };
 
   const progressPercentage = (practiceStatus.completed / practiceStatus.total) * 100;
@@ -108,157 +246,166 @@ export default function MindInsuranceHub() {
   }
 
   return (
-    <div className="min-h-screen bg-mi-navy">
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
-              <Shield className="w-8 h-8 text-mi-cyan" />
-              Mind Insurance
-            </h1>
-            <p className="text-gray-400 mt-1">
-              Your daily PROTECT practice hub
-            </p>
-          </div>
-          <Badge
-            variant="outline"
-            className={`text-lg px-4 py-2 border-mi-navy-light ${getChampionshipColor(userStats.championshipLevel)}`}
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            {userStats.championshipLevel}
-          </Badge>
-        </div>
+    <MindInsuranceErrorBoundary fallbackTitle="Error loading Mind Insurance Hub" showHomeButton={false}>
+      {/* Protocol Unlock Modal (for unstarted protocols - Day 1) */}
+      <ProtocolUnlockModal
+        isOpen={shouldShowModal && hasUnstartedProtocol}
+        protocol={unstartedProtocol}
+        variant={isNewUser ? 'new_user' : 'returning_user'}
+        onBeginDay1={handleBeginDay1}
+        onRemindLater={handleRemindLater}
+        onClose={dismissModal}
+      />
 
-        {/* Today's Practice Status */}
-        <Card className="p-6 bg-mi-navy-light border-mi-cyan/30">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
-                <Calendar className="w-5 h-5 text-mi-cyan" />
-                Today's Practice
-              </h2>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-mi-gold">{practiceStatus.points}</p>
-                <p className="text-sm text-gray-400">points earned</p>
-              </div>
-            </div>
+      {/* Daily Protocol Modal (for active protocols - Days 2-7) */}
+      <ProtocolUnlockModal
+        isOpen={shouldShowDailyModal && !shouldShowModal}
+        protocol={activeProtocol}
+        variant="daily"
+        currentDay={currentDay}
+        onBeginDay1={handleBeginDayX}
+        onRemindLater={handleDailyRemindLater}
+        onClose={dismissDailyModal}
+      />
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-300">
-                <span>{practiceStatus.completed} of {practiceStatus.total} completed</span>
-                <span className="font-semibold text-mi-cyan">{Math.round(progressPercentage)}%</span>
-              </div>
-              <div className="h-3 w-full bg-mi-cyan/20 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-mi-cyan rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+      {/* Tour Offer Dialog (after Begin Day 1) */}
+      <TourOfferDialog
+        isOpen={showTourOffer}
+        onStartTour={handleStartTour}
+        onSkip={handleSkipTour}
+      />
 
-            <Button
-              onClick={() => navigate('/mind-insurance/practice')}
-              className="w-full bg-mi-cyan hover:bg-mi-cyan-dark text-white"
-              size="lg"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {practiceStatus.completed === 0 ? 'Start Today\'s Practice' : 'Continue Practice'}
-            </Button>
-          </div>
-        </Card>
+      {/* Tour Sidebar Controller (opens sidebar on mobile for Steps 2-4) */}
+      <TourSidebarController
+        currentStep={currentStep}
+        isActive={isTourActive}
+        totalSteps={totalSteps}
+      />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Streak Tracker */}
-          <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-400">Current Streak</h3>
-              <p className="text-3xl font-bold text-mi-gold">{userStats.streak} days</p>
-              <p className="text-sm text-gray-400">Keep it going! 🔥</p>
-            </div>
-          </Card>
+      {/* Tour Overlay (when active) */}
+      <AnimatePresence>
+        {isTourActive && stepData && (
+          <>
+            <TourHighlight
+              targetSelector={stepData.targetSelector}
+              isActive={isTourActive}
+            />
+            <TourTooltip
+              step={stepData}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              onNext={currentStep === totalSteps - 1 ? handleTourComplete : nextStep}
+              onSkip={skipTour}
+              onComplete={handleTourComplete}
+            />
+          </>
+        )}
+      </AnimatePresence>
 
-          {/* Total Points */}
-          <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-400">Total Points</h3>
-              <p className="text-3xl font-bold text-mi-gold">{userStats.totalPoints}</p>
-              <p className="text-sm text-gray-400">
-                {userStats.totalPoints < 150 && 'Next level: 150 points (Silver)'}
-                {userStats.totalPoints >= 150 && userStats.totalPoints < 300 && 'Next level: 300 points (Gold)'}
-                {userStats.totalPoints >= 300 && userStats.totalPoints < 450 && 'Next level: 450 points (Platinum)'}
-                {userStats.totalPoints >= 450 && 'Maximum level achieved!'}
+      <div className="min-h-screen bg-mi-navy">
+        <div className="container mx-auto p-4 md:p-6 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
+                Mind Insurance
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400 mt-1">
+                Your daily PROTECT practice hub
               </p>
             </div>
-          </Card>
-        </div>
+            <Badge
+              variant="outline"
+              className={`text-sm sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 border-mi-navy-light w-fit ${getChampionshipColor(userStats.championshipLevel)}`}
+            >
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              {userStats.championshipLevel}
+            </Badge>
+          </div>
 
-        {/* Latest Insight */}
-        {latestInsight && (
-          <Card className="p-6 bg-mi-navy-light border-mi-cyan/30">
+          {/* Today's Practice Status - Tour Target: practice */}
+          <Card
+            data-tour-target="practice"
+            className="p-6 bg-mi-navy-light border-mi-cyan/30"
+          >
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-mi-cyan" />
-                Latest Insight
-              </h3>
-              <div>
-                <p className="font-medium text-white">{latestInsight.title}</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  {latestInsight.read_at ? 'Read' : 'Unread'} •
-                  {new Date(latestInsight.delivered_at).toLocaleDateString()}
-                </p>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
+                  <Calendar className="w-5 h-5 text-mi-cyan" />
+                  Today's Practice
+                </h2>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-mi-gold">{practiceStatus.points}</p>
+                  <p className="text-sm text-gray-400">points earned</p>
+                </div>
               </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-300">
+                  <span>{practiceStatus.completed} of {practiceStatus.total} completed</span>
+                  <span className="font-semibold text-mi-cyan">{Math.round(progressPercentage)}%</span>
+                </div>
+                <div className="h-3 w-full bg-mi-cyan/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-mi-cyan rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+
               <Button
-                variant="outline"
-                onClick={() => navigate('/mind-insurance/insights')}
-                className="w-full border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10"
+                onClick={() => navigate('/mind-insurance/practice')}
+                className="w-full bg-mi-cyan hover:bg-mi-cyan-dark text-white"
+                size="lg"
               >
-                View Insights
+                <Play className="w-4 h-4 mr-2" />
+                {practiceStatus.completed === 0 ? 'Start Today\'s Practice' : 'Continue Practice'}
               </Button>
             </div>
           </Card>
-        )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/insights')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <FileText className="w-6 h-6 text-mi-cyan" />
-            <span>Weekly Insights</span>
-          </Button>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Streak Tracker */}
+            <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-400">Current Streak</h3>
+                <p className="text-3xl font-bold text-mi-gold">{userStats.streak} days</p>
+                <p className="text-sm text-gray-400">Keep it going!</p>
+              </div>
+            </Card>
 
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/vault')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <Shield className="w-6 h-6 text-mi-cyan" />
-            <span>Recording Vault</span>
-          </Button>
+            {/* Total Points */}
+            <Card className="p-6 bg-mi-navy-light border-mi-gold/30">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-400">Total Points</h3>
+                <p className="text-3xl font-bold text-mi-gold">{userStats.totalPoints}</p>
+                <p className="text-sm text-gray-400">
+                  {userStats.totalPoints < 150 && 'Next level: 150 points (Silver)'}
+                  {userStats.totalPoints >= 150 && userStats.totalPoints < 300 && 'Next level: 300 points (Gold)'}
+                  {userStats.totalPoints >= 300 && userStats.totalPoints < 450 && 'Next level: 450 points (Platinum)'}
+                  {userStats.totalPoints >= 450 && 'Maximum level achieved!'}
+                </p>
+              </div>
+            </Card>
+          </div>
 
-          <Button
-            variant="outline"
-            onClick={() => navigate('/mind-insurance/championship')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-gold/30 hover:border-mi-gold hover:bg-mi-gold/10 text-white"
-          >
-            <TrendingUp className="w-6 h-6 text-mi-gold" />
-            <span>Progress</span>
-          </Button>
+          {/* Push Notification Banner - Shows if not subscribed */}
+          <PushNotificationPrompt variant="banner" />
 
-          <Button
-            variant="outline"
-            onClick={() => navigate('/avatar-assessment')}
-            className="h-20 flex-col gap-2 bg-mi-navy-light border-mi-cyan/30 hover:border-mi-cyan hover:bg-mi-cyan/10 text-white"
-          >
-            <Brain className="w-6 h-6 text-mi-cyan" />
-            <span>Temperament</span>
-          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Floating badge (when modal dismissed and tour not active) */}
+      <AnimatePresence>
+        {showBadge && unstartedProtocol && !isTourActive && (
+          <ProtocolReadyBadge
+            variant="floating"
+            onView={() => navigate('/mind-insurance/coverage')}
+          />
+        )}
+      </AnimatePresence>
+    </MindInsuranceErrorBoundary>
   );
 }

@@ -9,6 +9,7 @@ import {
   Shield,
   Settings,
   Home,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -17,7 +18,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useAccessControl, UserTier } from '@/hooks/useAccessControl';
+import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
 import { Badge } from '@/components/ui/badge';
 
 const ADMIN_NAV_ITEMS: Array<{
@@ -25,7 +26,7 @@ const ADMIN_NAV_ITEMS: Array<{
   href: string;
   icon: any;
   description: string;
-  requiredTier?: 'admin' | 'super_admin' | 'owner';
+  requiredTier?: 'admin' | 'super_admin';
 }> = [
   {
     title: 'Dashboard',
@@ -60,6 +61,13 @@ const ADMIN_NAV_ITEMS: Array<{
     requiredTier: 'super_admin',
   },
   {
+    title: 'Assessments',
+    href: '/admin/assessments',
+    icon: ClipboardCheck,
+    description: 'Assessment invitations',
+    requiredTier: 'super_admin',
+  },
+  {
     title: 'Knowledge Base',
     href: '/admin/knowledge-base',
     icon: BookOpen,
@@ -71,7 +79,7 @@ const ADMIN_NAV_ITEMS: Array<{
 export function AdminPanel() {
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { tier, isOwner, isSuperAdmin, isAdmin, hasTierAccess } = useAccessControl();
+  const { tier, isSuperAdmin, isAdmin, hasTierAccess } = useMIAccessControl();
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -104,11 +112,11 @@ export function AdminPanel() {
               {tier?.replace('_', ' ') || 'Loading...'}
             </p>
           </div>
-          {isOwner && (
-            <Badge variant="default" className="bg-purple-500">Owner</Badge>
+          {isSuperAdmin && (
+            <Badge variant="default" className="bg-purple-500">Super Admin</Badge>
           )}
-          {isSuperAdmin && !isOwner && (
-            <Badge variant="default" className="bg-blue-500">Super</Badge>
+          {isAdmin && !isSuperAdmin && (
+            <Badge variant="default" className="bg-blue-500">Admin</Badge>
           )}
         </div>
       </div>
@@ -142,7 +150,7 @@ export function AdminPanel() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Back to App">
-              <Link to="/dashboard" onClick={handleClick}>
+              <Link to="/mind-insurance" onClick={handleClick}>
                 <Home className="h-4 w-4" />
                 <span>Back to App</span>
               </Link>

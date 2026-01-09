@@ -30,10 +30,34 @@ import {
 } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper to call the admin-group-management Edge Function
+async function callAdminGroupAPI(action: string, data?: Record<string, unknown>) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await supabase.functions.invoke('admin-group-management', {
+    body: { action, data },
+  });
+
+  if (response.error) {
+    throw new Error(response.error.message || 'API call failed');
+  }
+
+  if (!response.data?.success) {
+    throw new Error(response.data?.error || 'Operation failed');
+  }
+
+  return response.data;
+}
+
 interface UserProfile {
-  id: string;
+  id: string;              // gh_approved_users.id (for React key)
   full_name: string | null;
   email: string | null;
+  user_id: string;         // FK to user_profiles.id (for targeting)
+  tier: string;
 }
 
 interface MIOUserGroup {
@@ -114,15 +138,12 @@ export function TargetUserPicker({
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, email')
-        .order('full_name', { ascending: true });
-
-      if (error) throw error;
-      setUsers(data || []);
+      // Use Edge Function to bypass RLS - same pattern as UserGroupManager
+      const result = await callAdminGroupAPI('list_users');
+      // Store API response directly - same as UserGroupManager (no transformation)
+      setUsers((result.data || []) as UserProfile[]);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('[TargetUserPicker] Error fetching users:', error);
     }
   };
 
@@ -189,8 +210,9 @@ export function TargetUserPicker({
     }
   }, [targetType, targetConfig, onUserCountChange]);
 
-  const handleAddUser = (userId: string) => {
-    const newIds = [...selectedUserIds, userId];
+  const handleAddUser = (user: UserProfile) => {
+    // Use user_id (FK to user_profiles.id) for targeting
+    const newIds = [...selectedUserIds, user.user_id];
     setSelectedUserIds(newIds);
     onChange({ user_ids: newIds });
     setUserSearchOpen(false);
@@ -212,7 +234,7 @@ export function TargetUserPicker({
   });
 
   const availableUsers = filteredUsers.filter(
-    (user) => !selectedUserIds.includes(user.id)
+    (user) => !selectedUserIds.includes(user.user_id)
   );
 
   // Render based on target type
@@ -242,8 +264,8 @@ export function TargetUserPicker({
                   {availableUsers.slice(0, 10).map((user) => (
                     <CommandItem
                       key={user.id}
-                      value={user.id}
-                      onSelect={() => handleAddUser(user.id)}
+                      value={`${user.full_name || ''} ${user.email || ''}`}
+                      onSelect={() => handleAddUser(user)}
                     >
                       <User className="mr-2 h-4 w-4" />
                       <div className="flex flex-col">
@@ -266,7 +288,7 @@ export function TargetUserPicker({
         {selectedUserIds.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {selectedUserIds.map((userId) => {
-              const user = users.find((u) => u.id === userId);
+              const user = users.find((u) => u.user_id === userId);
               return (
                 <Badge
                   key={userId}

@@ -111,10 +111,30 @@ export default {
             height: "0",
           },
         },
+        // MIO Insights one-time reward animations (defined in index.css)
+        "pulse-once": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.01)" },
+        },
+        "bounce-once": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "20%": { transform: "translateY(-6px)" },
+          "40%": { transform: "translateY(0)" },
+          "60%": { transform: "translateY(-3px)" },
+          "80%": { transform: "translateY(0)" },
+        },
+        "glow-once": {
+          "0%, 100%": { boxShadow: "0 0 0 rgba(250, 204, 21, 0)" },
+          "50%": { boxShadow: "0 0 25px rgba(250, 204, 21, 0.5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // MIO Insights one-time animations - play once then stop
+        "pulse-once": "pulse-once 0.8s ease-in-out 1",
+        "bounce-once": "bounce-once 0.6s ease-out 1",
+        "glow-once": "glow-once 1.2s ease-in-out 1",
       },
     },
   },

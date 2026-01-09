@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, Menu } from "lucide-react";
-import CoachSelector from "@/components/chat/CoachSelector";
+import { Send, Loader2 } from "lucide-react";
 import ChatMessage from "@/components/chat/ChatMessage";
-import HandoffSuggestion from "@/components/chat/HandoffSuggestion";
 import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import { AssessmentActionCard } from "@/components/chat/AssessmentActionCard";
+import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
 import { CoachType, COACHES } from "@/types/coach";
-import { HandoffSuggestion as HandoffSuggestionType } from "@/types/handoff";
+import { type AssessmentType } from "@/hooks/useAssessmentInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
@@ -26,23 +26,21 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+interface SuggestedAction {
+  type: 'assessment' | 'protocol';
+  assessment_type?: AssessmentType;
+  reason?: string;
+  button_text?: string;
+}
+
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   coachType: CoachType;
+  suggestedAction?: SuggestedAction;
 }
-
-// Map product type to default coach
-const getDefaultCoachForProduct = (product: ProductType): CoachType => {
-  const coachMap: Record<ProductType, CoachType> = {
-    'grouphome': 'nette',
-    'mind-insurance': 'mio',
-    'me-wealth': 'me'
-  };
-  return coachMap[product];
-};
 
 // Product-specific background styling for immersive experience
 const PRODUCT_BACKGROUNDS: Record<ProductType, {
@@ -61,16 +59,6 @@ const PRODUCT_BACKGROUNDS: Record<ProductType, {
     bgClass: 'bg-amber-50/30 dark:bg-amber-950/10',
     headerGradient: '', // Uses coach gradient
   },
-};
-
-// Get initial greeting based on coach type
-const getInitialGreeting = (coach: CoachType): string => {
-  const greetings: Record<CoachType, string> = {
-    'nette': "Hey there! I'm Nette, your Group Home Expert. I have access to 403 proven tactics and state-specific insights to help you launch your group home business. Whether you need help with licensing, property selection, or operational strategies, I'm here to guide you. What would you like to work on today?",
-    'mio': "Hi! I'm MIO - Mind Insurance Oracle. I'm your forensic behavioral psychologist here to help you see patterns you can't see yourself. I notice everything in your PROTECT practices and can help you break through mental blocks. What's on your mind?",
-    'me': "Hello! I'm ME, your Money Evolution Expert. I specialize in business credit, funding strategies, and financial planning for your group home venture. Let's build your financial foundation together. What financial goals are you working towards?"
-  };
-  return greetings[coach];
 };
 
 // Inner component that uses sidebar context
@@ -100,16 +88,14 @@ function ChatPageContent() {
   // Conversations context for creating new conversations (shared with sidebar)
   const { addConversation, updateConversation } = useConversationsContext();
 
-  // Initialize coach based on current product context
-  const defaultCoach = getDefaultCoachForProduct(currentProduct);
+  // MIO is the only coach in Mind Insurance standalone
+  const selectedCoach: CoachType = 'mio';
 
-  const [selectedCoach, setSelectedCoach] = useState<CoachType>(defaultCoach);
-  // Start with empty messages for new chats - greeting only shows for handoffs/switching
+  // Start with empty messages for new chats
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [handoffSuggestion, setHandoffSuggestion] = useState<HandoffSuggestionType | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -184,9 +170,6 @@ function ChatPageContent() {
 
         if (history.length > 0) {
           console.log('[ChatHistory] Loaded', history.length, 'messages');
-          // Determine coach from messages
-          const lastCoach = history[history.length - 1]?.coachType || selectedCoach;
-          setSelectedCoach(lastCoach);
           // Load history without preloaded greeting - shows actual conversation
           setMessages(history);
         } else {
@@ -225,41 +208,6 @@ function ChatPageContent() {
     scrollToBottom();
   }, [messages]);
 
-  const handleCoachChange = (coach: CoachType, isHandoff: boolean = false) => {
-    const previousCoach = selectedCoach;
-    setSelectedCoach(coach);
-
-    // Build warm introduction with context
-    let greetingContent = `Hi! I'm ${COACHES[coach].name}, your ${COACHES[coach].title}.`;
-
-    if (isHandoff && previousCoach !== coach) {
-      greetingContent += ` I've reviewed your conversation with ${COACHES[previousCoach].name}. `;
-    }
-
-    greetingContent += ` ${COACHES[coach].description} How can I help you today?`;
-
-    const greetingMessage: Message = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: greetingContent,
-      timestamp: new Date(),
-      coachType: coach
-    };
-
-    setMessages((prev) => [...prev, greetingMessage]);
-    setHandoffSuggestion(null);
-  };
-
-  const handleAcceptHandoff = () => {
-    if (handoffSuggestion) {
-      handleCoachChange(handoffSuggestion.suggestedAgent, true);
-    }
-  };
-
-  const handleDismissHandoff = () => {
-    setHandoffSuggestion(null);
-  };
-
   // Handle message from welcome screen - triggers transition to full chat
   const handleWelcomeMessage = async (messageText: string) => {
     if (!messageText.trim() || !user) return;
@@ -273,7 +221,7 @@ function ChatPageContent() {
       role: "user",
       content: messageText,
       timestamp: new Date(),
-      coachType: 'nette'
+      coachType: selectedCoach
     };
 
     // CRITICAL FIX: Store in ref BEFORE any state changes
@@ -290,7 +238,7 @@ function ChatPageContent() {
     setActiveConversation(newConversationId);
 
     // Create conversation metadata for sidebar (async, doesn't block)
-    await addConversation(newConversationId, messageText, 'nette');
+    await addConversation(newConversationId, messageText, selectedCoach);
 
     console.log('[Conversation] Started new conversation from welcome:', newConversationId);
 
@@ -309,7 +257,7 @@ function ChatPageContent() {
         body: JSON.stringify({
           user_id: user.id,
           message: messageText,
-          agent: 'nette',
+          agent: selectedCoach,
           conversation_id: newConversationId,
         }),
       });
@@ -324,9 +272,9 @@ function ChatPageContent() {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response || "I'm here to help you with your group home journey. Let me know what you'd like to explore.",
+        content: data.response || "I'm here to help you. Let me know what you'd like to explore.",
         timestamp: new Date(),
-        coachType: 'nette'
+        coachType: selectedCoach
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -336,7 +284,7 @@ function ChatPageContent() {
       pendingMessagesRef.current = [];
 
       // Update conversation metadata with AI response preview
-      await updateConversation(newConversationId, aiMessage.content, 'nette');
+      await updateConversation(newConversationId, aiMessage.content, selectedCoach);
 
       setIsTyping(false);
     } catch (error) {
@@ -444,7 +392,14 @@ function ChatPageContent() {
         role: "assistant",
         content: data.response || "I apologize, but I couldn't generate a response. Please try again.",
         timestamp: new Date(),
-        coachType: responseAgent
+        coachType: responseAgent,
+        // Parse suggested action from n8n response (for MIO assessment suggestions)
+        suggestedAction: data.suggested_action ? {
+          type: data.suggested_action.type,
+          assessment_type: data.suggested_action.assessment_type,
+          reason: data.suggested_action.reason,
+          button_text: data.suggested_action.button_text,
+        } : undefined,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -454,24 +409,6 @@ function ChatPageContent() {
 
       // Update conversation metadata
       await updateConversation(currentConversationId, aiMessage.content, responseAgent);
-
-      // Handle handoff detection from n8n
-      if (data.handoff_detected && data.handoff_message) {
-        console.log('[Chat] Handoff detected:', data.agent);
-        setHandoffSuggestion({
-          suggestedAgent: responseAgent,
-          reason: data.handoff_message,
-          confidence: 0.85,
-          detectedKeywords: [],
-          method: 'keyword_scoring'
-        });
-      }
-
-      // Update selected coach if handoff occurred
-      if (data.agent && data.agent !== selectedCoach) {
-        console.log('[Chat] Agent switched from', selectedCoach, 'to', data.agent);
-        // Don't auto-switch, let user accept handoff
-      }
 
       setIsTyping(false);
     } catch (error) {
@@ -549,12 +486,6 @@ function ChatPageContent() {
         {/* Content */}
         <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            {/* Coach Selector */}
-            <CoachSelector
-              selectedCoach={selectedCoach}
-              onSelectCoach={handleCoachChange}
-            />
-
             {/* Messages */}
             <div className="space-y-6 mb-6">
               {isLoadingHistory ? (
@@ -564,34 +495,46 @@ function ChatPageContent() {
                 </div>
               ) : (
                 messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    role={message.role}
-                    content={message.content}
-                    timestamp={message.timestamp}
-                    coachType={message.coachType}
-                  />
+                  <div key={message.id}>
+                    <ChatMessage
+                      role={message.role}
+                      content={message.content}
+                      timestamp={message.timestamp}
+                      coachType={message.coachType}
+                    />
+                    {/* Show AssessmentActionCard if MIO suggests an assessment */}
+                    {message.suggestedAction?.type === 'assessment' && message.suggestedAction.assessment_type && (
+                      <AssessmentActionCard
+                        assessmentType={message.suggestedAction.assessment_type}
+                        reason={message.suggestedAction.reason}
+                        buttonText={message.suggestedAction.button_text}
+                      />
+                    )}
+                  </div>
                 ))
               )}
 
-              {handoffSuggestion && (
-                <HandoffSuggestion
-                  suggestedAgent={handoffSuggestion.suggestedAgent}
-                  reason={handoffSuggestion.reason}
-                  confidence={handoffSuggestion.confidence}
-                  method={handoffSuggestion.method}
-                  onAccept={handleAcceptHandoff}
-                  onDismiss={handleDismissHandoff}
-                />
-              )}
-
+              {/* MIO Loading Animation */}
               {isTyping && (
-                <ChatMessage
-                  role="assistant"
-                  content="..."
-                  timestamp={new Date()}
-                  coachType={selectedCoach}
-                />
+                <div className="flex flex-col items-center justify-center py-8 gap-4">
+                  {/* Animated MIO Avatar */}
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
+                    style={{ background: 'linear-gradient(135deg, #05c3dd, #0099aa)' }}
+                  >
+                    M
+                  </div>
+
+                  {/* Thinking text */}
+                  <p className="text-gray-400 text-sm">MIO is analyzing your message...</p>
+
+                  {/* Animated dots */}
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -604,20 +547,30 @@ function ChatPageContent() {
             <div className="max-w-4xl mx-auto">
               {/* Active Conversation Indicator */}
               {activeConversationId && messages.length > 0 && (
-                <div className="text-xs text-muted-foreground text-center mb-2">
+                <div className={`text-xs text-center mb-2 ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
                   Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
                 </div>
               )}
 
               <div className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                  placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                  className="flex-1"
-                  disabled={isTyping || isLoadingHistory}
-                />
+                <div className="relative flex-1 flex items-center">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                    placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
+                    className={`flex-1 pr-10 ${isMindInsurance ? 'mi-input' : ''}`}
+                    disabled={isTyping || isLoadingHistory}
+                  />
+                  <div className="absolute right-1">
+                    <VoiceInputButton
+                      onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                      onTranscriptUpdate={(text) => setInput(text)}
+                      disabled={isTyping || isLoadingHistory}
+                      variant={isMindInsurance ? 'mi' : 'default'}
+                    />
+                  </div>
+                </div>
                 <Button
                   onClick={handleSend}
                   size="icon"
@@ -628,7 +581,7 @@ function ChatPageContent() {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
+              <p className={`text-xs mt-2 text-center ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
                 Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
               </p>
             </div>

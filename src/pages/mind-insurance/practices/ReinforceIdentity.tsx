@@ -13,27 +13,31 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Mic, MicOff, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   createPractice,
   updatePractice,
   getTodayPractices,
   isWithinTimeWindow
 } from '@/services/practiceService';
-// Voice recording service temporarily disabled - needs to be created
-// import {
-//   AudioRecorder,
-//   uploadAudioToStorage,
-//   saveVoiceRecording,
-//   sendAudioForTranscription
-// } from '@/services/voiceRecordingService';
+import {
+  AudioRecorder,
+  uploadAudioToStorage,
+  saveVoiceRecording,
+  sendAudioForTranscription
+} from '@/services/voiceRecordingService';
 import { PRACTICE_TYPES, POINTS_CONFIG, AUDIO_DURATIONS, TIME_WINDOWS } from '@/constants/protect';
 import type { DailyPractice } from '@/types/practices';
 import { useToast } from '@/hooks/use-toast';
+import { useSectionCompletion } from '@/hooks/useSectionCompletion';
 import { VoiceActivityIndicator } from '@/components/voice/VoiceActivityIndicator';
+import { getSafeTodayDate, sanitizeErrorMessage } from '@/utils/safeDateUtils';
 
 export default function ReinforceIdentity() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { checkCompletion: checkSectionCompletion } = useSectionCompletion();
 
   // Form state
   const [identityStatement, setIdentityStatement] = useState('');
@@ -42,7 +46,10 @@ export default function ReinforceIdentity() {
   const [hasRecording, setHasRecording] = useState(false);
   const [currentRecordingId, setCurrentRecordingId] = useState<string | null>(null);
   const [currentVolume, setCurrentVolume] = useState(0);
-  const [userTimezone, setUserTimezone] = useState('America/New_York');
+  // Use browser's detected timezone as default (more accurate than hardcoded value)
+  const [userTimezone, setUserTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'
+  );
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -50,14 +57,25 @@ export default function ReinforceIdentity() {
   const [existingPractice, setExistingPractice] = useState<DailyPractice | null>(null);
 
   // Refs
-  // Voice recording temporarily disabled - service needs to be created
-  const audioRecorderRef = useRef<any | null>(null);
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const recordingDataRef = useRef<{ blob: Blob; duration: number } | null>(null);
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Initialize audio recorder on mount
   useEffect(() => {
-    // audioRecorderRef.current = new AudioRecorder();
+    audioRecorderRef.current = new AudioRecorder();
 
     // Load existing practice if any
     loadExistingPractice();
@@ -269,23 +287,30 @@ export default function ReinforceIdentity() {
         throw new Error('User not authenticated');
       }
 
-      // Voice recording temporarily disabled - service needs to be created
-      // Upload would happen here
-      // const { publicUrl, path } = await uploadAudioToStorage(user.id, recordingDataRef.current.blob);
-      // const voiceRecording = await saveVoiceRecording(user.id, publicUrl, recordingDataRef.current.duration, existingPractice?.id, 'identity');
-      // sendAudioForTranscription(recordingDataRef.current.blob, user.id, voiceRecording.id);
+      // Upload voice recording to Supabase Storage
+      const { publicUrl } = await uploadAudioToStorage(user.id, recordingDataRef.current.blob);
+
+      // Save recording metadata to database
+      const voiceRecording = await saveVoiceRecording(
+        user.id,
+        publicUrl,
+        recordingDataRef.current.duration,
+        existingPractice?.id,
+        'identity'
+      );
+
+      // Send audio for transcription (fire and forget - non-blocking)
+      sendAudioForTranscription(recordingDataRef.current.blob, user.id, voiceRecording.id);
 
       // Prepare practice data
       const practiceData = {
         identity_statement: identityStatement.trim(),
-        recording_id: undefined, // Would be voiceRecording.id
-        recording_duration: recordingDataRef.current?.duration || 0,
+        recording_id: voiceRecording.id,
+        recording_duration: recordingDataRef.current.duration,
       };
 
-      // Get today's date in user's timezone
-      const practiceDate = new Date().toLocaleDateString('en-CA', {
-        timeZone: userTimezone
-      });
+      // Get today's date in user's timezone (Safari-safe)
+      const practiceDate = getSafeTodayDate(userTimezone);
 
       // Create or update practice
       if (existingPractice) {
@@ -313,11 +338,15 @@ export default function ReinforceIdentity() {
         description: `You earned ${pointsEarned} points`,
       });
 
-      // Navigate back to hub
-      navigate('/mind-insurance');
+      // Check if this completes a section and trigger MIO feedback
+      await checkSectionCompletion(PRACTICE_TYPES.REINFORCE_IDENTITY, practiceDate);
 
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving your practice');
+      // Navigate back to practice page
+      navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP');
+
+    } catch (err: unknown) {
+      // Use centralized error sanitization
+      setError(sanitizeErrorMessage(err));
       console.error('Practice completion error:', err);
     } finally {
       setLoading(false);
@@ -336,7 +365,7 @@ export default function ReinforceIdentity() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/mind-insurance')}
+            onClick={() => navigate('/mind-insurance/practice?section=CHAMPIONSHIP_SETUP')}
             className="shrink-0 text-gray-400 hover:text-white hover:bg-mi-navy-light"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -387,22 +416,29 @@ export default function ReinforceIdentity() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Recording Button */}
-              <div className="flex flex-col items-center space-y-4">
+              <div className="flex flex-col items-center space-y-6">
                 <VoiceActivityIndicator isRecording={isRecording} volume={currentVolume}>
                   <Button
                     size="lg"
                     variant={isRecording ? 'destructive' : 'default'}
-                    className="w-32 h-32 rounded-full"
+                    className="w-48 h-48 md:w-56 md:h-56 rounded-full shadow-lg shadow-mi-cyan/20 hover:shadow-mi-cyan/40 transition-all duration-300"
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={loading}
                   >
                     {isRecording ? (
-                      <MicOff className="h-12 w-12" />
+                      <MicOff style={{ width: '80px', height: '80px' }} />
                     ) : (
-                      <Mic className="h-12 w-12" />
+                      <Mic style={{ width: '80px', height: '80px' }} />
                     )}
                   </Button>
                 </VoiceActivityIndicator>
+
+                {/* Tap instruction */}
+                {!isRecording && !hasRecording && (
+                  <p className="text-mi-cyan text-sm font-medium animate-pulse">
+                    Tap to start recording
+                  </p>
+                )}
 
                 {/* Recording Status */}
                 {isRecording && (

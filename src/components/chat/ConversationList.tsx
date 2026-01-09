@@ -1,10 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { MessageSquareOff } from 'lucide-react';
 import { ConversationMetadata } from '@/services/conversationMetadataService';
 import { ConversationFolder } from './ConversationFolder';
+import { MIOInsightsPinnedItem } from './MIOInsightsPinnedItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CoachType } from '@/types/coach';
 import { useProduct } from '@/contexts/ProductContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { getThreadWithDetails, ThreadWithUnread } from '@/services/mioInsightsThreadService';
 
 interface ConversationListProps {
   conversations: ConversationMetadata[];
@@ -14,6 +17,8 @@ interface ConversationListProps {
   onSelectConversation: (conversationId: string) => void;
   onRenameConversation: (conversationId: string, newTitle: string) => Promise<boolean>;
   onArchiveConversation: (conversationId: string) => Promise<boolean>;
+  onSelectMIOInsights?: () => void;
+  isMIOInsightsActive?: boolean;
 }
 
 // Map product types to their default coach
@@ -34,11 +39,42 @@ export function ConversationList({
   onSelectConversation,
   onRenameConversation,
   onArchiveConversation,
+  onSelectMIOInsights,
+  isMIOInsightsActive = false,
 }: ConversationListProps) {
   const { currentProduct } = useProduct();
+  const { user } = useAuth();
+
+  // MIO Insights Thread state
+  const [mioInsightsData, setMIOInsightsData] = useState<ThreadWithUnread | null>(null);
+  const [mioInsightsLoading, setMIOInsightsLoading] = useState(true);
+
+  // Fetch MIO Insights thread data for pinned item
+  useEffect(() => {
+    async function fetchMIOInsights() {
+      if (!user?.id || currentProduct !== 'mind-insurance') {
+        setMIOInsightsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getThreadWithDetails(user.id);
+        setMIOInsightsData(data);
+      } catch (err) {
+        console.error('[ConversationList] Error fetching MIO Insights:', err);
+      } finally {
+        setMIOInsightsLoading(false);
+      }
+    }
+
+    fetchMIOInsights();
+  }, [user?.id, currentProduct]);
 
   // Determine which coach folder should be open by default based on current product
   const defaultOpenCoach = PRODUCT_TO_COACH[currentProduct] || 'nette';
+
+  // Show MIO Insights pinned item only for Mind Insurance product
+  const showMIOInsights = currentProduct === 'mind-insurance';
 
   // Group conversations by coach_type
   const groupedConversations = useMemo(() => {
@@ -120,19 +156,38 @@ export function ConversationList({
 
   // Conversations list grouped by coach
   return (
-    <div className="space-y-2 p-2">
-      {FOLDER_ORDER.map((coachType) => (
-        <ConversationFolder
-          key={coachType}
-          coachType={coachType}
-          conversations={groupedConversations[coachType]}
-          activeConversationId={activeConversationId}
-          isDefaultOpen={coachType === defaultOpenCoach}
-          onSelectConversation={onSelectConversation}
-          onRenameConversation={onRenameConversation}
-          onArchiveConversation={onArchiveConversation}
+    <div className="space-y-2">
+      {/* MIO Insights Pinned Item (only for Mind Insurance) */}
+      {showMIOInsights && onSelectMIOInsights && (
+        <MIOInsightsPinnedItem
+          thread={mioInsightsData?.thread || null}
+          lastMessage={mioInsightsData?.lastMessage}
+          unreadCount={mioInsightsData?.unreadCount || 0}
+          isActive={isMIOInsightsActive}
+          isLoading={mioInsightsLoading}
+          onClick={onSelectMIOInsights}
         />
-      ))}
+      )}
+
+      {/* Regular Conversations - Hidden for Mind Insurance standalone (MIO Insights pinned above) */}
+      {currentProduct !== 'mind-insurance' && (
+        <div className="p-2">
+          {FOLDER_ORDER.map((coachType) => {
+            return (
+              <ConversationFolder
+                key={coachType}
+                coachType={coachType}
+                conversations={groupedConversations[coachType]}
+                activeConversationId={isMIOInsightsActive ? null : activeConversationId}
+                isDefaultOpen={coachType === defaultOpenCoach}
+                onSelectConversation={onSelectConversation}
+                onRenameConversation={onRenameConversation}
+                onArchiveConversation={onArchiveConversation}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

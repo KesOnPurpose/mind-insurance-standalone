@@ -1,7 +1,32 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getUserSource, getSignupDomain } from '@/services/domainDetectionService';
+
+// Link any external assessments when user signs in/up
+async function linkExternalAssessmentsOnAuth(userId: string, userEmail: string) {
+  try {
+    const { data, error } = await supabase.rpc('link_external_assessments_on_auth', {
+      p_user_id: userId,
+      p_user_email: userEmail,
+    });
+
+    if (error) {
+      console.error('Error linking external assessments:', error);
+      return null;
+    }
+
+    if (data && data.linked_count > 0) {
+      console.log(`Linked ${data.linked_count} external assessment(s) to user ${userId}`);
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Failed to link external assessments:', err);
+    return null;
+  }
+}
 
 interface AuthContextType {
   user: User | null;
@@ -23,14 +48,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  // Track if we've already linked assessments for this session to avoid duplicate calls
+  const hasLinkedAssessmentsRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Link external assessments when user signs in (SIGNED_IN event)
+        // This covers both login and signup scenarios
+        if (
+          (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') &&
+          session?.user?.id &&
+          session?.user?.email &&
+          hasLinkedAssessmentsRef.current !== session.user.id
+        ) {
+          // Mark as linked to prevent duplicate calls
+          hasLinkedAssessmentsRef.current = session.user.id;
+          // Run async linking in background (don't block auth flow)
+          linkExternalAssessmentsOnAuth(session.user.id, session.user.email);
+        }
       }
     );
 
@@ -114,11 +155,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      // Capture user_source from current domain for multi-product tracking
+      const userSource = getUserSource();
+      const signupDomain = getSignupDomain();
+
+      console.log('[AuthContext] signUp with user_source:', userSource, 'domain:', signupDomain);
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            user_source: userSource,
+            signup_domain: signupDomain,
+          }
         }
       });
 

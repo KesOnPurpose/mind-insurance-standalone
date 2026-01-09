@@ -97,6 +97,7 @@ export interface SimpleOutput {
   annualGrossRevenue: number;
   annualNetProfit: number;
   isViable: boolean; // true if profit > 0 and break-even < 100%
+  bedCount: number; // Number of beds from input (for Nette's formula display)
 }
 
 // ============================================================================

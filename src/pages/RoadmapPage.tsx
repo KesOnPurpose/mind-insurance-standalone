@@ -29,6 +29,11 @@ import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
 import { useStartTactic, useCompleteTactic, useSaveNotes, calculateWeekProgress, useUserProgress } from '@/services/progressService';
 import { TacticCard } from '@/components/roadmap/TacticCard';
 import { Week1Checklist } from '@/components/roadmap/Week1Checklist';
+import { Week2Checklist } from '@/components/roadmap/Week2Checklist';
+import { Week3Checklist } from '@/components/roadmap/Week3Checklist';
+import { Week4Checklist } from '@/components/roadmap/Week4Checklist';
+import { Week5Checklist } from '@/components/roadmap/Week5Checklist';
+import { Week6Checklist } from '@/components/roadmap/Week6Checklist';
 import { QuickScheduleModal, ScheduleTacticData } from '@/components/roadmap/QuickScheduleModal';
 import { TacticWithProgress, WeekSummary } from '@/types/tactic';
 import { JOURNEY_PHASES } from '@/config/categories';
@@ -610,6 +615,131 @@ export default function RoadmapPage() {
             {/* Week 1 Mentorship Checklist - Show when Week 1 is selected and mentorship filter is active or all */}
             {selectedWeek === 1 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
               <Week1Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+                onSchedule={handleScheduleTactic}
+              />
+            )}
+
+            {/* Lesson 2 Mentorship Checklist - Show when Week 2 is selected and mentorship filter is active or all */}
+            {selectedWeek === 2 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week2Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+                onSchedule={handleScheduleTactic}
+              />
+            )}
+
+            {/* Lesson 3 Mentorship Checklist - Show when Week 3 is selected and mentorship filter is active or all */}
+            {selectedWeek === 3 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week3Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+                onSchedule={handleScheduleTactic}
+              />
+            )}
+
+            {/* Lesson 4 Mentorship Checklist - Show when Week 4 is selected and mentorship filter is active or all */}
+            {selectedWeek === 4 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week4Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+                onSchedule={handleScheduleTactic}
+              />
+            )}
+
+            {/* Lesson 5 Mentorship Checklist - Show when Week 5 is selected and mentorship filter is active or all */}
+            {selectedWeek === 5 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week5Checklist
+                tactics={tacticsWithProgress}
+                progressData={progressData || []}
+                onStartTactic={(id) => {
+                  if (!user?.id) return;
+                  startTactic.mutate({
+                    userId: user.id,
+                    tacticId: id
+                  });
+                }}
+                onCompleteTactic={async (id) => {
+                  if (!user?.id) return;
+                  completeTactic.mutate({
+                    userId: user.id,
+                    tacticId: id,
+                    notes: '',
+                    profileUpdates: {}
+                  });
+                }}
+                onSchedule={handleScheduleTactic}
+              />
+            )}
+
+            {/* Lesson 6 Mentorship Checklist - Show when Week 6 is selected and mentorship filter is active or all */}
+            {selectedWeek === 6 && (sourceFilter === 'all' || sourceFilter === 'mentorship') && (
+              <Week6Checklist
                 tactics={tacticsWithProgress}
                 progressData={progressData || []}
                 onStartTactic={(id) => {

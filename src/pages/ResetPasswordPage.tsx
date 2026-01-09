@@ -133,7 +133,7 @@ const ResetPasswordPage = () => {
     } else {
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/mind-insurance');
       }, 3000);
     }
   };

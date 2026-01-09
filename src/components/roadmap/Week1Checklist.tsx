@@ -31,16 +31,16 @@ interface Week1ChecklistProps {
 }
 
 /**
- * Week1Checklist - Nette's Mentorship Week 1 Progress Tracker
+ * Week1Checklist - Nette's Mentorship Lesson 1 Progress Tracker
  *
- * Displays all 13 Week 1 mentorship tactics (M001-M013) with:
+ * Displays all 13 Lesson 1 mentorship tactics (M001-M013) with:
  * - Overall progress bar showing X/13 completed
  * - Visual distinction between critical path and regular tactics
  * - Grouped by mentorship category (Legal Foundation, Business Setup, etc.)
  * - Quick status icons (completed, in_progress, not_started)
  * - Estimated time and cost for each tactic
  *
- * Purpose: Give users a focused view of Nette's Week 1 curriculum with clear progress tracking
+ * Purpose: Give users a focused view of Nette's Lesson 1 curriculum with clear progress tracking
  */
 export function Week1Checklist({
   tactics,
@@ -114,9 +114,9 @@ export function Week1Checklist({
       <Card className="border-2 border-amber-200 bg-amber-50">
         <div className="p-6 text-center">
           <AlertTriangle className="w-12 h-12 text-amber-600 mx-auto mb-3" />
-          <h3 className="font-semibold text-amber-900 mb-2">No Week 1 Mentorship Tactics Found</h3>
+          <h3 className="font-semibold text-amber-900 mb-2">No Lesson 1 Mentorship Tactics Found</h3>
           <p className="text-sm text-amber-700 mb-4">
-            Week 1 mentorship tactics (M001-M013) are not currently available in your roadmap.
+            Lesson 1 mentorship tactics (M001-M013) are not currently available in your roadmap.
             This could be due to filtering or database issues.
           </p>
           <Button
@@ -144,8 +144,8 @@ export function Week1Checklist({
           <div className="flex items-center gap-2">
             <GraduationCap className="w-6 h-6" />
             <div>
-              <h3 className="font-semibold text-lg">Nette's Week 1 Mentorship</h3>
-              <p className="text-sm text-purple-100">Foundations & Compliance</p>
+              <h3 className="font-semibold text-lg">Nette's Mentorship - Lesson 1</h3>
+              <p className="text-sm text-purple-100">Mastering the Unlicensed Group Home Business Model for Success</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -308,7 +308,7 @@ export function Week1Checklist({
             <div className="mt-4 p-3 bg-blue-100 rounded-lg border-2 border-blue-300">
               <p className="text-sm text-blue-900">
                 <strong>💪 Keep going!</strong> You've completed {completedTactics} of {totalTactics} tactics.{' '}
-                {totalTactics - completedTactics} more to master Week 1.
+                {totalTactics - completedTactics} more to master Lesson 1.
               </p>
             </div>
           )}
@@ -316,7 +316,7 @@ export function Week1Checklist({
           {completedTactics === totalTactics && (
             <div className="mt-4 p-3 bg-green-100 rounded-lg border-2 border-green-300">
               <p className="text-sm text-green-900">
-                <strong>🎉 Week 1 Complete!</strong> You've mastered the foundations. Ready for Week 2?
+                <strong>🎉 Lesson 1 Complete!</strong> You've mastered the foundations. Ready for Lesson 2?
               </p>
             </div>
           )}

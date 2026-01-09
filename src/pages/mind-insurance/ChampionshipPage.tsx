@@ -18,6 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
+import { getTodayInTimezone, formatDateInTimezone } from '@/utils/timezoneUtils';
+import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
 
 interface ChampionshipStats {
   currentStreak: number;
@@ -86,18 +88,18 @@ const DailyCommitmentGrid = ({
   completedDays: boolean[];
 }) => {
   return (
-    <Card className="p-6 bg-mi-navy-light border-mi-cyan/20">
+    <Card className="p-4 sm:p-6 bg-mi-navy-light border-mi-cyan/20">
       <div className="flex items-center gap-3 mb-4">
-        <Calendar className="w-6 h-6 text-mi-cyan" />
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white">Daily Commitment Tracker</h3>
-          <p className="text-sm text-gray-400">
+        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-mi-cyan flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base sm:text-lg font-semibold text-white">Daily Commitment Tracker</h3>
+          <p className="text-xs sm:text-sm text-gray-400">
             {currentDay} of 30 Commitments Met
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-6 sm:grid-cols-10 gap-2">
+      <div className="grid grid-cols-5 xs:grid-cols-6 sm:grid-cols-10 gap-1.5 sm:gap-2">
         {Array.from({ length: 30 }, (_, i) => {
           const dayNum = i + 1;
           const isCompleted = completedDays[i];
@@ -108,8 +110,8 @@ const DailyCommitmentGrid = ({
             <div
               key={dayNum}
               className={`
-                aspect-square rounded-lg flex items-center justify-center
-                border-2 transition-all text-sm font-medium
+                aspect-square rounded-md sm:rounded-lg flex items-center justify-center
+                border sm:border-2 transition-all text-xs sm:text-sm font-medium
                 ${isCompleted ? 'bg-green-500 border-green-500 text-white' :
                   isCurrent ? 'bg-mi-cyan border-mi-cyan text-white animate-pulse' :
                   isFuture ? 'bg-mi-navy border-mi-navy-light text-gray-500' :
@@ -117,7 +119,7 @@ const DailyCommitmentGrid = ({
               `}
             >
               {isCompleted ? (
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
               ) : (
                 dayNum
               )}
@@ -169,8 +171,9 @@ export default function ChampionshipPage() {
 
       if (profileError) throw profileError;
 
-      // Fetch today's practices
-      const today = new Date().toISOString().split('T')[0];
+      // Fetch today's practices using user's timezone
+      const userTimezone = profileData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const today = getTodayInTimezone(userTimezone);
       const { data: todayPractices, error: todayError } = await supabase
         .from('daily_practices')
         .select('*')
@@ -248,7 +251,7 @@ export default function ChampionshipPage() {
       const practicesByDay = new Map<string, boolean>();
 
       allPractices?.forEach(practice => {
-        const practiceDate = new Date(practice.created_at).toISOString().split('T')[0];
+        const practiceDate = formatDateInTimezone(new Date(practice.created_at), userTimezone);
         if (!practicesByDay.has(practiceDate) || practice.completed) {
           practicesByDay.set(practiceDate, practice.completed);
         }
@@ -257,7 +260,7 @@ export default function ChampionshipPage() {
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(challengeStartDate);
         checkDate.setDate(checkDate.getDate() + i);
-        const dateStr = checkDate.toISOString().split('T')[0];
+        const dateStr = formatDateInTimezone(checkDate, userTimezone);
         completedDaysArray[i] = practicesByDay.get(dateStr) || false;
       }
 
@@ -331,21 +334,22 @@ export default function ChampionshipPage() {
   );
 
   return (
+    <MindInsuranceErrorBoundary fallbackTitle="Error loading Championship" showHomeButton>
     <div className="min-h-screen bg-mi-navy p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-              <Trophy className="w-8 h-8 text-mi-gold" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+              <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-mi-gold flex-shrink-0" />
               Championship
             </h1>
-            <p className="text-gray-400 mt-1">Track your 30-day journey to mastery</p>
+            <p className="text-sm sm:text-base text-gray-400 mt-1">Track your 30-day journey to mastery</p>
           </div>
           <Button
             onClick={() => navigate('/mind-insurance')}
             variant="outline"
-            className="border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10"
+            className="bg-mi-navy border-mi-cyan/50 text-mi-cyan hover:bg-mi-cyan/10 hover:border-mi-cyan w-full sm:w-auto"
           >
             Back to Hub
           </Button>
@@ -380,21 +384,21 @@ export default function ChampionshipPage() {
         </div>
 
         {/* Today's Practice Card */}
-        <Card className={`p-6 border-2 bg-mi-navy-light ${
+        <Card className={`p-4 sm:p-6 border-2 bg-mi-navy-light ${
           stats.todayCompleted ? 'border-green-500' : 'border-mi-cyan/50'
         }`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
             <div className="flex items-center gap-3">
               {stats.todayCompleted ? (
-                <CheckCircle2 className="w-8 h-8 text-green-500" />
+                <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
               ) : (
-                <Clock className="w-8 h-8 text-mi-cyan animate-pulse" />
+                <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan animate-pulse flex-shrink-0" />
               )}
               <div>
-                <h3 className="text-xl font-semibold text-white">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">
                   {stats.todayCompleted ? 'Day Complete!' : "Today's Practice"}
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-400">
                   {stats.todayCompleted
                     ? 'Great job! You earned all 20 points today.'
                     : 'Complete your daily practices to maintain your streak'}
@@ -545,5 +549,6 @@ export default function ChampionshipPage() {
         </Card>
       </div>
     </div>
+    </MindInsuranceErrorBoundary>
   );
 }

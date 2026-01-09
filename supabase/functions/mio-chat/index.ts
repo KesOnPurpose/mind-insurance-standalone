@@ -12,6 +12,7 @@ import { generateEmbedding, cosineSimilarity } from '../_shared/embedding-servic
 import { hybridSearch, formatContextChunks, type AgentType } from '../_shared/rag-service.ts';
 import { getCache, CacheKeys, CacheTTL, hashMessage } from '../_shared/cache-service.ts';
 import { getUserContext, formatUserContextForPrompt } from '../_shared/user-context-service.ts';
+import { isAskingAboutMIODifference, MIO_VS_CHATGPT_RESPONSE } from '../_shared/mio-prompts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1161,8 +1162,47 @@ serve(async (req) => {
     );
 
     const { user_id, message, current_agent = 'nette', conversation_id } = await req.json();
-    
+
     console.log(`[Chat] User: ${user_id}, Agent: ${current_agent}, ConversationID: ${conversation_id || 'new'}`);
+
+    // SPECIAL CASE: "ChatGPT VS MIO?" curated response
+    // Returns the pre-written response explaining MIO's unique capabilities
+    if (current_agent === 'mio' && isAskingAboutMIODifference(message)) {
+      console.log('[Chat] MIO Difference question detected - returning curated response');
+
+      // Store conversation for history
+      await supabaseClient.from('agent_conversations').insert({
+        user_id,
+        agent_type: current_agent,
+        session_id: conversation_id || crypto.randomUUID(),
+        user_message: message,
+        agent_response: MIO_VS_CHATGPT_RESPONSE,
+        rag_context_used: false,
+        cache_hit: false,
+        handoff_suggested: false,
+        conversation_status: 'active',
+        conversation_state_detected: 'ANSWERED',
+        state_context: 'Curated MIO difference response'
+      });
+
+      // Return curated response as SSE stream format
+      const encoder = new TextEncoder();
+      const curatedStream = new ReadableStream({
+        start(controller) {
+          // Send the curated response as a single SSE event
+          const sseChunk = `data: ${JSON.stringify({
+            choices: [{ delta: { content: MIO_VS_CHATGPT_RESPONSE } }]
+          })}\n\n`;
+          controller.enqueue(encoder.encode(sseChunk));
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        }
+      });
+
+      return new Response(curatedStream, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' }
+      });
+    }
 
     // Generate cache key and check cache first
     const msgHash = hashMessage(message);

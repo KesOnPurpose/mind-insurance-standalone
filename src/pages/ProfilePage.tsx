@@ -1,108 +1,116 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   User,
-  Building2,
-  MapPin,
+  Shield,
+  Trophy,
   Target,
-  Home,
-  DollarSign,
-  FileCheck,
+  Flame,
+  Calendar,
+  Brain,
+  ArrowLeft,
   Loader2,
-  CheckCircle,
-  Save,
-  Lightbulb,
-  Edit3
+  ChevronRight,
+  Award,
+  Zap,
+  Clock,
+  Mail,
+  Settings,
+  Archive
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
+import { useIdentityCollisionStatus } from '@/hooks/useIdentityCollisionStatus';
+import { useMindInsuranceProgress } from '@/hooks/useMindInsuranceProgress';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
-interface ProfileData {
-  // Strategy fields
-  ownership_model: string;
-  target_state: string;
-  immediate_priority: string;
-  property_status: string;
-  // Business profile fields
-  business_name: string;
-  entity_type: string;
-  bed_count: number | null;
-  funding_source: string;
-  license_status: string;
-  service_model: string;
-  monthly_revenue_target: number | null;
-  startup_capital_actual: number | null;
-  // Computed
-  profile_completeness: number;
-}
+// Pattern display helpers
+const getPatternDisplayName = (pattern: string): string => {
+  const patterns: Record<string, string> = {
+    'past_prison': 'Past Prison',
+    'success_sabotage': 'Success Sabotage',
+    'compass_crisis': 'Compass Crisis'
+  };
+  return patterns[pattern] || pattern;
+};
+
+const getPatternIcon = (pattern: string): string => {
+  const icons: Record<string, string> = {
+    'past_prison': '⛓️',
+    'success_sabotage': '🎯',
+    'compass_crisis': '🧭'
+  };
+  return icons[pattern] || '🧠';
+};
+
+const getPatternDescription = (pattern: string): string => {
+  const descriptions: Record<string, string> = {
+    'past_prison': 'Your past experiences may be holding you back from your full potential. The PROTECT practices will help you break free.',
+    'success_sabotage': 'You may unconsciously undermine your own success when things are going well. PROTECT helps you recognize and overcome this pattern.',
+    'compass_crisis': 'You may struggle with direction and purpose, making it hard to stay committed. PROTECT helps you find your true north.'
+  };
+  return descriptions[pattern] || 'Your unique pattern has been identified through the Identity Collision Assessment.';
+};
+
+const getChampionshipColor = (level: string): string => {
+  const colors: Record<string, string> = {
+    'bronze': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    'silver': 'bg-gray-400/20 text-gray-300 border-gray-400/30',
+    'gold': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    'platinum': 'bg-cyan-400/20 text-cyan-300 border-cyan-400/30'
+  };
+  return colors[level.toLowerCase()] || 'bg-mi-cyan/20 text-mi-cyan border-mi-cyan/30';
+};
+
+// Intro category display helpers
+const getCategoryDisplayName = (category: string): string => {
+  const categories: Record<string, string> = {
+    'career': 'Career',
+    'relationships': 'Relationships',
+    'health': 'Health',
+    'wealth': 'Wealth',
+    'purpose': 'Purpose'
+  };
+  return categories[category] || category;
+};
+
+const getCategoryIcon = (category: string): string => {
+  const icons: Record<string, string> = {
+    'career': '💼',
+    'relationships': '❤️',
+    'health': '💚',
+    'wealth': '💰',
+    'purpose': '🧭'
+  };
+  return icons[category] || '🎯';
+};
 
 export function ProfilePage() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const { assessment } = usePersonalizedTactics();
+  const { data: collisionStatus, isLoading: isLoadingCollision } = useIdentityCollisionStatus(user?.id);
+  const { data: progress, isLoading: isLoadingProgress } = useMindInsuranceProgress(user?.id);
+  const [memberSince, setMemberSince] = useState<string | null>(null);
+  const [timezone, setTimezone] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [editMode, setEditMode] = useState(false);
 
-  const [profileData, setProfileData] = useState<ProfileData>({
-    ownership_model: '',
-    target_state: '',
-    immediate_priority: '',
-    property_status: '',
-    business_name: '',
-    entity_type: '',
-    bed_count: null,
-    funding_source: '',
-    license_status: '',
-    service_model: '',
-    monthly_revenue_target: null,
-    startup_capital_actual: null,
-    profile_completeness: 0,
-  });
-
-  const [originalData, setOriginalData] = useState<ProfileData>(profileData);
-
-  // Fetch profile data
+  // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
 
-      const { data, error } = await supabase
-        .from('user_onboarding')
-        .select('*')
-        .eq('user_id', user.id)
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('created_at, timezone')
+        .eq('id', user.id)
         .single();
 
-      if (data && !error) {
-        const profile: ProfileData = {
-          ownership_model: data.ownership_model || '',
-          target_state: data.target_state || '',
-          immediate_priority: data.immediate_priority || '',
-          property_status: data.property_status || '',
-          business_name: data.business_name || '',
-          entity_type: data.entity_type || '',
-          bed_count: data.bed_count || null,
-          funding_source: data.funding_source || '',
-          license_status: data.license_status || '',
-          service_model: data.service_model || '',
-          monthly_revenue_target: data.monthly_revenue_target || null,
-          startup_capital_actual: data.startup_capital_actual || null,
-          profile_completeness: data.profile_completeness || 0,
-        };
-        setProfileData(profile);
-        setOriginalData(profile);
+      if (data) {
+        setMemberSince(data.created_at);
+        setTimezone(data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       }
       setIsLoading(false);
     };
@@ -110,617 +118,332 @@ export function ProfilePage() {
     fetchProfile();
   }, [user?.id]);
 
-  // Check for changes
-  useEffect(() => {
-    const changed = Object.keys(profileData).some(
-      key => profileData[key as keyof ProfileData] !== originalData[key as keyof ProfileData]
-    );
-    setHasChanges(changed);
-  }, [profileData, originalData]);
-
-  // Calculate profile completeness locally
-  const calculateCompleteness = (data: ProfileData): number => {
-    const fields = [
-      data.target_state,
-      data.business_name,
-      data.entity_type,
-      data.bed_count,
-      data.property_status,
-      data.funding_source,
-      data.license_status,
-      data.service_model,
-      data.monthly_revenue_target,
-    ];
-    const filled = fields.filter(f => f !== null && f !== '' && f !== undefined).length;
-    return Math.round((filled / 9) * 100);
-  };
-
-  const handleSave = async () => {
-    if (!user?.id) return;
-
-    setIsSaving(true);
-    try {
-      const completeness = calculateCompleteness(profileData);
-
-      const { error } = await supabase
-        .from('user_onboarding')
-        .update({
-          ownership_model: profileData.ownership_model || null,
-          target_state: profileData.target_state || null,
-          immediate_priority: profileData.immediate_priority || null,
-          property_status: profileData.property_status || null,
-          business_name: profileData.business_name || null,
-          entity_type: profileData.entity_type || null,
-          bed_count: profileData.bed_count,
-          funding_source: profileData.funding_source || null,
-          license_status: profileData.license_status || null,
-          service_model: profileData.service_model || null,
-          monthly_revenue_target: profileData.monthly_revenue_target,
-          startup_capital_actual: profileData.startup_capital_actual,
-          profile_completeness: completeness,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setProfileData(prev => ({ ...prev, profile_completeness: completeness }));
-      setOriginalData({ ...profileData, profile_completeness: completeness });
-      setEditMode(false);
-      toast({
-        title: 'Profile Saved',
-        description: `Your profile is now ${completeness}% complete!`,
-      });
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save profile. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleReset = () => {
-    setProfileData(originalData);
-    setEditMode(false);
-  };
-
-  if (isLoading) {
+  if (isLoading || isLoadingCollision || isLoadingProgress) {
     return (
       <SidebarLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex items-center justify-center min-h-[400px] bg-mi-navy">
+          <Loader2 className="w-8 h-8 animate-spin text-mi-cyan" />
         </div>
       </SidebarLayout>
     );
   }
 
-  const currentCompleteness = calculateCompleteness(profileData);
+  // Extract data from hooks
+  const primaryPattern = collisionStatus?.primaryPattern || null;
+  const introSelections = collisionStatus?.introSelections;
+  const hasIntroSelections = introSelections &&
+    (introSelections.categories.length > 0 || introSelections.patterns.length > 0);
+
+  const currentStreak = progress?.currentStreak || 0;
+  const longestStreak = progress?.longestStreak || 0;
+  const weeklyPractices = progress?.weeklyPractices || 0;
+  const weeklyGoal = progress?.weeklyGoal || 7;
+  const patternAwareness = progress?.patternAwareness || 0;
+  const totalPoints = progress?.totalPoints || 0;
+  const championshipLevel = progress?.championshipLevel || 'Bronze';
+  const recentWin = progress?.recentWin || null;
+
+  const weeklyProgress = Math.min((weeklyPractices / weeklyGoal) * 100, 100);
 
   return (
     <SidebarLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 p-6 bg-mi-navy min-h-screen">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
-              <User className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+            <div className="flex items-center gap-2 mb-2">
+              <Link to="/mind-insurance">
+                <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-mi-navy-light">
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back to Hub
+                </Button>
+              </Link>
+            </div>
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
+              <User className="w-8 h-8 text-mi-cyan" />
               My Profile
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Manage your business profile to get personalized recommendations
+            <p className="text-white/60 mt-1">
+              Your Mind Insurance identity and practice journey
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {editMode ? (
+        </div>
+
+        {/* Identity Pattern Section */}
+        <Card className="mi-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Brain className="h-5 w-5 text-mi-cyan" />
+              Identity Pattern
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Your primary collision pattern from the Identity Collision Assessment
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {primaryPattern ? (
               <>
-                <Button variant="outline" size="sm" onClick={handleReset}>
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={handleSave} disabled={!hasChanges || isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" onClick={() => setEditMode(true)}>
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-            )}
-          </div>
-        </div>
-
-      {/* Profile Completeness Card */}
-      <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-primary" />
-            Profile Completeness
-          </h3>
-          <Badge variant={currentCompleteness >= 80 ? 'default' : currentCompleteness >= 50 ? 'secondary' : 'outline'}>
-            {currentCompleteness}% Complete
-          </Badge>
-        </div>
-        <Progress value={currentCompleteness} className="h-3 mb-3" />
-        <p className="text-sm text-muted-foreground">
-          {currentCompleteness < 50
-            ? 'Complete your profile to unlock personalized recommendations'
-            : currentCompleteness < 80
-            ? 'Great progress! A few more fields will maximize personalization'
-            : 'Excellent! Your profile is well-filled for maximum personalization'}
-        </p>
-      </Card>
-
-      <Accordion type="multiple" defaultValue={['business']} className="space-y-3">
-        {/* Business Profile Section */}
-        <AccordionItem value="business" className="border rounded-lg bg-card">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Business Profile</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            {!editMode && (
-              <p className="text-xs text-muted-foreground mb-4">(Click "Edit Profile" to make changes)</p>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              {/* Business Name */}
-              <div className="space-y-2">
-                <Label htmlFor="business_name" className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
-                  Business Name
-                </Label>
-                {editMode ? (
-                  <Input
-                    id="business_name"
-                    value={profileData.business_name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, business_name: e.target.value }))}
-                    placeholder="Enter your business name"
-                  />
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.business_name || <span className="text-muted-foreground italic">Not set</span>}
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl bg-mi-cyan/20 flex items-center justify-center text-3xl">
+                    {getPatternIcon(primaryPattern)}
                   </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Your group home business name (LLC, DBA, etc.)
-                </p>
-              </div>
-
-              {/* Entity Type */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <FileCheck className="w-4 h-4" />
-                  Entity Type
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.entity_type}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, entity_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select entity type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="llc">LLC</SelectItem>
-                      <SelectItem value="s-corp">S-Corporation</SelectItem>
-                      <SelectItem value="c-corp">C-Corporation</SelectItem>
-                      <SelectItem value="sole-proprietor">Sole Proprietorship</SelectItem>
-                      <SelectItem value="partnership">Partnership</SelectItem>
-                      <SelectItem value="nonprofit">Nonprofit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.entity_type ? (
-                      <Badge variant="outline" className="capitalize">{profileData.entity_type.replace(/-/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Bed Count */}
-              <div className="space-y-2">
-                <Label htmlFor="bed_count" className="flex items-center gap-2">
-                  <Home className="w-4 h-4" />
-                  Planned Bed Count
-                </Label>
-                {editMode ? (
-                  <Input
-                    id="bed_count"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={profileData.bed_count || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, bed_count: e.target.value ? parseInt(e.target.value) : null }))}
-                    placeholder="Number of beds"
-                  />
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.bed_count ? `${profileData.bed_count} beds` : <span className="text-muted-foreground italic">Not set</span>}
-                  </div>
-                )}
-              </div>
-
-              {/* Property Status */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Home className="w-4 h-4" />
-                  Property Status
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.property_status}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, property_status: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select property status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="not-started">Haven't started looking</SelectItem>
-                      <SelectItem value="researching">Researching areas</SelectItem>
-                      <SelectItem value="searching">Actively searching</SelectItem>
-                      <SelectItem value="offer-pending">Made an offer</SelectItem>
-                      <SelectItem value="under-contract">Under contract</SelectItem>
-                      <SelectItem value="owned">I own a property</SelectItem>
-                      <SelectItem value="leasing">I'm leasing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.property_status ? (
-                      <Badge variant="secondary" className="capitalize">{profileData.property_status.replace(/-/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Funding Source */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Funding Source
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.funding_source}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, funding_source: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select funding source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal-savings">Personal Savings</SelectItem>
-                      <SelectItem value="bank-loan">Bank Loan</SelectItem>
-                      <SelectItem value="sba-loan">SBA Loan</SelectItem>
-                      <SelectItem value="private-investor">Private Investor</SelectItem>
-                      <SelectItem value="partnership">Partnership</SelectItem>
-                      <SelectItem value="creative-financing">Creative Financing</SelectItem>
-                      <SelectItem value="combination">Combination</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.funding_source ? (
-                      <Badge variant="outline" className="capitalize">{profileData.funding_source.replace(/-/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* License Status */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <FileCheck className="w-4 h-4" />
-                  License Status
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.license_status}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, license_status: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select license status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="not-started">Not Started</SelectItem>
-                      <SelectItem value="researching">Researching Requirements</SelectItem>
-                      <SelectItem value="preparing">Preparing Application</SelectItem>
-                      <SelectItem value="submitted">Application Submitted</SelectItem>
-                      <SelectItem value="under-review">Under Review</SelectItem>
-                      <SelectItem value="licensed">Licensed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.license_status ? (
-                      <Badge variant="outline" className="capitalize">{profileData.license_status.replace(/-/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Service Model */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Service Model
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.service_model}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, service_model: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select service model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="owner-operator">Owner-Operator</SelectItem>
-                      <SelectItem value="semi-absentee">Semi-Absentee</SelectItem>
-                      <SelectItem value="absentee">Absentee Owner</SelectItem>
-                      <SelectItem value="management-company">With Management Company</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.service_model ? (
-                      <Badge variant="outline" className="capitalize">{profileData.service_model.replace(/-/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Monthly Revenue Target */}
-              <div className="space-y-2">
-                <Label htmlFor="monthly_revenue" className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Monthly Revenue Target
-                </Label>
-                {editMode ? (
-                  <Input
-                    id="monthly_revenue"
-                    type="number"
-                    min={0}
-                    step={1000}
-                    value={profileData.monthly_revenue_target || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, monthly_revenue_target: e.target.value ? parseInt(e.target.value) : null }))}
-                    placeholder="Target monthly revenue"
-                  />
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.monthly_revenue_target ? (
-                      <span className="text-emerald-600 font-semibold">${profileData.monthly_revenue_target.toLocaleString()}/mo</span>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {!editMode && (
-              <Card className="mt-4 p-3 bg-blue-50 border-blue-200">
-                <div className="flex items-start gap-3">
-                  <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-blue-900 text-sm">Pro Tip</p>
-                    <p className="text-xs text-blue-700">
-                      Complete relevant tactics in your roadmap to fill these fields, or edit directly here.
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-xl font-bold text-white">
+                        {getPatternDisplayName(primaryPattern)}
+                      </h3>
+                      <Badge className="bg-mi-cyan/20 text-mi-cyan border-mi-cyan/30">
+                        Primary
+                      </Badge>
+                    </div>
+                    <p className="text-white/60 text-sm">
+                      {getPatternDescription(primaryPattern)}
                     </p>
                   </div>
                 </div>
-              </Card>
-            )}
-          </AccordionContent>
-        </AccordionItem>
 
-        {/* Strategy & Goals Section */}
-        <AccordionItem value="strategy" className="border rounded-lg bg-card">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Strategy & Goals</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              {/* Ownership Model */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
-                  Ownership Model
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.ownership_model}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, ownership_model: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select ownership model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rental_arbitrage">Rental Arbitrage</SelectItem>
-                      <SelectItem value="ownership">Property Ownership</SelectItem>
-                      <SelectItem value="creative_financing">Creative Financing</SelectItem>
-                      <SelectItem value="house_hack">House Hacking</SelectItem>
-                      <SelectItem value="hybrid">Hybrid Approach</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.ownership_model ? (
-                      <Badge className="capitalize">{profileData.ownership_model.replace(/_/g, ' ')}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
+                {/* Intro Selections - Areas of Focus & Self-Identified Patterns */}
+                {hasIntroSelections && (
+                  <div className="pt-4 border-t border-mi-cyan/10 space-y-4">
+                    {/* Focus Areas */}
+                    {introSelections.categories.length > 0 && (
+                      <div>
+                        <p className="text-xs text-white/40 mb-2">Areas of Focus</p>
+                        <div className="flex flex-wrap gap-2">
+                          {introSelections.categories.map((category: string) => (
+                            <Badge
+                              key={category}
+                              variant="outline"
+                              className="gap-1.5 border-mi-cyan/20 text-white/70"
+                            >
+                              <span>{getCategoryIcon(category)}</span>
+                              {getCategoryDisplayName(category)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Self-Identified Patterns */}
+                    {introSelections.patterns.length > 0 && (
+                      <div>
+                        <p className="text-xs text-white/40 mb-2">Self-Identified Patterns</p>
+                        <div className="flex flex-wrap gap-2">
+                          {introSelections.patterns.map((pattern: string) => (
+                            <Badge
+                              key={pattern}
+                              variant="outline"
+                              className="gap-1.5 border-mi-gold/30 text-mi-gold/80"
+                            >
+                              <span>{getPatternIcon(pattern)}</span>
+                              {getPatternDisplayName(pattern)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
-              </div>
-
-              {/* Target State */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Target State
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.target_state}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, target_state: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select target state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {['CA', 'TX', 'FL', 'NY', 'GA', 'AZ', 'NC', 'PA', 'OH', 'OTHER'].map(state => (
-                        <SelectItem key={state} value={state}>
-                          {state === 'OTHER' ? 'Other State' : state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.target_state ? (
-                      <Badge variant="secondary">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {profileData.target_state}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Immediate Priority */}
-              <div className="space-y-2 md:col-span-2">
-                <Label className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Immediate Priority
-                </Label>
-                {editMode ? (
-                  <Select
-                    value={profileData.immediate_priority}
-                    onValueChange={(value) => setProfileData(prev => ({ ...prev, immediate_priority: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your focus" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="property_acquisition">Finding & Acquiring Property</SelectItem>
-                      <SelectItem value="operations">Operating My Property</SelectItem>
-                      <SelectItem value="comprehensive">Learning All Strategies</SelectItem>
-                      <SelectItem value="scaling">Scaling My Operation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="p-2 bg-muted/50 rounded-md min-h-[40px] flex items-center">
-                    {profileData.immediate_priority ? (
-                      <Badge variant="outline" className="capitalize">
-                        {profileData.immediate_priority.replace(/_/g, ' ')}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground italic">Not set</span>
-                    )}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  This determines how tactics are prioritized in your roadmap
-                </p>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Assessment Results Section */}
-        <AccordionItem value="assessment" className="border rounded-lg bg-card">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex items-center gap-2">
-              <FileCheck className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Assessment Results</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            {assessment ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Overall Score</span>
-                    <Badge variant="default">{assessment.overall_score}%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Readiness Level</span>
-                    <Badge variant="outline" className="capitalize">
-                      {assessment.readiness_level?.replace(/_/g, ' ')}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Financial Score</span>
-                    <span className="font-medium">{assessment.financial_score}%</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Market Score</span>
-                    <span className="font-medium">{assessment.market_score}%</span>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Operational Score</span>
-                    <span className="font-medium">{assessment.operational_score}%</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Mindset Score</span>
-                    <span className="font-medium">{assessment.mindset_score}%</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Capital Available</span>
-                    <span className="font-medium">{assessment.capital_available}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm font-medium">Timeline</span>
-                    <Badge variant="secondary" className="capitalize">
-                      {assessment.timeline?.replace(/-/g, ' ')}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+              </>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No assessment data available</p>
-                <Button asChild variant="link" className="mt-2">
-                  <Link to="/assessment">Take Assessment</Link>
-                </Button>
+              <div className="text-center py-6">
+                <Shield className="h-12 w-12 text-mi-cyan/30 mx-auto mb-3" />
+                <p className="text-white/60">No pattern detected yet</p>
+                <p className="text-white/40 text-sm mt-2">Complete the assessment in Coverage Center to see your pattern</p>
               </div>
             )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Practice Journey Section */}
+        <Card className="mi-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Trophy className="h-5 w-5 text-mi-gold" />
+              Practice Journey
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Track your Mind Insurance practice progress
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Championship Level */}
+            <div className="flex items-center justify-between p-4 rounded-lg bg-mi-navy border border-mi-cyan/20">
+              <div className="flex items-center gap-3">
+                <Award className="h-6 w-6 text-mi-gold" />
+                <div>
+                  <p className="text-sm text-white/60">Championship Level</p>
+                  <p className="text-lg font-bold text-white">{championshipLevel}</p>
+                </div>
+              </div>
+              <Badge className={`text-sm px-3 py-1 ${getChampionshipColor(championshipLevel)}`}>
+                {totalPoints.toLocaleString()} pts
+              </Badge>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Current Streak */}
+              <div className="p-4 rounded-lg bg-mi-navy border border-mi-cyan/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Flame className="h-4 w-4 text-orange-400" />
+                  <span className="text-xs text-white/60">Current Streak</span>
+                </div>
+                <p className="text-2xl font-bold text-white">{currentStreak}</p>
+                <p className="text-xs text-white/40">days</p>
+              </div>
+
+              {/* Longest Streak */}
+              <div className="p-4 rounded-lg bg-mi-navy border border-mi-cyan/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-mi-gold" />
+                  <span className="text-xs text-white/60">Longest Streak</span>
+                </div>
+                <p className="text-2xl font-bold text-white">{longestStreak}</p>
+                <p className="text-xs text-white/40">days</p>
+              </div>
+
+              {/* Weekly Practices */}
+              <div className="p-4 rounded-lg bg-mi-navy border border-mi-cyan/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-mi-cyan" />
+                  <span className="text-xs text-white/60">This Week</span>
+                </div>
+                <p className="text-2xl font-bold text-white">{weeklyPractices}/{weeklyGoal}</p>
+                <Progress value={weeklyProgress} className="h-1 mt-2" />
+              </div>
+
+              {/* Pattern Awareness */}
+              <div className="p-4 rounded-lg bg-mi-navy border border-mi-cyan/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="h-4 w-4 text-purple-400" />
+                  <span className="text-xs text-white/60">Pattern Awareness</span>
+                </div>
+                <p className="text-2xl font-bold text-white">{patternAwareness}%</p>
+                <Progress value={patternAwareness} className="h-1 mt-2" />
+              </div>
+            </div>
+
+            {/* Recent Win */}
+            {recentWin && (
+              <div className="p-4 rounded-lg bg-mi-gold/10 border border-mi-gold/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy className="h-4 w-4 text-mi-gold" />
+                  <span className="text-sm font-medium text-mi-gold">Recent Victory</span>
+                </div>
+                <p className="text-white/80 text-sm">{recentWin}</p>
+              </div>
+            )}
+
+            {/* View Championship Link */}
+            <Link to="/mind-insurance/championship">
+              <Button
+                variant="outline"
+                className="w-full bg-transparent border-mi-cyan/30 text-mi-cyan hover:bg-mi-cyan/10 hover:text-mi-cyan"
+              >
+                View Full Championship Stats
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Account Information Section */}
+        <Card className="mi-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <User className="h-5 w-5 text-mi-cyan" />
+              Account Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Email */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-mi-navy border border-mi-cyan/20">
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-white/40" />
+                <div>
+                  <p className="text-xs text-white/40">Email</p>
+                  <p className="text-white">{user?.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Member Since */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-mi-navy border border-mi-cyan/20">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-white/40" />
+                <div>
+                  <p className="text-xs text-white/40">Member Since</p>
+                  <p className="text-white">
+                    {memberSince
+                      ? new Date(memberSince).toLocaleDateString('en-US', {
+                          month: 'long',
+                          year: 'numeric'
+                        })
+                      : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Timezone */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-mi-navy border border-mi-cyan/20">
+              <div className="flex items-center gap-3">
+                <Clock className="h-4 w-4 text-white/40" />
+                <div>
+                  <p className="text-xs text-white/40">Timezone</p>
+                  <p className="text-white">{timezone.replace(/_/g, ' ')}</p>
+                </div>
+              </div>
+              <Link to="/settings">
+                <Button variant="ghost" size="sm" className="text-mi-cyan hover:bg-mi-cyan/10">
+                  Change
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card className="mi-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Zap className="h-5 w-5 text-mi-cyan" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/mind-insurance/coverage">
+                <Button
+                  variant="outline"
+                  className="w-full h-auto py-4 flex-col gap-2 bg-mi-navy border-mi-cyan/30 text-white hover:bg-mi-cyan/10 hover:text-white"
+                >
+                  <Shield className="h-5 w-5 text-mi-cyan" />
+                  <span className="text-sm">Coverage Center</span>
+                </Button>
+              </Link>
+              <Link to="/mind-insurance/vault">
+                <Button
+                  variant="outline"
+                  className="w-full h-auto py-4 flex-col gap-2 bg-mi-navy border-mi-cyan/30 text-white hover:bg-mi-cyan/10 hover:text-white"
+                >
+                  <Archive className="h-5 w-5 text-mi-cyan" />
+                  <span className="text-sm">My Evidence</span>
+                </Button>
+              </Link>
+              <Link to="/settings">
+                <Button
+                  variant="outline"
+                  className="w-full h-auto py-4 flex-col gap-2 bg-mi-navy border-mi-cyan/30 text-white hover:bg-mi-cyan/10 hover:text-white"
+                >
+                  <Settings className="h-5 w-5 text-white/60" />
+                  <span className="text-sm">Settings</span>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </SidebarLayout>
   );
