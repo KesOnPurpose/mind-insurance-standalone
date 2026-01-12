@@ -333,18 +333,28 @@ function ChatPageContent() {
       console.log('[Chat] User ID:', user.id);
       console.log('[Chat] Agent:', selectedCoach);
 
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          message: messageText,
-          agent: selectedCoach,
-          conversation_id: currentConversationId,
-        }),
-      });
+      const payload = {
+        user_id: user.id,
+        message: messageText,
+        agent: selectedCoach,
+        conversation_id: currentConversationId,
+      };
+
+      console.log('[Chat] Sending payload:', JSON.stringify(payload, null, 2));
+
+      let response;
+      try {
+        response = await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (fetchError) {
+        console.error('[Chat] ❌ Fetch failed:', fetchError);
+        throw fetchError;
+      }
 
       console.log('[Chat] Response status:', response.status);
 
@@ -412,7 +422,10 @@ function ChatPageContent() {
 
       setIsTyping(false);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('[Chat] ❌ CAUGHT ERROR in handleSend:', error);
+      console.error('[Chat] Error type:', error?.constructor?.name);
+      console.error('[Chat] Error message:', error instanceof Error ? error.message : String(error));
+      console.error('[Chat] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
 
       // Track error for analytics
       const errorObj = error instanceof Error ? error : new Error(String(error));
