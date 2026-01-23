@@ -1,10 +1,9 @@
 // ============================================================================
 // KNOWLEDGE INGESTION SERVICE
 // ============================================================================
-// Service for managing knowledge base operations across all three AI agents:
-// - Nette (GroupHome) → nette_knowledge_chunks (updated 2025-12-09)
-// - MIO (Mind Insurance) → mio_knowledge_chunks
-// - ME (Money Evolution) → me_knowledge_chunks
+// Service for managing knowledge base operations for Nette AI (GroupHome)
+// GROUPHOME STANDALONE: Only Nette AI (MIO intelligence built-in via N8n workflow)
+// Database table: nette_knowledge_chunks
 // All tables use consistent schema with chunk_text, category, tokens_approx
 // ============================================================================
 
@@ -529,9 +528,10 @@ export async function getAgentKnowledgeSummary(agent: AgentType): Promise<AgentK
 
 /**
  * Get all agent summaries
+ * GROUPHOME STANDALONE: Only returns Nette summary
  */
 export async function getAllAgentSummaries(): Promise<AgentKnowledgeSummary[]> {
-  const agents: AgentType[] = ['nette', 'mio', 'me'];
+  const agents: AgentType[] = ['nette'];
   const summaries = await Promise.all(agents.map(getAgentKnowledgeSummary));
   return summaries;
 }
@@ -567,13 +567,10 @@ export async function insertKnowledgeChunk(
     metadata: data.metadata || {},
   };
 
-  // Add agent-specific fields
-  if (agent === 'nette') {
-    insertData.uploaded_by = userId;
-    insertData.upload_metadata = data.metadata || {};
-  } else {
-    insertData.created_by = userId;
-  }
+  // Add Nette-specific fields
+  // GROUPHOME STANDALONE: Only Nette agent supported
+  insertData.uploaded_by = userId;
+  insertData.upload_metadata = data.metadata || {};
 
   const { data: chunk, error } = await supabase
     .from(tableName)
@@ -621,12 +618,10 @@ export async function bulkInsertKnowledgeChunks(
       metadata: chunk.metadata || {},
     };
 
-    if (agent === 'nette') {
-      data.uploaded_by = userId;
-      data.upload_metadata = chunk.metadata || {};
-    } else {
-      data.created_by = userId;
-    }
+    // Add Nette-specific fields
+    // GROUPHOME STANDALONE: Only Nette agent supported
+    data.uploaded_by = userId;
+    data.upload_metadata = chunk.metadata || {};
 
     return data;
   });
@@ -650,16 +645,11 @@ export async function bulkInsertKnowledgeChunks(
 
 /**
  * Get the table name for a specific agent
+ * GROUPHOME STANDALONE: Always returns Nette table
  */
-function getTableNameForAgent(agent: AgentType): string {
-  switch (agent) {
-    case 'nette':
-      return 'nette_knowledge_chunks'; // Changed from gh_training_chunks (2025-12-09)
-    case 'mio':
-      return 'mio_knowledge_chunks';
-    case 'me':
-      return 'me_knowledge_chunks';
-  }
+function getTableNameForAgent(_agent: AgentType): string {
+  // GROUPHOME STANDALONE: Only Nette agent supported
+  return 'nette_knowledge_chunks';
 }
 
 /**
@@ -702,45 +692,43 @@ async function triggerN8NWebhook(payload: N8NWebhookPayload): Promise<void> {
 
 /**
  * Fallback function to get stats if the view doesn't exist
+ * GROUPHOME STANDALONE: Only fetches Nette stats
  */
 async function getKnowledgeStatsFallback(): Promise<KnowledgeStats[]> {
   const stats: KnowledgeStats[] = [];
-  const agents: AgentType[] = ['nette', 'mio', 'me'];
+  const agent: AgentType = 'nette';
+  const tableName = getTableNameForAgent(agent);
 
-  for (const agent of agents) {
-    const tableName = getTableNameForAgent(agent);
+  try {
+    const { data } = await supabase
+      .from(tableName)
+      .select('category, created_at');
 
-    try {
-      const { data } = await supabase
-        .from(tableName)
-        .select('category, created_at');
+    if (data) {
+      const categoryCounts: Record<string, { count: number; lastUpdated: string }> = {};
 
-      if (data) {
-        const categoryCounts: Record<string, { count: number; lastUpdated: string }> = {};
+      data.forEach((item) => {
+        const cat = item.category || 'general';
+        if (!categoryCounts[cat]) {
+          categoryCounts[cat] = { count: 0, lastUpdated: '' };
+        }
+        categoryCounts[cat].count++;
+        if (item.created_at > categoryCounts[cat].lastUpdated) {
+          categoryCounts[cat].lastUpdated = item.created_at;
+        }
+      });
 
-        data.forEach((item) => {
-          const cat = item.category || 'general';
-          if (!categoryCounts[cat]) {
-            categoryCounts[cat] = { count: 0, lastUpdated: '' };
-          }
-          categoryCounts[cat].count++;
-          if (item.created_at > categoryCounts[cat].lastUpdated) {
-            categoryCounts[cat].lastUpdated = item.created_at;
-          }
+      Object.entries(categoryCounts).forEach(([category, { count, lastUpdated }]) => {
+        stats.push({
+          agent_type: agent,
+          category,
+          chunk_count: count,
+          last_updated: lastUpdated,
         });
-
-        Object.entries(categoryCounts).forEach(([category, { count, lastUpdated }]) => {
-          stats.push({
-            agent_type: agent,
-            category,
-            chunk_count: count,
-            last_updated: lastUpdated,
-          });
-        });
-      }
-    } catch (err) {
-      console.error(`Error fetching stats for ${agent}:`, err);
+      });
     }
+  } catch (err) {
+    console.error(`Error fetching stats for ${agent}:`, err);
   }
 
   return stats;

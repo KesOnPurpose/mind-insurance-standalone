@@ -126,12 +126,11 @@ export function ConversationListItem({
       onClick={isEditing ? undefined : onClick}
     >
       {/* Coach Avatar */}
-      <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0"
-        style={{ background: coach.gradient }}
-      >
-        {coach.avatar}
-      </div>
+      <img
+        src={coach.avatar}
+        alt={coach.name}
+        className="w-8 h-8 rounded-full object-cover shrink-0"
+      />
 
       {/* Content */}
       <div className="flex-1 min-w-0">

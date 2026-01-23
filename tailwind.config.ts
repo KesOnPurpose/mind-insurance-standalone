@@ -111,6 +111,27 @@ export default {
             height: "0",
           },
         },
+        // Collapsible content animations (for Radix Collapsible)
+        "collapsible-down": {
+          from: {
+            height: "0",
+            opacity: "0",
+          },
+          to: {
+            height: "var(--radix-collapsible-content-height)",
+            opacity: "1",
+          },
+        },
+        "collapsible-up": {
+          from: {
+            height: "var(--radix-collapsible-content-height)",
+            opacity: "1",
+          },
+          to: {
+            height: "0",
+            opacity: "0",
+          },
+        },
         // MIO Insights one-time reward animations (defined in index.css)
         "pulse-once": {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
@@ -127,14 +148,31 @@ export default {
           "0%, 100%": { boxShadow: "0 0 0 rgba(250, 204, 21, 0)" },
           "50%": { boxShadow: "0 0 25px rgba(250, 204, 21, 0.5)" },
         },
+        // Celebration confetti-like animation
+        "celebrate": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "50%": { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        // Subtle scale on checkbox/button interactions
+        "scale-check": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // Collapsible animations - smooth expand/collapse
+        "collapsible-down": "collapsible-down 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        "collapsible-up": "collapsible-up 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         // MIO Insights one-time animations - play once then stop
         "pulse-once": "pulse-once 0.8s ease-in-out 1",
         "bounce-once": "bounce-once 0.6s ease-out 1",
         "glow-once": "glow-once 1.2s ease-in-out 1",
+        // Micro-interaction animations
+        "celebrate": "celebrate 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "scale-check": "scale-check 0.2s ease-out",
       },
     },
   },

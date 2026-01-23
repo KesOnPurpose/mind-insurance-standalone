@@ -83,12 +83,20 @@ const ChatMessage = ({ role, content, timestamp, coachType = 'nette', userTimezo
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       <Avatar className={`w-10 h-10 flex-shrink-0`}>
-        <div
-          className="w-full h-full flex items-center justify-center text-white font-semibold text-sm"
-          style={{ background: isUser ? 'hsl(var(--muted))' : coach.gradient }}
-        >
-          {isUser ? "Y" : coach.avatar}
-        </div>
+        {isUser ? (
+          <div
+            className="w-full h-full flex items-center justify-center text-white font-semibold text-sm"
+            style={{ background: 'hsl(var(--muted))' }}
+          >
+            Y
+          </div>
+        ) : (
+          <img
+            src={coach.avatar}
+            alt={coach.name}
+            className="w-full h-full rounded-full object-cover"
+          />
+        )}
       </Avatar>
 
       <Card

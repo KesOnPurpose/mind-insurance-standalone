@@ -2,9 +2,55 @@ name = "mindhouse-prodigy"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-11-24"
 
-# Default environment variables (apply to all deployments)
+# =============================================================================
+# PRODUCTION Environment (default)
+# Uses the production UnifiedChat workflow (ID: 0qiaQWEaDXbCxkhK)
+# =============================================================================
 [vars]
 VITE_SUPABASE_URL = "https://hpyodaugrkctagkrfofj.supabase.co"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs"
 VITE_API_URL = "https://mio-fastapi-production-production.up.railway.app"
 VITE_N8N_WEBHOOK_URL = "https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat"
+
+# =============================================================================
+# STAGING Environment
+# Uses the TEST UnifiedChat workflow (ID: exBaZHKCjDbZioa4) with MIO Invisible
+# Deploy with: npx wrangler pages deploy dist --env staging
+# Domain: staging.mindinsurancechallange.pages.dev
+# =============================================================================
+[env.staging]
+name = "mindhouse-prodigy-staging"
+
+[env.staging.vars]
+VITE_SUPABASE_URL = "https://hpyodaugrkctagkrfofj.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs"
+VITE_API_URL = "https://mio-fastapi-production-production.up.railway.app"
+# TEST WORKFLOW - MIO Intelligence Invisible (hides user_state, dropout_risk, etc.)
+VITE_N8N_WEBHOOK_URL = "https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat-Test"
+
+# =============================================================================
+# MIO Intelligence Invisible Testing Notes
+# =============================================================================
+# Test Workflow ID: exBaZHKCjDbZioa4 (UnifiedChat-Test)
+# Production Workflow ID: 0qiaQWEaDXbCxkhK (UnifiedChat)
+#
+# Hidden from API Response:
+# - user_state
+# - dropout_risk
+# - breakthrough_probability
+# - neural_rewiring_triggered
+#
+# Visible in API Response:
+# - success
+# - response
+# - agent
+# - conversation_id
+# - user_id
+# - timestamp
+#
+# Test Cases to Run:
+# 1. Baseline: "How do I get started with a group home?"
+# 2. Behavioral: "I feel stuck and keep procrastinating"
+# 3. Fear: "I'm scared I'm going to fail"
+# 4. Multi-trigger: "I keep self-sabotaging and I'm overwhelmed"
+# =============================================================================

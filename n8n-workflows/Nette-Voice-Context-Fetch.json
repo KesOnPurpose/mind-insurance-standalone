@@ -1,0 +1,380 @@
+{
+  "name": "Nette AI Voice - Context Fetch",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice-context-fetch",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Voice Context Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "voice-context-fetch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-contact-id",
+              "leftValue": "={{ $json.body?.ghl_contact_id || $json.ghl_contact_id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "check-phone",
+              "leftValue": "={{ $json.body?.phone || $json.phone || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  up.id as user_id,\n  up.email,\n  up.full_name,\n  up.tier_level,\n  up.temperament,\n  up.target_state,\n  up.target_demographics,\n  up.startup_capital,\n  up.timezone,\n  up.ghl_contact_id,\n  COALESCE(js.current_day, 0) as journey_day,\n  COALESCE(js.current_journey_week, 1) as journey_week\nFROM user_profiles up\nLEFT JOIN journey_status js ON js.user_id = up.id\nWHERE up.ghl_contact_id = '{{ $json.body?.ghl_contact_id || $json.ghl_contact_id }}'\n   OR up.phone = '{{ $json.body?.phone || $json.phone }}'\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "fetch-user-profile",
+      "name": "Fetch User Profile",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [680, 200],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  overall_score,\n  readiness_level,\n  financial_score,\n  market_score,\n  operational_score,\n  mindset_score\nFROM assessment_results\nWHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}'\nORDER BY created_at DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "fetch-assessment",
+      "name": "Fetch Assessment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 100],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  dominant_pattern,\n  compass_crisis_score,\n  past_prison_score,\n  success_sabotage_score\nFROM identity_assessment_results\nWHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}'\nORDER BY created_at DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "fetch-identity-patterns",
+      "name": "Fetch Identity Patterns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 200],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  COUNT(*) FILTER (WHERE status = 'completed') as completed_count,\n  COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_count,\n  (SELECT name FROM tactics WHERE id = (\n    SELECT tactic_id FROM user_tactic_progress \n    WHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}'\n    AND status = 'in_progress'\n    ORDER BY started_at DESC LIMIT 1\n  )) as current_tactic\nFROM user_tactic_progress\nWHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}';",
+        "options": {}
+      },
+      "id": "fetch-tactic-progress",
+      "name": "Fetch Tactic Progress",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 300],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  current_streak,\n  longest_streak,\n  last_practice_date\nFROM mio_streaks\nWHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}'\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "fetch-streaks",
+      "name": "Fetch Streaks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 400],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  ai_summary,\n  topics_discussed,\n  call_duration_seconds,\n  created_at\nFROM nette_voice_call_logs\nWHERE user_id = '{{ $('Fetch User Profile').item.json.user_id }}'\n  AND call_status = 'completed'\nORDER BY created_at DESC\nLIMIT 3;",
+        "options": {}
+      },
+      "id": "fetch-recent-voice-calls",
+      "name": "Fetch Recent Voice Calls",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 500],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  role,\n  content,\n  created_at\nFROM n8n_chat_histories\nWHERE session_id LIKE '%:nette'\n  AND session_id LIKE '{{ $('Fetch User Profile').item.json.user_id }}%'\nORDER BY created_at DESC\nLIMIT 10;",
+        "options": {}
+      },
+      "id": "fetch-recent-text-chat",
+      "name": "Fetch Recent Text Chat",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 600],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all fetched data into a single context object\nconst userProfile = $('Fetch User Profile').first().json;\nconst assessment = $('Fetch Assessment').first()?.json || {};\nconst identityPatterns = $('Fetch Identity Patterns').first()?.json || {};\nconst tacticProgress = $('Fetch Tactic Progress').first()?.json || {};\nconst streaks = $('Fetch Streaks').first()?.json || {};\nconst recentVoiceCalls = $('Fetch Recent Voice Calls').all().map(item => item.json);\nconst recentTextChat = $('Fetch Recent Text Chat').all().map(item => item.json);\n\n// Build voice context for Nette AI Voice\nconst voiceContext = {\n  user_id: userProfile.user_id,\n  user_profile: {\n    full_name: userProfile.full_name,\n    tier_level: userProfile.tier_level,\n    temperament: userProfile.temperament,\n    target_state: userProfile.target_state,\n    target_demographics: userProfile.target_demographics,\n    startup_capital: userProfile.startup_capital,\n    journey_day: userProfile.journey_day,\n    journey_week: userProfile.journey_week\n  },\n  assessment: {\n    overall_score: assessment.overall_score || 0,\n    readiness_level: assessment.readiness_level || 'unknown',\n    financial_score: assessment.financial_score || 0,\n    market_score: assessment.market_score || 0,\n    operational_score: assessment.operational_score || 0,\n    mindset_score: assessment.mindset_score || 0\n  },\n  identity_patterns: {\n    dominant_pattern: identityPatterns.dominant_pattern || 'unknown',\n    compass_crisis_score: identityPatterns.compass_crisis_score || 0,\n    past_prison_score: identityPatterns.past_prison_score || 0,\n    success_sabotage_score: identityPatterns.success_sabotage_score || 0\n  },\n  tactic_progress: {\n    completed_count: tacticProgress.completed_count || 0,\n    in_progress_count: tacticProgress.in_progress_count || 0,\n    current_tactic: tacticProgress.current_tactic || 'none'\n  },\n  engagement: {\n    current_streak: streaks.current_streak || 0,\n    longest_streak: streaks.longest_streak || 0,\n    last_practice_date: streaks.last_practice_date || null\n  },\n  recent_voice_calls: recentVoiceCalls.map(call => ({\n    summary: call.ai_summary,\n    topics: call.topics_discussed,\n    duration_seconds: call.call_duration_seconds,\n    date: call.created_at\n  })),\n  recent_text_summary: recentTextChat.length > 0 \n    ? `Last ${recentTextChat.length} messages in text chat available`\n    : 'No recent text conversations'\n};\n\n// Build the prompt context string for voice AI\nconst promptContext = `## USER PROFILE\n- Name: ${voiceContext.user_profile.full_name || 'Unknown'}\n- Journey Day: ${voiceContext.user_profile.journey_day} of 90\n- Journey Week: ${voiceContext.user_profile.journey_week}\n- Tier Level: ${voiceContext.user_profile.tier_level || 'Standard'}\n- Temperament: ${voiceContext.user_profile.temperament || 'Unknown'}\n- Target State: ${voiceContext.user_profile.target_state || 'Unknown'}\n\n## READINESS ASSESSMENT\n- Overall Score: ${voiceContext.assessment.overall_score}/100\n- Readiness Level: ${voiceContext.assessment.readiness_level}\n- Financial Score: ${voiceContext.assessment.financial_score}/100\n- Market Score: ${voiceContext.assessment.market_score}/100\n- Operational Score: ${voiceContext.assessment.operational_score}/100\n- Mindset Score: ${voiceContext.assessment.mindset_score}/100\n\n## IDENTITY PATTERNS\n- Dominant Pattern: ${voiceContext.identity_patterns.dominant_pattern}\n- Compass Crisis: ${voiceContext.identity_patterns.compass_crisis_score}/100\n- Past Prison: ${voiceContext.identity_patterns.past_prison_score}/100\n- Success Sabotage: ${voiceContext.identity_patterns.success_sabotage_score}/100\n\n## TACTIC PROGRESS\n- Completed: ${voiceContext.tactic_progress.completed_count}\n- In Progress: ${voiceContext.tactic_progress.in_progress_count}\n- Current Tactic: ${voiceContext.tactic_progress.current_tactic}\n\n## ENGAGEMENT\n- Current Streak: ${voiceContext.engagement.current_streak} days\n- Longest Streak: ${voiceContext.engagement.longest_streak} days\n- Last Practice: ${voiceContext.engagement.last_practice_date || 'Never'}\n\n## RECENT VOICE CALLS\n${voiceContext.recent_voice_calls.length > 0 \n  ? voiceContext.recent_voice_calls.map(c => `- ${c.date}: ${c.summary || 'No summary'} (${Math.round(c.duration_seconds/60)}min)`).join('\\n')\n  : '- No previous voice calls'}`;\n\nreturn {\n  success: true,\n  context: voiceContext,\n  prompt_context: promptContext\n};"
+      },
+      "id": "build-context",
+      "name": "Build Voice Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"Missing required parameter: ghl_contact_id or phone\",\n  \"context\": null\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Voice Context Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Fetch User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Profile": {
+      "main": [
+        [
+          {
+            "node": "Fetch Assessment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Identity Patterns",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Tactic Progress",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Streaks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Recent Voice Calls",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Recent Text Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Assessment": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Identity Patterns": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tactic Progress": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Streaks": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Voice Calls": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Text Chat": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Voice Context": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "voice-context-fetch"
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "tags": [
+    {
+      "name": "Nette Voice",
+      "createdAt": "2026-01-19T00:00:00.000Z",
+      "updatedAt": "2026-01-19T00:00:00.000Z"
+    }
+  ]
+}

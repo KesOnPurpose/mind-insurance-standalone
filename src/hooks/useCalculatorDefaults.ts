@@ -10,9 +10,11 @@ import {
 
 interface StateInfo {
   state: string;
-  average_rate_per_bed: number | null;
-  licensing_cost_min: number | null;
-  licensing_cost_max: number | null;
+  state_abbr: string;
+  average_rate_per_resident_max: number | null;
+  average_rate_per_resident_min: number | null;
+  typical_cost_min: number | null;
+  typical_cost_max: number | null;
 }
 
 /**
@@ -49,9 +51,9 @@ export function useCalculatorDefaults() {
       if (profile.target_state) {
         const { data: stateData, error: stateError } = await supabase
           .from('gh_state_licensing_info')
-          .select('state, average_rate_per_bed, licensing_cost_min, licensing_cost_max')
-          .eq('state', profile.target_state)
-          .single();
+          .select('state, state_abbr, average_rate_per_resident_max, average_rate_per_resident_min, typical_cost_min, typical_cost_max')
+          .eq('state_abbr', profile.target_state)
+          .maybeSingle();
 
         if (stateError && stateError.code !== 'PGRST116') {
           console.error('Error fetching state info:', stateError);
@@ -69,8 +71,10 @@ export function useCalculatorDefaults() {
       }
 
       // Rate per bed from state info or SSI max
-      if (stateInfo?.average_rate_per_bed) {
-        defaults.ratePerBed = stateInfo.average_rate_per_bed;
+      if (stateInfo?.average_rate_per_resident_max) {
+        // Use the average of min and max rates if both exist
+        const minRate = stateInfo.average_rate_per_resident_min || stateInfo.average_rate_per_resident_max;
+        defaults.ratePerBed = Math.round((stateInfo.average_rate_per_resident_max + minRate) / 2);
       } else {
         defaults.ratePerBed = CALCULATOR_CONSTANTS.SSI_MAX_RENT;
       }
@@ -84,9 +88,9 @@ export function useCalculatorDefaults() {
         const startupCosts = { ...DEFAULT_STARTUP_COSTS };
 
         // Use state licensing cost average if available
-        if (stateInfo?.licensing_cost_min && stateInfo?.licensing_cost_max) {
+        if (stateInfo?.typical_cost_min && stateInfo?.typical_cost_max) {
           startupCosts.licensingCosts = Math.round(
-            (stateInfo.licensing_cost_min + stateInfo.licensing_cost_max) / 2
+            (stateInfo.typical_cost_min + stateInfo.typical_cost_max) / 2
           );
         }
 

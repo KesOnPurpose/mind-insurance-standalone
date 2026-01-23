@@ -65,12 +65,14 @@ export function FinancialProjectionsCard() {
       if (profile?.target_state) {
         const { data: stateInfo } = await supabase
           .from('gh_state_licensing_info')
-          .select('average_rate_per_bed')
-          .eq('state', profile.target_state)
-          .single();
+          .select('average_rate_per_resident_max, average_rate_per_resident_min')
+          .eq('state_abbr', profile.target_state)
+          .maybeSingle();
 
-        if (stateInfo?.average_rate_per_bed) {
-          stateRate = stateInfo.average_rate_per_bed;
+        if (stateInfo?.average_rate_per_resident_max) {
+          // Use the average of min and max rates if both exist, otherwise just max
+          const minRate = stateInfo.average_rate_per_resident_min || stateInfo.average_rate_per_resident_max;
+          stateRate = Math.round((stateInfo.average_rate_per_resident_max + minRate) / 2);
         }
       }
 

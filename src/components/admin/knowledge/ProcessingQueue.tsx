@@ -1,7 +1,8 @@
 // ============================================================================
 // PROCESSING QUEUE COMPONENT
 // ============================================================================
-// Displays and manages the knowledge processing queue
+// Displays and manages the knowledge processing queue for Nette AI
+// GROUPHOME STANDALONE: Only Nette AI (MIO/ME columns removed)
 // Shows status of pending, processing, completed, and failed items
 // ============================================================================
 
@@ -11,7 +12,6 @@ import {
   ProcessingQueueItem,
   QueueStats,
   ProcessingStatus,
-  AGENT_CONFIGS,
   SOURCE_TYPE_CONFIGS,
 } from '@/types/knowledgeManagement';
 import {
@@ -208,7 +208,6 @@ export function ProcessingQueue({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Source</TableHead>
-                    <TableHead>Agent</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Chunks</TableHead>
@@ -228,18 +227,6 @@ export function ProcessingQueue({
                             {SOURCE_TYPE_CONFIGS[item.source_type]?.label}
                           </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          style={{
-                            backgroundColor: `${AGENT_CONFIGS[item.agent_type]?.color}10`,
-                            borderColor: AGENT_CONFIGS[item.agent_type]?.color,
-                            color: AGENT_CONFIGS[item.agent_type]?.color,
-                          }}
-                        >
-                          {AGENT_CONFIGS[item.agent_type]?.name}
-                        </Badge>
                       </TableCell>
                       <TableCell className="capitalize">
                         {item.category.replace(/_/g, ' ')}
@@ -368,7 +355,7 @@ function CompactQueueList({
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {AGENT_CONFIGS[item.agent_type]?.name} - {item.category.replace(/_/g, ' ')}
+              {item.category.replace(/_/g, ' ')}
             </p>
           </div>
           <div className="text-xs text-muted-foreground">

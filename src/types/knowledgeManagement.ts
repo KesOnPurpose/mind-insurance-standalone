@@ -1,8 +1,8 @@
 // ============================================================================
 // KNOWLEDGE MANAGEMENT SYSTEM TYPES
 // ============================================================================
-// Types for the unified Admin Knowledge Base Manager supporting
-// all three AI agents: Nette (GroupHome), MIO (Mind Insurance), ME (Money Evolution)
+// Types for the Admin Knowledge Base Manager supporting Nette (GroupHome)
+// GROUPHOME STANDALONE: Only Nette AI (MIO intelligence built-in via N8n workflow)
 // ============================================================================
 
 import { CoachType } from './coach';
@@ -84,28 +84,8 @@ export type NetteCategory =
   | 'app_navigation'
   | 'general';
 
-// MIO (Mind Insurance) categories - stored in mio_knowledge_chunks
-export type MIOCategory =
-  | 'identity_patterns'
-  | 'protect_practices'
-  | 'neural_rewiring'
-  | 'behavioral_psychology'
-  | 'mindset_coaching'
-  | 'accountability'
-  | 'general';
-
-// ME (Money Evolution) categories - stored in me_knowledge_chunks
-export type MECategory =
-  | 'wealth_mindset'
-  | 'investment_strategies'
-  | 'financial_planning'
-  | 'abundance_psychology'
-  | 'cash_flow'
-  | 'funding_sources'
-  | 'general';
-
-// Union type for all categories
-export type KnowledgeCategory = NetteCategory | MIOCategory | MECategory;
+// GROUPHOME STANDALONE: Only Nette categories (MIO/ME removed)
+export type KnowledgeCategory = NetteCategory;
 
 // Category configuration for UI
 export interface CategoryConfig {
@@ -220,106 +200,11 @@ export const NETTE_CATEGORIES: Record<NetteCategory, CategoryConfig> = {
   }
 };
 
-export const MIO_CATEGORIES: Record<MIOCategory, CategoryConfig> = {
-  identity_patterns: {
-    id: 'identity_patterns',
-    label: 'Identity Patterns',
-    description: 'Identity collision and pattern recognition',
-    color: 'bg-cyan-100 text-cyan-800'
-  },
-  protect_practices: {
-    id: 'protect_practices',
-    label: 'PROTECT Practices',
-    description: 'Daily PROTECT method practices',
-    color: 'bg-teal-100 text-teal-800'
-  },
-  neural_rewiring: {
-    id: 'neural_rewiring',
-    label: 'Neural Rewiring',
-    description: 'Neural pathway and habit formation',
-    color: 'bg-indigo-100 text-indigo-800'
-  },
-  behavioral_psychology: {
-    id: 'behavioral_psychology',
-    label: 'Behavioral Psychology',
-    description: 'Psychology of behavior change',
-    color: 'bg-violet-100 text-violet-800'
-  },
-  mindset_coaching: {
-    id: 'mindset_coaching',
-    label: 'Mindset Coaching',
-    description: 'Mindset shift techniques',
-    color: 'bg-fuchsia-100 text-fuchsia-800'
-  },
-  accountability: {
-    id: 'accountability',
-    label: 'Accountability',
-    description: 'Accountability systems and partner guidance',
-    color: 'bg-rose-100 text-rose-800'
-  },
-  general: {
-    id: 'general',
-    label: 'General',
-    description: 'General mindset knowledge',
-    color: 'bg-gray-100 text-gray-800'
-  }
-};
+// GROUPHOME STANDALONE: Only Nette categories - MIO/ME removed
 
-export const ME_CATEGORIES: Record<MECategory, CategoryConfig> = {
-  wealth_mindset: {
-    id: 'wealth_mindset',
-    label: 'Wealth Mindset',
-    description: 'Psychology of wealth and abundance',
-    color: 'bg-emerald-100 text-emerald-800'
-  },
-  investment_strategies: {
-    id: 'investment_strategies',
-    label: 'Investment Strategies',
-    description: 'Investment approaches and ROI optimization',
-    color: 'bg-green-100 text-green-800'
-  },
-  financial_planning: {
-    id: 'financial_planning',
-    label: 'Financial Planning',
-    description: 'Financial planning and budgeting',
-    color: 'bg-lime-100 text-lime-800'
-  },
-  abundance_psychology: {
-    id: 'abundance_psychology',
-    label: 'Abundance Psychology',
-    description: 'Scarcity vs abundance mindset',
-    color: 'bg-teal-100 text-teal-800'
-  },
-  cash_flow: {
-    id: 'cash_flow',
-    label: 'Cash Flow',
-    description: 'Cash flow management and optimization',
-    color: 'bg-cyan-100 text-cyan-800'
-  },
-  funding_sources: {
-    id: 'funding_sources',
-    label: 'Funding Sources',
-    description: 'Creative financing and funding options',
-    color: 'bg-sky-100 text-sky-800'
-  },
-  general: {
-    id: 'general',
-    label: 'General',
-    description: 'General financial knowledge',
-    color: 'bg-gray-100 text-gray-800'
-  }
-};
-
-// Helper to get categories for a specific agent
-export function getCategoriesForAgent(agent: AgentType): Record<string, CategoryConfig> {
-  switch (agent) {
-    case 'nette':
-      return NETTE_CATEGORIES;
-    case 'mio':
-      return MIO_CATEGORIES;
-    case 'me':
-      return ME_CATEGORIES;
-  }
+// Helper to get categories for agent (simplified - only Nette)
+export function getCategoriesForAgent(_agent: AgentType): Record<string, CategoryConfig> {
+  return NETTE_CATEGORIES;
 }
 
 // ============================================================================
@@ -353,20 +238,8 @@ export interface NetteKnowledgeChunk extends BaseKnowledgeChunk {
   uploaded_by?: string;
 }
 
-// MIO knowledge chunk (mio_knowledge_chunks)
-export interface MIOKnowledgeChunk extends BaseKnowledgeChunk {
-  agent_type: 'mio';
-  created_by?: string;
-}
-
-// ME knowledge chunk (me_knowledge_chunks)
-export interface MEKnowledgeChunk extends BaseKnowledgeChunk {
-  agent_type: 'me';
-  created_by?: string;
-}
-
-// Union type for all knowledge chunks
-export type KnowledgeChunkUnion = NetteKnowledgeChunk | MIOKnowledgeChunk | MEKnowledgeChunk;
+// GROUPHOME STANDALONE: Only Nette knowledge chunks
+export type KnowledgeChunkUnion = NetteKnowledgeChunk;
 
 // Normalized knowledge chunk for UI display
 export interface NormalizedKnowledgeChunk {
@@ -497,6 +370,7 @@ export interface AgentConfig {
   categories: Record<string, CategoryConfig>;
 }
 
+// GROUPHOME STANDALONE: Only Nette agent configuration
 export const AGENT_CONFIGS: Record<AgentType, AgentConfig> = {
   nette: {
     id: 'nette',
@@ -504,26 +378,8 @@ export const AGENT_CONFIGS: Record<AgentType, AgentConfig> = {
     description: 'Group Home Expert - Tactics, licensing, compliance, operations',
     color: 'hsl(221 83% 53%)',
     gradient: 'linear-gradient(135deg, hsl(221 83% 53%), hsl(221 70% 60%))',
-    tableName: 'nette_knowledge_chunks', // Updated from gh_training_chunks (2025-12-09)
+    tableName: 'nette_knowledge_chunks',
     categories: NETTE_CATEGORIES
-  },
-  mio: {
-    id: 'mio',
-    name: 'MIO',
-    description: 'Mind Insurance Oracle - Identity patterns, PROTECT practices, neural rewiring',
-    color: '#05c3dd',
-    gradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
-    tableName: 'mio_knowledge_chunks',
-    categories: MIO_CATEGORIES
-  },
-  me: {
-    id: 'me',
-    name: 'ME',
-    description: 'Money Evolution - Wealth mindset, investment strategies, financial planning',
-    color: 'hsl(142 70% 45%)',
-    gradient: 'linear-gradient(135deg, hsl(142 70% 45%), hsl(142 60% 55%))',
-    tableName: 'me_knowledge_chunks',
-    categories: ME_CATEGORIES
   }
 };
 

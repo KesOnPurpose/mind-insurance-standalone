@@ -1,4 +1,5 @@
-export type CoachType = 'nette' | 'mio' | 'me';
+// GROUPHOME STANDALONE: Only Nette coach (MIO intelligence built-in via N8n workflow)
+export type CoachType = 'nette';
 
 export interface Coach {
   id: CoachType;
@@ -18,8 +19,8 @@ export const COACHES: Record<CoachType, Coach> = {
     name: 'Nette',
     title: 'Group Home Expert',
     description: 'Your educational guide and assessment expert. I conduct your readiness assessment, generate personalized roadmaps, and provide state-specific licensing guidance to get you started.',
-    avatar: 'N',
-    color: 'hsl(221 83% 53%)', // Primary blue (distinct from MIO's cyan)
+    avatar: '/nette-avatar.png',
+    color: 'hsl(221 83% 53%)', // Primary blue
     gradient: 'linear-gradient(135deg, hsl(221 83% 53%), hsl(221 70% 60%))',
     personality: 'Warm and encouraging, patient educator, detail-oriented, and compliance-focused.',
     expertise: [
@@ -28,40 +29,6 @@ export const COACHES: Record<CoachType, Coach> = {
       'State licensing guidance',
       'Population-specific expertise',
       'Initial user onboarding'
-    ]
-  },
-  mio: {
-    id: 'mio',
-    name: 'MIO',
-    title: 'Mindset & Accountability Coach',
-    description: 'I help you overcome mental blocks, stay accountable, and build the mindset needed for breakthrough success.',
-    avatar: 'M',
-    color: '#05c3dd', // Mind Insurance cyan
-    gradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
-    personality: 'Empathetic, motivating, and insightful. Helps with mindset shifts and accountability.',
-    expertise: [
-      'Mindset coaching',
-      'Accountability tracking',
-      'Overcoming obstacles',
-      'Identity collision work',
-      'PROTECT practices'
-    ]
-  },
-  me: {
-    id: 'me',
-    name: 'ME',
-    title: 'Money Evolution Expert',
-    description: 'Your financial strategist and funding specialist. I provide creative financing strategies, ROI calculations, funding source identification, and cash flow optimization to fund your group home.',
-    avatar: 'E',
-    color: 'hsl(142 70% 45%)', // Success green
-    gradient: 'linear-gradient(135deg, hsl(142 70% 45%), hsl(142 60% 55%))',
-    personality: 'Numbers-driven, strategic thinker, opportunity-focused, and ROI-oriented.',
-    expertise: [
-      'Creative financing strategies',
-      'ROI calculations & projections',
-      'Funding source identification',
-      'Cash flow optimization',
-      'Investment structuring'
     ]
   }
 };

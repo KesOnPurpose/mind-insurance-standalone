@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,9 @@ import {
   Link2,
   ListChecks,
   Save,
-  Calendar
+  Calendar,
+  Video,
+  ClipboardCheck
 } from 'lucide-react';
 import { TacticWithProgress, TacticWithPrerequisites } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
@@ -31,6 +33,9 @@ import { formatCostRange } from '@/services/tacticFilterService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTacticDocuments } from '@/hooks/useTacticDocuments';
 import { useTacticKnowledge } from '@/hooks/useTacticKnowledge';
+import { useCompletionGates } from '@/services/progressService';
+import { CompletionGateBadge } from '@/components/course/CompletionGateStatus';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TacticCardProps {
   tactic: TacticWithProgress | TacticWithPrerequisites;
@@ -40,15 +45,46 @@ interface TacticCardProps {
   onSchedule?: (tacticId: string, tacticName: string, durationMinutes: number | null, category: string) => void;
   showEnrichedFields?: boolean; // Toggle for new enriched field display
   tacticNameMap?: Record<string, string>; // Map of tactic IDs to names for prerequisite display
+  // FEAT-GH-006: Completion gate callbacks
+  onWatchVideo?: (tacticId: string) => void;
+  onTakeAssessment?: (tacticId: string) => void;
+  onViewPrerequisite?: (tacticId: string) => void;
 }
 
-export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, onSchedule, showEnrichedFields = true, tacticNameMap = {} }: TacticCardProps) {
+export function TacticCard({
+  tactic,
+  onStart,
+  onComplete,
+  onSaveNotes,
+  onSchedule,
+  showEnrichedFields = true,
+  tacticNameMap = {},
+  onWatchVideo,
+  onTakeAssessment,
+  onViewPrerequisite,
+}: TacticCardProps) {
   const [notes, setNotes] = useState(tactic.notes || '');
   const [showNotes, setShowNotes] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+  // FEAT-GH-006: Auth and completion gates
+  const { user } = useAuth();
+
+  // Configure completion gate checking
+  const tacticGateConfig = tactic.video_url || (tactic as any).prerequisite_tactic_ids?.length > 0
+    ? {
+        tacticId: tactic.tactic_id,
+        videoUrl: tactic.video_url,
+        videoCompletionThreshold: 90,
+        completionGateEnabled: true,
+        prerequisiteTacticIds: (tactic as any).prerequisite_tactic_ids || [],
+      }
+    : undefined;
+
+  const { data: gateResult } = useCompletionGates(user?.id, tacticGateConfig);
 
   // Fetch resource data (hooks kept for potential future use)
   const { documents: _documents } = useTacticDocuments(tactic.tactic_id);
@@ -130,6 +166,38 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, onSchedul
                   <h3 className="font-semibold text-base leading-tight">
                     {tactic.tactic_name}
                   </h3>
+              {/* Video indicator */}
+              {tactic.video_url && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700 text-xs gap-1">
+                        <Video className="w-3 h-3" />
+                        {tactic.videoGateMet ? (
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                        ) : tactic.videoWatchPercentage && tactic.videoWatchPercentage > 0 ? (
+                          <span>{Math.round(tactic.videoWatchPercentage)}%</span>
+                        ) : (
+                          <span>Video</span>
+                        )}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">
+                        {tactic.videoGateMet
+                          ? 'Video completed'
+                          : tactic.videoWatchPercentage
+                          ? `${Math.round(tactic.videoWatchPercentage)}% watched`
+                          : 'Has lesson video'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {/* FEAT-GH-006: Completion gate status badge */}
+              {gateResult && gateResult.gates.length > 0 && tactic.status !== 'completed' && (
+                <CompletionGateBadge gateResult={gateResult} size="sm" />
+              )}
               {showEnrichedFields && tactic.is_critical_path && (
                 <TooltipProvider>
                   <Tooltip>
@@ -215,6 +283,15 @@ export function TacticCard({ tactic, onStart, onComplete, onSaveNotes, onSchedul
         onComplete(tactic.tactic_id, formNotes || notes, profileUpdates);
         setShowCompletionForm(false);
       }}
+      // FEAT-GH-006: Completion gate props
+      tacticId={tactic.tactic_id}
+      videoUrl={tactic.video_url}
+      videoCompletionThreshold={90}
+      completionGateEnabled={!!tactic.video_url || ((tactic as any).prerequisite_tactic_ids?.length > 0)}
+      prerequisiteTacticIds={(tactic as any).prerequisite_tactic_ids || []}
+      onWatchVideo={onWatchVideo ? () => onWatchVideo(tactic.tactic_id) : undefined}
+      onTakeAssessment={onTakeAssessment ? () => onTakeAssessment(tactic.tactic_id) : undefined}
+      onViewPrerequisite={onViewPrerequisite}
     />
 
     <TacticDetailModal

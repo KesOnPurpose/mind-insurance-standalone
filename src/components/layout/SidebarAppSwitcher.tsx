@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Shield, DollarSign, LucideIcon } from 'lucide-react';
+import { Home, LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +12,9 @@ interface AppConfig {
   gradient: string;
   href: string;
   isDisabled: boolean;
-  pathPrefix: string; // For detecting active state
 }
 
+// GROUPHOME STANDALONE: Only one app
 const APPS: AppConfig[] = [
   {
     id: 'grouphome',
@@ -26,61 +25,16 @@ const APPS: AppConfig[] = [
     gradient: 'from-blue-500 to-blue-600',
     href: '/dashboard',
     isDisabled: false,
-    pathPrefix: '', // Always considered "in" the grouphome app for non-MI paths
-  },
-  {
-    id: 'mind-insurance',
-    name: 'Mind Insurance',
-    shortName: 'Mind Insurance',
-    description: 'Mental breakthrough',
-    icon: Shield,
-    gradient: 'from-purple-500 to-purple-600',
-    href: '/mind-insurance',
-    isDisabled: false,
-    pathPrefix: '/mind-insurance',
-  },
-  {
-    id: 'me-wealth',
-    name: 'Millionaire Essentials',
-    shortName: 'ME Wealth',
-    description: 'Business funding',
-    icon: DollarSign,
-    gradient: 'from-amber-500 to-amber-600',
-    href: '#',
-    isDisabled: true,
-    pathPrefix: '/millionaire-essentials',
   },
 ];
 
 /**
  * SidebarAppSwitcher - Visual app switcher component for the sidebar
- *
- * Displays product tiles with:
- * - Gradient icon
- * - Name and description
- * - Active/Soon badges
+ * GROUPHOME STANDALONE: Simplified to single product
  */
 export function SidebarAppSwitcher() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
-
-  // Check if we're in the Mind Insurance section for dark theme
-  const isMindInsurance = useMemo(() => {
-    return location.pathname.startsWith('/mind-insurance');
-  }, [location.pathname]);
-
-  // Determine which app is currently active based on path
-  const getIsActive = (app: AppConfig): boolean => {
-    if (app.id === 'mind-insurance') {
-      return location.pathname.startsWith('/mind-insurance');
-    }
-    // Grouphome is active for all other paths (dashboard, roadmap, chat, resources, etc.)
-    if (app.id === 'grouphome') {
-      return !location.pathname.startsWith('/mind-insurance');
-    }
-    return false;
-  };
 
   const handleAppClick = (app: AppConfig) => {
     if (app.isDisabled) return;
@@ -94,7 +48,6 @@ export function SidebarAppSwitcher() {
     <div className="space-y-2 px-1">
       {APPS.map((app) => {
         const Icon = app.icon;
-        const isActive = getIsActive(app);
 
         return (
           <button
@@ -103,12 +56,8 @@ export function SidebarAppSwitcher() {
             disabled={app.isDisabled}
             className={cn(
               'relative w-full flex items-center gap-3 p-3 rounded-lg transition-all',
-              isMindInsurance
-                ? 'hover:bg-mi-navy'
-                : 'hover:bg-sidebar-accent/50',
-              isActive && (isMindInsurance
-                ? 'bg-mi-navy border border-mi-cyan/30'
-                : 'bg-sidebar-accent border border-sidebar-border'),
+              'hover:bg-sidebar-accent/50',
+              'bg-sidebar-accent border border-sidebar-border',
               app.isDisabled && 'opacity-50 cursor-not-allowed'
             )}
           >
@@ -124,35 +73,14 @@ export function SidebarAppSwitcher() {
 
             {/* Text content */}
             <div className="flex-1 min-w-0 text-left">
-              <h4 className={cn(
-                "font-semibold text-sm truncate",
-                isMindInsurance && "text-white"
-              )}>{app.shortName}</h4>
-              <p className={cn(
-                "text-xs truncate",
-                isMindInsurance ? "text-gray-400" : "text-muted-foreground"
-              )}>{app.description}</p>
+              <h4 className="font-semibold text-sm truncate">{app.shortName}</h4>
+              <p className="text-xs truncate text-muted-foreground">{app.description}</p>
             </div>
 
-            {/* Badge */}
-            {isActive && !app.isDisabled && (
-              <span className={cn(
-                "text-[10px] px-1.5 py-0.5 rounded flex-shrink-0",
-                isMindInsurance
-                  ? "bg-mi-cyan/20 text-mi-cyan"
-                  : "bg-primary/10 text-primary"
-              )}>
-                Active
-              </span>
-            )}
-            {app.isDisabled && (
-              <span className={cn(
-                "text-[10px] px-1.5 py-0.5 rounded flex-shrink-0",
-                isMindInsurance ? "bg-mi-navy text-gray-500" : "bg-muted"
-              )}>
-                Soon
-              </span>
-            )}
+            {/* Active Badge */}
+            <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 bg-primary/10 text-primary">
+              Active
+            </span>
           </button>
         );
       })}

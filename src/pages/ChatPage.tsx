@@ -1,37 +1,38 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Loader2 } from "lucide-react";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
-import { AssessmentActionCard } from "@/components/chat/AssessmentActionCard";
 import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
+import { VoiceCallCard } from "@/components/chat/VoiceCallCard";
+import { PhoneVerificationModal } from "@/components/phone/PhoneVerificationModal";
+import { VoiceTabContent } from "@/components/chat/VoiceTabContent";
+import type { ChatMode } from "@/components/chat/ChatSidebar";
 import { CoachType, COACHES } from "@/types/coach";
-import { type AssessmentType } from "@/hooks/useAssessmentInvitations";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProduct, ProductType } from "@/contexts/ProductContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
 import { useConversationsContext } from "@/contexts/ConversationsContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
-import { trackChatError, trackNetworkError } from "@/services/errorTracker";
-import { fetchRecentConversation, fetchConversationById } from "@/services/chatHistoryService";
+import { trackChatError } from "@/services/errorTracker";
+import { fetchConversationById } from "@/services/chatHistoryService";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  fetchVoiceCallsForChat,
+  subscribeToVoiceCalls,
+  type VoiceCallForChat,
+  type NetteVoiceCallLog,
+} from "@/services/netteVoiceCallService";
+import {
   SidebarProvider,
-  SidebarTrigger,
   SidebarInset,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-interface SuggestedAction {
-  type: 'assessment' | 'protocol';
-  assessment_type?: AssessmentType;
-  reason?: string;
-  button_text?: string;
-}
 
 interface Message {
   id: string;
@@ -39,43 +40,48 @@ interface Message {
   content: string;
   timestamp: Date;
   coachType: CoachType;
-  suggestedAction?: SuggestedAction;
 }
 
-// Product-specific background styling for immersive experience
-const PRODUCT_BACKGROUNDS: Record<ProductType, {
-  bgClass: string;
-  headerGradient: string;
-}> = {
-  'grouphome': {
-    bgClass: 'bg-muted/30',
-    headerGradient: '', // Uses coach gradient
-  },
-  'mind-insurance': {
-    bgClass: 'bg-[#0a1628]', // MI dark navy background
-    headerGradient: 'linear-gradient(135deg, #05c3dd, #0099aa)',
-  },
-  'me-wealth': {
-    bgClass: 'bg-amber-50/30 dark:bg-amber-950/10',
-    headerGradient: '', // Uses coach gradient
-  },
-};
+// Union type for chat items (messages + voice calls)
+type ChatItem =
+  | { type: 'message'; data: Message }
+  | { type: 'voice_call'; data: VoiceCallForChat };
+
+// Interface for navigation state from tactic help
+interface TacticHelpState {
+  tacticContext?: {
+    tacticId: string;
+    tacticLabel?: string;
+    lessonId?: string;
+    lessonTitle?: string;
+    phaseId?: string;
+    phaseTitle?: string;
+    programId?: string;
+    programTitle?: string;
+  };
+  initialMessage?: string;
+}
+
+interface ChatPageContentProps {
+  activeMode: ChatMode;
+  onPhoneVerified: (phone: string) => void;
+  showPhoneVerification: boolean;
+  setShowPhoneVerification: (show: boolean) => void;
+}
 
 // Inner component that uses sidebar context
-function ChatPageContent() {
-  const { currentProduct } = useProduct();
+function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, setShowPhoneVerification }: ChatPageContentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { setOpenMobile, isMobile } = useSidebar();
+  const location = useLocation();
+
+  // Check for tactic help navigation state
+  const tacticHelpState = location.state as TacticHelpState | null;
 
   // Analytics tracking hooks
   const { trackConversation } = useSession('chat');
-  const { trackFeature } = useFeatureUsage(
-    currentProduct === 'mind-insurance' ? 'chat_mio' :
-    currentProduct === 'me-wealth' ? 'chat_me' :
-    'chat_nette',
-    true // Auto-track on mount
-  );
+  const { trackFeature } = useFeatureUsage('chat_nette', true);
 
   // Conversation context for sidebar integration
   const {
@@ -88,31 +94,56 @@ function ChatPageContent() {
   // Conversations context for creating new conversations (shared with sidebar)
   const { addConversation, updateConversation } = useConversationsContext();
 
-  // MIO is the only coach in Mind Insurance standalone
-  const selectedCoach: CoachType = 'mio';
+  // GROUPHOME STANDALONE: Nette is the only coach
+  const selectedCoach: CoachType = 'nette';
 
   // Start with empty messages for new chats
   const [messages, setMessages] = useState<Message[]>([]);
+  const [voiceCalls, setVoiceCalls] = useState<VoiceCallForChat[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
+  // Extended user profile with all fields needed for voice caller identification
+  const [userProfile, setUserProfile] = useState<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    verified_phone: string | null;
+    ghl_contact_id: string | null;
+    timezone: string | null;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Ref to preserve messages during state transitions (prevents race condition)
-  // When a quick action is clicked, messages are stored here BEFORE setActiveConversation
-  // This prevents the loadConversation useEffect from resetting messages to []
+  // Ref to preserve messages during state transitions
   const pendingMessagesRef = useRef<Message[]>([]);
 
-  // Fetch user profile for personalized greeting
+  // Track if we've already sent the tactic help message to prevent double-sending
+  const [tacticHelpSent, setTacticHelpSent] = useState(false);
+
+  // Auto-send message when arriving from tactic help
+  useEffect(() => {
+    if (tacticHelpState?.initialMessage && !tacticHelpSent && user?.id) {
+      console.log('[TacticHelp] Auto-sending tactic help message:', tacticHelpState.initialMessage);
+      setTacticHelpSent(true);
+      // Use a small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        handleWelcomeMessage(tacticHelpState.initialMessage!);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [tacticHelpState, tacticHelpSent, user?.id]);
+
+  // Fetch user profile for personalized greeting and voice caller identification
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user?.id) return;
 
       try {
+        // Fetch all fields needed for voice caller identification
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('full_name')
+          .select('id, full_name, email, phone, verified_phone, ghl_contact_id, timezone')
           .eq('id', user.id)
           .single();
 
@@ -122,7 +153,15 @@ function ChatPageContent() {
         }
 
         setUserProfile(data);
-        console.log('[UserProfile] Loaded:', data?.full_name);
+        console.log('[UserProfile] Loaded for voice context:', {
+          full_name: data?.full_name,
+          email: data?.email,
+          phone: data?.verified_phone || data?.phone,
+          ghl_contact_id: data?.ghl_contact_id,
+          has_voice_context: !!(data?.ghl_contact_id || data?.phone || data?.verified_phone)
+        });
+
+        // Note: Phone verification modal trigger moved to parent component
       } catch (error) {
         console.error('[UserProfile] Error:', error);
       }
@@ -131,16 +170,92 @@ function ChatPageContent() {
     fetchUserProfile();
   }, [user?.id]);
 
+  // Fetch voice calls and subscribe to real-time updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadVoiceCalls = async () => {
+      try {
+        console.log('[VoiceCalls] Fetching voice calls for user:', user.id);
+        const calls = await fetchVoiceCallsForChat(user.id);
+        console.log('[VoiceCalls] Loaded', calls.length, 'voice calls');
+        setVoiceCalls(calls);
+      } catch (error) {
+        console.error('[VoiceCalls] Error fetching voice calls:', error);
+      }
+    };
+
+    loadVoiceCalls();
+
+    // Subscribe to real-time voice call updates
+    const unsubscribe = subscribeToVoiceCalls(user.id, (newCall: NetteVoiceCallLog) => {
+      console.log('[VoiceCalls] New/updated voice call:', newCall.id);
+      // Convert NetteVoiceCallLog to VoiceCallForChat
+      const callForChat: VoiceCallForChat = {
+        id: newCall.id,
+        ai_summary: newCall.ai_summary,
+        topics_discussed: newCall.topics_discussed,
+        call_duration_seconds: newCall.call_duration_seconds,
+        direction: newCall.direction,
+        full_transcript: newCall.full_transcript,
+        parsed_messages: newCall.parsed_messages,
+        recording_url: newCall.recording_url,
+        synced_to_chat: newCall.synced_to_chat,
+        created_at: newCall.created_at,
+      };
+      setVoiceCalls(prev => {
+        // Check if call already exists, update it
+        const existingIndex = prev.findIndex(c => c.id === callForChat.id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = callForChat;
+          return updated;
+        }
+        // Add new call at the beginning (most recent)
+        return [callForChat, ...prev];
+      });
+    });
+
+    return () => {
+      console.log('[VoiceCalls] Cleaning up subscription');
+      unsubscribe();
+    };
+  }, [user?.id]);
+
+  // Combine messages and voice calls into chronological order
+  const chatItems: ChatItem[] = useMemo(() => {
+    const items: ChatItem[] = [];
+
+    // Add messages
+    messages.forEach(msg => {
+      items.push({ type: 'message', data: msg });
+    });
+
+    // Add voice calls
+    voiceCalls.forEach(call => {
+      items.push({ type: 'voice_call', data: call });
+    });
+
+    // Sort by timestamp (messages use Date, voice calls use string)
+    items.sort((a, b) => {
+      const getTime = (item: ChatItem): number => {
+        if (item.type === 'message') {
+          return item.data.timestamp.getTime();
+        }
+        return new Date(item.data.created_at).getTime();
+      };
+      return getTime(a) - getTime(b);
+    });
+
+    return items;
+  }, [messages, voiceCalls]);
+
   // Load conversation when activeConversationId changes
   useEffect(() => {
     const loadConversation = async () => {
       if (!user?.id) return;
 
-      // If it's a new conversation, check for pending messages first
       if (isNewConversation || !activeConversationId) {
-        // CRITICAL: Check if we have pending messages from quick action
-        // This prevents the race condition where setActiveConversation triggers
-        // this effect before the messages state is updated
         if (pendingMessagesRef.current.length > 0) {
           console.log('[ChatHistory] Preserving pending messages:', pendingMessagesRef.current.length);
           setMessages([...pendingMessagesRef.current]);
@@ -152,8 +267,6 @@ function ChatPageContent() {
         return;
       }
 
-      // CRITICAL: Check for pending messages before loading from DB
-      // This handles the case where we just started a new conversation
       if (pendingMessagesRef.current.length > 0) {
         console.log('[ChatHistory] Preserving pending messages for new conversation:', pendingMessagesRef.current.length);
         setMessages([...pendingMessagesRef.current]);
@@ -161,7 +274,6 @@ function ChatPageContent() {
         return;
       }
 
-      // Load existing conversation
       setIsLoadingHistory(true);
       console.log('[ChatHistory] Loading conversation:', activeConversationId);
 
@@ -170,26 +282,21 @@ function ChatPageContent() {
 
         if (history.length > 0) {
           console.log('[ChatHistory] Loaded', history.length, 'messages');
-          // Load history without preloaded greeting - shows actual conversation
           setMessages(history);
         } else {
           console.log('[ChatHistory] No history found for conversation');
-          // Check pending messages one more time before showing empty
           if (pendingMessagesRef.current.length > 0) {
             console.log('[ChatHistory] Using pending messages as fallback');
             setMessages([...pendingMessagesRef.current]);
           } else {
-            // Empty conversation - welcome screen will show
             setMessages([]);
           }
         }
       } catch (error) {
         console.error('[ChatHistory] Error loading history:', error);
-        // Check pending messages before showing empty on error
         if (pendingMessagesRef.current.length > 0) {
           setMessages([...pendingMessagesRef.current]);
         } else {
-          // On error, show welcome screen instead of fallback greeting
           setMessages([]);
         }
       } finally {
@@ -208,14 +315,12 @@ function ChatPageContent() {
     scrollToBottom();
   }, [messages]);
 
-  // Handle message from welcome screen - triggers transition to full chat
+  // Handle message from welcome screen
   const handleWelcomeMessage = async (messageText: string) => {
     if (!messageText.trim() || !user) return;
 
-    // Generate conversation ID
     const newConversationId = crypto.randomUUID();
 
-    // Create user message FIRST (before any state that triggers view change)
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -224,20 +329,9 @@ function ChatPageContent() {
       coachType: selectedCoach
     };
 
-    // CRITICAL FIX: Store in ref BEFORE any state changes
-    // This prevents the race condition where setActiveConversation triggers
-    // the loadConversation useEffect which would reset messages to []
     pendingMessagesRef.current = [userMessage];
-
-    // Add user message to state BEFORE switching view
-    // This ensures the message is visible when the view changes
     setMessages([userMessage]);
-
-    // NOW set as active conversation (this triggers the view switch)
-    // The pendingMessagesRef will protect the messages from being cleared
     setActiveConversation(newConversationId);
-
-    // Create conversation metadata for sidebar (async, doesn't block)
     await addConversation(newConversationId, messageText, selectedCoach);
 
     console.log('[Conversation] Started new conversation from welcome:', newConversationId);
@@ -278,18 +372,11 @@ function ChatPageContent() {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-
-      // CRITICAL: Clear pending messages ref after AI response is successfully added
-      // This allows normal conversation flow to continue without the ref interference
       pendingMessagesRef.current = [];
-
-      // Update conversation metadata with AI response preview
       await updateConversation(newConversationId, aiMessage.content, selectedCoach);
-
       setIsTyping(false);
     } catch (error) {
       console.error('Error sending welcome message:', error);
-      // Clear pending ref even on error to prevent stale data
       pendingMessagesRef.current = [];
       toast({
         title: "Error",
@@ -303,7 +390,6 @@ function ChatPageContent() {
   const handleSend = async () => {
     if (!input.trim() || !user) return;
 
-    // Generate conversation ID on first message if not set
     let currentConversationId = activeConversationId;
     if (!currentConversationId) {
       currentConversationId = crypto.randomUUID();
@@ -326,7 +412,6 @@ function ChatPageContent() {
     setIsTyping(true);
 
     try {
-      // Call n8n webhook for AI agent response
       const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat';
 
       console.log('[Chat] Calling n8n webhook:', N8N_WEBHOOK_URL);
@@ -352,7 +437,7 @@ function ChatPageContent() {
           body: JSON.stringify(payload),
         });
       } catch (fetchError) {
-        console.error('[Chat] ❌ Fetch failed:', fetchError);
+        console.error('[Chat] Fetch failed:', fetchError);
         throw fetchError;
       }
 
@@ -361,7 +446,6 @@ function ChatPageContent() {
       if (!response.ok) {
         console.error('[Chat] Error response:', response.status, response.statusText);
 
-        // Handle specific error codes
         if (response.status === 429) {
           toast({
             title: "Rate Limit Exceeded",
@@ -373,7 +457,6 @@ function ChatPageContent() {
         }
 
         if (response.status === 500) {
-          // Check if it's a user not found error
           const errorText = await response.text();
           if (errorText.includes('select condition') || errorText.includes('user')) {
             toast({
@@ -389,54 +472,36 @@ function ChatPageContent() {
         throw new Error(`Failed to get response: ${response.status}`);
       }
 
-      // Parse JSON response from n8n
       const data = await response.json();
       console.log('[Chat] Response data:', data);
 
       const aiMessageId = (Date.now() + 1).toString();
       const responseAgent = (data.agent || selectedCoach) as CoachType;
 
-      // Create AI message with the response
       const aiMessage: Message = {
         id: aiMessageId,
         role: "assistant",
         content: data.response || "I apologize, but I couldn't generate a response. Please try again.",
         timestamp: new Date(),
         coachType: responseAgent,
-        // Parse suggested action from n8n response (for MIO assessment suggestions)
-        suggestedAction: data.suggested_action ? {
-          type: data.suggested_action.type,
-          assessment_type: data.suggested_action.assessment_type,
-          reason: data.suggested_action.reason,
-          button_text: data.suggested_action.button_text,
-        } : undefined,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-
-      // Track successful conversation for analytics
       await trackConversation();
-
-      // Update conversation metadata
       await updateConversation(currentConversationId, aiMessage.content, responseAgent);
-
       setIsTyping(false);
     } catch (error) {
-      console.error('[Chat] ❌ CAUGHT ERROR in handleSend:', error);
-      console.error('[Chat] Error type:', error?.constructor?.name);
-      console.error('[Chat] Error message:', error instanceof Error ? error.message : String(error));
-      console.error('[Chat] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('[Chat] CAUGHT ERROR in handleSend:', error);
 
-      // Track error for analytics
       const errorObj = error instanceof Error ? error : new Error(String(error));
       await trackChatError(
-        selectedCoach === 'nette' ? 'nette' : selectedCoach === 'me' ? 'me' : 'mio',
+        'nette',
         errorObj,
         currentConversationId,
         {
           message: messageText,
           agent: selectedCoach,
-          product: currentProduct
+          product: 'grouphome'
         }
       );
 
@@ -449,39 +514,61 @@ function ChatPageContent() {
     }
   };
 
-  // Show welcome screen for new conversations (empty messages array)
-  if (isNewConversation && messages.length === 0) {
+  // Handle phone verification success
+  const handlePhoneVerifiedInternal = (phone: string) => {
+    console.log('[PhoneVerification] Phone verified:', phone.slice(0, 4) + '****');
+    // Update profile with verified phone for voice caller identification
+    setUserProfile(prev => prev ? {
+      ...prev,
+      verified_phone: phone,
+      phone: prev.phone || phone  // Also set phone if not already set
+    } : null);
+    onPhoneVerified(phone);
+    toast({
+      title: 'Phone Verified',
+      description: 'Nette will now recognize you on voice calls.',
+    });
+  };
+
+  // Show welcome screen for new conversations (only in chat mode)
+  if (activeMode === 'chat' && isNewConversation && messages.length === 0) {
     return (
       <SidebarInset>
-        {/* Sidebar toggle - always visible */}
-        <div className="fixed top-4 left-4 z-50">
-          <SidebarTrigger className="h-10 w-10 bg-background shadow-lg border" />
-        </div>
+        {/* Sticky header with sidebar toggle */}
+        <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+        </header>
         <ChatWelcomeScreen
           userName={userProfile?.full_name ?? null}
           onSendMessage={handleWelcomeMessage}
           isLoading={isTyping}
         />
+
+        {/* Phone Verification Modal */}
+        {user && (
+          <PhoneVerificationModal
+            isOpen={showPhoneVerification}
+            onClose={() => setShowPhoneVerification(false)}
+            onVerified={handlePhoneVerifiedInternal}
+            userId={user.id}
+          />
+        )}
       </SidebarInset>
     );
   }
 
-  // Get product-specific styling
-  const productBg = PRODUCT_BACKGROUNDS[currentProduct];
-  const isMindInsurance = currentProduct === 'mind-insurance';
-
   // Full chat interface
   return (
     <SidebarInset>
-      {/* Fixed sidebar trigger - always visible when scrolling */}
-      <div className="fixed top-4 left-4 z-50">
-        <SidebarTrigger className={`h-10 w-10 backdrop-blur-sm shadow-lg border rounded-lg ${isMindInsurance ? 'bg-[#1a2a4a]/80 hover:bg-[#1a2a4a] text-[#05c3dd] border-[#05c3dd]/30' : 'bg-background/80 hover:bg-background'}`} />
-      </div>
-      <div className={`min-h-screen flex flex-col ${productBg.bgClass} ${isMindInsurance ? 'text-white' : ''}`}>
-        {/* Header - Uses product gradient if available, otherwise coach gradient */}
+      {/* Sticky header with sidebar toggle */}
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+      </header>
+      <div className="min-h-[calc(100vh-3.5rem)] flex flex-col bg-white">
+        {/* Header */}
         <div
           className="text-white transition-all"
-          style={{ background: productBg.headerGradient || COACHES[selectedCoach].gradient }}
+          style={{ background: COACHES[selectedCoach].gradient }}
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3">
@@ -496,121 +583,165 @@ function ChatPageContent() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
-            {/* Messages */}
-            <div className="space-y-6 mb-6">
-              {isLoadingHistory ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                  <span className="ml-2 text-muted-foreground">Loading conversation...</span>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <div key={message.id}>
-                    <ChatMessage
-                      role={message.role}
-                      content={message.content}
-                      timestamp={message.timestamp}
-                      coachType={message.coachType}
-                    />
-                    {/* Show AssessmentActionCard if MIO suggests an assessment */}
-                    {message.suggestedAction?.type === 'assessment' && message.suggestedAction.assessment_type && (
-                      <AssessmentActionCard
-                        assessmentType={message.suggestedAction.assessment_type}
-                        reason={message.suggestedAction.reason}
-                        buttonText={message.suggestedAction.button_text}
-                      />
-                    )}
-                  </div>
-                ))
-              )}
-
-              {/* MIO Loading Animation */}
-              {isTyping && (
-                <div className="flex flex-col items-center justify-center py-8 gap-4">
-                  {/* Animated MIO Avatar */}
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
-                    style={{ background: 'linear-gradient(135deg, #05c3dd, #0099aa)' }}
-                  >
-                    M
-                  </div>
-
-                  {/* Thinking text */}
-                  <p className="text-gray-400 text-sm">MIO is analyzing your message...</p>
-
-                  {/* Animated dots */}
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        </div>
-
-        {/* Input */}
-        <div className={`border-t sticky bottom-0 ${isMindInsurance ? 'bg-[#0a1628] border-[#05c3dd]/20' : 'bg-background'}`}>
-          <div className="container mx-auto px-4 py-4">
+        {/* Voice Tab Content */}
+        {activeMode === 'voice' && (
+          <div className="flex-1 container mx-auto px-4 overflow-y-auto">
             <div className="max-w-4xl mx-auto">
-              {/* Active Conversation Indicator */}
-              {activeConversationId && messages.length > 0 && (
-                <div className={`text-xs text-center mb-2 ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                  Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <div className="relative flex-1 flex items-center">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                    className={`flex-1 pr-10 ${isMindInsurance ? 'mi-input' : ''}`}
-                    disabled={isTyping || isLoadingHistory}
-                  />
-                  <div className="absolute right-1">
-                    <VoiceInputButton
-                      onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
-                      onTranscriptUpdate={(text) => setInput(text)}
-                      disabled={isTyping || isLoadingHistory}
-                      variant={isMindInsurance ? 'mi' : 'default'}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={handleSend}
-                  size="icon"
-                  disabled={isTyping || isLoadingHistory || !input.trim()}
-                  style={{ background: COACHES[selectedCoach].gradient }}
-                  className="text-white hover:opacity-90"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-              <p className={`text-xs mt-2 text-center ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
-              </p>
+              <VoiceTabContent
+                voiceCalls={voiceCalls}
+                userProfile={userProfile}
+                userTimezone={userProfile?.timezone ?? undefined}
+                onPhoneVerify={() => setShowPhoneVerification(true)}
+                isWidgetVisible={activeMode === 'voice'}
+                isLoading={isLoadingHistory}
+              />
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Text Chat Content */}
+        {activeMode === 'chat' && (
+          <>
+            <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
+              <div className="max-w-4xl mx-auto">
+                {/* Messages and Voice Calls */}
+                <div className="space-y-6 mb-6">
+                  {isLoadingHistory ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">Loading conversation...</span>
+                    </div>
+                  ) : (
+                    chatItems.map((item) => (
+                      <div
+                        key={item.type === 'message' ? item.data.id : `voice-${item.data.id}`}
+                        id={item.type === 'voice_call' ? `voice-${item.data.id}` : undefined}
+                      >
+                        {item.type === 'message' ? (
+                          <ChatMessage
+                            role={item.data.role}
+                            content={item.data.content}
+                            timestamp={item.data.timestamp}
+                            coachType={item.data.coachType}
+                          />
+                        ) : (
+                          <VoiceCallCard
+                            call={item.data}
+                            userTimezone={userProfile?.timezone ?? undefined}
+                          />
+                        )}
+                      </div>
+                    ))
+                  )}
+
+                  {/* Loading Animation */}
+                  {isTyping && (
+                    <div className="flex flex-col items-center justify-center py-8 gap-4">
+                      <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
+                        style={{ background: COACHES[selectedCoach].gradient }}
+                      >
+                        {COACHES[selectedCoach].avatar}
+                      </div>
+                      <p className="text-muted-foreground text-sm">{COACHES[selectedCoach].name} is thinking...</p>
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+            </div>
+
+            {/* Input */}
+            <div className="border-t sticky bottom-0 bg-background">
+              <div className="container mx-auto px-4 py-4">
+                <div className="max-w-4xl mx-auto">
+                  {activeConversationId && (messages.length > 0 || voiceCalls.length > 0) && (
+                    <div className="text-xs text-center mb-2 text-muted-foreground">
+                      Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
+                      {voiceCalls.length > 0 && ` • ${voiceCalls.length} voice ${voiceCalls.length === 1 ? 'call' : 'calls'}`}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <div className="relative flex-1 flex items-center">
+                      <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                        placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
+                        className="flex-1 pr-10"
+                        disabled={isTyping || isLoadingHistory}
+                      />
+                      <div className="absolute right-1">
+                        <VoiceInputButton
+                          onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                          onTranscriptUpdate={(text) => setInput(text)}
+                          disabled={isTyping || isLoadingHistory}
+                          variant="default"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleSend}
+                      size="icon"
+                      disabled={isTyping || isLoadingHistory || !input.trim()}
+                      style={{ background: COACHES[selectedCoach].gradient }}
+                      className="text-white hover:opacity-90"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs mt-2 text-center text-muted-foreground">
+                    Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* Phone Verification Modal */}
+      {user && (
+        <PhoneVerificationModal
+          isOpen={showPhoneVerification}
+          onClose={() => setShowPhoneVerification(false)}
+          onVerified={handlePhoneVerifiedInternal}
+          userId={user.id}
+        />
+      )}
     </SidebarInset>
   );
 }
 
 // Main ChatPage component with providers
 const ChatPage = () => {
+  const [activeMode, setActiveMode] = useState<ChatMode>('chat');
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+
+  const handlePhoneVerified = (phone: string) => {
+    setVerifiedPhone(phone);
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
-      <ChatSidebar />
-      <ChatPageContent />
+      <ChatSidebar
+        onModeChange={setActiveMode}
+        verifiedPhone={verifiedPhone}
+        onVerifyPhone={() => setShowPhoneVerification(true)}
+      />
+      <ChatPageContent
+        activeMode={activeMode}
+        onPhoneVerified={handlePhoneVerified}
+        showPhoneVerification={showPhoneVerification}
+        setShowPhoneVerification={setShowPhoneVerification}
+      />
     </SidebarProvider>
   );
 };

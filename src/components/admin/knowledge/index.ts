@@ -2,9 +2,11 @@
 // KNOWLEDGE MANAGEMENT COMPONENTS - BARREL EXPORT
 // ============================================================================
 // Central export for all knowledge management UI components
+// GROUPHOME STANDALONE: AgentSelector removed (Nette-only)
 // ============================================================================
 
-export { AgentSelector, AgentSelectorCompact, AgentStatCard } from './AgentSelector';
+// GROUPHOME STANDALONE: AgentSelector removed - only Nette agent supported
+// export { AgentSelector, AgentSelectorCompact, AgentStatCard } from './AgentSelector';
 export { CategorySelector, CategoryGrid, CategoryFilter, CategoryBadge } from './CategorySelector';
 export { KnowledgeSourceInput, QuickSourceInput } from './KnowledgeSourceInput';
 export { FileUploadZone, CompactFileUpload, MultiFileUploadZone } from './FileUploadZone';

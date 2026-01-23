@@ -2,6 +2,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { TacticWithProgress, WeekSummary, JourneyPhase } from '@/types/tactic';
+import type {
+  CompletionGateResult,
+  CompletionGateStatus,
+  CompletionGateType,
+} from '@/types/assessment';
+import { getVideoProgress } from '@/services/videoProgressService';
+import { getAssessmentStatus } from '@/services/lessonAssessmentService';
 
 export function useUserProgress(userId: string) {
   return useQuery({
@@ -281,4 +288,212 @@ export async function validateM013Completion(
     stepProgressPercent,
     message
   };
+}
+
+// =============================================================================
+// FEAT-GH-006-G: COMPLETION GATE VALIDATION
+// =============================================================================
+
+interface TacticGateConfig {
+  tacticId: string;
+  videoUrl?: string | null;
+  videoCompletionThreshold?: number;
+  completionGateEnabled?: boolean;
+  prerequisiteTacticIds?: string[];
+}
+
+/**
+ * canCompleteTactic - Check if all completion gates are met for a tactic
+ *
+ * Validates three types of gates:
+ * 1. Video Gate - User must watch X% (default 90%) of the lesson video
+ * 2. Assessment Gate - User must pass the lesson assessment quiz
+ * 3. Prerequisites Gate - User must complete all prerequisite tactics
+ *
+ * @param userId - The user's ID
+ * @param tacticConfig - Configuration for the tactic's gates
+ * @returns CompletionGateResult with gate statuses and overall completion status
+ */
+export async function canCompleteTactic(
+  userId: string,
+  tacticConfig: TacticGateConfig
+): Promise<CompletionGateResult> {
+  const {
+    tacticId,
+    videoUrl,
+    videoCompletionThreshold = 90,
+    completionGateEnabled = true,
+    prerequisiteTacticIds = [],
+  } = tacticConfig;
+
+  const gates: CompletionGateStatus[] = [];
+  const blockedBy: CompletionGateType[] = [];
+
+  // If completion gate is disabled, everything passes
+  if (!completionGateEnabled) {
+    return {
+      canComplete: true,
+      gates: [],
+      blockedBy: [],
+      message: 'Completion gates are disabled for this tactic.',
+    };
+  }
+
+  // =============================================================================
+  // 1. VIDEO GATE
+  // =============================================================================
+  if (videoUrl) {
+    const videoResult = await getVideoProgress({
+      userId,
+      tacticId,
+    });
+
+    const watchPercentage = videoResult.success && videoResult.data
+      ? videoResult.data.watch_percentage || 0
+      : 0;
+    const videoGatePassed = watchPercentage >= videoCompletionThreshold;
+
+    gates.push({
+      type: 'video',
+      label: 'Watch Lesson Video',
+      required: true,
+      passed: videoGatePassed,
+      details: `${Math.round(watchPercentage)}% watched (${videoCompletionThreshold}% required)`,
+      action: !videoGatePassed
+        ? {
+            label: 'Watch Video',
+            type: 'watch_video',
+          }
+        : undefined,
+    });
+
+    if (!videoGatePassed) {
+      blockedBy.push('video');
+    }
+  }
+
+  // =============================================================================
+  // 2. ASSESSMENT GATE
+  // =============================================================================
+  const assessmentStatus = await getAssessmentStatus(userId, tacticId);
+
+  if (assessmentStatus.hasAssessment) {
+    const assessmentGatePassed = assessmentStatus.passed;
+
+    gates.push({
+      type: 'assessment',
+      label: 'Pass Knowledge Check',
+      required: true,
+      passed: assessmentGatePassed,
+      details: assessmentGatePassed
+        ? `Best score: ${assessmentStatus.bestScore}%`
+        : assessmentStatus.attempts > 0
+          ? `${assessmentStatus.attempts} attempt${assessmentStatus.attempts !== 1 ? 's' : ''}, best: ${assessmentStatus.bestScore}%`
+          : 'Not attempted yet',
+      action: !assessmentGatePassed
+        ? {
+            label: assessmentStatus.attempts > 0 ? 'Retry Assessment' : 'Take Assessment',
+            type: 'take_assessment',
+          }
+        : undefined,
+    });
+
+    if (!assessmentGatePassed) {
+      blockedBy.push('assessment');
+    }
+  }
+
+  // =============================================================================
+  // 3. PREREQUISITES GATE
+  // =============================================================================
+  if (prerequisiteTacticIds.length > 0) {
+    // Fetch progress for all prerequisite tactics
+    const { data: prereqProgress, error } = await supabase
+      .from('gh_user_tactic_progress')
+      .select('tactic_id, status')
+      .eq('user_id', userId)
+      .in('tactic_id', prerequisiteTacticIds);
+
+    if (error) {
+      console.error('Error fetching prerequisite progress:', error);
+    }
+
+    const completedPrereqs = (prereqProgress || []).filter(
+      (p) => p.status === 'completed'
+    ).length;
+    const totalPrereqs = prerequisiteTacticIds.length;
+    const prerequisitesGatePassed = completedPrereqs === totalPrereqs;
+
+    gates.push({
+      type: 'prerequisites',
+      label: 'Complete Prerequisites',
+      required: true,
+      passed: prerequisitesGatePassed,
+      details: `${completedPrereqs}/${totalPrereqs} prerequisites completed`,
+      action: !prerequisitesGatePassed && prerequisiteTacticIds[0]
+        ? {
+            label: 'View Prerequisites',
+            type: 'complete_tactic',
+            targetId: prerequisiteTacticIds.find(
+              (id) => !(prereqProgress || []).find((p) => p.tactic_id === id && p.status === 'completed')
+            ),
+          }
+        : undefined,
+    });
+
+    if (!prerequisitesGatePassed) {
+      blockedBy.push('prerequisites');
+    }
+  }
+
+  // =============================================================================
+  // FINAL RESULT
+  // =============================================================================
+  const canComplete = blockedBy.length === 0;
+  const requiredGatesCount = gates.filter((g) => g.required).length;
+  const passedRequiredGatesCount = gates.filter((g) => g.required && g.passed).length;
+
+  let message: string | undefined;
+  if (!canComplete) {
+    if (blockedBy.length === 1) {
+      const gate = gates.find((g) => g.type === blockedBy[0]);
+      message = gate?.action?.label
+        ? `${gate.action.label} to unlock completion.`
+        : `Complete the ${gate?.label || blockedBy[0]} requirement.`;
+    } else {
+      message = `Complete ${requiredGatesCount - passedRequiredGatesCount} remaining requirements to unlock.`;
+    }
+  }
+
+  return {
+    canComplete,
+    gates,
+    blockedBy,
+    message,
+  };
+}
+
+/**
+ * React Query hook for checking completion gates
+ */
+export function useCompletionGates(
+  userId: string | undefined,
+  tacticConfig: TacticGateConfig | undefined
+) {
+  return useQuery({
+    queryKey: ['completionGates', tacticConfig?.tacticId, userId],
+    queryFn: async () => {
+      if (!userId || !tacticConfig) {
+        return {
+          canComplete: false,
+          gates: [],
+          blockedBy: [],
+          message: 'User not authenticated',
+        } as CompletionGateResult;
+      }
+      return canCompleteTactic(userId, tacticConfig);
+    },
+    staleTime: 30000, // 30 seconds
+    enabled: !!userId && !!tacticConfig?.tacticId,
+  });
 }

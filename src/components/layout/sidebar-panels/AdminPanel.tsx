@@ -4,12 +4,13 @@ import {
   Users,
   FileText,
   Calendar,
-  Brain,
+  // GROUPHOME STANDALONE: Removed Brain - was used for MIO Reports
   BookOpen,
   Shield,
   Settings,
   Home,
-  ClipboardCheck,
+  GraduationCap,
+  // GROUPHOME STANDALONE: Removed ClipboardCheck - was used for MIO Assessments
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -18,15 +19,18 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
+import { useAdmin } from '@/contexts/AdminContext';
 import { Badge } from '@/components/ui/badge';
+
+// GROUPHOME STANDALONE: Tier type for admin access control
+type AdminTier = 'admin' | 'super_admin';
 
 const ADMIN_NAV_ITEMS: Array<{
   title: string;
   href: string;
   icon: any;
   description: string;
-  requiredTier?: 'admin' | 'super_admin';
+  requiredTier?: AdminTier;
 }> = [
   {
     title: 'Dashboard',
@@ -47,31 +51,25 @@ const ADMIN_NAV_ITEMS: Array<{
     description: 'Document management',
   },
   {
+    title: 'Programs',
+    href: '/admin/programs',
+    icon: GraduationCap,
+    description: 'Course management',
+  },
+  {
     title: 'Protocols',
     href: '/admin/protocols',
     icon: Calendar,
     description: 'Coach protocols',
     requiredTier: 'super_admin',
   },
-  {
-    title: 'MIO Reports',
-    href: '/admin/reports',
-    icon: Brain,
-    description: 'Mind Insurance Oracle',
-    requiredTier: 'super_admin',
-  },
-  {
-    title: 'Assessments',
-    href: '/admin/assessments',
-    icon: ClipboardCheck,
-    description: 'Assessment invitations',
-    requiredTier: 'super_admin',
-  },
+  // GROUPHOME STANDALONE: Removed MIO Reports nav item
+  // GROUPHOME STANDALONE: Removed MIO Assessments nav item
   {
     title: 'Knowledge Base',
     href: '/admin/knowledge-base',
     icon: BookOpen,
-    description: 'KB management',
+    description: 'Nette AI knowledge',
     requiredTier: 'super_admin',
   },
 ];
@@ -79,7 +77,8 @@ const ADMIN_NAV_ITEMS: Array<{
 export function AdminPanel() {
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { tier, isSuperAdmin, isAdmin, hasTierAccess } = useMIAccessControl();
+  // GROUPHOME STANDALONE: Using useAdmin instead of useMIAccessControl
+  const { adminUser, isSuperAdmin, isAdmin } = useAdmin();
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -94,10 +93,13 @@ export function AdminPanel() {
     }
   };
 
-  // Filter navigation items based on user's tier
+  // GROUPHOME STANDALONE: Filter navigation items based on user's role
   const visibleNavItems = ADMIN_NAV_ITEMS.filter(item => {
     if (!item.requiredTier) return true; // No tier requirement
-    return hasTierAccess(item.requiredTier);
+    // super_admin can access everything, admin can only access admin-level items
+    if (item.requiredTier === 'super_admin') return isSuperAdmin;
+    if (item.requiredTier === 'admin') return isAdmin || isSuperAdmin;
+    return false;
   });
 
   return (
@@ -109,7 +111,7 @@ export function AdminPanel() {
           <div className="flex-1">
             <p className="text-sm font-medium">Admin Panel</p>
             <p className="text-xs text-muted-foreground capitalize">
-              {tier?.replace('_', ' ') || 'Loading...'}
+              {adminUser?.role?.replace('_', ' ') || 'Loading...'}
             </p>
           </div>
           {isSuperAdmin && (
@@ -150,7 +152,7 @@ export function AdminPanel() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Back to App">
-              <Link to="/mind-insurance" onClick={handleClick}>
+              <Link to="/dashboard" onClick={handleClick}>
                 <Home className="h-4 w-4" />
                 <span>Back to App</span>
               </Link>

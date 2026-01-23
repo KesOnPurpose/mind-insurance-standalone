@@ -1,7 +1,7 @@
 {
-  "name": "Mind Insurance",
-  "short_name": "MindIns",
-  "description": "Your daily behavioral practice companion",
+  "name": "Grouphome Accelerator",
+  "short_name": "Grouphome",
+  "description": "The complete roadmap to start and grow your group home business",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

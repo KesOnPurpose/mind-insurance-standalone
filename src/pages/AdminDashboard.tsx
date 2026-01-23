@@ -4,7 +4,8 @@ import { ShieldCheck, Users, BarChart3, Settings, Activity } from 'lucide-react'
 import { AnalyticsDashboard } from '@/components/admin/analytics';
 import { Button } from '@/components/ui/button';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
-import { useMIAccessControl } from '@/hooks/useMIAccessControl';
+
+// GROUPHOME STANDALONE: Removed useMIAccessControl import
 
 // ============================================================================
 // ADMIN DASHBOARD
@@ -19,7 +20,7 @@ type DashboardView = 'analytics' | 'permissions';
 
 export default function AdminDashboard() {
   const { adminUser, isSuperAdmin } = useAdmin();
-  const { tier } = useMIAccessControl();
+  // GROUPHOME STANDALONE: Removed useMIAccessControl - using adminUser.role directly
   const [view, setView] = useState<DashboardView>('analytics');
 
   if (!adminUser) {
@@ -31,7 +32,7 @@ export default function AdminDashboard() {
       mode="admin"
       showHeader
       headerTitle="Admin Dashboard"
-      headerSubtitle={`Welcome back, ${tier?.replace('_', ' ') || adminUser.role}`}
+      headerSubtitle={`Welcome back, ${adminUser.role.replace('_', ' ')}`}
       headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
     >
       <div className="space-y-6">

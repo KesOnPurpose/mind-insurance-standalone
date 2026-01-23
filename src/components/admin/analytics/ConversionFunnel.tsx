@@ -55,18 +55,21 @@ async function batchQuery<T>(
 // Helper function to batch count queries
 async function batchCountQuery(
   userIds: string[],
-  tableName: 'user_onboarding',
+  tableName: 'user_onboarding' | 'user_profiles',
   notNullColumn: string
 ): Promise<number> {
   const BATCH_SIZE = 50;
   let totalCount = 0;
 
+  // user_profiles uses 'id' as primary key, user_onboarding uses 'user_id'
+  const userIdColumn = tableName === 'user_profiles' ? 'id' : 'user_id';
+
   for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
     const batchIds = userIds.slice(i, i + BATCH_SIZE);
     const { count } = await supabase
       .from(tableName)
-      .select('user_id', { count: 'exact', head: true })
-      .in('user_id', batchIds)
+      .select(userIdColumn, { count: 'exact', head: true })
+      .in(userIdColumn, batchIds)
       .not(notNullColumn, 'is', null);
     totalCount += count || 0;
   }
@@ -146,8 +149,8 @@ async function fetchFunnelData(timeRange: TimeRange): Promise<FunnelData> {
 
     const uniqueTacticUsers = new Set(tacticUsers.map(t => t.user_id)).size;
 
-    // Count users who completed Week 1 (user_onboarding.week_1_completed_at IS NOT NULL)
-    const week1Count = await batchCountQuery(userIds, 'user_onboarding', 'week_1_completed_at');
+    // Count users who completed Week 1 (user_profiles.week_1_completed_at IS NOT NULL)
+    const week1Count = await batchCountQuery(userIds, 'user_profiles', 'week_1_completed_at');
 
     // Build funnel stages
     const stages: FunnelStage[] = [

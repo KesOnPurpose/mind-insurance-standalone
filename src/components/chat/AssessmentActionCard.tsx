@@ -1,12 +1,24 @@
+// ============================================================================
+// GROUPHOME STANDALONE: ORPHANED FILE
+// This component imports from useAssessmentInvitations which was deleted during MI removal.
+// The component is not currently used anywhere in the codebase.
+// This is an MIO-specific feature - if assessment cards are needed for GH, rebuild with GH patterns.
+// ============================================================================
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, ArrowRight, X, Sparkles } from 'lucide-react';
-import { ASSESSMENT_INFO, type AssessmentType } from '@/hooks/useAssessmentInvitations';
+// GROUPHOME STANDALONE: Broken import - hook was deleted
+// import { ASSESSMENT_INFO, type AssessmentType } from '@/hooks/useAssessmentInvitations';
+
+// GROUPHOME STANDALONE: Placeholder types to prevent TypeScript errors
+type AssessmentType = string;
+const ASSESSMENT_INFO: Record<string, { name: string; icon: string; description: string; path: string; estimatedMinutes: number }> = {};
 
 // ============================================================================
-// ASSESSMENT ACTION CARD COMPONENT
+// ASSESSMENT ACTION CARD COMPONENT (ORPHANED - NOT IN USE)
 // ============================================================================
 // Displays assessment suggestions from MIO in chat interface
 // Renders as a special message card with action buttons

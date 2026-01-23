@@ -1,0 +1,318 @@
+{
+  "name": "Nette AI Voice - Call Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice-call-complete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Call Complete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "voice-call-complete"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-call-id",
+              "leftValue": "={{ $json.body?.ghl_call_id || $json.ghl_call_id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "check-transcript",
+              "leftValue": "={{ $json.body?.transcript || $json.transcript || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  up.id as user_id,\n  up.email,\n  up.full_name,\n  up.timezone\nFROM user_profiles up\nWHERE up.ghl_contact_id = '{{ $json.body?.ghl_contact_id || $json.ghl_contact_id }}'\n   OR up.phone = '{{ $json.body?.phone || $json.phone }}'\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "lookup-user",
+      "name": "Lookup User",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [680, 200],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-user-found",
+              "leftValue": "={{ $json.user_id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-user-found",
+      "name": "User Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 500,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are an AI assistant that summarizes voice call transcripts for Nette, a group home business coach.\\n\\nAnalyze the following voice call transcript and provide:\\n1. A brief 2-3 sentence summary of the conversation\\n2. A list of 3-5 key topics discussed (as short phrases)\\n\\nRespond in JSON format ONLY (no markdown code blocks):\\n{\\n  \\\"summary\\\": \\\"Your 2-3 sentence summary here\\\",\\n  \\\"topics\\\": [\\\"topic1\\\", \\\"topic2\\\", \\\"topic3\\\"]\\n}\\n\\nTranscript:\\n{{ $('Webhook - Call Complete').item.json.body?.transcript || $('Webhook - Call Complete').item.json.transcript }}\\n\\nCall duration: {{ $('Webhook - Call Complete').item.json.body?.call_duration_seconds || $('Webhook - Call Complete').item.json.call_duration_seconds }} seconds\\nDirection: {{ $('Webhook - Call Complete').item.json.body?.direction || $('Webhook - Call Complete').item.json.direction }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "generate-summary",
+      "name": "Generate AI Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 100],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "anthropic-header-auth",
+          "name": "Anthropic API Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the AI response and extract summary and topics\nconst rawWebhook = $('Webhook - Call Complete').first().json;\n// Handle both direct and body-wrapped webhook data\nconst webhookData = rawWebhook.body || rawWebhook;\nconst userData = $('Lookup User').first().json;\nconst aiResponse = $input.first().json;\n\n// Try to parse the AI response as JSON\nlet summary = '';\nlet topics = [];\n\ntry {\n  // Extract content from Anthropic API response format\n  let responseText = '';\n  \n  if (aiResponse.content && Array.isArray(aiResponse.content)) {\n    // Anthropic Messages API format: { content: [{ type: 'text', text: '...' }] }\n    const textBlock = aiResponse.content.find(block => block.type === 'text');\n    responseText = textBlock ? textBlock.text : '';\n  } else if (aiResponse.content) {\n    responseText = aiResponse.content;\n  } else if (aiResponse.text) {\n    responseText = aiResponse.text;\n  } else {\n    responseText = JSON.stringify(aiResponse);\n  }\n  \n  // Remove markdown code blocks if present\n  responseText = responseText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  \n  const parsed = JSON.parse(responseText);\n  summary = parsed.summary || '';\n  topics = Array.isArray(parsed.topics) ? parsed.topics : [];\n} catch (e) {\n  // If parsing fails, use the raw response as summary\n  summary = 'Voice call completed. Unable to generate summary.';\n  topics = ['general discussion'];\n}\n\n// Parse transcript into messages if possible\nlet parsedMessages = null;\ntry {\n  const transcript = webhookData.transcript || '';\n  const lines = transcript.split('\\n').filter(l => l.trim());\n  parsedMessages = lines.map((line, idx) => {\n    const isUser = line.toLowerCase().startsWith('user:') || line.toLowerCase().startsWith('customer:');\n    const content = line.replace(/^(user:|customer:|nette:|assistant:|ai:)/i, '').trim();\n    return {\n      role: isUser ? 'user' : 'nette',\n      content: content,\n      timestamp: new Date().toISOString()\n    };\n  });\n} catch (e) {\n  parsedMessages = null;\n}\n\n// Prepare the record for insertion\nconst voiceCallRecord = {\n  user_id: userData.user_id,\n  ghl_call_id: webhookData.ghl_call_id,\n  ghl_contact_id: webhookData.ghl_contact_id || null,\n  phone: webhookData.phone || null,\n  direction: webhookData.direction || 'inbound',\n  call_duration_seconds: webhookData.call_duration_seconds || 0,\n  call_status: 'completed',\n  full_transcript: webhookData.transcript,\n  parsed_messages: parsedMessages ? JSON.stringify(parsedMessages) : null,\n  ai_summary: summary,\n  topics_discussed: topics,\n  recording_url: webhookData.recording_url || null,\n  trigger_type: webhookData.trigger_type || 'reactive_widget',\n  started_at: webhookData.started_at || null,\n  ended_at: webhookData.ended_at || new Date().toISOString()\n};\n\nreturn {\n  ...voiceCallRecord,\n  user_full_name: userData.full_name\n};"
+      },
+      "id": "prepare-record",
+      "name": "Prepare Voice Call Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO nette_voice_call_logs (\n  user_id,\n  ghl_call_id,\n  ghl_contact_id,\n  phone,\n  direction,\n  call_duration_seconds,\n  call_status,\n  full_transcript,\n  parsed_messages,\n  ai_summary,\n  topics_discussed,\n  recording_url,\n  trigger_type,\n  started_at,\n  ended_at,\n  synced_to_chat,\n  created_at\n) VALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.ghl_call_id }}',\n  {{ $json.ghl_contact_id ? \"'\" + $json.ghl_contact_id + \"'\" : 'NULL' }},\n  {{ $json.phone ? \"'\" + $json.phone + \"'\" : 'NULL' }},\n  '{{ $json.direction }}',\n  {{ $json.call_duration_seconds }},\n  'completed',\n  '{{ $json.full_transcript.replace(/'/g, \"''\") }}',\n  {{ $json.parsed_messages ? \"'\" + $json.parsed_messages.replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n  '{{ $json.ai_summary.replace(/'/g, \"''\") }}',\n  ARRAY[{{ $json.topics_discussed.map(t => \"'\" + t.replace(/'/g, \"''\") + \"'\").join(', ') }}],\n  {{ $json.recording_url ? \"'\" + $json.recording_url + \"'\" : 'NULL' }},\n  '{{ $json.trigger_type }}',\n  {{ $json.started_at ? \"'\" + $json.started_at + \"'\" : 'NULL' }},\n  {{ $json.ended_at ? \"'\" + $json.ended_at + \"'\" : 'NOW()' }},\n  TRUE,\n  NOW()\n)\nON CONFLICT (ghl_call_id) DO UPDATE SET\n  full_transcript = EXCLUDED.full_transcript,\n  parsed_messages = EXCLUDED.parsed_messages,\n  ai_summary = EXCLUDED.ai_summary,\n  topics_discussed = EXCLUDED.topics_discussed,\n  recording_url = EXCLUDED.recording_url,\n  call_status = 'completed',\n  synced_to_chat = TRUE,\n  synced_at = NOW(),\n  updated_at = NOW()\nRETURNING id, user_id, ghl_call_id, ai_summary;",
+        "options": {}
+      },
+      "id": "insert-voice-call",
+      "name": "Insert Voice Call Log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1560, 100],
+      "credentials": {
+        "postgres": {
+          "id": "8NMb8xpnAv2CtCPV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"voice_call_id\": \"{{ $json.id }}\",\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"ai_summary\": \"{{ $json.ai_summary }}\",\n  \"message\": \"Voice call logged and synced to chat successfully\"\n}",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1780, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"User not found for the provided ghl_contact_id or phone\",\n  \"ghl_contact_id\": \"{{ $('Webhook - Call Complete').item.json.body?.ghl_contact_id || $('Webhook - Call Complete').item.json.ghl_contact_id }}\",\n  \"phone\": \"{{ $('Webhook - Call Complete').item.json.body?.phone || $('Webhook - Call Complete').item.json.phone }}\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "id": "respond-user-not-found",
+      "name": "Respond - User Not Found",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"Missing required parameters: ghl_call_id and transcript are required\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "respond-validation-error",
+      "name": "Respond - Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Call Complete": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Lookup User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup User": {
+      "main": [
+        [
+          {
+            "node": "User Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Found?": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - User Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Prepare Voice Call Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Voice Call Record": {
+      "main": [
+        [
+          {
+            "node": "Insert Voice Call Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Voice Call Log": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "voice-call-complete"
+  },
+  "pinData": {},
+  "versionId": "1.0.1",
+  "tags": [
+    {
+      "name": "Nette Voice",
+      "createdAt": "2026-01-19T00:00:00.000Z",
+      "updatedAt": "2026-01-19T00:00:00.000Z"
+    }
+  ]
+}

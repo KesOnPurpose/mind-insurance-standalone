@@ -16,7 +16,8 @@ import {
   GraduationCap,
   BookOpen,
   Target,
-  X
+  X,
+  Video
 } from 'lucide-react';
 import { TacticWithProgress } from '@/types/tactic';
 import { getCategoryColor } from '@/config/categories';
@@ -24,6 +25,8 @@ import { formatCostRange } from '@/services/tacticFilterService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { VideoPlayer } from '@/components/course/VideoPlayer';
+import { VideoProgressBadge } from '@/components/course/VideoProgressGauge';
 
 interface TacticDetailModalProps {
   tactic: TacticWithProgress | null;
@@ -241,6 +244,44 @@ export function TacticDetailModal({
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
+          {/* Video Player Section (FEAT-GH-005) */}
+          {tactic.video_url && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Video className="w-5 h-5 text-primary" />
+                  Lesson Video
+                </h3>
+                {/* Video progress badge */}
+                <VideoProgressBadge
+                  watchPercentage={tactic.videoWatchPercentage || 0}
+                  completionThreshold={tactic.video_completion_threshold || 90}
+                  isComplete={tactic.videoGateMet || false}
+                />
+              </div>
+              <VideoPlayer
+                tacticId={tactic.tactic_id}
+                videoUrl={tactic.video_url}
+                videoProvider={tactic.video_provider || undefined}
+                duration={tactic.video_duration_seconds || undefined}
+                thumbnailUrl={tactic.video_thumbnail_url || undefined}
+                completionThreshold={tactic.video_completion_threshold || 90}
+                onComplete={() => {
+                  // Auto-start tactic if not started
+                  if (tactic.status === 'not_started' && onStartTactic) {
+                    onStartTactic(tactic.tactic_id);
+                  }
+                }}
+              />
+              {tactic.completion_gate_enabled && (
+                <p className="text-xs text-muted-foreground">
+                  Watch at least {tactic.video_completion_threshold || 90}% of the video to unlock completion.
+                </p>
+              )}
+              <Separator />
+            </div>
+          )}
+
           {/* Official Lynette Quote */}
           {tactic.official_lynette_quote && (
             <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200">

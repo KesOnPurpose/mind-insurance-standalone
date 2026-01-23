@@ -318,13 +318,22 @@ serve(async (req) => {
       );
     }
 
-    // Update user_profiles with ghl_contact_id
+    // Update user_profiles with ghl_contact_id AND phone (for voice context matching)
+    const updateData: Record<string, string | null> = {
+      ghl_contact_id: ghlContact.id,
+      updated_at: new Date().toISOString()
+    };
+
+    // Sync phone from GHL contact for voice context matching
+    if (ghlContact.phone) {
+      updateData.phone = ghlContact.phone;
+      updateData.verified_phone = ghlContact.phone;
+      console.log('[Sync] Syncing phone from GHL:', ghlContact.phone);
+    }
+
     const { error: updateError } = await supabase
       .from('user_profiles')
-      .update({
-        ghl_contact_id: ghlContact.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', user_id);
 
     if (updateError) {

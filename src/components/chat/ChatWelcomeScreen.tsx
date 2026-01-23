@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send } from 'lucide-react';
-import { COACHES, CoachType } from '@/types/coach';
-import { useProduct } from '@/contexts/ProductContext';
+import { Card } from '@/components/ui/card';
+import { Send, Clock, ArrowRight, Calendar } from 'lucide-react';
+import { COACHES } from '@/types/coach';
 import { cn } from '@/lib/utils';
 import { VoiceInputButton } from './VoiceInputButton';
+import { useStuckDetection, getStuckMessage, getStuckCTA, StuckStatus } from '@/hooks/useStuckDetection';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
@@ -14,27 +16,13 @@ interface ChatWelcomeScreenProps {
   userTimezone?: string;
 }
 
-// Product-specific quick actions
-const QUICK_ACTIONS: Record<string, string[]> = {
-  'grouphome': [
-    "How to use this app?",
-    "Where should I start?",
-    "Do I need a license?",
-    "Tell me about your journey"
-  ],
-  'mind-insurance': [
-    "ChatGPT VS MIO?",
-    "Help me see my patterns",
-    "Why do I keep repeating mistakes?",
-    "What is identity collision?"
-  ],
-  'me-wealth': [
-    "How to build business credit?",
-    "Funding strategies for beginners",
-    "Where should I start?",
-    "Tell me about your journey"
-  ]
-};
+// GROUPHOME STANDALONE: Quick actions for Nette coach
+const QUICK_ACTIONS = [
+  "How to use this app?",
+  "Where should I start?",
+  "Do I need a license?",
+  "Tell me about your journey"
+];
 
 const getTimeBasedGreeting = (userTimezone?: string): string => {
   const now = new Date();
@@ -62,16 +50,6 @@ const getFirstName = (fullName: string | null): string => {
   return fullName.split(' ')[0];
 };
 
-// Map product to coach
-const getCoachForProduct = (product: string): CoachType => {
-  const coachMap: Record<string, CoachType> = {
-    'grouphome': 'nette',
-    'mind-insurance': 'mio',
-    'me-wealth': 'me'
-  };
-  return coachMap[product] || 'nette';
-};
-
 export const ChatWelcomeScreen = ({
   userName,
   onSendMessage,
@@ -79,12 +57,27 @@ export const ChatWelcomeScreen = ({
   userTimezone
 }: ChatWelcomeScreenProps) => {
   const [input, setInput] = useState('');
-  const { currentProduct } = useProduct();
-  const activeCoach = getCoachForProduct(currentProduct);
-  const coach = COACHES[activeCoach];
-  const quickActions = QUICK_ACTIONS[currentProduct] || QUICK_ACTIONS['grouphome'];
+  const navigate = useNavigate();
+  // GROUPHOME STANDALONE: Always use Nette coach
+  const coach = COACHES.nette;
   const firstName = getFirstName(userName);
   const greeting = getTimeBasedGreeting(userTimezone);
+
+  // FEAT-GH-007: Stuck detection for nudge messages
+  const { data: stuckStatus, isLoading: stuckLoading } = useStuckDetection();
+
+  // Handle stuck CTA actions
+  const handleStuckCTA = (action: string) => {
+    if (action === 'continue' && stuckStatus?.currentTacticId) {
+      navigate(`/course/tactic/${stuckStatus.currentTacticId}`);
+    } else if (action === 'chat') {
+      // Just close the nudge and let them chat
+      onSendMessage("I'd like to talk about getting back on track");
+    } else if (action === 'book') {
+      // Open booking link (Calendly or similar)
+      window.open('https://calendly.com/grouphome4newbies/coaching', '_blank');
+    }
+  };
 
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
@@ -96,75 +89,72 @@ export const ChatWelcomeScreen = ({
     onSendMessage(message);
   };
 
-  // Product-specific subtitles
-  const getSubtitle = () => {
-    switch (currentProduct) {
-      case 'mind-insurance':
-        return "I'm here to help you see patterns you can't see yourself.";
-      case 'me-wealth':
-        return "How can I help you build your financial foundation today?";
-      default:
-        return "How can I help you with your group home journey today?";
-    }
-  };
-
-  // Check if Mind Insurance for dark theme
-  const isMindInsurance = currentProduct === 'mind-insurance';
-
   return (
-    <div className={cn(
-      "min-h-screen flex flex-col items-center justify-center px-4",
-      isMindInsurance ? "bg-[#0a1628]" : "bg-background"
-    )}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-2xl flex flex-col items-center">
         {/* Coach Avatar */}
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-6"
-          style={{ background: coach.gradient }}
-        >
-          {coach.avatar}
-        </div>
+        <img
+          src={coach.avatar}
+          alt={coach.name}
+          className="w-16 h-16 rounded-full object-cover mb-6"
+        />
 
         {/* Greeting */}
-        <h1 className={cn(
-          "text-2xl md:text-3xl font-semibold text-center mb-2",
-          isMindInsurance ? "text-white" : "text-foreground"
-        )}>
+        <h1 className="text-2xl md:text-3xl font-semibold text-center mb-2 text-foreground">
           {greeting}{firstName ? `, ${firstName}` : ''}
         </h1>
 
         {/* Subtitle */}
-        <p className={cn(
-          "text-center mb-8",
-          isMindInsurance ? "text-gray-400" : "text-muted-foreground"
-        )}>
-          {getSubtitle()}
+        <p className="text-center mb-8 text-muted-foreground">
+          How can I help you with your group home journey today?
         </p>
+
+        {/* FEAT-GH-007: Stuck Detection Nudge Banner */}
+        {stuckStatus?.isStuck && !stuckLoading && (
+          <Card className="w-full mb-6 p-4 border-l-4 border-l-primary bg-primary/5">
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: coach.gradient }}
+                >
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {getStuckMessage(stuckStatus).replace('there', firstName || 'there')}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => handleStuckCTA(getStuckCTA(stuckStatus).action)}
+                  size="sm"
+                  className="rounded-full"
+                  style={{ background: coach.gradient }}
+                >
+                  {getStuckCTA(stuckStatus).text}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Input Container */}
         <div className="w-full mb-6">
-          <div className={cn(
-            "flex items-center gap-2 p-2 border rounded-2xl shadow-sm focus-within:ring-2",
-            isMindInsurance
-              ? "bg-[#0f1d32] border-[#05c3dd]/30 focus-within:ring-[#05c3dd]/20"
-              : "bg-background focus-within:ring-primary/20"
-          )}>
+          <div className="flex items-center gap-2 p-2 border rounded-2xl shadow-sm focus-within:ring-2 bg-background focus-within:ring-primary/20">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder={`Ask ${coach.name} anything...`}
-              className={cn(
-                "flex-1 border-0 bg-transparent focus-visible:ring-0 text-base",
-                isMindInsurance && "text-white placeholder:text-gray-500"
-              )}
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base"
               disabled={isLoading}
             />
             <VoiceInputButton
               onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
               onTranscriptUpdate={(text) => setInput(text)}
               disabled={isLoading}
-              variant={isMindInsurance ? 'mi' : 'default'}
+              variant="default"
             />
             <Button
               onClick={handleSend}
@@ -180,21 +170,14 @@ export const ChatWelcomeScreen = ({
 
         {/* Quick Action Chips */}
         <div className="flex flex-wrap justify-center gap-2">
-          {quickActions.map((action) => (
+          {QUICK_ACTIONS.map((action) => (
             <Button
               key={action}
               variant="outline"
               onClick={() => handleQuickAction(action)}
               disabled={isLoading}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm",
-                isMindInsurance
-                  ? "bg-[#0f1d32] border-[#05c3dd]/30 text-gray-300 hover:bg-[#05c3dd]/10 hover:text-white hover:border-[#05c3dd]/50"
-                  : "hover:bg-primary/5 hover:border-primary/30"
-              )}
-              style={!isMindInsurance ? {
-                borderColor: `${coach.color}30`,
-              } : undefined}
+              className="rounded-full px-4 py-2 text-sm hover:bg-primary/5 hover:border-primary/30"
+              style={{ borderColor: `${coach.color}30` }}
             >
               {action}
             </Button>

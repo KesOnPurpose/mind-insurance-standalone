@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
 import { DocumentAnalyticsSummary } from '@/components/admin/documents/DocumentAnalyticsSummary';
 import { DocumentUploadZone } from '@/components/admin/documents/DocumentUploadZone';
@@ -100,19 +101,16 @@ export function DocumentManagement() {
   const showMetadataForm = uploadedFiles.length > 0 && currentFile;
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <FileText className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold italic tracking-tight uppercase">Document Management</h1>
-            <p className="text-sm text-muted-foreground">
-              Upload and manage training materials for tactics
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <SidebarLayout
+      mode="admin"
+      showHeader
+      headerTitle="Document Management"
+      headerSubtitle="Upload and manage training materials for tactics"
+      headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
+    >
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-wrap gap-2 justify-end">
           <DocumentLinkExporter />
           <button
             onClick={() => setIsImporterOpen(true)}
@@ -145,7 +143,6 @@ export function DocumentManagement() {
             }}
           />
         </div>
-      </div>
 
       <DocumentAnalyticsSummary />
 
@@ -263,7 +260,8 @@ export function DocumentManagement() {
         }}
         onLinksUpdated={refetchDocuments}
       />
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }
 

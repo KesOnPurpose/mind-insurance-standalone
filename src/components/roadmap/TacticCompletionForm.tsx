@@ -21,11 +21,14 @@ import {
 } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Building2, Info, AlertCircle, Sparkles, ChevronDown } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { CheckCircle, Building2, Info, AlertCircle, Sparkles, ChevronDown, Lock, Loader2 } from 'lucide-react';
 import { TacticQuestion, BusinessProfile, AssessmentAnswers } from '@/types/assessment';
 import { getQuestionsForTactic } from '@/config/tacticQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompletionGates } from '@/services/progressService';
+import { CompletionGateStatus } from '@/components/course/CompletionGateStatus';
 
 // Keywords for identifying critical steps
 const CRITICAL_KEYWORDS = [
@@ -160,6 +163,16 @@ interface TacticCompletionFormProps {
   tacticCategory: string;
   tacticSteps?: any[];  // The step_by_step array from the tactic
   onComplete: (profileUpdates: Partial<BusinessProfile>, notes: string) => void;
+  // FEAT-GH-006: Completion gate configuration
+  tacticId: string;
+  videoUrl?: string | null;
+  videoCompletionThreshold?: number;
+  completionGateEnabled?: boolean;
+  prerequisiteTacticIds?: string[];
+  // Callbacks for gate actions
+  onWatchVideo?: () => void;
+  onTakeAssessment?: () => void;
+  onViewPrerequisite?: (tacticId: string) => void;
 }
 
 interface FieldState {
@@ -175,6 +188,15 @@ export function TacticCompletionForm({
   tacticCategory,
   tacticSteps = [],
   onComplete,
+  // FEAT-GH-006: Completion gate props
+  tacticId,
+  videoUrl,
+  videoCompletionThreshold = 90,
+  completionGateEnabled = true,
+  prerequisiteTacticIds = [],
+  onWatchVideo,
+  onTakeAssessment,
+  onViewPrerequisite,
 }: TacticCompletionFormProps) {
   const { user } = useAuth();
   const [fieldStates, setFieldStates] = useState<Record<string, FieldState>>({});
@@ -185,6 +207,24 @@ export function TacticCompletionForm({
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [stepValidationErrors, setStepValidationErrors] = useState<Record<number, string>>({});
   const [isLoadingAssessment, setIsLoadingAssessment] = useState(false);
+
+  // FEAT-GH-006: Check completion gates
+  const tacticGateConfig = completionGateEnabled ? {
+    tacticId,
+    videoUrl,
+    videoCompletionThreshold,
+    completionGateEnabled,
+    prerequisiteTacticIds,
+  } : undefined;
+
+  const {
+    data: gateResult,
+    isLoading: isLoadingGates,
+  } = useCompletionGates(user?.id, tacticGateConfig);
+
+  // Determine if completion is blocked by gates
+  const isGateBlocked = completionGateEnabled && gateResult && !gateResult.canComplete;
+  const hasGates = completionGateEnabled && gateResult && gateResult.gates.length > 0;
 
   const questions = getQuestionsForTactic(tacticName, tacticCategory);
   const hasSteps = Array.isArray(tacticSteps) && tacticSteps.length > 0;
@@ -649,11 +689,49 @@ export function TacticCompletionForm({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {isLoadingAssessment && (
-            <div className="text-sm text-muted-foreground italic">
-              Loading your assessment data...
+          {/* FEAT-GH-006: Completion Gate Status */}
+          {isLoadingGates && (
+            <div className="flex items-center gap-2 p-4 bg-muted/50 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Checking completion requirements...</span>
             </div>
           )}
+
+          {hasGates && gateResult && (
+            <>
+              <CompletionGateStatus
+                gateResult={gateResult}
+                onWatchVideo={onWatchVideo}
+                onTakeAssessment={onTakeAssessment}
+                onViewPrerequisite={onViewPrerequisite}
+                compact={!isGateBlocked}
+              />
+              {!isGateBlocked && <Separator />}
+            </>
+          )}
+
+          {/* Show blocking message if gates not met */}
+          {isGateBlocked && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-5 h-5 text-amber-600" />
+                <h4 className="font-semibold text-amber-800">Complete Requirements First</h4>
+              </div>
+              <p className="text-sm text-amber-700">
+                Before you can mark this tactic as complete, please finish the requirements shown above.
+                This ensures you've fully absorbed the material.
+              </p>
+            </div>
+          )}
+
+          {/* Only show form fields if gates are passed or no gates */}
+          {(!hasGates || !isGateBlocked) && (
+            <>
+              {isLoadingAssessment && (
+                <div className="text-sm text-muted-foreground italic">
+                  Loading your assessment data...
+                </div>
+              )}
 
           {/* Step-by-Step Accountability Section - Smart Filtered */}
           {hasSteps && (() => {
@@ -845,14 +923,31 @@ export function TacticCompletionForm({
               rows={3}
             />
           </div>
+            </>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Complete Tactic'}
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || isGateBlocked || isLoadingGates}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : isGateBlocked ? (
+              <>
+                <Lock className="w-4 h-4 mr-2" />
+                Complete Requirements
+              </>
+            ) : (
+              'Complete Tactic'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

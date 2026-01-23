@@ -50,6 +50,9 @@ import type {
  * 2. React Query hooks for declarative use in components
  *
  * CACHING: All metric functions now use metricsCache service for improved performance
+ *
+ * GROUPHOME STANDALONE: Analytics now focused on Nette (GH coach) only.
+ * MIO/ME fields in response types remain for edge function compatibility but return 0/empty.
  */
 
 // Helper function to convert date range to time_range parameter

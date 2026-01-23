@@ -1,7 +1,8 @@
 // ============================================================================
 // CATEGORY SELECTOR COMPONENT
 // ============================================================================
-// Dynamic category selector that changes based on selected agent
+// Category selector for Nette knowledge management
+// GROUPHOME STANDALONE: Only Nette categories (MIO/ME removed)
 // ============================================================================
 
 import { cn } from '@/lib/utils';

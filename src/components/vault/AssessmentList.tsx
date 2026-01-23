@@ -1,3 +1,11 @@
+// ============================================================================
+// GROUPHOME STANDALONE: ORPHANED FILE
+// This component imports from useVaultAssessments and useAssessmentInvitations
+// which were deleted during MI removal.
+// The component is not currently used anywhere in the codebase.
+// This is an MIO-specific feature - if assessment lists are needed for GH, rebuild.
+// ============================================================================
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -22,11 +30,35 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { VaultAssessment } from '@/hooks/useVaultAssessments';
-import { ASSESSMENT_INFO, type AssessmentInvitation } from '@/hooks/useAssessmentInvitations';
+// GROUPHOME STANDALONE: Hooks were deleted - using placeholder types
+// import type { VaultAssessment } from '@/hooks/useVaultAssessments';
+// import { ASSESSMENT_INFO, type AssessmentInvitation } from '@/hooks/useAssessmentInvitations';
+
+// GROUPHOME STANDALONE: Placeholder types
+interface VaultAssessment {
+  id: string;
+  type: string;
+  title: string;
+  primary_result: string;
+  secondary_results?: Record<string, any>;
+  scores?: Record<string, number>;
+  confidence?: number;
+  impact_area?: string;
+  completed_at?: string;
+  can_retake?: boolean;
+}
+
+interface AssessmentInvitation {
+  id: string;
+  assessment_type: string;
+  reason?: string;
+  invited_by?: string;
+}
+
+const ASSESSMENT_INFO: Record<string, { name: string; icon: string; description: string; path: string; estimatedMinutes: number }> = {};
 
 // ============================================================================
-// ASSESSMENT LIST COMPONENT
+// ASSESSMENT LIST COMPONENT (ORPHANED - NOT IN USE)
 // ============================================================================
 // Displays assessment history in Recording Vault
 // ============================================================================

@@ -1,11 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { createContext, useContext, ReactNode } from 'react';
 
-export type ProductType = 'grouphome' | 'mind-insurance' | 'me-wealth';
+// GROUPHOME STANDALONE: Only one product type now
+export type ProductType = 'grouphome';
 
 interface ProductContextType {
   currentProduct: ProductType;
-  setCurrentProduct: (product: ProductType) => void;
   productConfig: Record<ProductType, ProductConfig>;
 }
 
@@ -32,77 +31,19 @@ const productConfig: Record<ProductType, ProductConfig> = {
     color: 'text-primary',
     bgGradient: 'from-primary/10 to-primary/5',
     borderColor: 'border-primary/30',
-    available: false,
-    route: '/mind-insurance',
-  },
-  'mind-insurance': {
-    id: 'mind-insurance',
-    name: 'Mind Insurance',
-    shortName: 'Mind Insurance',
-    description: 'Protect your mindset',
-    icon: 'Shield',
-    color: 'text-purple-600',
-    bgGradient: 'from-purple-600/10 to-purple-600/5',
-    borderColor: 'border-purple-600/30',
     available: true,
-    route: '/mind-insurance',
-  },
-  'me-wealth': {
-    id: 'me-wealth',
-    name: 'ME Wealth Builder',
-    shortName: 'ME Wealth',
-    description: 'Build your empire',
-    icon: 'DollarSign',
-    color: 'text-amber-500',
-    bgGradient: 'from-amber-500/10 to-amber-500/5',
-    borderColor: 'border-amber-500/30',
-    available: false,
-    route: '/wealth',
+    route: '/dashboard',
   },
 };
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export function ProductProvider({ children }: { children: ReactNode }) {
-  const location = useLocation();
-  const [currentProduct, setCurrentProductState] = useState<ProductType>(() => {
-    // Load from localStorage if available
-    const saved = localStorage.getItem('currentProduct');
-    if (saved && (saved === 'grouphome' || saved === 'mind-insurance' || saved === 'me-wealth')) {
-      return saved as ProductType;
-    }
-    return 'grouphome';
-  });
-
-  const setCurrentProduct = (product: ProductType) => {
-    setCurrentProductState(product);
-    localStorage.setItem('currentProduct', product);
-  };
-
-  // Update product based on current route - watches for navigation changes
-  // IMPORTANT: Order matters - check specific product routes BEFORE generic /chat route
-  useEffect(() => {
-    const path = location.pathname;
-
-    // Mind Insurance routes (check first - includes /mind-insurance/chat)
-    if (path.includes('/protect') || path.startsWith('/mind-insurance')) {
-      setCurrentProductState('mind-insurance');
-      localStorage.setItem('currentProduct', 'mind-insurance');
-    }
-    // ME Wealth routes (includes /wealth/chat)
-    else if (path.startsWith('/wealth') || path.includes('/me-')) {
-      setCurrentProductState('me-wealth');
-      localStorage.setItem('currentProduct', 'me-wealth');
-    }
-    // Grouphome routes (generic /chat goes here)
-    else if (path.includes('/dashboard') || path.includes('/roadmap') || path.includes('/model-week') || path === '/chat') {
-      setCurrentProductState('grouphome');
-      localStorage.setItem('currentProduct', 'grouphome');
-    }
-  }, [location.pathname]);
+  // GROUPHOME STANDALONE: Always 'grouphome' product
+  const currentProduct: ProductType = 'grouphome';
 
   return (
-    <ProductContext.Provider value={{ currentProduct, setCurrentProduct, productConfig }}>
+    <ProductContext.Provider value={{ currentProduct, productConfig }}>
       {children}
     </ProductContext.Provider>
   );

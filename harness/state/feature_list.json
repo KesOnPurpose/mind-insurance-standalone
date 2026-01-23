@@ -1,0 +1,218 @@
+{
+  "features": [
+    {
+      "id": "FEAT-GH-015",
+      "name": "World-Class UX Consolidation - Unified Compliance Experience",
+      "description": "Consolidate 6 tabs to 5 tabs, combine Search + Library into Research, elevate My Binder, expose hidden features (Share, Export, Documents), connect to Property page - all while PRESERVING FullBinderReader and ComplianceSearch exactly as built",
+      "priority": "critical",
+      "status": "pending",
+      "assigned_agent": "@senior-react-developer",
+      "created_at": "2026-01-22T00:00:00Z",
+      "phase": 1,
+      "preservation_requirements": {
+        "DO_NOT_MODIFY": [
+          "src/components/compliance/library/FullBinderReader.tsx",
+          "src/components/compliance/ComplianceSearch.tsx"
+        ],
+        "critical_ux_features": [
+          "Table of Contents sidebar with click-to-scroll navigation",
+          "Continuous scrollable document format",
+          "Google-style keyword search with instant results",
+          "Save to Binder action on search results"
+        ]
+      },
+      "tasks": [
+        {
+          "task_id": "FEAT-GH-015-A",
+          "description": "Phase 1A: Update ComplianceHubPage.tsx tab structure from 6 tabs to 5 tabs",
+          "status": "pending",
+          "files_to_modify": ["src/pages/ComplianceHubPage.tsx"],
+          "changes": {
+            "before": "type HubTab = 'overview' | 'search' | 'binder' | 'library' | 'assessment' | 'compare'",
+            "after": "type HubTab = 'overview' | 'research' | 'my-binder' | 'assessment' | 'compare'"
+          },
+          "tab_mapping": {
+            "overview": "KEEP as-is",
+            "search": "MERGE into research tab",
+            "binder": "RENAME to my-binder",
+            "library": "RENAME to research (combines with search)",
+            "assessment": "KEEP as-is",
+            "compare": "KEEP as-is"
+          },
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-B",
+          "description": "Phase 1B: Update tab labels and icons in ComplianceHubPage.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/pages/ComplianceHubPage.tsx"],
+          "changes": {
+            "old_labels": ["Search", "Binder", "Library"],
+            "new_labels": ["Research", "My Binder"]
+          },
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-C",
+          "description": "Phase 1C: Add URL redirect handling for old tab URLs (/compliance?tab=binder → /compliance?tab=my-binder, /compliance?tab=library → /compliance?tab=research)",
+          "status": "pending",
+          "files_to_modify": ["src/pages/ComplianceHubPage.tsx"],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-D",
+          "description": "Phase 2A: Create ComplianceResearch.tsx container component that combines Search + State Library",
+          "status": "pending",
+          "files_to_create": ["src/components/compliance/research/ComplianceResearch.tsx"],
+          "requirements": [
+            "Import and use existing ComplianceSearch.tsx (DO NOT MODIFY IT)",
+            "Import and use existing StateBinderSelector and FullBinderReader (DO NOT MODIFY THEM)",
+            "Prominent search bar at top",
+            "State selector for browsing",
+            "Results show search matches + full state binder option"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-E",
+          "description": "Phase 2B: Wire ComplianceResearch.tsx into the Research tab in ComplianceHubPage.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/pages/ComplianceHubPage.tsx"],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-F",
+          "description": "Phase 3A: Add Share button to ComplianceBinder.tsx that uses existing shareLinksService.ts",
+          "status": "pending",
+          "files_to_modify": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+          "services_to_use": ["src/services/shareLinksService.ts"],
+          "requirements": [
+            "Import createShareLink from shareLinksService",
+            "Add Share button next to existing Export PDF button",
+            "Create ShareBinderDialog component for share link generation",
+            "Allow setting expiration and permissions"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-G",
+          "description": "Phase 3B: Create ShareBinderDialog.tsx modal component",
+          "status": "pending",
+          "files_to_create": ["src/components/compliance/binder/ShareBinderDialog.tsx"],
+          "requirements": [
+            "Display generated share link with copy button",
+            "Expiration dropdown (7 days, 30 days, never)",
+            "Permissions checkboxes (view, download, print)",
+            "Uses existing shareLinksService.ts"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-H",
+          "description": "Phase 3C: Replace simple export with full ExportBinderModal.tsx in ComplianceBinder.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+          "components_to_use": ["src/components/compliance/binder/ExportBinderModal.tsx"],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-I",
+          "description": "Phase 3D: Add 'My Documents' section to ComplianceBinder.tsx integrating DocumentVault.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+          "components_to_integrate": ["src/components/compliance/DocumentVault.tsx"],
+          "requirements": [
+            "Add new BinderSection for documents",
+            "Wire DocumentVault with current binder ID",
+            "Position after other sections"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-J",
+          "description": "Phase 4A: Add 'My Compliance Documents' tab to ResourcesPage.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/pages/ResourcesPage.tsx"],
+          "requirements": [
+            "Add new tab alongside existing Training Documents",
+            "Show user's uploaded compliance documents from their binder",
+            "Add link to navigate to My Binder"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-K",
+          "description": "Phase 5A: Add Compliance tab to PropertyDetailPage.tsx (7th tab)",
+          "status": "pending",
+          "files_to_modify": ["src/pages/PropertyDetailPage.tsx"],
+          "new_tab": {
+            "id": "compliance",
+            "label": "Compliance",
+            "icon": "Shield"
+          },
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-L",
+          "description": "Phase 5B: Create PropertyComplianceTab.tsx component",
+          "status": "pending",
+          "files_to_create": ["src/components/property/PropertyComplianceTab.tsx"],
+          "requirements": [
+            "Accept propertyId, stateCode, binderId props",
+            "Show state-specific compliance info for property location",
+            "Link to user's full My Binder",
+            "Display compliance checklist for this property"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-M",
+          "description": "Phase 5C: Wire PropertyComplianceTab into PropertyDetailPage.tsx",
+          "status": "pending",
+          "files_to_modify": ["src/pages/PropertyDetailPage.tsx"],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-N",
+          "description": "Visual validation: Take screenshots at 375px, 768px, 1440px for all modified pages",
+          "status": "pending",
+          "pages_to_screenshot": [
+            "/compliance (Research tab)",
+            "/compliance?tab=my-binder",
+            "/resources",
+            "/property/:id (Compliance tab)"
+          ],
+          "passes": false
+        },
+        {
+          "task_id": "FEAT-GH-015-O",
+          "description": "Final verification: Test all navigation flows, share links, export PDF, document upload",
+          "status": "pending",
+          "test_flows": [
+            "Search → Save to Binder → View in My Binder",
+            "State selector → Full Binder Reader with TOC click-scroll",
+            "My Binder → Share → Generate link",
+            "My Binder → Export PDF",
+            "My Binder → My Documents → Upload file",
+            "Resources → My Compliance Documents tab",
+            "Property → Compliance tab → Link to My Binder"
+          ],
+          "passes": false
+        }
+      ],
+      "success_criteria": {
+        "tabs_to_find_binder": "1 (was 2)",
+        "clicks_to_share": "2 (was hidden)",
+        "clicks_to_export": "2 (was 4+)",
+        "document_upload_location": "My Binder → My Documents",
+        "property_compliance": "Linked via Compliance tab"
+      },
+      "verification": {
+        "typescript_compile": "pending",
+        "console_errors": "pending",
+        "visual_validation": "pending",
+        "user_flow_testing": "pending"
+      }
+    }
+  ]
+}

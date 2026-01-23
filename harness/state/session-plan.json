@@ -1,0 +1,329 @@
+{
+  "session_metadata": {
+    "session_id": "2026-01-22-feat-gh-015-ux-consolidation",
+    "created_at": "2026-01-22T00:00:00Z",
+    "initializer_version": "1.0",
+    "project": "Grouphome App - Mind Insurance",
+    "database": "hpyodaugrkctagkrfofj.supabase.co",
+    "total_features": 1,
+    "total_tasks": 15,
+    "estimated_hours": 6.5,
+    "estimated_sessions": 2
+  },
+
+  "feature_summary": {
+    "feature_id": "FEAT-GH-015",
+    "name": "World-Class UX Consolidation - Unified Compliance Experience",
+    "description": "Consolidate 6 tabs to 5 tabs, combine Search + Library into Research, elevate My Binder, expose hidden features (Share, Export, Documents), connect to Property page - all while PRESERVING FullBinderReader and ComplianceSearch exactly as built",
+    "priority": "critical",
+    "status": "ready",
+    "assigned_agent": "@senior-react-developer"
+  },
+
+  "preservation_requirements": {
+    "DO_NOT_MODIFY": [
+      "src/components/compliance/library/FullBinderReader.tsx",
+      "src/components/compliance/ComplianceSearch.tsx"
+    ],
+    "critical_ux_features": [
+      "Table of Contents sidebar with click-to-scroll navigation",
+      "Continuous scrollable document format",
+      "Google-style keyword search with instant results",
+      "Save to Binder action on search results"
+    ],
+    "rationale": "These components represent world-class UX already built. New features must INTEGRATE with them, not replace them."
+  },
+
+  "execution_order": [
+    {
+      "step": 1,
+      "phase": "Phase 1: Tab Structure Changes",
+      "task_ids": ["FEAT-GH-015-A", "FEAT-GH-015-B", "FEAT-GH-015-C"],
+      "description": "Update ComplianceHubPage.tsx tab structure from 6 tabs to 5 tabs with URL redirects",
+      "can_parallel": false,
+      "reason": "All 3 tasks modify ComplianceHubPage.tsx sequentially",
+      "estimated_minutes": 45,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/pages/ComplianceHubPage.tsx"],
+      "verification": ["typescript_compiles", "tab_count_is_5", "old_urls_redirect"]
+    },
+    {
+      "step": 2,
+      "phase": "Phase 2A: Research Tab Component Creation",
+      "task_ids": ["FEAT-GH-015-D"],
+      "description": "Create ComplianceResearch.tsx container that combines Search + State Library",
+      "can_parallel": true,
+      "parallel_group": 1,
+      "reason": "Creates new component, no conflicts with other phase 2 tasks",
+      "estimated_minutes": 40,
+      "agent": "@senior-react-developer",
+      "files_created": ["src/components/compliance/research/ComplianceResearch.tsx"],
+      "preservation_note": "MUST import and use existing ComplianceSearch.tsx and FullBinderReader.tsx without modifying them",
+      "verification": ["typescript_compiles", "component_renders", "search_integrated", "state_selector_integrated"]
+    },
+    {
+      "step": 3,
+      "phase": "Phase 2B: Research Tab Wiring",
+      "task_ids": ["FEAT-GH-015-E"],
+      "description": "Wire ComplianceResearch.tsx into the Research tab in ComplianceHubPage.tsx",
+      "can_parallel": false,
+      "depends_on": ["FEAT-GH-015-D", "FEAT-GH-015-C"],
+      "reason": "Requires ComplianceResearch.tsx to exist and tab structure to be updated",
+      "estimated_minutes": 15,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/pages/ComplianceHubPage.tsx"],
+      "verification": ["typescript_compiles", "research_tab_displays", "search_works", "state_library_accessible"]
+    },
+    {
+      "step": 4,
+      "phase": "Phase 3A: Share Feature Integration",
+      "task_ids": ["FEAT-GH-015-F"],
+      "description": "Add Share button to ComplianceBinder.tsx using existing shareLinksService.ts",
+      "can_parallel": true,
+      "parallel_group": 1,
+      "reason": "Modifies ComplianceBinder.tsx, no dependency on other phase 3 tasks",
+      "estimated_minutes": 30,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+      "services_to_use": ["src/services/shareLinksService.ts"],
+      "verification": ["typescript_compiles", "share_button_visible", "service_imported"]
+    },
+    {
+      "step": 5,
+      "phase": "Phase 3B: Share Dialog Component",
+      "task_ids": ["FEAT-GH-015-G"],
+      "description": "Create ShareBinderDialog.tsx modal component",
+      "can_parallel": true,
+      "parallel_group": 1,
+      "reason": "Creates new component, can run parallel with F and H",
+      "estimated_minutes": 35,
+      "agent": "@senior-react-developer",
+      "files_created": ["src/components/compliance/binder/ShareBinderDialog.tsx"],
+      "verification": ["typescript_compiles", "dialog_renders", "copy_link_works", "expiration_dropdown", "permissions_checkboxes"]
+    },
+    {
+      "step": 6,
+      "phase": "Phase 3C: Export Modal Integration",
+      "task_ids": ["FEAT-GH-015-H"],
+      "description": "Replace simple export with full ExportBinderModal.tsx in ComplianceBinder.tsx",
+      "can_parallel": false,
+      "depends_on": ["FEAT-GH-015-F"],
+      "reason": "Modifies ComplianceBinder.tsx after Share button is added",
+      "estimated_minutes": 20,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+      "components_to_use": ["src/components/compliance/binder/ExportBinderModal.tsx"],
+      "verification": ["typescript_compiles", "export_modal_displays", "pdf_export_works"]
+    },
+    {
+      "step": 7,
+      "phase": "Phase 3D: My Documents Integration",
+      "task_ids": ["FEAT-GH-015-I"],
+      "description": "Add 'My Documents' section to ComplianceBinder.tsx integrating DocumentVault.tsx",
+      "can_parallel": false,
+      "depends_on": ["FEAT-GH-015-H"],
+      "reason": "Final modification to ComplianceBinder.tsx after export is integrated",
+      "estimated_minutes": 25,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/components/compliance/binder/ComplianceBinder.tsx"],
+      "components_to_integrate": ["src/components/compliance/DocumentVault.tsx"],
+      "verification": ["typescript_compiles", "documents_section_visible", "vault_wired_with_binder_id"]
+    },
+    {
+      "step": 8,
+      "phase": "Phase 4: Resources Page Update",
+      "task_ids": ["FEAT-GH-015-J"],
+      "description": "Add 'My Compliance Documents' tab to ResourcesPage.tsx",
+      "can_parallel": true,
+      "parallel_group": 2,
+      "reason": "Modifies different page, no dependency on Compliance or Property pages",
+      "estimated_minutes": 25,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/pages/ResourcesPage.tsx"],
+      "verification": ["typescript_compiles", "new_tab_visible", "documents_listed", "link_to_my_binder"]
+    },
+    {
+      "step": 9,
+      "phase": "Phase 5A: Property Compliance Tab Creation",
+      "task_ids": ["FEAT-GH-015-K"],
+      "description": "Add Compliance tab to PropertyDetailPage.tsx (7th tab)",
+      "can_parallel": true,
+      "parallel_group": 2,
+      "reason": "Modifies PropertyDetailPage.tsx, no dependency on Resources page",
+      "estimated_minutes": 20,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/pages/PropertyDetailPage.tsx"],
+      "verification": ["typescript_compiles", "compliance_tab_exists", "shield_icon_displayed"]
+    },
+    {
+      "step": 10,
+      "phase": "Phase 5B: Property Compliance Component",
+      "task_ids": ["FEAT-GH-015-L"],
+      "description": "Create PropertyComplianceTab.tsx component",
+      "can_parallel": true,
+      "parallel_group": 2,
+      "reason": "Creates new component, can run parallel with K and M",
+      "estimated_minutes": 30,
+      "agent": "@senior-react-developer",
+      "files_created": ["src/components/property/PropertyComplianceTab.tsx"],
+      "verification": ["typescript_compiles", "component_accepts_props", "state_info_displayed", "link_to_binder"]
+    },
+    {
+      "step": 11,
+      "phase": "Phase 5C: Property Compliance Wiring",
+      "task_ids": ["FEAT-GH-015-M"],
+      "description": "Wire PropertyComplianceTab into PropertyDetailPage.tsx",
+      "can_parallel": false,
+      "depends_on": ["FEAT-GH-015-L", "FEAT-GH-015-K"],
+      "reason": "Requires PropertyComplianceTab.tsx to exist and tab to be added",
+      "estimated_minutes": 15,
+      "agent": "@senior-react-developer",
+      "files_modified": ["src/pages/PropertyDetailPage.tsx"],
+      "verification": ["typescript_compiles", "compliance_tab_renders", "component_wired_correctly"]
+    },
+    {
+      "step": 12,
+      "phase": "Phase 6: Visual Validation",
+      "task_ids": ["FEAT-GH-015-N", "FEAT-GH-015-O"],
+      "description": "Take screenshots at all breakpoints and test all navigation flows",
+      "can_parallel": false,
+      "depends_on": ["all_previous_tasks"],
+      "reason": "Final validation after all implementation is complete",
+      "estimated_minutes": 60,
+      "agent": "qa-data-validator",
+      "verification": [
+        "screenshots_at_375px_768px_1440px",
+        "search_to_binder_flow_works",
+        "state_selector_to_fullbinder_works",
+        "share_link_generation_works",
+        "pdf_export_works",
+        "document_upload_works",
+        "resources_tab_accessible",
+        "property_compliance_tab_accessible"
+      ]
+    }
+  ],
+
+  "parallel_opportunities": [
+    {
+      "group": 1,
+      "phase": "Phase 2-3 Components",
+      "tasks": ["FEAT-GH-015-D", "FEAT-GH-015-F", "FEAT-GH-015-G"],
+      "reason": "All create new components or add independent features, no file conflicts",
+      "estimated_speedup": "2x (120 min sequential → 60 min parallel)"
+    },
+    {
+      "group": 2,
+      "phase": "Phase 4-5 Page Updates",
+      "tasks": ["FEAT-GH-015-J", "FEAT-GH-015-K", "FEAT-GH-015-L"],
+      "reason": "Modify different pages (Resources, Property), can run simultaneously",
+      "estimated_speedup": "2x (75 min sequential → 40 min parallel)"
+    }
+  ],
+
+  "conflict_analysis": {
+    "files_modified_by_multiple_tasks": [
+      {
+        "file": "src/pages/ComplianceHubPage.tsx",
+        "tasks": ["FEAT-GH-015-A", "FEAT-GH-015-B", "FEAT-GH-015-C", "FEAT-GH-015-E"],
+        "resolution": "Sequential execution - A→B→C→E in order"
+      },
+      {
+        "file": "src/components/compliance/binder/ComplianceBinder.tsx",
+        "tasks": ["FEAT-GH-015-F", "FEAT-GH-015-H", "FEAT-GH-015-I"],
+        "resolution": "Sequential execution - F→H→I in order"
+      },
+      {
+        "file": "src/pages/PropertyDetailPage.tsx",
+        "tasks": ["FEAT-GH-015-K", "FEAT-GH-015-M"],
+        "resolution": "Sequential execution - K→M in order"
+      }
+    ],
+    "files_created": [
+      "src/components/compliance/research/ComplianceResearch.tsx",
+      "src/components/compliance/binder/ShareBinderDialog.tsx",
+      "src/components/property/PropertyComplianceTab.tsx"
+    ],
+    "preservation_enforced": [
+      "src/components/compliance/library/FullBinderReader.tsx (DO NOT MODIFY)",
+      "src/components/compliance/ComplianceSearch.tsx (DO NOT MODIFY)"
+    ]
+  },
+
+  "success_criteria": {
+    "tabs_to_find_binder": "1 click (was 2)",
+    "clicks_to_share": "2 clicks (was hidden)",
+    "clicks_to_export": "2 clicks (was 4+)",
+    "document_upload_location": "My Binder → My Documents",
+    "property_compliance": "Linked via Compliance tab",
+    "typescript_compile": "0 errors",
+    "console_errors": "0 errors",
+    "visual_validation": "All screenshots captured at 375px, 768px, 1440px",
+    "user_flow_testing": "All 7 flows tested and working"
+  },
+
+  "stop_conditions": {
+    "typescript_errors": "STOP - Fix before proceeding to next task",
+    "console_errors": "STOP - Debug before continuing",
+    "preservation_violation": "ABORT - FullBinderReader or ComplianceSearch modified",
+    "user_approval_required": "WAIT - Ask before git push"
+  },
+
+  "coding_agent_instructions": {
+    "session_2": {
+      "focus": "Execute all 15 tasks following execution_order",
+      "start_with": "FEAT-GH-015-A (Phase 1: Tab structure)",
+      "agent_primary": "@senior-react-developer",
+      "agent_secondary": "qa-data-validator (final validation)",
+      "checkpoints": [
+        "After Phase 1: Verify 5 tabs display correctly",
+        "After Phase 2: Test Research tab combines Search + Library",
+        "After Phase 3: Verify Share, Export, Documents all work",
+        "After Phase 4: Verify Resources page has new tab",
+        "After Phase 5: Verify Property page has Compliance tab",
+        "After Phase 6: All screenshots and flows tested"
+      ],
+      "critical_warnings": [
+        "DO NOT MODIFY FullBinderReader.tsx",
+        "DO NOT MODIFY ComplianceSearch.tsx",
+        "PRESERVE Table of Contents click-to-scroll",
+        "PRESERVE Google-style search experience",
+        "PRESERVE Save to Binder action"
+      ]
+    }
+  },
+
+  "handoff_notes": {
+    "critical_context": [
+      "This is a UX consolidation feature, NOT a rebuild",
+      "Existing components (FullBinderReader, ComplianceSearch) are world-class UX - DO NOT TOUCH",
+      "New components must INTEGRATE with existing components, not replace them",
+      "6 tabs → 5 tabs reduces cognitive load (Research combines Search + Library)",
+      "My Binder elevation makes primary user feature more accessible",
+      "Share/Export/Documents exposure surfaces hidden but critical features",
+      "Property page connection enables property-specific compliance workflows"
+    ],
+    "files_to_read_first": [
+      "mindhouse-prodigy/CLAUDE.md",
+      "Context/LOVABLE-STANDARDS.md",
+      "Context/AGENT-LOVABLE-DEVELOPER.md",
+      "src/components/compliance/library/FullBinderReader.tsx (read only, do not modify)",
+      "src/components/compliance/ComplianceSearch.tsx (read only, do not modify)"
+    ],
+    "do_not_modify": [
+      "src/components/compliance/library/FullBinderReader.tsx (CRITICAL - world-class UX)",
+      "src/components/compliance/ComplianceSearch.tsx (CRITICAL - world-class UX)",
+      "src/components/ui/* (ShadCN components)",
+      "src/lib/supabase.ts (connection config)",
+      "vite.config.ts",
+      "tsconfig.json"
+    ],
+    "ux_principles": [
+      "Tabs to find Binder: 1 (was 2) - immediate access",
+      "Clicks to Share: 2 (was hidden) - surface critical feature",
+      "Clicks to Export: 2 (was 4+) - reduce friction",
+      "Document upload: My Binder → My Documents - intuitive location",
+      "Property compliance: Linked via Compliance tab - contextual access"
+    ]
+  }
+}

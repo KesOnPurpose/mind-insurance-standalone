@@ -1,3 +1,9 @@
+// ============================================================================
+// GROUPHOME STANDALONE: ORPHANED FILE
+// This component has been replaced by SidebarLayout.tsx and is not currently used.
+// Keeping for reference. Do not use this component - use SidebarLayout instead.
+// ============================================================================
+
 import { ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LogOut, MessageSquare, Map, BookOpen, Shield, LifeBuoy, Loader2, Upload } from 'lucide-react';
@@ -16,7 +22,8 @@ import {
 import { AppLauncher, CurrentProductBadge } from './AppLauncher';
 import { BottomNav } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMIAccessControl } from '@/hooks/useMIAccessControl';
+import { useAdmin } from '@/contexts/AdminContext';
+import { toast } from 'sonner';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -24,7 +31,11 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
-  const { canAccessAdminPanel } = useMIAccessControl();
+  // GROUPHOME STANDALONE: Using useAdmin instead of useMIAccessControl
+  const { isAdmin, isSuperAdmin } = useAdmin();
+  const canAccessAdminPanel = isAdmin || isSuperAdmin;
+  // GROUPHOME STANDALONE: Added missing state for support modal
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">

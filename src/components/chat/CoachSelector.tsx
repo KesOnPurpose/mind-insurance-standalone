@@ -33,12 +33,11 @@ const CoachSelector = ({ selectedCoach, onSelectCoach }: CoachSelectorProps) => 
             }}
           >
             <div className="flex items-start gap-3">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-                style={{ background: coach.gradient }}
-              >
-                {coach.avatar}
-              </div>
+              <img
+                src={coach.avatar}
+                alt={coach.name}
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className={cn("font-semibold", isMindInsurance ? "text-white" : "text-foreground")}>{coach.name}</h3>

@@ -4,10 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // ============================================================================
-// ADMIN CONTEXT - Role-Based Access Control (MI Standalone)
+// ADMIN CONTEXT - Role-Based Access Control (GROUPHOME STANDALONE)
 // ============================================================================
 // Manages admin authentication state and permission checking
-// Uses mi_approved_users table with tier-based access (user/admin/super_admin)
+// Uses gh_approved_users table with tier-based access (user/coach/admin/super_admin/owner)
 // ============================================================================
 
 interface AdminPermissions {
@@ -17,8 +17,8 @@ interface AdminPermissions {
   system: { read: boolean; configure: boolean };
 }
 
-// MI uses tier-based roles: user, admin, super_admin
-export type AdminRole = 'super_admin' | 'admin' | 'user';
+// GH uses tier-based roles: user, coach, admin, super_admin, owner
+export type AdminRole = 'owner' | 'super_admin' | 'admin' | 'coach' | 'user';
 
 interface AdminUser {
   id: string;
@@ -41,9 +41,16 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-// Map MI tiers to permission sets
+// Map GH tiers to permission sets
 function getPermissionsForTier(tier: string): AdminPermissions {
   switch (tier) {
+    case 'owner':
+      return {
+        users: { read: true, write: true, delete: true },
+        analytics: { read: true, export: true },
+        content: { read: true, write: true, publish: true },
+        system: { read: true, configure: true },
+      };
     case 'super_admin':
       return {
         users: { read: true, write: true, delete: true },
@@ -57,6 +64,13 @@ function getPermissionsForTier(tier: string): AdminPermissions {
         analytics: { read: true, export: true },
         content: { read: true, write: true, publish: false },
         system: { read: true, configure: false },
+      };
+    case 'coach':
+      return {
+        users: { read: true, write: false, delete: false },
+        analytics: { read: true, export: false },
+        content: { read: true, write: true, publish: false },
+        system: { read: false, configure: false },
       };
     default: // 'user'
       return {
@@ -90,17 +104,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsLoading(true);
 
       // Use RPC function to avoid RLS infinite recursion
-      // The mi_get_current_user_access function uses SECURITY DEFINER to bypass RLS
-      const { data, error } = await supabase.rpc('mi_get_current_user_access');
+      // The gh_get_current_user_access function uses SECURITY DEFINER to bypass RLS
+      const { data, error } = await supabase.rpc('gh_get_current_user_access');
 
       if (error) {
         // RPC function might not exist or other error
-        console.error('[AdminContext] Error calling mi_get_current_user_access:', error);
+        console.error('[AdminContext] Error calling gh_get_current_user_access:', error);
         setAdminUser(null);
       } else if (data && data.is_approved && data.tier) {
         const tier = data.tier as string;
-        // Only set as admin if tier is admin or super_admin
-        if (tier === 'admin' || tier === 'super_admin') {
+        // Set as admin if tier is coach, admin, super_admin, or owner
+        if (tier === 'coach' || tier === 'admin' || tier === 'super_admin' || tier === 'owner') {
           console.log('[AdminContext] Admin user loaded via RPC:', tier);
           setAdminUser({
             id: data.user?.id || user.id,
@@ -118,7 +132,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       } else {
         // User not found or not approved
-        console.log('[AdminContext] User not in mi_approved_users or not approved');
+        console.log('[AdminContext] User not in gh_approved_users or not approved');
         setAdminUser(null);
       }
     } catch (error) {
@@ -147,7 +161,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (categoryPerms as any)[action] === true;
   };
 
-  const isSuperAdmin = adminUser?.role === 'super_admin';
+  // Owner has all super_admin privileges
+  const isSuperAdmin = adminUser?.role === 'super_admin' || adminUser?.role === 'owner';
 
   const value: AdminContextType = {
     adminUser,

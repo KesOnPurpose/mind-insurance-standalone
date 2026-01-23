@@ -1,8 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useMIAccessControl, MIUserTier, MI_TIER_HIERARCHY } from '@/hooks/useMIAccessControl';
+import { useAdmin } from '@/contexts/AdminContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+// GROUPHOME STANDALONE: Tier types for gh_approved_users
+export type GHUserTier = 'user' | 'coach' | 'admin' | 'super_admin' | 'owner';
+
+// GROUPHOME STANDALONE: Tier hierarchy (higher number = higher access)
+const GH_TIER_HIERARCHY: Record<GHUserTier, number> = {
+  user: 1,
+  coach: 2,
+  admin: 3,
+  super_admin: 4,
+  owner: 5,
+};
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +80,7 @@ interface ApprovedUser {
   id: string;
   email: string;
   user_id: string | null;
-  tier: MIUserTier;
+  tier: GHUserTier;
   is_active: boolean;
   full_name: string | null;
   phone: string | null;
@@ -81,21 +93,27 @@ interface ApprovedUser {
   updated_at: string;
 }
 
-// MI tier options (simpler than GH - no coach/owner)
-const TIER_OPTIONS: { value: NonNullable<MIUserTier>; label: string }[] = [
+// GROUPHOME STANDALONE: Full GH tier options
+const TIER_OPTIONS: { value: GHUserTier; label: string }[] = [
   { value: 'user', label: 'User' },
+  { value: 'coach', label: 'Coach' },
   { value: 'admin', label: 'Admin' },
   { value: 'super_admin', label: 'Super Admin' },
+  { value: 'owner', label: 'Owner' },
 ];
 
-const TIER_COLORS: Record<NonNullable<MIUserTier>, string> = {
+const TIER_COLORS: Record<GHUserTier, string> = {
   user: 'bg-slate-500',
+  coach: 'bg-blue-500',
   admin: 'bg-purple-500',
   super_admin: 'bg-orange-500',
+  owner: 'bg-red-500',
 };
 
 export default function UserManagement() {
-  const { tier: currentUserTier, isAdmin, isSuperAdmin } = useMIAccessControl();
+  // GROUPHOME STANDALONE: Using useAdmin instead of useMIAccessControl
+  const { adminUser, isAdmin, isSuperAdmin } = useAdmin();
+  const currentUserTier = adminUser?.role as GHUserTier | null;
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -116,7 +134,7 @@ export default function UserManagement() {
     email: '',
     full_name: '',
     phone: '',
-    tier: 'user' as NonNullable<MIUserTier>,
+    tier: 'user' as GHUserTier,
     notes: '',
   });
   const [sendInviteOnAdd, setSendInviteOnAdd] = useState(true);
@@ -143,7 +161,7 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('mi_admin_get_all_users');
+      const { data, error } = await supabase.rpc('gh_admin_get_all_users');
 
       if (error) throw error;
       setUsers(data as ApprovedUser[]);
@@ -179,12 +197,15 @@ export default function UserManagement() {
     });
   }, [users, searchQuery, filterTier, filterStatus]);
 
-  // Check if current user can modify target tier (MI tier hierarchy: super_admin > admin > user)
-  const canModifyTier = (targetTier: MIUserTier, targetUserEmail?: string): boolean => {
+  // GROUPHOME STANDALONE: Check if current user can modify target tier (GH tier hierarchy: owner > super_admin > admin > coach > user)
+  const canModifyTier = (targetTier: GHUserTier, targetUserEmail?: string): boolean => {
     if (!currentUserTier || !targetTier) return false;
 
-    // Super admins can modify anyone (including themselves)
-    if (isSuperAdmin) return true;
+    // Owners can modify anyone (including themselves)
+    if (currentUserTier === 'owner') return true;
+
+    // Super admins can modify anyone except owners (including themselves)
+    if (isSuperAdmin) return targetTier !== 'owner';
 
     // Check if trying to edit themselves
     const isEditingSelf = targetUserEmail && user?.email &&
@@ -193,13 +214,13 @@ export default function UserManagement() {
     // Admins (non-super admins) cannot edit themselves
     if (isAdmin && !isSuperAdmin && isEditingSelf) return false;
 
-    // Admins cannot modify super_admin tier
-    if (isAdmin && !isSuperAdmin && targetTier === 'super_admin') {
+    // Admins cannot modify super_admin or owner tier
+    if (isAdmin && !isSuperAdmin && (targetTier === 'super_admin' || targetTier === 'owner')) {
       return false;
     }
 
     // Must be higher tier to modify
-    return MI_TIER_HIERARCHY[currentUserTier] > MI_TIER_HIERARCHY[targetTier];
+    return GH_TIER_HIERARCHY[currentUserTier] > GH_TIER_HIERARCHY[targetTier];
   };
 
   // Bulk selection helpers
@@ -236,7 +257,7 @@ export default function UserManagement() {
     }
 
     try {
-      const { error } = await supabase.rpc('mi_admin_add_user', {
+      const { error } = await supabase.rpc('gh_admin_add_user', {
         p_email: formData.email.toLowerCase().trim(),
         p_tier: formData.tier,
         p_full_name: formData.full_name || null,
@@ -323,7 +344,7 @@ export default function UserManagement() {
     if (!selectedUser) return;
 
     try {
-      const { error } = await supabase.rpc('mi_admin_update_user', {
+      const { error } = await supabase.rpc('gh_admin_update_user', {
         p_user_id: selectedUser.id,
         p_tier: formData.tier,
         p_full_name: formData.full_name || null,
@@ -347,7 +368,7 @@ export default function UserManagement() {
   // Toggle user active status using MI RPC function (bypasses RLS)
   const handleToggleStatus = async (user: ApprovedUser) => {
     try {
-      const { error } = await supabase.rpc('mi_admin_update_user', {
+      const { error } = await supabase.rpc('gh_admin_update_user', {
         p_user_id: user.id,
         p_is_active: !user.is_active,
       });
@@ -372,7 +393,7 @@ export default function UserManagement() {
     }
 
     try {
-      const { error } = await supabase.rpc('mi_admin_delete_user', {
+      const { error } = await supabase.rpc('gh_admin_delete_user', {
         p_user_id: user.id,
       });
 
@@ -396,7 +417,7 @@ export default function UserManagement() {
     try {
       for (const user of selectedUsers) {
         try {
-          const { error } = await supabase.rpc('mi_admin_delete_user', {
+          const { error } = await supabase.rpc('gh_admin_delete_user', {
             p_user_id: user.id,
           });
 
@@ -469,7 +490,7 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk activate users using mi_approved_users table
+  // Bulk activate users using gh_approved_users table
   const handleBulkActivate = async () => {
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let successCount = 0;
@@ -479,7 +500,7 @@ export default function UserManagement() {
       for (const user of selectedUsers) {
         try {
           const { error } = await supabase
-            .from('mi_approved_users')
+            .from('gh_approved_users')
             .update({ is_active: true })
             .eq('id', user.id);
 
@@ -513,7 +534,7 @@ export default function UserManagement() {
     }
   };
 
-  // Bulk deactivate users using mi_approved_users table
+  // Bulk deactivate users using gh_approved_users table
   const handleBulkDeactivate = async () => {
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let successCount = 0;
@@ -523,7 +544,7 @@ export default function UserManagement() {
       for (const user of selectedUsers) {
         try {
           const { error } = await supabase
-            .from('mi_approved_users')
+            .from('gh_approved_users')
             .update({ is_active: false })
             .eq('id', user.id);
 
@@ -561,14 +582,14 @@ export default function UserManagement() {
   const handleSyncAllUserIds = async () => {
     setIsSyncingUserIds(true);
     try {
-      // For MI, we'll sync user_ids by matching emails between auth.users and mi_approved_users
-      // This updates mi_approved_users.user_id for any emails that now have auth accounts
-      const { data, error } = await supabase.rpc('mi_admin_sync_user_ids');
+      // For MI, we'll sync user_ids by matching emails between auth.users and gh_approved_users
+      // This updates gh_approved_users.user_id for any emails that now have auth accounts
+      const { data, error } = await supabase.rpc('gh_admin_sync_user_ids');
 
       if (error) {
         // If the function doesn't exist yet, just refresh the list
         if (error.message?.includes('function') || error.code === '42883') {
-          console.warn('mi_admin_sync_user_ids not yet created, skipping sync');
+          console.warn('gh_admin_sync_user_ids not yet created, skipping sync');
           toast({
             title: 'Refreshed',
             description: 'User list refreshed',
@@ -696,7 +717,7 @@ export default function UserManagement() {
       const user = parsedCsv.valid[i];
 
       try {
-        const { error } = await supabase.rpc('mi_admin_add_user', {
+        const { error } = await supabase.rpc('gh_admin_add_user', {
           p_email: user.email,
           p_tier: user.tier,
           p_full_name: user.full_name || null,
@@ -1134,7 +1155,7 @@ export default function UserManagement() {
                       <Label>Access Tier</Label>
                       <Select
                         value={formData.tier}
-                        onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<MIUserTier> }))}
+                        onValueChange={v => setFormData(f => ({ ...f, tier: v as GHUserTier }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1416,7 +1437,7 @@ export default function UserManagement() {
                 <Label>Access Tier</Label>
                 <Select
                   value={formData.tier}
-                  onValueChange={v => setFormData(f => ({ ...f, tier: v as NonNullable<MIUserTier> }))}
+                  onValueChange={v => setFormData(f => ({ ...f, tier: v as GHUserTier }))}
                 >
                   <SelectTrigger>
                     <SelectValue />

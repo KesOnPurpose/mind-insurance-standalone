@@ -1,21 +1,17 @@
 // ============================================================================
 // ADMIN KNOWLEDGE BASE PAGE
 // ============================================================================
-// Unified Admin UI for managing knowledge bases for all three AI agents:
-// - Nette (Group Home Expert)
-// - MIO (Mind Insurance Oracle)
-// - ME (Money Evolution)
+// Admin UI for managing the Nette AI knowledge base (GroupHome)
+// GROUPHOME STANDALONE: Only Nette AI (MIO intelligence built-in via N8n workflow)
 //
 // Features:
-// - Agent selection (Nette, MIO, ME)
 // - Category-based organization
 // - Multi-source ingestion (Google Drive, Docs, Notion, File Upload)
 // - Processing queue monitoring
 // - Knowledge chunk viewing and management
 // ============================================================================
 
-import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import {
@@ -27,7 +23,6 @@ import {
 } from '@/types/knowledgeManagement';
 import { submitKnowledgeIngestion, submitBulkKnowledgeIngestion } from '@/services/knowledgeIngestionService';
 import {
-  AgentSelector,
   CategorySelector,
   KnowledgeSourceInput,
   ProcessingQueue,
@@ -81,7 +76,8 @@ export default function AdminKnowledgeBase() {
   const { toast } = useToast();
 
   // State
-  const [selectedAgent, setSelectedAgent] = useState<AgentType>('nette');
+  // GROUPHOME STANDALONE: Agent is always 'nette'
+  const selectedAgent: AgentType = 'nette';
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'browse' | 'add' | 'queue' | 'setup'>('browse');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -102,11 +98,6 @@ export default function AdminKnowledgeBase() {
 
   const agentConfig = AGENT_CONFIGS[selectedAgent];
   const categories = getCategoriesForAgent(selectedAgent);
-
-  const handleAgentChange = useCallback((agent: AgentType) => {
-    setSelectedAgent(agent);
-    setSelectedCategory(null); // Reset category when agent changes
-  }, []);
 
   const handleSubmitKnowledge = async () => {
     // Validate category
@@ -229,7 +220,7 @@ export default function AdminKnowledgeBase() {
       mode="admin"
       showHeader
       headerTitle="Knowledge Base Manager"
-      headerSubtitle="Manage AI knowledge for Nette, MIO, and ME agents"
+      headerSubtitle="Manage AI knowledge for Nette"
       headerGradient="linear-gradient(135deg, hsl(270 70% 45%), hsl(240 70% 50%))"
     >
       <div className="space-y-6">
@@ -327,22 +318,6 @@ export default function AdminKnowledgeBase() {
             </DialogContent>
           </Dialog>
         </div>
-
-        {/* Agent Selector */}
-        <Card className="mb-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Select Agent</CardTitle>
-            <CardDescription>
-              Choose which AI agent's knowledge base to manage
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AgentSelector
-              value={selectedAgent}
-              onChange={handleAgentChange}
-            />
-          </CardContent>
-        </Card>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>

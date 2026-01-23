@@ -1,0 +1,343 @@
+# Claude Progress - Overnight Session 2026-01-20
+
+## Session 1: Initializer Agent (COMPLETE)
+
+**Completed By**: Initializer Agent
+**Date**: 2026-01-20
+**Status**: Planning complete, ready for Coding Agent
+
+---
+
+## HANDOFF TO CODING AGENT
+
+### Files to Read First
+1. `mindhouse-prodigy/harness/state/session-plan.json` - Your execution plan
+2. `mindhouse-prodigy/harness/state/feature_list.json` - Feature details with task breakdowns
+3. `mindhouse-prodigy/CLAUDE.md` - Project-specific instructions
+4. `mindhouse-prodigy/Context/LOVABLE-STANDARDS.md` - Code patterns
+
+### What Was Analyzed
+- 5 pending features (FEAT-GH-004 through FEAT-GH-008)
+- 41 total tasks decomposed
+- Dependencies mapped
+- Agents assigned
+- Conflict detection completed
+
+### Execution Order (CRITICAL)
+
+**Phase 1 - MUST DO FIRST:**
+- FEAT-GH-004: Schema Foundation (9 database migrations)
+- All other features depend on this
+
+**Phase 2 - Can run in parallel:**
+- FEAT-GH-005: Video Progress Tracking (8 tasks)
+- FEAT-GH-007: Stuck Detection Automation (6 tasks)
+
+**Phase 3 - Sequential:**
+- FEAT-GH-006: Completion Logic (10 tasks) - depends on GH-005
+- FEAT-GH-008: Coach Dashboard (8 tasks) - depends on GH-007
+
+### Critical Warnings
+
+1. **SHARED DATABASE**: `hpyodaugrkctagkrfofj.supabase.co` is shared with Grouphome
+   - All migrations MUST use `IF NOT EXISTS`
+   - All new columns MUST have `DEFAULT` values
+   - Test that existing functionality still works after migrations
+
+2. **Security Review Required**: All database changes need RLS policies
+
+3. **Do NOT Modify**:
+   - `src/components/ui/*` (ShadCN components)
+   - `src/lib/supabase.ts`
+   - `vite.config.ts`
+   - `tsconfig.json`
+
+### Files That Will Be Modified (Conflict Check)
+- `src/components/roadmap/TacticCard.tsx` - Modified by GH-005, then GH-006
+- `src/components/roadmap/TacticCompletionForm.tsx` - Modified by GH-006
+- `src/types/tactic.ts` - Modified by GH-005, then GH-006
+- `src/App.tsx` - Modified by GH-008
+- `src/components/chat/ChatWelcomeScreen.tsx` - Modified by GH-007
+
+### Quality Gates Required
+- TypeScript compilation: `npx tsc --noEmit`
+- Visual validation: Screenshots at 375px, 768px, 1440px
+- Security: RLS policies on all new tables
+- Accessibility: WCAG AA compliance
+
+---
+
+## Session 2+ Instructions
+
+Start with:
+```
+Read mindhouse-prodigy/harness/state/session-plan.json and execute as Coding Agent.
+Start with FEAT-GH-004 (Schema Foundation).
+```
+
+After each feature:
+1. Update feature status in `feature_list.json`
+2. Run TypeScript check
+3. Update this progress file
+
+---
+
+## Previous Session Notes (From Earlier Work)
+
+### Completed Features (Sessions before tonight):
+- FEAT-GH-001: Grouphome Standalone Transformation (85+ files deleted)
+- FEAT-GH-002: Fix Remaining Broken Imports
+- FEAT-GH-003: Match Production Grouphome App Layout
+
+### Key Architecture Decisions:
+- Nette AI is the only coach (MIO intelligence built into N8n backend)
+- User source tagging: `user_profiles.user_source = 'gh_user'` for Grouphome users
+- Phase-based course system with 5 phases
+
+---
+
+**Initializer Agent signing off. Good luck, Coding Agent!**
+
+---
+
+## Session 2: Coding Agent Execution
+
+### Checkpoint: 2026-01-20T18:00:00Z
+
+**Status**: FEAT-GH-006 COMPLETE, starting FEAT-GH-007
+
+### Completed Features This Session:
+
+#### FEAT-GH-004: Schema Foundation ✅
+- 9 database migrations created and applied
+- Tables: gh_curriculum_config, gh_lesson_video_progress, gh_lesson_assessments, gh_user_assessment_attempts, gh_automation_events
+- Video columns added to gh_tactic_instructions
+- Completion gate columns added to gh_user_tactic_progress
+- Coach role added to admin system
+
+#### FEAT-GH-005: Video Progress Tracking ✅
+- Created src/types/video.ts with VideoProgress types
+- Created src/services/videoProgressService.ts
+- Created src/hooks/useVideoProgress.ts with React Query
+- Created src/components/course/VideoPlayer.tsx
+- Created src/components/course/VideoProgressGauge.tsx
+- Updated src/types/tactic.ts with video fields
+- Integrated VideoPlayer into TacticDetailModal
+- Build passes, visual validation complete
+
+#### FEAT-GH-006: Strict Completion Logic ✅
+- Created src/types/assessment.ts (CompletionGateResult, CompletionGateStatus types)
+- Created src/services/assessmentService.ts
+- Created src/services/lessonAssessmentService.ts
+- Created src/hooks/useAssessment.ts
+- Created src/components/course/LessonAssessment.tsx
+- Created src/components/course/AssessmentQuestion.tsx
+- Created src/components/course/CompletionGateStatus.tsx (+ CompletionGateBadge)
+- Added canCompleteTactic() and useCompletionGates() to progressService.ts
+- Updated TacticCompletionForm.tsx with gate enforcement
+- Updated TacticCard.tsx with CompletionGateBadge display
+- Build passes, all gates functional
+
+### FEAT-GH-007 & FEAT-GH-008: MERGE COMPLETE ✅
+
+**Completed**: All features merged into Nette AI + MIO system
+- Stuck detection now handled by unified chatbot
+- Coach dashboard consolidated with admin reports
+- All workflows secured and migrated to production N8n instance
+- Beta users (Lynette, CSM) enabled and tested
+
+---
+
+## Session 3: Initializer Agent - FEAT-GH-015
+
+### Checkpoint: 2026-01-22T00:00:00Z
+
+**Status**: Planning complete, ready for Coding Agent Session 2
+
+**Feature**: FEAT-GH-015 - World-Class UX Consolidation - Unified Compliance Experience
+
+### What Was Analyzed
+- 15 tasks decomposed (FEAT-GH-015-A through FEAT-GH-015-O)
+- 6 phases identified with dependencies mapped
+- 2 parallel execution groups for 2x speedup
+- Preservation requirements CRITICAL: DO NOT MODIFY FullBinderReader.tsx or ComplianceSearch.tsx
+- All tasks assigned to @senior-react-developer with qa-data-validator for final validation
+
+### Session Plan Created
+**File**: `mindhouse-prodigy/harness/state/session-plan.json`
+**Total Estimated Time**: 6.5 hours
+**Phases**: 6 sequential phases with 2 parallel opportunities
+**Execution Steps**: 12 (including final validation)
+
+### Critical Context for Coding Agent
+
+**THIS IS A UX CONSOLIDATION, NOT A REBUILD:**
+1. **Preserve World-Class UX**: FullBinderReader.tsx and ComplianceSearch.tsx are perfect - DO NOT MODIFY
+2. **Integration, Not Replacement**: New components must INTEGRATE with existing components
+3. **Tab Consolidation**: 6 tabs → 5 tabs (Search + Library = Research)
+4. **Feature Exposure**: Share, Export, Documents no longer hidden
+5. **Property Connection**: Compliance tab on Property page links to My Binder
+
+### Preservation Requirements (CRITICAL)
+
+**DO NOT MODIFY THESE FILES:**
+- `src/components/compliance/library/FullBinderReader.tsx` - World-class TOC + click-to-scroll
+- `src/components/compliance/ComplianceSearch.tsx` - Google-style instant search
+
+**PRESERVE THESE UX FEATURES:**
+- Table of Contents sidebar with click-to-scroll navigation
+- Continuous scrollable document format
+- Google-style keyword search with instant results
+- Save to Binder action on search results
+
+### Execution Order (12 Steps)
+
+**Phase 1: Tab Structure** (Step 1)
+- Tasks: FEAT-GH-015-A, B, C
+- File: src/pages/ComplianceHubPage.tsx
+- Sequential execution required (same file)
+
+**Phase 2: Research Tab** (Steps 2-3)
+- Tasks: FEAT-GH-015-D (create), FEAT-GH-015-E (wire)
+- Creates: src/components/compliance/research/ComplianceResearch.tsx
+- Step 2 can run PARALLEL with Phase 3A
+
+**Phase 3: My Binder Features** (Steps 4-7)
+- Tasks: FEAT-GH-015-F (Share), G (ShareDialog), H (Export), I (Documents)
+- File: src/components/compliance/binder/ComplianceBinder.tsx
+- Steps 4-5 can run PARALLEL (Group 1)
+- Steps 6-7 are SEQUENTIAL (modify same file)
+
+**Phase 4: Resources Page** (Step 8)
+- Tasks: FEAT-GH-015-J
+- File: src/pages/ResourcesPage.tsx
+- Can run PARALLEL with Phase 5A-B (Group 2)
+
+**Phase 5: Property Page** (Steps 9-11)
+- Tasks: FEAT-GH-015-K (add tab), L (create component), M (wire)
+- Files: src/pages/PropertyDetailPage.tsx, src/components/property/PropertyComplianceTab.tsx
+- Steps 9-10 can run PARALLEL (Group 2)
+- Step 11 is SEQUENTIAL (wiring)
+
+**Phase 6: Validation** (Step 12)
+- Tasks: FEAT-GH-015-N (screenshots), O (flow testing)
+- Agent: qa-data-validator
+- Screenshots at 375px, 768px, 1440px
+- Test all 7 user flows
+
+### Parallel Execution Opportunities
+
+**Group 1** (Phase 2-3 Components):
+- FEAT-GH-015-D (ComplianceResearch)
+- FEAT-GH-015-F (Share button)
+- FEAT-GH-015-G (ShareDialog)
+- Estimated speedup: 2x (120 min → 60 min)
+
+**Group 2** (Phase 4-5 Pages):
+- FEAT-GH-015-J (Resources tab)
+- FEAT-GH-015-K (Property tab)
+- FEAT-GH-015-L (PropertyComplianceTab)
+- Estimated speedup: 2x (75 min → 40 min)
+
+### Files That Will Be Modified (Conflict Analysis)
+
+**Sequential Execution Required:**
+1. `src/pages/ComplianceHubPage.tsx` - Tasks A, B, C, E (must run in order)
+2. `src/components/compliance/binder/ComplianceBinder.tsx` - Tasks F, H, I (must run in order)
+3. `src/pages/PropertyDetailPage.tsx` - Tasks K, M (must run in order)
+
+**New Files Created:**
+1. `src/components/compliance/research/ComplianceResearch.tsx` (Task D)
+2. `src/components/compliance/binder/ShareBinderDialog.tsx` (Task G)
+3. `src/components/property/PropertyComplianceTab.tsx` (Task L)
+
+**Files Modified (Single Task):**
+1. `src/pages/ResourcesPage.tsx` (Task J)
+
+### Success Criteria
+
+**UX Metrics:**
+- Tabs to find Binder: **1 click** (was 2)
+- Clicks to Share: **2 clicks** (was hidden)
+- Clicks to Export: **2 clicks** (was 4+)
+- Document upload: **My Binder → My Documents** (intuitive location)
+- Property compliance: **Compliance tab** (contextual access)
+
+**Technical Validation:**
+- TypeScript compile: **0 errors**
+- Console errors: **0 errors**
+- Visual validation: **All screenshots captured** (375px, 768px, 1440px)
+- User flows: **All 7 flows tested and working**
+
+### Stop Conditions
+
+**ABORT IF:**
+- FullBinderReader.tsx or ComplianceSearch.tsx is modified (preservation violation)
+
+**STOP IF:**
+- TypeScript errors occur (fix before proceeding)
+- Console errors detected (debug before continuing)
+
+**WAIT IF:**
+- User approval required before git push
+
+### Known Risks
+
+**File Conflict Risk**: ComplianceHubPage.tsx modified by 4 tasks (A, B, C, E)
+- Mitigation: Strict sequential execution, verify TypeScript after each task
+
+**Integration Risk**: Research tab must combine 2 complex components (ComplianceSearch + FullBinderReader)
+- Mitigation: Task D explicitly preserves both components unchanged
+
+**Binder File Risk**: ComplianceBinder.tsx modified by 3 tasks (F, H, I)
+- Mitigation: Sequential execution F→H→I, verify after each task
+
+### Agent Workload
+
+**@senior-react-developer**: 13 tasks (Steps 1-11)
+- Phase 1: Tab structure (3 tasks)
+- Phase 2: Research component (2 tasks)
+- Phase 3: My Binder features (4 tasks)
+- Phase 4: Resources page (1 task)
+- Phase 5: Property page (3 tasks)
+
+**qa-data-validator**: 2 tasks (Step 12)
+- Visual validation (screenshots at 3 breakpoints)
+- User flow testing (7 flows)
+
+### Handoff Instructions for Coding Agent
+
+**Start Session 2 with:**
+```
+Read mindhouse-prodigy/harness/state/session-plan.json and execute FEAT-GH-015.
+Start with Step 1 (FEAT-GH-015-A: Phase 1 Tab Structure).
+```
+
+**After each task:**
+1. Run TypeScript check: `npx tsc --noEmit`
+2. Verify no console errors
+3. Mark task as complete in feature_list.json
+4. Update this progress file
+
+**After each phase:**
+1. Take checkpoint screenshots
+2. Verify phase success criteria
+3. Update progress file with phase completion
+
+**Critical Reminders:**
+1. DO NOT MODIFY FullBinderReader.tsx
+2. DO NOT MODIFY ComplianceSearch.tsx
+3. PRESERVE Table of Contents click-to-scroll
+4. PRESERVE Google-style search experience
+5. PRESERVE Save to Binder action
+
+**Files to Read First:**
+1. `mindhouse-prodigy/harness/state/session-plan.json` - Execution plan
+2. `mindhouse-prodigy/harness/state/feature_list.json` - Task details
+3. `mindhouse-prodigy/CLAUDE.md` - Project standards
+4. `src/components/compliance/library/FullBinderReader.tsx` - READ ONLY (understand structure)
+5. `src/components/compliance/ComplianceSearch.tsx` - READ ONLY (understand structure)
+
+---
+
+**Initializer Agent signing off. Session 1 complete. Ready for Coding Agent Session 2.**

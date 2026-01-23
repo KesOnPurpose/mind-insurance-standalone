@@ -26,12 +26,11 @@ const HandoffSuggestion = ({
   return (
     <Card className="p-4 mb-4 border-2 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex items-start gap-3">
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-          style={{ background: coach.gradient }}
-        >
-          {coach.avatar}
-        </div>
+        <img
+          src={coach.avatar}
+          alt={coach.name}
+          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+        />
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h4 className="font-semibold text-sm">Handoff Suggested</h4>

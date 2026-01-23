@@ -191,13 +191,22 @@ export function Week1Checklist({
                   const categoryColor = getCategoryColor(tactic.category);
 
                   return (
-                    <button
+                    <div
                       key={tactic.tactic_id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => {
                         setSelectedTactic(tactic);
                         setShowDetailModal(true);
                       }}
-                      className="w-full text-left p-3 rounded-lg border bg-white hover:shadow-md transition-all group"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedTactic(tactic);
+                          setShowDetailModal(true);
+                        }
+                      }}
+                      className="w-full text-left p-3 rounded-lg border bg-white hover:shadow-md transition-all group cursor-pointer"
                     >
                       <div className="flex items-start gap-3">
                         {/* Status Icon */}
@@ -263,7 +272,7 @@ export function Week1Checklist({
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

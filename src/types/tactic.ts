@@ -1,3 +1,5 @@
+import type { VideoProvider, CompletionGateConfig } from './video';
+
 // Tactic source type for 3-tier organization
 export type TacticSource = 'mentorship' | 'cashflow_course' | 'general';
 
@@ -43,6 +45,26 @@ export interface Tactic {
   completion_rate?: number | null;             // % of users completing (auto-updated)
   avg_completion_minutes?: number | null;      // Actual average completion time
   dropout_rate?: number | null;                // % of users abandoning
+
+  // FEAT-GH-005: Video and Completion Gate Fields (from gh_tactic_instructions)
+  video_url?: string | null;                   // Video URL (Vimeo, YouTube, Wistia, etc.)
+  video_provider?: VideoProvider | null;       // Detected/specified video provider
+  video_duration_seconds?: number | null;      // Video length in seconds
+  video_completion_threshold?: number | null;  // % required to mark as complete (default 90)
+  video_thumbnail_url?: string | null;         // Video thumbnail for preview
+
+  // Assessment fields
+  has_assessment?: boolean | null;             // Whether tactic has an assessment
+  assessment_required_for_completion?: boolean | null; // Assessment must pass to complete
+  primary_assessment_id?: string | null;       // FK to assessment table
+
+  // Completion gates (FEAT-GH-004)
+  completion_gate_enabled?: boolean | null;    // Whether gates are enforced
+  completion_gate_config?: CompletionGateConfig | null; // Full gate configuration
+
+  // Display settings
+  display_order?: number | null;               // Order within category/week
+  show_estimated_time?: boolean | null;        // Show time estimate in UI
 }
 
 export interface ProgressRow {
@@ -59,6 +81,12 @@ export interface TacticWithProgress extends Tactic {
   status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
   completedAt?: string;
   notes?: string;
+
+  // FEAT-GH-005: Video progress status
+  videoWatchPercentage?: number;               // Current video watch progress (0-100)
+  videoGateMet?: boolean;                      // Has video completion threshold been met
+  assessmentGateMet?: boolean;                 // Has assessment been passed (if required)
+  allGatesMet?: boolean;                       // All completion gates met
 }
 
 export interface WeekSummary {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { KPICards } from './KPICards';
 import { CacheHitRateChart } from './CacheHitRateChart';
 import { ResponseTimeChart } from './ResponseTimeChart';
-import { AgentComparisonTable } from './AgentComparisonTable';
+// GROUPHOME STANDALONE: Removed AgentComparisonTable (MI multi-agent comparison)
 import { ExportButtons } from './ExportButtons';
 import { UserEngagementMetrics } from './UserEngagementMetrics';
 import { ConversionFunnel } from './ConversionFunnel';
@@ -66,7 +66,7 @@ export const AnalyticsDashboard: React.FC = () => {
     if (result.success) {
       toast({
         title: 'Analytics Synced',
-        description: `Synced ${result.nette_synced} Nette, ${result.mio_synced} MIO, ${result.me_synced} ME conversations (${result.total} total)`,
+        description: `Synced ${result.nette_synced || result.total} conversations successfully`,
       });
       // Trigger a refresh after successful sync
       handleRefresh();
@@ -219,8 +219,7 @@ export const AnalyticsDashboard: React.FC = () => {
         <ResponseTimeChart timeRange={timeRange} />
       </div>
 
-      {/* Agent Comparison Table */}
-      <AgentComparisonTable timeRange={timeRange} />
+      {/* GROUPHOME STANDALONE: Removed AgentComparisonTable (MI multi-agent comparison) */}
 
       {/* System Information Card */}
       <Card>

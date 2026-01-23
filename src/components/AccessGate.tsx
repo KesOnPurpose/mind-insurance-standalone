@@ -1,7 +1,16 @@
+// ============================================================================
+// GROUPHOME STANDALONE: ORPHANED FILE
+// This component depends on useMIAccessControl which was deleted during MI removal.
+// The component is not currently used in the codebase.
+// If access gating is needed, create a new GH-specific access control hook.
+// ============================================================================
+
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
+// GROUPHOME STANDALONE: Broken import - hook was deleted
+// import { useMIAccessControl, MIUserTier } from '@/hooks/useMIAccessControl';
+import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut, AlertCircle, RefreshCw } from 'lucide-react';
@@ -9,15 +18,19 @@ import { Loader2, Lock, Mail, Phone, MessageCircle, LogOut, AlertCircle, Refresh
 // Maximum time to wait for loading states before showing timeout UI
 const LOADING_TIMEOUT_MS = 10000; // 10 seconds
 
+// GROUPHOME STANDALONE: Simplified tier type
+type GHAccessTier = 'user' | 'admin' | 'super_admin';
+
 interface AccessGateProps {
   children: ReactNode;
-  requiredTier?: MIUserTier;
+  requiredTier?: GHAccessTier;
   fallback?: ReactNode;
 }
 
 export function AccessGate({ children, requiredTier = 'user', fallback }: AccessGateProps) {
   const { user } = useAuth();
-  const { isApproved, tier, isLoading, hasTierAccess, refetch } = useMIAccessControl();
+  // GROUPHOME STANDALONE: Using useAdmin for access control
+  const { adminUser, isAdmin, isSuperAdmin, isLoading } = useAdmin();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   // Timeout handler to prevent infinite loading spinner
@@ -62,7 +75,8 @@ export function AccessGate({ children, requiredTier = 'user', fallback }: Access
             <Button
               onClick={() => {
                 setLoadingTimedOut(false);
-                refetch?.();
+                // GROUPHOME STANDALONE: No refetch available - reload page instead
+                window.location.reload();
               }}
               className="gap-2"
             >
@@ -78,8 +92,17 @@ export function AccessGate({ children, requiredTier = 'user', fallback }: Access
     );
   }
 
-  // Check if user has required tier access
-  const hasAccess = isApproved && (requiredTier ? hasTierAccess(requiredTier) : true);
+  // GROUPHOME STANDALONE: Check if user has required tier access
+  // All authenticated users have 'user' access
+  // Admin access requires isAdmin or isSuperAdmin
+  // Super admin access requires isSuperAdmin
+  const hasAccess = (() => {
+    if (!user) return false;
+    if (requiredTier === 'user') return true; // All authenticated users have user access
+    if (requiredTier === 'admin') return isAdmin || isSuperAdmin;
+    if (requiredTier === 'super_admin') return isSuperAdmin;
+    return true;
+  })();
 
   if (hasAccess) {
     return <>{children}</>;

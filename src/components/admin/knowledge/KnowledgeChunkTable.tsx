@@ -2,6 +2,7 @@
 // KNOWLEDGE CHUNK TABLE COMPONENT
 // ============================================================================
 // Displays and manages knowledge chunks with search, filter, and pagination
+// GROUPHOME STANDALONE: Only Nette AI (agentType prop always 'nette')
 // Supports viewing, editing, and deleting chunks
 // ============================================================================
 

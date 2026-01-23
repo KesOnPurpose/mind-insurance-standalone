@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } from '@/utils/passwordValidator';
 import { isMindInsuranceDomain } from '@/services/domainDetectionService';
 import { SmsOptIn } from '@/components/settings/SmsOptIn';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
 export function SettingsPage() {
   const { user, updatePassword } = useAuth();
@@ -424,7 +425,8 @@ export function SettingsPage() {
 
   // Grouphome Light Theme (Default)
   return (
-    <div className="space-y-6 p-6">
+    <SidebarLayout>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -631,6 +633,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+    </SidebarLayout>
   );
 }
 

@@ -144,7 +144,7 @@ export const MILESTONES = [
 ] as const;
 
 // N8N Webhook for audio transcription
-export const N8N_WEBHOOK_URL = 'https://purposewaze.app.n8n.cloud/webhook/audioreceiver';
+export const N8N_WEBHOOK_URL = 'https://n8n-n8n.vq00fr.easypanel.host/webhook/audioreceiver';
 
 // Type definitions for TypeScript usage
 export type PracticeType = typeof PRACTICE_TYPES[keyof typeof PRACTICE_TYPES];

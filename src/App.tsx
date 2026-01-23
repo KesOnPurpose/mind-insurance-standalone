@@ -10,8 +10,6 @@ import { ConversationProvider } from "@/contexts/ConversationContext";
 import { ConversationsProvider } from "@/contexts/ConversationsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
-// MI STANDALONE: AccessGate removed - uses gh_approved_users which is GH-specific
-// MI STANDALONE: AssessmentGuard removed - IdentityCollisionGuard handles MI assessment gating
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { SheetTourProvider } from "@/components/ui/sheet";
 import { ConfigurationRequired } from "@/components/ConfigurationRequired";
@@ -25,45 +23,60 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
 
-// Mind Insurance pages
-import MILandingPage from "./pages/MILandingPage";
-import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
-import IdentityCollisionAssessmentPage from "./pages/mind-insurance/IdentityCollisionAssessmentPage";
-import { IdentityCollisionGuard } from "@/components/mind-insurance/IdentityCollisionGuard";
-import MindInsurancePracticePage from "./pages/mind-insurance/MindInsurancePracticePage";
-import ChampionshipPage from "./pages/mind-insurance/ChampionshipPage";
-import CoverageCenterPage from "./pages/mind-insurance/CoverageCenterPage";
-import FirstSessionPage from "./pages/mind-insurance/FirstSessionPage";
-import VaultPage from "./pages/mind-insurance/VaultPage";
-import InsightRevealPage from "./pages/mind-insurance/InsightRevealPage";
-import ProtocolDetailPage from "./pages/mind-insurance/ProtocolDetailPage";
-import CoachProtocolDetailPage from "./pages/mind-insurance/CoachProtocolDetailPage";
-import PatternCheck from "./pages/mind-insurance/practices/PatternCheck";
-import ReinforceIdentity from "./pages/mind-insurance/practices/ReinforceIdentity";
-import OutcomeVisualization from "./pages/mind-insurance/practices/OutcomeVisualization";
-import TriggerReset from "./pages/mind-insurance/practices/TriggerReset";
-import EnergyAudit from "./pages/mind-insurance/practices/EnergyAudit";
-import CelebrateWins from "./pages/mind-insurance/practices/CelebrateWins";
-import TomorrowSetup from "./pages/mind-insurance/practices/TomorrowSetup";
-import MIOInsightsPage from "./pages/mind-insurance/MIOInsightsPage";
-import DebugProtocolStatus from "./pages/mind-insurance/DebugProtocolStatus";
-import MentalPillarAssessmentPage from "./pages/mind-insurance/MentalPillarAssessmentPage";
-import TemperamentAssessmentPage from "./pages/mind-insurance/TemperamentAssessmentPage";
-import SubPatternAssessmentPage from "./pages/mind-insurance/SubPatternAssessmentPage";
-import AvatarRevealPage from "./pages/mind-insurance/AvatarRevealPage";
-import ExternalMentalPillarAssessmentPage from "./pages/external/ExternalMentalPillarAssessmentPage";
+// Grouphome pages
+import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/DashboardPage";
+import RoadmapPage from "./pages/RoadmapPage";
+// FEAT-GH-010: Programs Hub for course-based learning
+import ProgramsPage from "./pages/ProgramsPage";
+// FEAT-GH-011: Program Dashboard & Phase Roadmap
+import ProgramDashboardPage from "./pages/ProgramDashboardPage";
+// FEAT-GH-012: Phase View & Lesson List
+import PhasePage from "./pages/PhasePage";
+// FEAT-GH-013: Lesson Experience (Video + Tactics + Bottom Sheet)
+import LessonPage from "./pages/LessonPage";
+import ModelWeekPage from "./pages/ModelWeekPage";
 import ChatPage from "./pages/ChatPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import ResourcesHubPage from "./pages/ResourcesHubPage";
+import ResourcesDocumentsPage from "./pages/ResourcesDocumentsPage";
+import ResourcesCalculatorPage from "./pages/ResourcesCalculatorPage";
+import CalculatorPage from "./pages/CalculatorPage";
+
+// Property Portfolio pages
+import PropertyPortfolioPage from "./pages/PropertyPortfolioPage";
+import PropertyDetailPage from "./pages/PropertyDetailPage";
+
+// Compliance Hub pages
+import ComplianceHubPage from "./pages/ComplianceHubPage";
+import ComplianceSearchPage from "./pages/ComplianceSearchPage";
+import ComplianceBinderPage from "./pages/ComplianceBinderPage";
+import ComplianceAssessmentPage from "./pages/ComplianceAssessmentPage";
+import StateComparisonPage from "./pages/StateComparisonPage";
+import SharedBinderPage from "./pages/SharedBinderPage";
 
 // Admin pages
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminKnowledgeBase from "./pages/AdminKnowledgeBase";
 import { DocumentManagement } from "./pages/admin/DocumentManagement";
-import ProtocolManagement from "./pages/admin/ProtocolManagement";
-import ReportManagement from "./pages/admin/ReportManagement";
-import AssessmentCenter from "./pages/admin/AssessmentCenter";
+import CoachDashboard from "./pages/CoachDashboard";
+// GROUPHOME STANDALONE: Removed MIO-focused ProtocolManagement
+// import ProtocolManagement from "./pages/admin/ProtocolManagement";
+// GROUPHOME STANDALONE: Removed MIO-focused ReportManagement
+// import ReportManagement from "./pages/admin/ReportManagement";
+// GROUPHOME STANDALONE: Removed MIO-focused AssessmentCenter (useAssessmentInvitations hook deleted)
+// import AssessmentCenter from "./pages/admin/AssessmentCenter";
 import UserManagement from "./pages/admin/UserManagement";
+// FEAT-GH-014: Admin Program Management
+import AdminProgramsPage from "./pages/admin/AdminProgramsPage";
+import AdminProgramDashboardPage from "./pages/admin/AdminProgramDashboardPage";
+// FEAT-GH-015: Admin Phase & Lesson Builder
+import PhaseBuilderPage from "./pages/admin/PhaseBuilderPage";
+// FEAT-GH-016: Admin Lesson Editor
+import LessonEditorPage from "./pages/admin/LessonEditorPage";
+// FEAT-GH-018: Admin Learner Progress Drill-down
+import AdminLearnerDetailPage from "./pages/admin/AdminLearnerDetailPage";
 
 // Other
 import NotFound from "./pages/NotFound";
@@ -76,10 +89,10 @@ const queryClient = new QueryClient();
 // Clears localStorage/sessionStorage when a new version is deployed
 // This fixes issues where stale cached data causes infinite loops or errors
 // Increment this version when deploying fixes that require cache clearing
-const APP_VERSION = '2025.12.18.5'; // EMERGENCY: Disabled IdentityCollisionGuard to unblock users
+const APP_VERSION = '2026.01.18.1'; // GROUPHOME STANDALONE: Removed all Mind Insurance content
 
 // MOBILE CACHE BUST: Check for ?clearcache=1 in URL
-// Send users this link: https://mymindinsurance.com/?clearcache=1
+// Send users this link: https://grouphome4newbies.com/?clearcache=1
 const checkUrlCacheBust = () => {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -105,7 +118,7 @@ const checkUrlCacheBust = () => {
       }
 
       // Set the new version so they don't get stuck
-      localStorage.setItem('mi_app_version', APP_VERSION);
+      localStorage.setItem('gh_app_version', APP_VERSION);
 
       // Remove the clearcache param and reload to clean URL
       params.delete('clearcache');
@@ -122,7 +135,7 @@ const checkUrlCacheBust = () => {
 
 const checkVersionAndClearCache = () => {
   try {
-    const storedVersion = localStorage.getItem('mi_app_version');
+    const storedVersion = localStorage.getItem('gh_app_version');
     if (storedVersion !== APP_VERSION) {
       console.log(`[App] Version changed: ${storedVersion} → ${APP_VERSION}, clearing cache...`);
       // Preserve certain keys if needed
@@ -142,7 +155,7 @@ const checkVersionAndClearCache = () => {
       });
 
       // Set new version
-      localStorage.setItem('mi_app_version', APP_VERSION);
+      localStorage.setItem('gh_app_version', APP_VERSION);
 
       // Reload to apply fresh state
       window.location.reload();
@@ -183,8 +196,8 @@ const App = () => {
                   <ConversationProvider>
                     <ConversationsProvider>
                       <Routes>
-                      {/* Landing - MI-specific */}
-                      <Route path="/" element={<MILandingPage />} />
+                      {/* Landing - Grouphome: redirect to dashboard */}
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
                       {/* Auth routes */}
                       <Route path="/auth" element={<AuthPage />} />
@@ -193,80 +206,72 @@ const App = () => {
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
 
-                      {/* Legacy route redirects - for backwards compatibility with Grouphome routes */}
-                      <Route path="/assessment" element={<Navigate to="/mind-insurance/assessment" replace />} />
-                      <Route path="/chat" element={<Navigate to="/mind-insurance/chat" replace />} />
-                      <Route path="/dashboard" element={<Navigate to="/mind-insurance" replace />} />
+                      {/* Public share link route - no auth required */}
+                      <Route path="/compliance/binder/share/:token" element={<SharedBinderPage />} />
 
-                      {/* External Assessment - Public, no auth required */}
-                      <Route path="/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
-                      <Route path="/mind-insurance/mental-assessment" element={<ExternalMentalPillarAssessmentPage />} />
+                      {/* Grouphome Core Routes - Pages handle their own SidebarLayout */}
+                      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                      <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />
+                      <Route path="/model-week" element={<ProtectedRoute><ModelWeekPage /></ProtectedRoute>} />
 
-                      {/* Mind Insurance Identity Collision Assessment - entry point for new users */}
-                      {/* IMPORTANT: requireAssessment=false to prevent infinite redirect loop */}
-                      {/* MI STANDALONE: No AccessGate - legacy MI users shouldn't need gh_approved_users */}
-                      <Route path="/mind-insurance/assessment" element={<ProtectedRoute requireAssessment={false}><IdentityCollisionAssessmentPage /></ProtectedRoute>} />
+                      {/* FEAT-GH-010: Programs Hub - Course-based learning */}
+                      <Route path="/programs" element={<ProtectedRoute><ProgramsPage /></ProtectedRoute>} />
+                      {/* FEAT-GH-011: Program Dashboard & Phase Roadmap */}
+                      <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDashboardPage /></ProtectedRoute>} />
+                      {/* FEAT-GH-012: Phase View & Lesson List */}
+                      <Route path="/programs/:programId/phases/:phaseId" element={<ProtectedRoute><PhasePage /></ProtectedRoute>} />
+                      {/* FEAT-GH-013: Lesson Experience (Video + Tactics + Bottom Sheet) */}
+                      <Route path="/programs/:programId/lessons/:lessonId" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
 
-                      {/* Legacy Inner Wiring route - redirect to Temperament Assessment */}
-                      <Route path="/mind-insurance/inner-wiring" element={<Navigate to="/mind-insurance/temperament-assessment" replace />} />
+                      {/* Chat - Nette AI (only coach) */}
+                      <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
 
-                      {/* Mental Pillar Baseline Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/mental-pillar-assessment" element={<ProtectedRoute><IdentityCollisionGuard><MentalPillarAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
+                      {/* Resources - Pages handle their own SidebarLayout */}
+                      <Route path="/resources" element={<ProtectedRoute><ResourcesHubPage /></ProtectedRoute>} />
+                      <Route path="/resources/documents" element={<ProtectedRoute><ResourcesDocumentsPage /></ProtectedRoute>} />
+                      <Route path="/resources/calculator" element={<ProtectedRoute><ResourcesCalculatorPage /></ProtectedRoute>} />
+                      <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
 
-                      {/* Main Mind Insurance Hub - default after login */}
-                      <Route path="/mind-insurance" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MindInsuranceHub /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      {/* Property Portfolio - Multi-property management */}
+                      <Route path="/portfolio" element={<ProtectedRoute><PropertyPortfolioPage /></ProtectedRoute>} />
+                      <Route path="/property/:propertyId" element={<ProtectedRoute><PropertyDetailPage /></ProtectedRoute>} />
 
-                      {/* Mind Insurance Core Routes */}
-                      <Route path="/mind-insurance/practice" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MindInsurancePracticePage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/championship" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><ChampionshipPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/insights" element={<Navigate to="/mind-insurance/coverage" replace />} />
-                      <Route path="/mind-insurance/coverage" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CoverageCenterPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      {/* First Session - NO assessment guards, accessible immediately after login */}
-                      <Route path="/mind-insurance/first-session" element={<ProtectedRoute><FirstSessionPage /></ProtectedRoute>} />
-                      <Route path="/mind-insurance/vault" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><VaultPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/insight/:protocolId" element={<ProtectedRoute><IdentityCollisionGuard><InsightRevealPage /></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/protocol/:protocolId" element={<ProtectedRoute><IdentityCollisionGuard><ProtocolDetailPage /></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/coach-protocol" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CoachProtocolDetailPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      {/* Compliance Hub - Digital compliance binder and research */}
+                      <Route path="/compliance" element={<ProtectedRoute><ComplianceHubPage /></ProtectedRoute>} />
+                      <Route path="/compliance/search" element={<ProtectedRoute><ComplianceSearchPage /></ProtectedRoute>} />
+                      <Route path="/compliance/binder" element={<ProtectedRoute><ComplianceBinderPage /></ProtectedRoute>} />
+                      <Route path="/compliance/assessment" element={<ProtectedRoute><ComplianceAssessmentPage /></ProtectedRoute>} />
+                      <Route path="/compliance/compare" element={<ProtectedRoute><StateComparisonPage /></ProtectedRoute>} />
 
-                      {/* Mind Insurance Practice Routes */}
-                      <Route path="/mind-insurance/practices/pattern-check" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><PatternCheck /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/reinforce-identity" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><ReinforceIdentity /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/outcome-visualization" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><OutcomeVisualization /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/trigger-reset" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><TriggerReset /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/energy-audit" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><EnergyAudit /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/celebrate-wins" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><CelebrateWins /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-                      <Route path="/mind-insurance/practices/tomorrow-setup" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><TomorrowSetup /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* MIO Insights Thread route */}
-                      <Route path="/mind-insurance/mio-insights" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><MIOInsightsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* Debug Protocol Status - temporary diagnostic page */}
-                      <Route path="/mind-insurance/debug-protocol" element={<ProtectedRoute><SidebarLayout><DebugProtocolStatus /></SidebarLayout></ProtectedRoute>} />
-
-                      {/* Temperament Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/temperament-assessment" element={<ProtectedRoute><IdentityCollisionGuard><TemperamentAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* Sub-Pattern Assessment - requires Identity Collision first */}
-                      <Route path="/mind-insurance/sub-pattern-assessment" element={<ProtectedRoute><IdentityCollisionGuard><SubPatternAssessmentPage /></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* Avatar Reveal - shows combined assessment results */}
-                      <Route path="/mind-insurance/avatar" element={<ProtectedRoute><IdentityCollisionGuard><AvatarRevealPage /></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* Chat - MI specific */}
-                      <Route path="/mind-insurance/chat" element={<ProtectedRoute><IdentityCollisionGuard><ChatPage /></IdentityCollisionGuard></ProtectedRoute>} />
-
-                      {/* User Settings & Profile */}
-                      <Route path="/settings" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><SettingsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
+                      {/* User Settings & Profile - Pages handle their own SidebarLayout */}
+                      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
                       {/* Admin routes */}
                       <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/documents" element={<ProtectedRoute><AdminRoute><DocumentManagement /></AdminRoute></ProtectedRoute>} />
-                      <Route path="/admin/protocols" element={<ProtectedRoute><AdminRoute><ProtocolManagement /></AdminRoute></ProtectedRoute>} />
-                      <Route path="/admin/reports" element={<ProtectedRoute><AdminRoute><ReportManagement /></AdminRoute></ProtectedRoute>} />
-                      <Route path="/admin/assessments" element={<ProtectedRoute><AdminRoute><AssessmentCenter /></AdminRoute></ProtectedRoute>} />
+                      {/* GROUPHOME STANDALONE: Removed MIO-focused ProtocolManagement route */}
+                      <Route path="/admin/protocols" element={<Navigate to="/admin" replace />} />
+                      {/* GROUPHOME STANDALONE: Removed MIO-focused ReportManagement route */}
+                      {/* GROUPHOME STANDALONE: Removed MIO-focused AssessmentCenter route */}
                       <Route path="/admin/knowledge-base" element={<ProtectedRoute><AdminRoute><AdminKnowledgeBase /></AdminRoute></ProtectedRoute>} />
                       <Route path="/admin/users" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
+                      {/* FEAT-GH-008: Coach Dashboard for stuck user management and funnel analytics */}
+                      <Route path="/admin/coach-dashboard" element={<ProtectedRoute><AdminRoute><CoachDashboard /></AdminRoute></ProtectedRoute>} />
+                      {/* FEAT-GH-014: Admin Program Management */}
+                      <Route path="/admin/programs" element={<ProtectedRoute><AdminRoute><AdminProgramsPage /></AdminRoute></ProtectedRoute>} />
+                      <Route path="/admin/programs/:programId" element={<ProtectedRoute><AdminRoute><AdminProgramDashboardPage /></AdminRoute></ProtectedRoute>} />
+                      {/* FEAT-GH-015: Admin Phase & Lesson Builder */}
+                      <Route path="/admin/programs/:programId/phases/:phaseId" element={<ProtectedRoute><AdminRoute><PhaseBuilderPage /></AdminRoute></ProtectedRoute>} />
+                      {/* FEAT-GH-016: Admin Lesson Editor */}
+                      <Route path="/admin/programs/:programId/lessons/:lessonId" element={<ProtectedRoute><AdminRoute><LessonEditorPage /></AdminRoute></ProtectedRoute>} />
+                      {/* FEAT-GH-018: Admin Learner Progress Drill-down */}
+                      <Route path="/admin/programs/:programId/learners/:userId" element={<ProtectedRoute><AdminRoute><AdminLearnerDetailPage /></AdminRoute></ProtectedRoute>} />
+
+                      {/* Legacy route redirects - for backwards compatibility */}
+                      <Route path="/mind-insurance/*" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/wealth/*" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/assessment" element={<Navigate to="/dashboard" replace />} />
 
                       {/* 404 catch-all - must be last */}
                       <Route path="*" element={<NotFound />} />

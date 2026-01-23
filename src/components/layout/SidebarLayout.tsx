@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -33,6 +33,8 @@ function getCurrentMode(pathname: string): SidebarMode {
   if (pathname.startsWith('/chat')) return 'chat';
   if (pathname.startsWith('/roadmap')) return 'roadmap';
   if (pathname.startsWith('/dashboard')) return 'dashboard';
+  // FEAT-GH-010: Programs Hub and nested routes
+  if (pathname.startsWith('/programs')) return 'programs';
   if (pathname.startsWith('/mind-insurance')) return 'mind-insurance';
   if (pathname.startsWith('/model-week')) return 'model-week';
   if (pathname.startsWith('/profile')) return 'profile';
@@ -64,29 +66,22 @@ export function SidebarLayout({
   const location = useLocation();
   const mode = explicitMode || getCurrentMode(location.pathname);
 
-  // MI Standalone: Always use dark theme for all pages
-  // This includes /profile, /settings, /admin, and all /mind-insurance routes
-  const isMindInsurance = true;
+  // GROUPHOME STANDALONE: Use light theme for all pages
+  const isMindInsurance = false;
 
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar mode={mode} />
 
-      {/* Fixed sidebar trigger - OUTSIDE SidebarInset for proper fixed positioning */}
-      {/* Always visible on both mobile and desktop so users can open sidebar after scrolling */}
-      <div className="fixed top-4 left-4 z-50">
-        <SidebarTrigger className={cn(
-          "h-10 w-10 backdrop-blur-sm shadow-lg border rounded-lg",
-          isMindInsurance
-            ? "bg-mi-navy-light/80 border-mi-cyan/30 text-mi-cyan hover:bg-mi-navy hover:text-white"
-            : "bg-background/80 hover:bg-background"
-        )} />
-      </div>
-
       <SidebarInset>
+        {/* Sticky header with sidebar toggle */}
+        <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+        </header>
+
         <div className={cn(
-          "min-h-screen flex flex-col",
-          isMindInsurance ? "bg-mi-navy" : "bg-muted/30"
+          "min-h-[calc(100vh-3.5rem)] flex flex-col",
+          isMindInsurance ? "bg-mi-navy" : "bg-white"
         )}>
           {/* Optional Header with gradient */}
           {showHeader && (
@@ -109,7 +104,7 @@ export function SidebarLayout({
 
           {/* Main Content Area */}
           <main className="flex-1">
-            <div className="container mx-auto px-4 py-6 pt-16 md:pt-6 max-w-6xl">
+            <div className="container mx-auto px-4 py-6 max-w-6xl">
               {children}
             </div>
           </main>

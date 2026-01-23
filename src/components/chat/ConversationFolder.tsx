@@ -62,12 +62,11 @@ export function ConversationFolder({
         />
 
         {/* Coach Avatar */}
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0"
-          style={{ background: coach.gradient }}
-        >
-          {coach.avatar}
-        </div>
+        <img
+          src={coach.avatar}
+          alt={coach.name}
+          className="w-6 h-6 rounded-full object-cover shrink-0"
+        />
 
         {/* Coach Name & Count */}
         <span className={cn(
