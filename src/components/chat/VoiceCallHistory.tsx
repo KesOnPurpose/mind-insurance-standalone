@@ -35,24 +35,24 @@ export function VoiceCallHistory({
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
+  // Check if call is within last 24 hours (considered "recent")
+  const isRecent = (call: VoiceCallForChat) => {
+    const callDate = new Date(call.created_at);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - callDate.getTime()) / (1000 * 60 * 60);
+    return hoursDiff < 24;
+  };
+
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Recent Voice Calls</h3>
-        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-          {voiceCalls.length}
-        </span>
-      </div>
-
-      <div className="space-y-3">
-        {sortedCalls.map((call) => (
-          <VoiceCallCard
-            key={call.id}
-            call={call}
-            userTimezone={userTimezone}
-          />
-        ))}
-      </div>
+      {sortedCalls.map((call, index) => (
+        <VoiceCallCard
+          key={call.id}
+          call={call}
+          userTimezone={userTimezone}
+          isRecent={index === 0 && isRecent(call)}
+        />
+      ))}
     </div>
   );
 }

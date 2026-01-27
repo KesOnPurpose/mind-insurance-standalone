@@ -1,15 +1,8 @@
 /**
  * VoiceCallCard Component
  *
- * Displays a voice call summary card in the chat interface.
- * Part of the Nette AI Voice ↔ Text Context Synchronization feature.
- *
- * Features:
- * - Summary card showing call date, duration, and topics
- * - Expandable to show full transcript
- * - Matches chat UI styling (supports both Grouphome and Mind Insurance themes)
- *
- * @module components/chat/VoiceCallCard
+ * Displays a voice call with transcript-first experience.
+ * Features chat-style message bubbles, prominent AI summary, and topics.
  */
 
 import { useState } from 'react';
@@ -17,22 +10,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Phone, Clock, ChevronDown, ChevronUp, MessageSquare, Play, ExternalLink } from 'lucide-react';
-import { useProduct } from '@/contexts/ProductContext';
-import { COACHES } from '@/types/coach';
+import { Phone, Clock, ChevronDown, Play, Copy, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { VoiceCallForChat, VoiceMessage } from '@/services/netteVoiceCallService';
 import { formatCallDuration, formatCallDirection } from '@/services/netteVoiceCallService';
 
 interface VoiceCallCardProps {
   call: VoiceCallForChat;
   userTimezone?: string;
+  isRecent?: boolean;
 }
 
-export const VoiceCallCard = ({ call, userTimezone }: VoiceCallCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { currentProduct } = useProduct();
-  const isMindInsurance = currentProduct === 'mind-insurance';
-  const coach = COACHES['nette'];
+export const VoiceCallCard = ({ call, userTimezone, isRecent = false }: VoiceCallCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(isRecent);
+  const [copied, setCopied] = useState(false);
 
   // Format the call date
   const callDate = new Date(call.created_at);
@@ -52,181 +43,172 @@ export const VoiceCallCard = ({ call, userTimezone }: VoiceCallCardProps) => {
   // Parse transcript messages if available
   const parsedMessages = call.parsed_messages as VoiceMessage[] | null;
 
+  // Copy transcript to clipboard
+  const handleCopyTranscript = async () => {
+    const text = parsedMessages
+      ? parsedMessages.map(m => `${m.role === 'user' ? 'You' : 'Nette'}: ${m.content}`).join('\n\n')
+      : call.full_transcript || '';
+
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="flex gap-3 flex-row">
-      {/* Avatar */}
-      <div
-        className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
-        style={{ background: coach.gradient }}
-      >
-        <Phone className="w-5 h-5" />
-      </div>
-
-      {/* Card Content */}
-      <Card
-        className={`p-4 max-w-[80%] ${
-          isMindInsurance
-            ? 'bg-[#132337] border border-[#05c3dd]/20 text-white'
-            : 'bg-card border-primary/20'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <Phone className="w-4 h-4" style={{ color: coach.color }} />
-          <span className="text-xs font-semibold" style={{ color: coach.color }}>
-            Voice Call with Nette
-          </span>
-          <span className={`text-xs ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-            • {formatCallDirection(call.direction)}
-          </span>
+    <Card className="overflow-hidden border-border/50">
+      {/* Header: Date, duration, direction, play button */}
+      <div className="flex items-center justify-between p-4 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Phone className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Voice Call with Nette</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{formattedDate} at {formattedTime}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatCallDuration(call.call_duration_seconds)}
+              </span>
+              <span>•</span>
+              <span>{formatCallDirection(call.direction)}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Call Info Row */}
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <div className={`flex items-center gap-1 text-sm ${isMindInsurance ? 'text-gray-300' : 'text-foreground'}`}>
-            <Clock className="w-3.5 h-3.5" />
-            <span>{formatCallDuration(call.call_duration_seconds)}</span>
-          </div>
-          <span className={`text-sm ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-            {formattedDate} at {formattedTime}
-          </span>
-        </div>
-
-        {/* Topics */}
-        {call.topics_discussed && call.topics_discussed.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {call.topics_discussed.slice(0, 4).map((topic, idx) => (
-              <Badge
-                key={idx}
-                variant="secondary"
-                className={`text-xs ${
-                  isMindInsurance
-                    ? 'bg-[#05c3dd]/10 text-[#05c3dd] border-[#05c3dd]/20'
-                    : 'bg-primary/10 text-primary'
-                }`}
-              >
-                {topic}
-              </Badge>
-            ))}
-            {call.topics_discussed.length > 4 && (
-              <Badge
-                variant="secondary"
-                className={`text-xs ${
-                  isMindInsurance
-                    ? 'bg-gray-700 text-gray-400'
-                    : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                +{call.topics_discussed.length - 4} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* AI Summary */}
-        {call.ai_summary && (
-          <div className={`text-sm leading-relaxed mb-3 ${isMindInsurance ? 'text-gray-200' : 'text-foreground'}`}>
-            {call.ai_summary}
-          </div>
-        )}
-
-        {/* Recording Link (if available) */}
         {call.recording_url && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className={`mb-3 ${
-              isMindInsurance
-                ? 'text-[#05c3dd] hover:bg-[#05c3dd]/10'
-                : 'text-primary hover:bg-primary/10'
-            }`}
             onClick={() => window.open(call.recording_url!, '_blank')}
+            className="shrink-0"
           >
-            <Play className="w-3.5 h-3.5 mr-1.5" />
-            Listen to recording
-            <ExternalLink className="w-3 h-3 ml-1" />
+            <Play className="w-4 h-4 mr-1" />
+            Play
           </Button>
         )}
+      </div>
 
-        {/* Expandable Transcript */}
-        {call.full_transcript && (
-          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`w-full justify-between ${
-                  isMindInsurance
-                    ? 'text-gray-400 hover:bg-[#05c3dd]/10 hover:text-[#05c3dd]'
-                    : 'text-muted-foreground hover:bg-primary/10'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>{isExpanded ? 'Hide transcript' : 'View full transcript'}</span>
-                </div>
-                {isExpanded ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
+      {/* AI Summary - Prominent */}
+      {call.ai_summary && (
+        <div className="p-4 bg-muted/30 border-b border-border/50">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Summary
+          </p>
+          <p className="text-sm text-foreground leading-relaxed">
+            {call.ai_summary}
+          </p>
+        </div>
+      )}
 
-            <CollapsibleContent className="mt-3">
-              <div
-                className={`p-3 rounded-lg space-y-3 max-h-96 overflow-y-auto ${
-                  isMindInsurance
-                    ? 'bg-[#0a1628] border border-[#05c3dd]/10'
-                    : 'bg-muted/50 border border-border'
-                }`}
-              >
+      {/* Topics */}
+      {call.topics_discussed && call.topics_discussed.length > 0 && (
+        <div className="px-4 py-3 flex flex-wrap gap-1.5 border-b border-border/50">
+          {call.topics_discussed.map((topic, idx) => (
+            <Badge
+              key={idx}
+              variant="secondary"
+              className="text-xs bg-primary/10 text-primary hover:bg-primary/20"
+            >
+              {topic}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {/* Transcript - Chat-style bubbles */}
+      {call.full_transcript && (
+        <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+            <span className="text-sm font-medium text-foreground">
+              Full Transcript
+            </span>
+            <ChevronDown className={cn(
+              'w-4 h-4 text-muted-foreground transition-transform',
+              isExpanded && 'rotate-180'
+            )} />
+          </CollapsibleTrigger>
+
+          <CollapsibleContent>
+            <div className="border-t border-border/50">
+              {/* Copy button */}
+              <div className="flex justify-end px-4 pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyTranscript}
+                  className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy transcript
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Messages */}
+              <div className="p-4 pt-2 space-y-3 max-h-96 overflow-y-auto">
                 {parsedMessages && parsedMessages.length > 0 ? (
-                  // Render parsed messages
+                  // Render as chat bubbles
                   parsedMessages.map((msg, idx) => (
                     <div
                       key={idx}
-                      className={`text-sm ${
-                        msg.role === 'user'
-                          ? isMindInsurance
-                            ? 'text-white'
-                            : 'text-foreground'
-                          : isMindInsurance
-                            ? 'text-[#05c3dd]'
-                            : 'text-primary'
-                      }`}
+                      className={cn(
+                        'flex',
+                        msg.role === 'user' ? 'justify-end' : 'justify-start'
+                      )}
                     >
-                      <span className="font-semibold">
-                        {msg.role === 'user' ? 'You: ' : 'Nette: '}
-                      </span>
-                      {msg.content}
+                      <div
+                        className={cn(
+                          'max-w-[85%] rounded-2xl px-4 py-2.5',
+                          msg.role === 'user'
+                            ? 'bg-primary text-primary-foreground rounded-br-md'
+                            : 'bg-muted rounded-bl-md'
+                        )}
+                      >
+                        <p className={cn(
+                          'text-[10px] font-semibold uppercase tracking-wide mb-1',
+                          msg.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                        )}>
+                          {msg.role === 'user' ? 'You' : 'Nette'}
+                        </p>
+                        <p className="text-sm leading-relaxed">
+                          {msg.content}
+                        </p>
+                      </div>
                     </div>
                   ))
                 ) : (
-                  // Render raw transcript
-                  <div
-                    className={`text-sm whitespace-pre-wrap ${
-                      isMindInsurance ? 'text-gray-300' : 'text-foreground'
-                    }`}
-                  >
-                    {call.full_transcript}
+                  // Render raw transcript as fallback
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                      {call.full_transcript}
+                    </p>
                   </div>
                 )}
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
-        {/* Timestamp */}
-        <span
-          className={`text-xs mt-2 block ${
-            isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'
-          }`}
-        >
-          Synced {call.synced_to_chat ? 'to conversation' : 'from voice'}
-        </span>
-      </Card>
-    </div>
+      {/* No transcript available */}
+      {!call.full_transcript && !call.ai_summary && (
+        <div className="p-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Transcript not available for this call
+          </p>
+        </div>
+      )}
+    </Card>
   );
 };
 
