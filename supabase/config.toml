@@ -32,3 +32,12 @@ verify_jwt = true
 
 [functions.sync-ghl-voice-context]
 verify_jwt = true
+
+[functions.lookup-user-by-phone]
+verify_jwt = false
+
+[functions.voice-session-lookup]
+verify_jwt = false
+
+[functions.generate-binder]
+verify_jwt = false

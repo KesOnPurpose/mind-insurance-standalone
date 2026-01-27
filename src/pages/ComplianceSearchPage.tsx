@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { useNavigate } from 'react-router-dom';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Search, Shield, FolderOpen, Plus } from 'lucide-react';
@@ -23,18 +24,19 @@ export default function ComplianceSearchPage() {
   const primaryBinderId = binders.length > 0 ? binders[0].id : undefined;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/compliance')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1.5" />
-          Back to Hub
-        </Button>
-      </div>
+    <SidebarLayout>
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/compliance')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Back to Hub
+          </Button>
+        </div>
 
       {/* Show create binder prompt if user has no binder */}
       {!bindersLoading && !primaryBinderId && (
@@ -88,7 +90,8 @@ export default function ComplianceSearchPage() {
             showPopularSearches={true}
           />
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </SidebarLayout>
   );
 }

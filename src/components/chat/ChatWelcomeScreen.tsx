@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Send, Clock, ArrowRight, Calendar } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { COACHES } from '@/types/coach';
-import { cn } from '@/lib/utils';
 import { VoiceInputButton } from './VoiceInputButton';
-import { useStuckDetection, getStuckMessage, getStuckCTA, StuckStatus } from '@/hooks/useStuckDetection';
-import { useNavigate } from 'react-router-dom';
 
 interface ChatWelcomeScreenProps {
   userName: string | null;
@@ -57,27 +53,10 @@ export const ChatWelcomeScreen = ({
   userTimezone
 }: ChatWelcomeScreenProps) => {
   const [input, setInput] = useState('');
-  const navigate = useNavigate();
   // GROUPHOME STANDALONE: Always use Nette coach
   const coach = COACHES.nette;
   const firstName = getFirstName(userName);
   const greeting = getTimeBasedGreeting(userTimezone);
-
-  // FEAT-GH-007: Stuck detection for nudge messages
-  const { data: stuckStatus, isLoading: stuckLoading } = useStuckDetection();
-
-  // Handle stuck CTA actions
-  const handleStuckCTA = (action: string) => {
-    if (action === 'continue' && stuckStatus?.currentTacticId) {
-      navigate(`/course/tactic/${stuckStatus.currentTacticId}`);
-    } else if (action === 'chat') {
-      // Just close the nudge and let them chat
-      onSendMessage("I'd like to talk about getting back on track");
-    } else if (action === 'book') {
-      // Open booking link (Calendly or similar)
-      window.open('https://calendly.com/grouphome4newbies/coaching', '_blank');
-    }
-  };
 
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
@@ -109,35 +88,6 @@ export const ChatWelcomeScreen = ({
           How can I help you with your group home journey today?
         </p>
 
-        {/* FEAT-GH-007: Stuck Detection Nudge Banner */}
-        {stuckStatus?.isStuck && !stuckLoading && (
-          <Card className="w-full mb-6 p-4 border-l-4 border-l-primary bg-primary/5">
-            <div className="flex flex-col space-y-3">
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: coach.gradient }}
-                >
-                  <Clock className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-sm text-foreground leading-relaxed">
-                  {getStuckMessage(stuckStatus).replace('there', firstName || 'there')}
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => handleStuckCTA(getStuckCTA(stuckStatus).action)}
-                  size="sm"
-                  className="rounded-full"
-                  style={{ background: coach.gradient }}
-                >
-                  {getStuckCTA(stuckStatus).text}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
 
         {/* Input Container */}
         <div className="w-full mb-6">

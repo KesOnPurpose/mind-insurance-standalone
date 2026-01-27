@@ -1,67 +1,75 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ListTodo, CheckCircle2, Circle, ArrowRight, MessageSquare, Target } from 'lucide-react';
+import { ListTodo, ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { usePersonalizedTactics } from '@/hooks/usePersonalizedTactics';
-import type { TacticWithProgress } from '@/types/tactic';
+import { usePrograms, useProgramPhases, usePhaseLessons, useLessonTactics } from '@/hooks/usePrograms';
 
 /**
- * WeeklyFocusCard - Dashboard card showing current week's tasks
+ * WeeklyFocusCard - Apple-style simplified dashboard card
  *
- * Displays:
- * - Current week number and title
- * - Tasks completed vs total
- * - Checklist of current week's tasks (max 5)
- * - View All Tasks CTA
- * - Inline Ask Nette link with roadmap context
+ * Design Philosophy:
+ * - ONE dominant metric based on current context
+ * - Priority: Tactics > Lessons > Phase milestones
+ * - Links to program/lesson pages (NOT roadmap)
+ * - Glanceable in <1 second
+ *
+ * Data Source:
+ * - Pulls from enrolled program's current phase
+ * - Shows incomplete tactics from current lesson first
+ * - Falls back to lessons, then phase milestones
  */
 export function WeeklyFocusCard() {
+  // 1. Get the enrolled program to continue
+  const { continueProgram, isLoading: programsLoading } = usePrograms();
+
+  // 2. Get phases for the active program to find current phase
+  const { currentPhase, phases, isLoading: phasesLoading } = useProgramPhases(continueProgram?.id);
+
+  // 3. Get lessons for the current phase to find current lesson
+  const { currentLesson, lessons, isLoading: lessonsLoading } = usePhaseLessons(currentPhase?.id);
+
+  // 4. Get tactics for the current lesson
   const {
     tactics,
-    recommendedWeeks,
-    startingWeek,
-    isLoading,
-    totalTacticsCount,
-    hasAssessment,
-  } = usePersonalizedTactics();
+    completedRequired,
+    totalRequired,
+    allRequiredComplete,
+    isLoading: tacticsLoading,
+  } = useLessonTactics(currentLesson?.id);
+
+  const isLoading = programsLoading || (continueProgram && phasesLoading) ||
+    (currentPhase && lessonsLoading) || (currentLesson && tacticsLoading);
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-32 mb-3" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-9 w-full mt-4" />
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <Skeleton className="h-5 w-32 mx-auto mb-4" />
+          <Skeleton className="h-12 w-24 mx-auto mb-2" />
+          <Skeleton className="h-4 w-28 mx-auto mb-6" />
+          <Skeleton className="h-9 w-32 mx-auto" />
         </CardContent>
       </Card>
     );
   }
 
-  // No assessment taken - prompt to take it
-  if (!hasAssessment) {
+  // No enrolled program - show CTA to browse programs
+  if (!continueProgram) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <ListTodo className="w-5 h-5 text-primary" />
-            <CardTitle className="text-base">Weekly Focus</CardTitle>
+            <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Complete your readiness assessment to get personalized weekly tasks tailored to your journey.
-          </p>
-          <Link to="/assessment">
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              Take Assessment
-              <ArrowRight className="w-4 h-4" />
+
+          <p className="text-4xl font-bold text-foreground mb-1">—</p>
+          <p className="text-sm text-muted-foreground mb-6">Enroll in a program</p>
+
+          <Link to="/programs">
+            <Button size="sm" variant="ghost" className="gap-2">
+              Browse Programs <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </CardContent>
@@ -69,24 +77,22 @@ export function WeeklyFocusCard() {
     );
   }
 
-  // No tactics available
-  if (!tactics || tactics.length === 0) {
+  // Program complete - celebrate!
+  if (continueProgram.computed_status === 'completed') {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <ListTodo className="w-5 h-5 text-primary" />
-            <CardTitle className="text-base">Weekly Focus</CardTitle>
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Your personalized roadmap is being prepared. Check back soon for your weekly tasks.
-          </p>
-          <Link to="/roadmap">
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              View Roadmap
-              <ArrowRight className="w-4 h-4" />
+
+          <p className="text-4xl font-bold text-green-600 mb-1">Done!</p>
+          <p className="text-sm text-muted-foreground mb-6">Program completed</p>
+
+          <Link to="/programs">
+            <Button size="sm" variant="ghost" className="gap-2">
+              View Programs <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </CardContent>
@@ -94,147 +100,149 @@ export function WeeklyFocusCard() {
     );
   }
 
-  // Determine current week (starting week from assessment or first recommended)
-  const currentWeek = startingWeek || (recommendedWeeks && recommendedWeeks.length > 0 ? recommendedWeeks[0] : 1);
-  const totalWeeks = recommendedWeeks?.length || 12;
+  // Build the program URL
+  const programUrl = `/programs/${continueProgram.slug || continueProgram.id}`;
 
-  // Filter tactics for current week
-  const currentWeekTactics = tactics.filter(
-    (t: TacticWithProgress) => t.week_assignment === currentWeek
-  );
+  // PRIORITY 1: Show tactics if there are incomplete required tactics in current lesson
+  if (currentLesson && tactics && tactics.length > 0 && !allRequiredComplete && totalRequired > 0) {
+    const lessonUrl = `${programUrl}/lessons/${currentLesson.id}`;
 
-  // Calculate completed count
-  const completedCount = currentWeekTactics.filter(
-    (t: TacticWithProgress) => t.status === 'completed'
-  ).length;
+    // Calculate phase position (1-indexed for display)
+    const currentPhaseNumber = currentPhase ? (currentPhase.order_index ?? 0) + 1 : 1;
+    const totalPhases = phases.length || 1;
 
-  const totalCount = currentWeekTactics.length;
-
-  // Get progress percentage
-  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-  // Determine status badge
-  const getStatusBadge = () => {
-    if (progressPercent === 100) {
-      return { label: 'Complete!', color: 'bg-green-600' };
-    }
-    if (progressPercent >= 60) {
-      return { label: 'On Track', color: 'bg-blue-600' };
-    }
-    if (progressPercent > 0) {
-      return { label: 'In Progress', color: 'bg-yellow-600' };
-    }
-    return { label: 'Not Started', color: 'bg-slate-500' };
-  };
-
-  const status = getStatusBadge();
-
-  // Get up to 5 tactics to display (prioritize incomplete)
-  const incompleteTactics = currentWeekTactics.filter(
-    (t: TacticWithProgress) => t.status !== 'completed'
-  );
-  const completedTactics = currentWeekTactics.filter(
-    (t: TacticWithProgress) => t.status === 'completed'
-  );
-
-  // Show incomplete first, then completed, max 5 total
-  const displayTactics = [
-    ...incompleteTactics.slice(0, 4),
-    ...completedTactics.slice(0, Math.max(0, 5 - incompleteTactics.length)),
-  ].slice(0, 5);
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+    return (
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <ListTodo className="w-5 h-5 text-primary" />
-            <CardTitle className="text-base">Weekly Focus</CardTitle>
+            <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
           </div>
-          <Badge variant="secondary" className={`${status.color} text-white text-xs`}>
-            {status.label}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* Week info */}
-        <div className="mb-3">
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-muted-foreground" />
-            <p className="font-medium text-sm">Week {currentWeek} of {totalWeeks}</p>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {completedCount} of {totalCount} tasks complete
-          </p>
-        </div>
 
-        {/* Task checklist */}
-        {displayTactics.length > 0 ? (
-          <div className="space-y-2 mb-4">
-            {displayTactics.map((tactic: TacticWithProgress) => (
-              <div
-                key={tactic.tactic_id}
-                className="flex items-start gap-2 text-sm"
-              >
-                {tactic.status === 'completed' ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                )}
-                <span
-                  className={
-                    tactic.status === 'completed'
-                      ? 'text-muted-foreground line-through'
-                      : 'text-foreground'
-                  }
-                >
-                  {tactic.tactic_name}
-                </span>
-              </div>
-            ))}
-            {currentWeekTactics.length > 5 && (
-              <p className="text-xs text-muted-foreground pl-6">
-                +{currentWeekTactics.length - 5} more tasks
-              </p>
+          {/* Hero Metric - Tactics progress */}
+          <p className="text-4xl font-bold text-foreground mb-1">
+            {completedRequired} of {totalRequired}
+          </p>
+
+          {/* Context - Phase position + Lesson title */}
+          <p className="text-sm text-muted-foreground mb-6 truncate px-4">
+            Phase {currentPhaseNumber} of {totalPhases} · {currentLesson.title}
+          </p>
+
+          {/* CTA to lesson page */}
+          <Link to={lessonUrl}>
+            <Button size="sm" variant="ghost" className="gap-2">
+              Continue Lesson <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // PRIORITY 2: Show phase progress (which phase out of total)
+  if (currentLesson && currentPhase) {
+    const completedLessons = lessons.filter(l => l.status === 'completed').length;
+    const totalLessons = lessons.length;
+    const lessonUrl = `${programUrl}/lessons/${currentLesson.id}`;
+
+    // Calculate phase position (1-indexed for display)
+    const currentPhaseNumber = (currentPhase.order_index ?? 0) + 1;
+    const totalPhases = phases.length;
+
+    // Extract just the descriptive part of phase title (remove "Phase X – " prefix if present)
+    const phaseTitle = currentPhase.title.replace(/^Phase\s*\d+\s*[–-]\s*/i, '');
+
+    return (
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <BookOpen className="w-5 h-5 text-primary" />
+            <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
+          </div>
+
+          {/* Hero Metric - Which phase out of total phases */}
+          <p className="text-4xl font-bold text-foreground mb-1">
+            Phase {currentPhaseNumber} of {totalPhases}
+          </p>
+
+          {/* Context - Lesson progress + Phase name */}
+          <p className="text-sm text-muted-foreground mb-6 truncate px-4">
+            {completedLessons} of {totalLessons} lessons · {phaseTitle}
+          </p>
+
+          {/* CTA to lesson page */}
+          <Link to={lessonUrl}>
+            <Button size="sm" variant="ghost" className="gap-2">
+              Continue Lesson <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // PRIORITY 3: Show phase milestone (all lessons in phase complete, or no current lesson)
+  if (currentPhase) {
+    const phaseLessonsComplete = currentPhase.status === 'completed';
+
+    // Calculate phase position (1-indexed for display)
+    const currentPhaseNumber = (currentPhase.order_index ?? 0) + 1;
+    const totalPhases = phases.length;
+
+    // Extract just the descriptive part of phase title (remove "Phase X – " prefix if present)
+    const phaseTitle = currentPhase.title.replace(/^Phase\s*\d+\s*[–-]\s*/i, '');
+
+    return (
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            {phaseLessonsComplete ? (
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            ) : (
+              <BookOpen className="w-5 h-5 text-primary" />
             )}
+            <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground mb-4">
-            No tasks assigned for this week yet.
+
+          {/* Hero Metric - Phase progress */}
+          <p className={`text-4xl font-bold mb-1 ${phaseLessonsComplete ? 'text-green-600' : 'text-foreground'}`}>
+            {currentPhase.progress_percent}%
           </p>
-        )}
 
-        {/* All complete celebration */}
-        {progressPercent === 100 && totalCount > 0 && (
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Week {currentWeek} complete!</span>
-            </div>
-            <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-              Great progress! Ready to move forward.
-            </p>
-          </div>
-        )}
+          {/* Context - Phase X of Y + Phase name */}
+          <p className="text-sm text-muted-foreground mb-6 truncate px-4">
+            Phase {currentPhaseNumber} of {totalPhases} · {phaseTitle}
+          </p>
 
-        {/* Actions */}
-        <div className="space-y-2">
-          <Link to="/roadmap">
-            <Button size="sm" className="w-full gap-2">
-              View All Tasks
-              <ArrowRight className="w-4 h-4" />
+          {/* CTA to program page */}
+          <Link to={programUrl}>
+            <Button size="sm" variant="ghost" className="gap-2">
+              View Program <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
-          {/* Inline Ask Nette link with context */}
-          <Link
-            to={`/chat?context=roadmap&week=${currentWeek}&completed=${completedCount}&total=${totalCount}`}
-            className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors py-1"
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Ask Nette about my weekly tasks</span>
-          </Link>
+  // Fallback: No current phase (shouldn't happen if enrolled)
+  return (
+    <Card className="relative overflow-hidden">
+      <CardContent className="pt-6 pb-6 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <ListTodo className="w-5 h-5 text-primary" />
+          <span className="font-medium text-muted-foreground text-sm">Current Focus</span>
         </div>
+
+        <p className="text-4xl font-bold text-foreground mb-1">—</p>
+        <p className="text-sm text-muted-foreground mb-6">Starting soon</p>
+
+        <Link to={programUrl}>
+          <Button size="sm" variant="ghost" className="gap-2">
+            View Program <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );

@@ -93,7 +93,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              The Mind Insurance System
+              The Grouphomes4newbies System
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Four integrated pillars that work together to ensure your success
@@ -153,7 +153,7 @@ const LandingPage = () => {
               <div className="w-12 h-12 rounded-xl bg-gradient-success flex items-center justify-center mb-4">
                 <Brain className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Mind Insurance (PROTECT)</h3>
+              <h3 className="text-2xl font-bold mb-3">Mental Breakthrough Coaching</h3>
               <p className="text-muted-foreground mb-4">
                 Daily 10-minute practice to break through mental barriers. MIO, your AI coach, provides 3x daily check-ins and weekly forensic analysis.
               </p>
@@ -254,7 +254,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-12">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="text-sm">© 2024 Mind Insurance. Transforming lives through group home ownership.</p>
+          <p className="text-sm">© 2024 Grouphomes4newbies. Transforming lives through group home ownership.</p>
         </div>
       </footer>
     </div>

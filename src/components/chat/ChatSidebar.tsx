@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings, LogOut, User, MessageSquare, Shield, Home, Map, FileText, Calculator, Phone, PhoneCall, History, CheckCircle2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Settings, LogOut, User, MessageSquare, Shield, Home, FileText, Calculator, Phone, PhoneCall, History, CheckCircle2, BookOpen, FolderOpen, ChevronDown, ChevronRight, ClipboardCheck, Building2 } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,7 @@ import { useConversationContext } from '@/contexts/ConversationContext';
 import { ConversationList } from './ConversationList';
 import { cn } from '@/lib/utils';
 import { COACHES } from '@/types/coach';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export type ChatMode = 'chat' | 'voice';
 
@@ -40,7 +41,11 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
   const [mode, setMode] = useState<ChatMode>('chat');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
+  const [resourcesOpen, setResourcesOpen] = useState(
+    location.pathname.startsWith('/resources') || location.pathname === '/portfolio'
+  );
 
   const {
     conversations,
@@ -95,6 +100,9 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
     await signOut();
     navigate('/auth');
   };
+
+  const isActive = (path: string) => location.pathname === path;
+  const isResourcesActive = location.pathname.startsWith('/resources') || location.pathname === '/portfolio';
 
   return (
     <Sidebar side="left" collapsible="offcanvas">
@@ -258,7 +266,7 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
           </div>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard">
+              <SidebarMenuButton asChild tooltip="Dashboard" isActive={isActive('/dashboard')}>
                 <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
                   <Home className="h-4 w-4" />
                   <span>Dashboard</span>
@@ -266,26 +274,75 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Roadmap">
-                <Link to="/roadmap" onClick={() => isMobile && setOpenMobile(false)}>
-                  <Map className="h-4 w-4" />
-                  <span>Roadmap</span>
+              <SidebarMenuButton asChild tooltip="My Programs" isActive={location.pathname.startsWith('/programs')}>
+                <Link to="/programs" onClick={() => isMobile && setOpenMobile(false)}>
+                  <BookOpen className="h-4 w-4" />
+                  <span>My Programs</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            {/* Resources - Collapsible Section */}
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Documents">
-                <Link to="/resources/documents" onClick={() => isMobile && setOpenMobile(false)}>
-                  <FileText className="h-4 w-4" />
-                  <span>Documents</span>
-                </Link>
-              </SidebarMenuButton>
+              <Collapsible open={resourcesOpen} onOpenChange={setResourcesOpen}>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="Resources"
+                    className={cn(isResourcesActive && "bg-sidebar-accent text-sidebar-accent-foreground")}
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                    <span>Resources</span>
+                    {resourcesOpen ? (
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Documents"
+                    isActive={isActive('/resources/documents')}
+                    className="h-8"
+                  >
+                    <Link to="/resources/documents" onClick={() => isMobile && setOpenMobile(false)}>
+                      <FileText className="h-4 w-4" />
+                      <span>Documents</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Calculator"
+                    isActive={isActive('/resources/calculator')}
+                    className="h-8"
+                  >
+                    <Link to="/resources/calculator" onClick={() => isMobile && setOpenMobile(false)}>
+                      <Calculator className="h-4 w-4" />
+                      <span>Calculator</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Portfolio"
+                    isActive={isActive('/portfolio')}
+                    className="h-8"
+                  >
+                    <Link to="/portfolio" onClick={() => isMobile && setOpenMobile(false)}>
+                      <Building2 className="h-4 w-4" />
+                      <span>Portfolio</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenuItem>
+
+            {/* Compliance */}
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Calculator">
-                <Link to="/resources/calculator" onClick={() => isMobile && setOpenMobile(false)}>
-                  <Calculator className="h-4 w-4" />
-                  <span>Calculator</span>
+              <SidebarMenuButton asChild tooltip="Compliance" isActive={location.pathname.startsWith('/compliance')}>
+                <Link to="/compliance" onClick={() => isMobile && setOpenMobile(false)}>
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span>Compliance</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

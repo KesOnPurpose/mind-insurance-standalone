@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -426,8 +427,9 @@ export default function ComplianceHubPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+    <SidebarLayout>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         {/* FEAT-GH-015: Consolidated from 6 tabs to 5 tabs */}
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">
@@ -542,7 +544,8 @@ export default function ComplianceHubPage() {
         <TabsContent value="compare">
           <StateComparison />
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </SidebarLayout>
   );
 }

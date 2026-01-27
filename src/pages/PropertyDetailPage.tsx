@@ -24,6 +24,7 @@ import {
   PropertyComplianceTab,
 } from '@/components/property';
 import { toast } from 'sonner';
+import { uploadPropertyPhoto, deletePropertyPhoto } from '@/services/propertyService';
 import {
   Building2,
   Calculator,
@@ -287,6 +288,34 @@ const PropertyDetailPage = () => {
     }
   };
 
+  // Handle photo upload
+  const handlePhotoUpload = async (file: File): Promise<string> => {
+    if (!propertyId) {
+      throw new Error('Property ID is required');
+    }
+    try {
+      const url = await uploadPropertyPhoto(propertyId, file);
+      toast.success('Photo uploaded successfully');
+      return url;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload photo';
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  // Handle photo delete
+  const handlePhotoDelete = async (photoUrl: string): Promise<void> => {
+    try {
+      await deletePropertyPhoto(photoUrl);
+      toast.success('Photo deleted');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete photo';
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
   // Navigate to full calculator
   const handleOpenFullCalculator = () => {
     navigate('/calculator', { state: { propertyId } });
@@ -428,6 +457,8 @@ const PropertyDetailPage = () => {
             <PropertyProfile
               property={property}
               onUpdate={handleUpdateProperty}
+              onPhotoUpload={handlePhotoUpload}
+              onPhotoDelete={handlePhotoDelete}
               isUpdating={isUpdating}
             />
           </TabsContent>

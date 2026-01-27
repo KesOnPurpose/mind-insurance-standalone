@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -55,25 +56,97 @@ export default function ComplianceAssessmentPage() {
   // Loading state while fetching binders
   if (bindersLoading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-5xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-16 w-16 rounded-lg" />
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-64" />
-            <Skeleton className="h-5 w-96" />
+      <SidebarLayout>
+        <div className="container mx-auto px-4 py-6 max-w-5xl">
+          <div className="flex items-center gap-4 mb-6">
+            <Skeleton className="h-8 w-32" />
           </div>
+          <div className="flex items-center gap-4 mb-6">
+            <Skeleton className="h-16 w-16 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-7 w-64" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+          </div>
+          <Skeleton className="h-[500px] w-full rounded-lg" />
         </div>
-        <Skeleton className="h-[500px] w-full rounded-lg" />
-      </div>
+      </SidebarLayout>
     );
   }
 
   // No state selected - show prompt to select state
   if (!stateCode) {
     return (
+      <SidebarLayout>
+        <div className="container mx-auto px-4 py-6 max-w-5xl">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/compliance')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Back to Hub
+            </Button>
+          </div>
+
+          {/* Page Title */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 rounded-lg bg-primary/10 text-primary">
+              <ClipboardCheck className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Compliance Assessment</h1>
+              <p className="text-muted-foreground">
+                Guided workbook to verify your housing model against state requirements.
+              </p>
+            </div>
+          </div>
+
+          {/* State Selection Required */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Select Your State
+              </CardTitle>
+              <CardDescription>
+                Before starting the assessment, you need to select the state where your
+                group home will be located. This determines which regulations apply.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>No State Selected</AlertTitle>
+                <AlertDescription>
+                  You haven't set up a compliance binder with a state yet.
+                  Please create a binder first or go to the Research tab to select your state.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button onClick={() => navigate('/compliance?tab=research')}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Go to Research
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/compliance?tab=my-binder')}
+                >
+                  Create a Binder
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </SidebarLayout>
+    );
+  }
+
+  return (
+    <SidebarLayout>
       <div className="container mx-auto px-4 py-6 max-w-5xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
@@ -95,136 +168,70 @@ export default function ComplianceAssessmentPage() {
           <div>
             <h1 className="text-2xl font-bold">Compliance Assessment</h1>
             <p className="text-muted-foreground">
-              Guided workbook to verify your housing model against state requirements.
+              Guided workbook to verify your housing model against {stateCode} requirements.
             </p>
           </div>
         </div>
 
-        {/* State Selection Required */}
+        {/* Introduction Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Select Your State
+              <BookOpen className="h-5 w-5" />
+              Getting Started
             </CardTitle>
             <CardDescription>
-              Before starting the assessment, you need to select the state where your
-              group home will be located. This determines which regulations apply.
+              This assessment will guide you through verifying your housing model
+              against state and local compliance requirements.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>No State Selected</AlertTitle>
-              <AlertDescription>
-                You haven't set up a compliance binder with a state yet.
-                Please create a binder first or go to the Research tab to select your state.
-              </AlertDescription>
-            </Alert>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <h4 className="font-medium">What You'll Do</h4>
+                </div>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-7">
+                  <li>Define your housing model clearly</li>
+                  <li>Research state licensure requirements</li>
+                  <li>Review local zoning and occupancy rules</li>
+                  <li>Document your findings and interpretations</li>
+                  <li>Receive a compliance determination</li>
+                </ul>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                  <h4 className="font-medium">What You'll Get</h4>
+                </div>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-7">
+                  <li>Clear understanding of requirements</li>
+                  <li>Documented research trail</li>
+                  <li>Auto-populated compliance binder</li>
+                  <li>Confidence when speaking to officials</li>
+                  <li>Actionable next steps checklist</li>
+                </ul>
+              </div>
+            </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button onClick={() => navigate('/compliance?tab=research')}>
-                <BookOpen className="h-4 w-4 mr-2" />
-                Go to Research
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/compliance?tab=my-binder')}
-              >
-                Create a Binder
-              </Button>
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-4">
+                <strong>Time estimate:</strong> 30-60 minutes to complete all sections.
+                You can save and return at any time - your progress is automatically saved.
+              </p>
             </div>
           </CardContent>
         </Card>
+
+        {/* Main Assessment Component */}
+        <ComplianceAssessment
+          stateCode={stateCode}
+          binderId={binderId}
+          onComplete={handleAssessmentComplete}
+          onCancel={() => navigate('/compliance')}
+        />
       </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/compliance')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1.5" />
-          Back to Hub
-        </Button>
-      </div>
-
-      {/* Page Title */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="p-3 rounded-lg bg-primary/10 text-primary">
-          <ClipboardCheck className="h-8 w-8" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Compliance Assessment</h1>
-          <p className="text-muted-foreground">
-            Guided workbook to verify your housing model against {stateCode} requirements.
-          </p>
-        </div>
-      </div>
-
-      {/* Introduction Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Getting Started
-          </CardTitle>
-          <CardDescription>
-            This assessment will guide you through verifying your housing model
-            against state and local compliance requirements.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <h4 className="font-medium">What You'll Do</h4>
-              </div>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-7">
-                <li>Define your housing model clearly</li>
-                <li>Research state licensure requirements</li>
-                <li>Review local zoning and occupancy rules</li>
-                <li>Document your findings and interpretations</li>
-                <li>Receive a compliance determination</li>
-              </ul>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-5 w-5 text-blue-500" />
-                <h4 className="font-medium">What You'll Get</h4>
-              </div>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-7">
-                <li>Clear understanding of requirements</li>
-                <li>Documented research trail</li>
-                <li>Auto-populated compliance binder</li>
-                <li>Confidence when speaking to officials</li>
-                <li>Actionable next steps checklist</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground mb-4">
-              <strong>Time estimate:</strong> 30-60 minutes to complete all sections.
-              You can save and return at any time - your progress is automatically saved.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Assessment Component */}
-      <ComplianceAssessment
-        stateCode={stateCode}
-        binderId={binderId}
-        onComplete={handleAssessmentComplete}
-        onCancel={() => navigate('/compliance')}
-      />
-    </div>
+    </SidebarLayout>
   );
 }

@@ -10,6 +10,7 @@ import {
   Settings,
   Home,
   GraduationCap,
+  Scale,
   // GROUPHOME STANDALONE: Removed ClipboardCheck - was used for MIO Assessments
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,13 @@ const ADMIN_NAV_ITEMS: Array<{
     href: '/admin/programs',
     icon: GraduationCap,
     description: 'Course management',
+  },
+  {
+    title: 'Compliance Binders',
+    href: '/admin/compliance',
+    icon: Scale,
+    description: 'Generate compliance binders',
+    requiredTier: 'super_admin',
   },
   {
     title: 'Protocols',

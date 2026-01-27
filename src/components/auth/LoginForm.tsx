@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Loader2,Shield } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,7 +81,7 @@ export const LoginForm = () => {
     try {
       toast({
         title: "Redirecting to Google",
-        description: "You'll be securely authenticated via Mind Insurance",
+        description: "You'll be securely authenticated via Grouphomes4newbies",
       });
 
       const { error } = await signInWithGoogle();
@@ -96,14 +96,13 @@ export const LoginForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-mi-navy-light border-mi-cyan/20">
+    <Card className="w-full max-w-md mx-auto bg-white border-gray-200 shadow-lg">
       <CardHeader className="space-y-1">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Shield className="w-8 h-8 text-mi-cyan" />
-          <CardTitle className="text-2xl font-bold text-white">Mind Insurance</CardTitle>
-        </div>
-        <CardDescription className="text-center text-white/70">
-          Protect your mind, transform your life
+        <CardTitle className="text-2xl font-bold text-gray-900 text-center">
+          Grouphomes4newbies
+        </CardTitle>
+        <CardDescription className="text-center text-gray-600">
+          Welcome to your group home investment journey
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -118,7 +117,7 @@ export const LoginForm = () => {
               
               {/* Email Input */}
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email" className="text-gray-700">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -136,7 +135,7 @@ export const LoginForm = () => {
 
               {/* Password Input - Always Visible */}
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password" className="text-gray-700">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -175,8 +174,8 @@ export const LoginForm = () => {
                     onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                    Remember me
+                  <Label htmlFor="remember" className="text-sm font-normal cursor-pointer text-gray-700">
+                    Remember me for 30 days
                   </Label>
                 </div>
                 <Link
@@ -195,26 +194,26 @@ export const LoginForm = () => {
 
               <Button
                 type="submit"
-                className="w-full font-semibold"
+                className="w-full font-semibold bg-teal-500 hover:bg-teal-600 text-white"
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
+                Sign In with Password
               </Button>
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-500">OR</span>
                 </div>
               </div>
 
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
@@ -236,7 +235,7 @@ export const LoginForm = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                Google
+                Continue with Google
               </Button>
             </form>
           </TabsContent>
@@ -245,7 +244,7 @@ export const LoginForm = () => {
           <TabsContent value="signup" className="space-y-4">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email" className="text-gray-700">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -262,7 +261,7 @@ export const LoginForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
+                <Label htmlFor="signup-password" className="text-gray-700">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -322,7 +321,7 @@ export const LoginForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                <Label htmlFor="signup-confirm-password" className="text-gray-700">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -352,7 +351,7 @@ export const LoginForm = () => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full font-semibold bg-teal-500 hover:bg-teal-600 text-white"
                 disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -361,21 +360,21 @@ export const LoginForm = () => {
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <span className="bg-white px-2 text-gray-500">Or</span>
                 </div>
               </div>
 
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
-                Sign Up with Google
+                Continue with Google
               </Button>
             </form>
           </TabsContent>

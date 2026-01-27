@@ -572,9 +572,11 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
-                {COACHES[selectedCoach].avatar}
-              </div>
+              <img
+                src={COACHES[selectedCoach].avatar}
+                alt={COACHES[selectedCoach].name}
+                className="w-12 h-12 rounded-full object-cover bg-white/20 backdrop-blur-sm"
+              />
               <div>
                 <h1 className="text-2xl font-bold">Chat with {COACHES[selectedCoach].name}</h1>
                 <p className="text-white/90 text-sm">{COACHES[selectedCoach].title}</p>
@@ -589,10 +591,11 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
             <div className="max-w-4xl mx-auto">
               <VoiceTabContent
                 voiceCalls={voiceCalls}
-                userProfile={userProfile}
+                verifiedPhone={userProfile?.verified_phone ?? null}
+                userId={user?.id ?? ''}
+                ghlContactId={userProfile?.ghl_contact_id ?? null}
                 userTimezone={userProfile?.timezone ?? undefined}
                 onPhoneVerify={() => setShowPhoneVerification(true)}
-                isWidgetVisible={activeMode === 'voice'}
                 isLoading={isLoadingHistory}
               />
             </div>
@@ -637,12 +640,11 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
                   {/* Loading Animation */}
                   {isTyping && (
                     <div className="flex flex-col items-center justify-center py-8 gap-4">
-                      <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
-                        style={{ background: COACHES[selectedCoach].gradient }}
-                      >
-                        {COACHES[selectedCoach].avatar}
-                      </div>
+                      <img
+                        src={COACHES[selectedCoach].avatar}
+                        alt={COACHES[selectedCoach].name}
+                        className="w-16 h-16 rounded-full object-cover animate-pulse"
+                      />
                       <p className="text-muted-foreground text-sm">{COACHES[selectedCoach].name} is thinking...</p>
                       <div className="flex gap-1">
                         <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

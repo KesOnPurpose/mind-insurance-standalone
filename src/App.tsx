@@ -77,6 +77,8 @@ import PhaseBuilderPage from "./pages/admin/PhaseBuilderPage";
 import LessonEditorPage from "./pages/admin/LessonEditorPage";
 // FEAT-GH-018: Admin Learner Progress Drill-down
 import AdminLearnerDetailPage from "./pages/admin/AdminLearnerDetailPage";
+// Compliance Binder Generator
+import ComplianceBinderGeneratorPage from "./pages/admin/ComplianceBinderGeneratorPage";
 
 // Other
 import NotFound from "./pages/NotFound";
@@ -267,6 +269,8 @@ const App = () => {
                       <Route path="/admin/programs/:programId/lessons/:lessonId" element={<ProtectedRoute><AdminRoute><LessonEditorPage /></AdminRoute></ProtectedRoute>} />
                       {/* FEAT-GH-018: Admin Learner Progress Drill-down */}
                       <Route path="/admin/programs/:programId/learners/:userId" element={<ProtectedRoute><AdminRoute><AdminLearnerDetailPage /></AdminRoute></ProtectedRoute>} />
+                      {/* Compliance Binder Generator */}
+                      <Route path="/admin/compliance" element={<ProtectedRoute><AdminRoute><ComplianceBinderGeneratorPage /></AdminRoute></ProtectedRoute>} />
 
                       {/* Legacy route redirects - for backwards compatibility */}
                       <Route path="/mind-insurance/*" element={<Navigate to="/dashboard" replace />} />

@@ -4,6 +4,7 @@
 // Main reader component for viewing complete state compliance binders.
 // Provides a full-document reading experience with TOC navigation.
 // This is the "$100M feature" - a clean, scrollable binder for each state.
+// Now includes Zoning & Occupancy tab and Local Binders section.
 // ============================================================================
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Accordion,
   AccordionContent,
@@ -41,8 +43,13 @@ import {
   BookmarkPlus,
   Plus,
   Loader2,
+  Building2,
+  MapPinned,
+  Scale,
 } from 'lucide-react';
-import type { StateBinder, BinderSectionHeader, StateCode } from '@/types/compliance';
+import type { StateBinder, BinderSectionHeader, StateCode, LocalBinder } from '@/types/compliance';
+import { getLocationsForState } from '@/services/localBinderService';
+import { LocalBinderReader } from './LocalBinderReader';
 import {
   getPrimaryBinderForState,
   createBinder,
@@ -76,6 +83,19 @@ function formatDate(dateStr: string | null): string {
     month: 'long',
     day: 'numeric',
   });
+}
+
+/**
+ * Strip markdown formatting from text (bold, italic, etc.)
+ * Removes **bold**, *italic*, __bold__, _italic_
+ */
+function stripMarkdownFormatting(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')  // **bold**
+    .replace(/\*(.+?)\*/g, '$1')       // *italic*
+    .replace(/__(.+?)__/g, '$1')       // __bold__
+    .replace(/_(.+?)_/g, '$1')         // _italic_
+    .trim();
 }
 
 function formatWordCount(count: number | null): string {
@@ -230,7 +250,7 @@ function TableOfContents({
                 <ChevronRight className={`h-3 w-3 flex-shrink-0 ${
                   activeSection === sectionId ? 'text-primary' : 'text-muted-foreground/50'
                 }`} />
-                <span className="truncate">{header.title}</span>
+                <span className="truncate">{stripMarkdownFormatting(header.title)}</span>
               </button>
             );
           })}
@@ -280,11 +300,52 @@ export function FullBinderReader({
   const [openSections, setOpenSections] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Tabs and local binders state
+  const [activeTab, setActiveTab] = useState<'general' | 'zoning'>('general');
+  const [localBinders, setLocalBinders] = useState<LocalBinder[]>([]);
+  const [isLoadingLocalBinders, setIsLoadingLocalBinders] = useState(false);
+  const [openZoningSections, setOpenZoningSections] = useState<string[]>([]);
+  const [selectedLocalBinder, setSelectedLocalBinder] = useState<LocalBinder | null>(null);
+
   // Parse binder content into sections
   const parsedSections = useMemo(() => {
     if (!binder) return [];
     return parseContentIntoSections(binder.content);
   }, [binder]);
+
+  // Parse zoning content into sections (if available)
+  const parsedZoningSections = useMemo(() => {
+    if (!binder?.zoning_content) return [];
+    return parseContentIntoSections(binder.zoning_content);
+  }, [binder]);
+
+  // Check if binder has zoning content
+  const hasZoningContent = useMemo(() => {
+    return !!(binder?.zoning_content && binder.zoning_word_count && binder.zoning_word_count > 0);
+  }, [binder]);
+
+  // Fetch local binders when state changes
+  useEffect(() => {
+    const fetchLocalBinders = async () => {
+      if (!binder?.state_code) {
+        setLocalBinders([]);
+        return;
+      }
+
+      setIsLoadingLocalBinders(true);
+      try {
+        const locations = await getLocationsForState(binder.state_code as StateCode);
+        setLocalBinders(locations);
+      } catch (error) {
+        console.error('[FullBinderReader] Error fetching local binders:', error);
+        setLocalBinders([]);
+      } finally {
+        setIsLoadingLocalBinders(false);
+      }
+    };
+
+    fetchLocalBinders();
+  }, [binder?.state_code]);
 
   // Track scroll position for back-to-top button
   useEffect(() => {
@@ -735,6 +796,7 @@ export function FullBinderReader({
   }
 
   return (
+    <>
     <div className={`grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-6 ${className}`}>
       {/* Main Content Area */}
       <div className="space-y-4">
@@ -824,11 +886,29 @@ export function FullBinderReader({
           </CardHeader>
         </Card>
 
-        {/* Binder Content - Collapsible Accordion Sections */}
-        <Card className="overflow-hidden">
-          <ScrollArea ref={contentRef} className="h-[calc(100vh-320px)] min-h-[400px]">
-            <CardContent className="p-4 md:p-6">
-              <Accordion
+        {/* Content Tabs - General and Zoning (when available) */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'general' | 'zoning')} className="w-full">
+          {hasZoningContent && (
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="general" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">General Compliance</span>
+                <span className="sm:hidden">General</span>
+              </TabsTrigger>
+              <TabsTrigger value="zoning" className="flex items-center gap-2">
+                <Scale className="h-4 w-4" />
+                <span className="hidden sm:inline">Zoning & Occupancy</span>
+                <span className="sm:hidden">Zoning</span>
+              </TabsTrigger>
+            </TabsList>
+          )}
+
+          {/* General Compliance Tab */}
+          <TabsContent value="general" className="mt-0">
+            <Card className="overflow-hidden">
+              <ScrollArea ref={contentRef} className="h-[calc(100vh-380px)] min-h-[400px]">
+                <CardContent className="p-4 md:p-6">
+                  <Accordion
                 type="multiple"
                 value={openSections}
                 onValueChange={setOpenSections}
@@ -853,7 +933,7 @@ export function FullBinderReader({
                               {index + 1}
                             </span>
                             <span className="text-left font-semibold text-base">
-                              {section.title}
+                              {stripMarkdownFormatting(section.title)}
                             </span>
                           </div>
                           <TooltipProvider>
@@ -967,18 +1047,206 @@ export function FullBinderReader({
               Top
             </Button>
           )}
+            </Card>
+          </TabsContent>
+
+          {/* Zoning & Occupancy Tab */}
+          {hasZoningContent && (
+            <TabsContent value="zoning" className="mt-0">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Zoning & Occupancy Framework</CardTitle>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      <Hash className="h-3 w-3 mr-1" />
+                      {binder.zoning_word_count?.toLocaleString() || 0} words
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Deep-dive analysis of zoning regulations and occupancy requirements for {binder.state_name}
+                  </p>
+                </CardHeader>
+                <ScrollArea className="h-[calc(100vh-420px)] min-h-[350px]">
+                  <CardContent className="p-4 md:p-6">
+                    <Accordion
+                      type="multiple"
+                      value={openZoningSections}
+                      onValueChange={setOpenZoningSections}
+                      className="w-full"
+                    >
+                      {parsedZoningSections.map((section, index) => {
+                        const contentWithoutH2 = section.content.replace(/^## .+\n?/, '');
+
+                        return (
+                          <AccordionItem
+                            key={section.id}
+                            value={section.id}
+                            id={`zoning-${section.id}`}
+                            className="border rounded-lg mb-3 px-4 data-[state=open]:bg-muted/30"
+                          >
+                            <AccordionTrigger className="hover:no-underline py-4">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                                  {index + 1}
+                                </span>
+                                <span className="text-left font-semibold text-base">
+                                  {stripMarkdownFormatting(section.title)}
+                                </span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <article className="prose prose-slate max-w-none dark:prose-invert prose-headings:font-semibold prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2 prose-p:my-2 prose-p:leading-relaxed prose-li:my-0.5 prose-ul:my-2 prose-ol:my-2 prose-strong:text-foreground print:prose-sm">
+                                <ReactMarkdown>
+                                  {contentWithoutH2}
+                                </ReactMarkdown>
+                              </article>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
+
+                    {/* Expand/Collapse All buttons for zoning */}
+                    {parsedZoningSections.length > 0 && (
+                      <div className="flex justify-center gap-2 mt-4 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenZoningSections(parsedZoningSections.map(s => s.id))}
+                          disabled={openZoningSections.length === parsedZoningSections.length}
+                        >
+                          Expand All
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenZoningSections([])}
+                          disabled={openZoningSections.length === 0}
+                        >
+                          Collapse All
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+
+        {/* Local Binders Section */}
+        <Card className="mt-4">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPinned className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base font-semibold">Local Binders</CardTitle>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                {localBinders.length} available
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              City and county-specific compliance binders for {binder.state_name}
+            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {isLoadingLocalBinders ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading local binders...</span>
+              </div>
+            ) : localBinders.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Building2 className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No local binders available for {binder.state_name} yet.</p>
+                <p className="text-xs mt-1">Check back soon for city and county-specific guidance.</p>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {localBinders.map((local) => (
+                  <LocalBinderCard
+                    key={local.id}
+                    binder={local}
+                    onSelect={setSelectedLocalBinder}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
 
       {/* Sidebar - Table of Contents (desktop only) */}
       <aside className="hidden lg:block">
         <TableOfContents
-          headers={binder.section_headers}
+          headers={activeTab === 'zoning' && hasZoningContent
+            ? (binder.zoning_section_headers || [])
+            : binder.section_headers}
           activeSection={activeSection}
           onSectionClick={handleSectionClick}
         />
       </aside>
     </div>
+
+    {/* Local Binder Reader Modal */}
+    <LocalBinderReader
+      binder={selectedLocalBinder}
+      isOpen={!!selectedLocalBinder}
+      onClose={() => setSelectedLocalBinder(null)}
+      onBackToState={() => setSelectedLocalBinder(null)}
+      displayMode="sheet"
+    />
+    </>
+  );
+}
+
+// ============================================================================
+// LOCAL BINDER CARD COMPONENT
+// ============================================================================
+
+interface LocalBinderCardProps {
+  binder: LocalBinder;
+  onSelect?: (binder: LocalBinder) => void;
+}
+
+function LocalBinderCard({ binder, onSelect }: LocalBinderCardProps) {
+  const isCity = binder.location_type === 'city';
+
+  return (
+    <button
+      className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left w-full group"
+      onClick={() => onSelect?.(binder)}
+    >
+      <div className={`flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 ${
+        isCity
+          ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
+          : 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
+      }`}>
+        {isCity ? (
+          <Building2 className="h-5 w-5" />
+        ) : (
+          <MapPinned className="h-5 w-5" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm truncate">
+            {binder.location_name}
+          </span>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+            {isCity ? 'City' : 'County'}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {binder.word_count?.toLocaleString() || 0} words
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0 mt-3" />
+    </button>
   );
 }
 

@@ -56,7 +56,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT \n  up.id as user_id,\n  up.email,\n  up.full_name,\n  up.timezone\nFROM user_profiles up\nWHERE up.ghl_contact_id = '{{ $json.body?.ghl_contact_id || $json.ghl_contact_id }}'\n   OR up.phone = '{{ $json.body?.phone || $json.phone }}'\nLIMIT 1;",
+        "query": "-- First try to find user via voice_sessions (most reliable for web widget calls)\n-- Then fall back to direct ghl_contact_id/phone matching\nWITH session_match AS (\n  SELECT \n    vs.user_id,\n    vs.id as session_id\n  FROM voice_sessions vs\n  WHERE vs.status IN ('pending', 'matched')\n    AND vs.expires_at > NOW()\n  ORDER BY vs.created_at DESC\n  LIMIT 1\n),\ndirect_match AS (\n  SELECT \n    up.id as user_id,\n    NULL::uuid as session_id\n  FROM user_profiles up\n  WHERE up.ghl_contact_id = '{{ $json.body?.ghl_contact_id || $json.ghl_contact_id }}'\n     OR up.phone = '{{ $json.body?.phone || $json.phone }}'\n  LIMIT 1\n)\nSELECT \n  COALESCE(sm.user_id, dm.user_id) as user_id,\n  up.email,\n  up.full_name,\n  up.timezone,\n  sm.session_id\nFROM (\n  SELECT user_id, session_id FROM session_match\n  UNION ALL\n  SELECT user_id, session_id FROM direct_match WHERE NOT EXISTS (SELECT 1 FROM session_match)\n) combined\nJOIN user_profiles up ON up.id = combined.user_id\nLIMIT 1;",
         "options": {}
       },
       "id": "lookup-user",
@@ -149,7 +149,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO nette_voice_call_logs (\n  user_id,\n  ghl_call_id,\n  ghl_contact_id,\n  phone,\n  direction,\n  call_duration_seconds,\n  call_status,\n  full_transcript,\n  parsed_messages,\n  ai_summary,\n  topics_discussed,\n  recording_url,\n  trigger_type,\n  started_at,\n  ended_at,\n  synced_to_chat,\n  created_at\n) VALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.ghl_call_id }}',\n  {{ $json.ghl_contact_id ? \"'\" + $json.ghl_contact_id + \"'\" : 'NULL' }},\n  {{ $json.phone ? \"'\" + $json.phone + \"'\" : 'NULL' }},\n  '{{ $json.direction }}',\n  {{ $json.call_duration_seconds }},\n  'completed',\n  '{{ $json.full_transcript.replace(/'/g, \"''\") }}',\n  {{ $json.parsed_messages ? \"'\" + $json.parsed_messages.replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n  '{{ $json.ai_summary.replace(/'/g, \"''\") }}',\n  ARRAY[{{ $json.topics_discussed.map(t => \"'\" + t.replace(/'/g, \"''\") + \"'\").join(', ') }}],\n  {{ $json.recording_url ? \"'\" + $json.recording_url + \"'\" : 'NULL' }},\n  '{{ $json.trigger_type }}',\n  {{ $json.started_at ? \"'\" + $json.started_at + \"'\" : 'NULL' }},\n  {{ $json.ended_at ? \"'\" + $json.ended_at + \"'\" : 'NOW()' }},\n  TRUE,\n  NOW()\n)\nON CONFLICT (ghl_call_id) DO UPDATE SET\n  full_transcript = EXCLUDED.full_transcript,\n  parsed_messages = EXCLUDED.parsed_messages,\n  ai_summary = EXCLUDED.ai_summary,\n  topics_discussed = EXCLUDED.topics_discussed,\n  recording_url = EXCLUDED.recording_url,\n  call_status = 'completed',\n  synced_to_chat = TRUE,\n  synced_at = NOW(),\n  updated_at = NOW()\nRETURNING id, user_id, ghl_call_id, ai_summary;",
+        "query": "-- Insert voice call log\nINSERT INTO nette_voice_call_logs (\n  user_id,\n  ghl_call_id,\n  ghl_contact_id,\n  phone,\n  direction,\n  call_duration_seconds,\n  call_status,\n  full_transcript,\n  parsed_messages,\n  ai_summary,\n  topics_discussed,\n  recording_url,\n  trigger_type,\n  started_at,\n  ended_at,\n  synced_to_chat,\n  created_at\n) VALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.ghl_call_id }}',\n  {{ $json.ghl_contact_id ? \"'\" + $json.ghl_contact_id + \"'\" : 'NULL' }},\n  {{ $json.phone ? \"'\" + $json.phone + \"'\" : 'NULL' }},\n  '{{ $json.direction }}',\n  {{ $json.call_duration_seconds }},\n  'completed',\n  '{{ $json.full_transcript.replace(/'/g, \"''\") }}',\n  {{ $json.parsed_messages ? \"'\" + $json.parsed_messages.replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n  '{{ $json.ai_summary.replace(/'/g, \"''\") }}',\n  ARRAY[{{ $json.topics_discussed.map(t => \"'\" + t.replace(/'/g, \"''\") + \"'\").join(', ') }}],\n  {{ $json.recording_url ? \"'\" + $json.recording_url + \"'\" : 'NULL' }},\n  '{{ $json.trigger_type }}',\n  {{ $json.started_at ? \"'\" + $json.started_at + \"'\" : 'NULL' }},\n  {{ $json.ended_at ? \"'\" + $json.ended_at + \"'\" : 'NOW()' }},\n  TRUE,\n  NOW()\n)\nON CONFLICT (ghl_call_id) DO UPDATE SET\n  full_transcript = EXCLUDED.full_transcript,\n  parsed_messages = EXCLUDED.parsed_messages,\n  ai_summary = EXCLUDED.ai_summary,\n  topics_discussed = EXCLUDED.topics_discussed,\n  recording_url = EXCLUDED.recording_url,\n  call_status = 'completed',\n  synced_to_chat = TRUE,\n  synced_at = NOW(),\n  updated_at = NOW()\nRETURNING id, user_id, ghl_call_id, ai_summary;\n\n-- Complete any pending voice sessions for this user\nUPDATE voice_sessions\nSET status = 'completed',\n    call_ended_at = NOW()\nWHERE user_id = '{{ $json.user_id }}'\n  AND status IN ('pending', 'matched');",
         "options": {}
       },
       "id": "insert-voice-call",
@@ -307,7 +307,7 @@
     "instanceId": "voice-call-complete"
   },
   "pinData": {},
-  "versionId": "1.0.1",
+  "versionId": "1.1.0",
   "tags": [
     {
       "name": "Nette Voice",

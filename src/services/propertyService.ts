@@ -940,6 +940,102 @@ export async function deleteScenario(scenarioId: string): Promise<void> {
 }
 
 // ============================================================================
+// IMAGE UPLOAD OPERATIONS
+// ============================================================================
+
+const PROPERTY_IMAGES_BUCKET = 'property-images';
+
+/**
+ * Upload a property photo to Supabase Storage
+ * @param propertyId - The property ID to associate the photo with
+ * @param file - The image file to upload
+ * @returns The public URL of the uploaded image
+ */
+export async function uploadPropertyPhoto(
+  propertyId: string,
+  file: File
+): Promise<string> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user?.user?.id) {
+    throw new Error('User not authenticated');
+  }
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    throw new Error('File must be an image');
+  }
+
+  // Validate file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    throw new Error('Image must be less than 10MB');
+  }
+
+  // Generate unique filename
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  const fileName = `${propertyId}/${timestamp}-${randomStr}.${fileExt}`;
+
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from(PROPERTY_IMAGES_BUCKET)
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error('Upload error:', uploadError);
+    throw new Error('Failed to upload image');
+  }
+
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from(PROPERTY_IMAGES_BUCKET)
+    .getPublicUrl(fileName);
+
+  if (!urlData?.publicUrl) {
+    throw new Error('Failed to get image URL');
+  }
+
+  return urlData.publicUrl;
+}
+
+/**
+ * Delete a property photo from Supabase Storage
+ * @param photoUrl - The public URL of the photo to delete
+ */
+export async function deletePropertyPhoto(photoUrl: string): Promise<void> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user?.user?.id) {
+    throw new Error('User not authenticated');
+  }
+
+  // Extract the file path from the public URL
+  // URL format: https://[project].supabase.co/storage/v1/object/public/property-images/[path]
+  const bucketPath = `/storage/v1/object/public/${PROPERTY_IMAGES_BUCKET}/`;
+  const pathIndex = photoUrl.indexOf(bucketPath);
+
+  if (pathIndex === -1) {
+    console.error('Invalid photo URL format:', photoUrl);
+    throw new Error('Invalid photo URL');
+  }
+
+  const filePath = photoUrl.substring(pathIndex + bucketPath.length);
+
+  // Remove from storage
+  const { error: deleteError } = await supabase.storage
+    .from(PROPERTY_IMAGES_BUCKET)
+    .remove([filePath]);
+
+  if (deleteError) {
+    console.error('Delete error:', deleteError);
+    throw new Error('Failed to delete image');
+  }
+}
+
+// ============================================================================
 // PORTFOLIO AGGREGATIONS
 // ============================================================================
 
@@ -1160,4 +1256,7 @@ export default {
   // Portfolio
   getPortfolioSummary,
   calculatePropertyHealth,
+  // Images
+  uploadPropertyPhoto,
+  deletePropertyPhoto,
 };

@@ -27,6 +27,40 @@ interface UseProgramsOptions {
   searchQuery?: string;
 }
 
+/**
+ * Helper to check if a string is a valid UUID v4
+ * Used to differentiate between slugs and UUIDs in URL parameters
+ */
+const isValidUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
+/**
+ * Helper to resolve a program identifier (UUID or slug) to its UUID
+ * Returns the UUID if valid, or looks up by slug if not
+ */
+const resolveProgramId = async (programIdOrSlug: string): Promise<string | null> => {
+  // If it's already a valid UUID, return it directly
+  if (isValidUUID(programIdOrSlug)) {
+    return programIdOrSlug;
+  }
+
+  // Otherwise, look up by slug
+  const { data, error } = await supabase
+    .from('gh_programs')
+    .select('id')
+    .eq('slug', programIdOrSlug)
+    .single();
+
+  if (error || !data) {
+    console.error('Error resolving program slug:', error);
+    return null;
+  }
+
+  return data.id;
+};
+
 interface UseProgramsResult {
   programs: ProgramWithProgress[];
   isLoading: boolean;
@@ -218,6 +252,12 @@ export const useProgram = (programId: string | undefined) => {
       setIsLoading(true);
       setError(null);
 
+      // Resolve programId (could be slug or UUID) to actual UUID
+      const resolvedProgramId = await resolveProgramId(programId);
+      if (!resolvedProgramId) {
+        throw new Error(`Program not found: ${programId}`);
+      }
+
       // Fetch program with enrollment
       const { data: enrollment, error: enrollmentError } = await supabase
         .from('gh_user_program_enrollments')
@@ -247,7 +287,7 @@ export const useProgram = (programId: string | undefined) => {
           )
         `)
         .eq('user_id', user.id)
-        .eq('program_id', programId)
+        .eq('program_id', resolvedProgramId)
         .single();
 
       if (enrollmentError) {
@@ -256,7 +296,7 @@ export const useProgram = (programId: string | undefined) => {
           const { data: programData, error: programError } = await supabase
             .from('gh_programs')
             .select('*')
-            .eq('id', programId)
+            .eq('id', resolvedProgramId)
             .eq('status', 'published')
             .single();
 
@@ -361,6 +401,15 @@ export const useProgramPhases = (programId: string | undefined) => {
       setIsLoading(true);
       setError(null);
 
+      // Resolve programId (could be slug or UUID) to actual UUID
+      const resolvedProgramId = await resolveProgramId(programId);
+      if (!resolvedProgramId) {
+        console.error('Error fetching phases: Program not found for', programId);
+        setPhases([]);
+        setIsLoading(false);
+        return;
+      }
+
       // Fetch phases for the program
       // NOTE: total_lessons/total_tactics are on gh_programs, not gh_program_phases
       // prerequisite_phase_id is the correct column name (not unlock_after_phase_id)
@@ -381,7 +430,7 @@ export const useProgramPhases = (programId: string | undefined) => {
           unlock_offset_days,
           prerequisite_phase_id
         `)
-        .eq('program_id', programId)
+        .eq('program_id', resolvedProgramId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
 

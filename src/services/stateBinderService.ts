@@ -32,6 +32,10 @@ interface StateBinderRow {
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  // Zoning content columns
+  zoning_content: string | null;
+  zoning_section_headers: BinderSectionHeader[] | null;
+  zoning_word_count: number | null;
 }
 
 // ============================================================================
@@ -93,6 +97,10 @@ function transformToStateBinder(row: StateBinderRow): StateBinder {
     metadata: row.metadata || {},
     created_at: row.created_at,
     updated_at: row.updated_at,
+    // Zoning content
+    zoning_content: row.zoning_content,
+    zoning_section_headers: row.zoning_section_headers || null,
+    zoning_word_count: row.zoning_word_count,
   };
 }
 
@@ -128,28 +136,45 @@ export async function getStateBinder(stateCode: StateCode): Promise<StateBinder 
  * Returns a list of states with whether they have a binder available
  */
 export async function getAvailableStates(): Promise<StateBinderOption[]> {
+  console.log('[StateBinderService] Fetching available states...');
+
   // Get all states that have binders
   const { data, error } = await supabase
     .from('state_compliance_binders')
-    .select('state_code, state_name, last_updated, word_count')
+    .select('state_code, state_name, last_updated, word_count, zoning_word_count')
     .order('state_name');
+
+  // DIAGNOSTIC: Log the raw response
+  console.log('[StateBinderService] Query result:', {
+    dataCount: data?.length ?? 0,
+    error: error ? { code: error.code, message: error.message, hint: error.hint } : null,
+    sampleData: data?.slice(0, 2) // Log first 2 rows for debugging
+  });
 
   if (error) {
     console.error('[StateBinderService] Error fetching available states:', error);
+    console.warn('[StateBinderService] Returning all states with has_binder=false due to error');
     // Return all states with no binders on error (graceful degradation)
     return Object.entries(STATE_NAMES).map(([code, name]) => ({
       state_code: code as StateCode,
       state_name: name,
       has_binder: false,
+      has_zoning: false,
     }));
   }
 
+  // DIAGNOSTIC: Check if data is empty (no rows in table)
+  if (!data || data.length === 0) {
+    console.warn('[StateBinderService] Table is empty or RLS is blocking access. Returning all states with has_binder=false.');
+  }
+
   // Create a map of states with binders
-  const binderMap = new Map<string, { last_updated: string; word_count: number | null }>();
-  (data || []).forEach((row: { state_code: string; state_name: string; last_updated: string; word_count: number | null }) => {
+  const binderMap = new Map<string, { last_updated: string; word_count: number | null; zoning_word_count: number | null }>();
+  (data || []).forEach((row: { state_code: string; state_name: string; last_updated: string; word_count: number | null; zoning_word_count: number | null }) => {
     binderMap.set(row.state_code, {
       last_updated: row.last_updated,
       word_count: row.word_count,
+      zoning_word_count: row.zoning_word_count,
     });
   });
 
@@ -161,8 +186,10 @@ export async function getAvailableStates(): Promise<StateBinderOption[]> {
         state_code: code as StateCode,
         state_name: name,
         has_binder: !!binderInfo,
+        has_zoning: !!binderInfo?.zoning_word_count,
         last_updated: binderInfo?.last_updated,
         word_count: binderInfo?.word_count ?? undefined,
+        zoning_word_count: binderInfo?.zoning_word_count ?? undefined,
       };
     })
     .sort((a, b) => a.state_name.localeCompare(b.state_name));
@@ -328,6 +355,86 @@ export async function getBinderStats(): Promise<{
 }
 
 // ============================================================================
+// ZONING CONTENT FUNCTIONS
+// ============================================================================
+
+/**
+ * Get states that have zoning content available
+ * Returns only states with zoning_content populated
+ */
+export async function getStatesWithZoning(): Promise<StateBinderOption[]> {
+  const { data, error } = await supabase
+    .from('state_compliance_binders')
+    .select('state_code, state_name, last_updated, word_count, zoning_word_count')
+    .not('zoning_content', 'is', null)
+    .order('state_name');
+
+  if (error) {
+    console.error('[StateBinderService] Error fetching states with zoning:', error);
+    return [];
+  }
+
+  return (data || []).map((row: { state_code: string; state_name: string; last_updated: string; word_count: number | null; zoning_word_count: number | null }) => ({
+    state_code: row.state_code as StateCode,
+    state_name: row.state_name,
+    has_binder: true,
+    has_zoning: true,
+    last_updated: row.last_updated,
+    word_count: row.word_count ?? undefined,
+    zoning_word_count: row.zoning_word_count ?? undefined,
+  }));
+}
+
+/**
+ * Check if a state has zoning content available
+ */
+export async function hasStateZoning(stateCode: StateCode): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('state_compliance_binders')
+    .select('zoning_word_count')
+    .eq('state_code', stateCode)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return false;
+    }
+    console.error('[StateBinderService] Error checking zoning status:', error);
+    return false;
+  }
+
+  return !!data?.zoning_word_count;
+}
+
+/**
+ * Update state zoning content (admin)
+ */
+export async function upsertStateZoning(
+  stateCode: StateCode,
+  zoningContent: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  const sectionHeaders = extractSectionHeaders(zoningContent);
+  const wordCount = countWords(zoningContent);
+
+  const { error } = await supabase
+    .from('state_compliance_binders')
+    .update({
+      zoning_content: zoningContent,
+      zoning_section_headers: sectionHeaders,
+      zoning_word_count: wordCount,
+      metadata: metadata || {},
+      updated_at: new Date().toISOString(),
+    })
+    .eq('state_code', stateCode);
+
+  if (error) {
+    console.error('[StateBinderService] Error upserting zoning content:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -339,6 +446,9 @@ export default {
   upsertStateBinder,
   deleteStateBinder,
   getBinderStats,
+  getStatesWithZoning,
+  hasStateZoning,
+  upsertStateZoning,
   extractSectionHeaders,
   countWords,
 };

@@ -95,18 +95,18 @@ serve(async (req) => {
       }
     }
 
-    console.log('[Session Lookup] Looking for session within', lookupWindowSeconds, 'seconds');
+    console.log('[Session Lookup] Looking for non-expired pending session');
 
-    // Calculate the window start time
-    const windowStart = new Date(Date.now() - lookupWindowSeconds * 1000).toISOString();
+    // Current time for expiration check
+    const now = new Date().toISOString();
 
-    // Find the most recent pending session created within the window
+    // Find the most recent PENDING session that has NOT EXPIRED
+    // We don't limit by created_at window - just find any pending session that's still valid
     const { data: session, error: queryError } = await supabase
       .from('voice_sessions')
       .select('*')
       .eq('status', 'pending')
-      .gte('created_at', windowStart)
-      .lt('expires_at', new Date(Date.now() + 60 * 60 * 1000).toISOString()) // Not expired
+      .gt('expires_at', now) // Session has NOT expired (expires_at > now)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

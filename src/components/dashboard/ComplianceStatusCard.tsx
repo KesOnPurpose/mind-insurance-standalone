@@ -1,37 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
-import { ClipboardCheck, FileText, AlertTriangle, CheckCircle2, ArrowRight, MessageSquare } from 'lucide-react';
+import { ClipboardCheck, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBinderList } from '@/hooks/useComplianceBinder';
 import { STATE_NAMES, type StateCode } from '@/types/compliance';
 
 /**
- * ComplianceStatusCard - Dashboard card showing compliance readiness
+ * ComplianceStatusCard - Apple-style simplified dashboard card
  *
- * Displays:
- * - Primary state compliance status
- * - Overall readiness percentage
- * - Outstanding items needing attention
- * - Review Compliance CTA
- * - Inline Ask Nette link with compliance context
+ * Design Philosophy:
+ * - ONE dominant metric (readiness %)
+ * - Glanceable in <1 second
+ * - Generous whitespace
+ * - Single focused CTA
  */
 export function ComplianceStatusCard() {
-  const { binders, isLoading, error } = useBinderList();
+  const { binders, isLoading } = useBinderList();
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-32 mb-3" />
-          <Skeleton className="h-2 w-full mb-4" />
-          <Skeleton className="h-16 w-full mb-3" />
-          <Skeleton className="h-9 w-full" />
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <Skeleton className="h-5 w-32 mx-auto mb-4" />
+          <Skeleton className="h-12 w-20 mx-auto mb-2" />
+          <Skeleton className="h-4 w-28 mx-auto mb-6" />
+          <Skeleton className="h-9 w-32 mx-auto" />
         </CardContent>
       </Card>
     );
@@ -40,21 +34,19 @@ export function ComplianceStatusCard() {
   // No binders - show CTA to start compliance
   if (!binders || binders.length === 0) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
+      <Card className="relative overflow-hidden">
+        <CardContent className="pt-6 pb-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <ClipboardCheck className="w-5 h-5 text-primary" />
-            <CardTitle className="text-base">Compliance Status</CardTitle>
+            <span className="font-medium text-muted-foreground text-sm">Compliance</span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Start your compliance journey. Create a binder to track your state's requirements and documents.
-          </p>
+
+          <p className="text-4xl font-bold text-foreground mb-1">—</p>
+          <p className="text-sm text-muted-foreground mb-6">No binder yet</p>
+
           <Link to="/compliance">
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              Start Compliance Binder
-              <ArrowRight className="w-4 h-4" />
+            <Button size="sm" variant="ghost" className="gap-2">
+              Start Binder <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </CardContent>
@@ -68,129 +60,48 @@ export function ComplianceStatusCard() {
   const stateName = STATE_NAMES[stateCode] || stateCode;
 
   // Calculate readiness based on item count and documents
-  // This is a simplified calculation - could be enhanced with assessment data
   const itemCount = primaryBinder.item_count || 0;
   const documentCount = primaryBinder.document_count || 0;
 
   // Simple readiness calculation (items + documents weighted)
-  // Assume ~10 items and ~5 docs for "complete" status
   const itemScore = Math.min((itemCount / 10) * 50, 50);
   const docScore = Math.min((documentCount / 5) * 50, 50);
   const readinessPercent = Math.round(itemScore + docScore);
 
-  // Determine status
+  // Determine status label and color
   const getReadinessStatus = (percent: number) => {
-    if (percent >= 80) return { label: 'Ready', color: 'bg-green-600', textColor: 'text-green-600' };
-    if (percent >= 50) return { label: 'In Progress', color: 'bg-yellow-600', textColor: 'text-yellow-600' };
-    return { label: 'Getting Started', color: 'bg-blue-600', textColor: 'text-blue-600' };
+    if (percent >= 80) return { label: 'Ready!', textColor: 'text-green-600' };
+    if (percent >= 50) return { label: 'In Progress', textColor: 'text-yellow-600' };
+    return { label: 'Getting Started', textColor: 'text-blue-600' };
   };
 
   const status = getReadinessStatus(readinessPercent);
 
-  // Determine items that need attention
-  const needsAttention: { icon: React.ReactNode; label: string }[] = [];
-
-  if (itemCount < 5) {
-    needsAttention.push({
-      icon: <FileText className="w-3.5 h-3.5" />,
-      label: 'Add more compliance requirements',
-    });
-  }
-
-  if (documentCount === 0) {
-    needsAttention.push({
-      icon: <AlertTriangle className="w-3.5 h-3.5" />,
-      label: 'Upload required documents',
-    });
-  }
-
-  if (!primaryBinder.model_definition) {
-    needsAttention.push({
-      icon: <AlertTriangle className="w-3.5 h-3.5" />,
-      label: 'Define your housing model',
-    });
-  }
-
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-primary" />
-            <CardTitle className="text-base">Compliance Status</CardTitle>
-          </div>
-          <Badge variant="secondary" className={`${status.color} text-white text-xs`}>
-            {status.label}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* State and readiness */}
-        <div className="mb-3">
-          <p className="font-medium text-sm">{stateName}</p>
-          <p className="text-xs text-muted-foreground">
-            {binders.length} binder{binders.length !== 1 ? 's' : ''} &bull; {itemCount} items &bull; {documentCount} docs
-          </p>
+    <Card className="relative overflow-hidden">
+      <CardContent className="pt-6 pb-6 text-center">
+        {/* Icon + Title row */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <ClipboardCheck className="w-5 h-5 text-primary" />
+          <span className="font-medium text-muted-foreground text-sm">Compliance</span>
         </div>
 
-        {/* Progress bar */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">Readiness</span>
-            <span className={`font-medium ${status.textColor}`}>{readinessPercent}%</span>
-          </div>
-          <Progress value={readinessPercent} className="h-2" />
-        </div>
+        {/* Hero Metric */}
+        <p className={`text-4xl font-bold mb-1 ${status.textColor}`}>
+          {readinessPercent}%
+        </p>
 
-        {/* Items needing attention */}
-        {needsAttention.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 mb-2">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{needsAttention.length} item{needsAttention.length !== 1 ? 's' : ''} need attention</span>
-            </div>
-            <ul className="space-y-1.5">
-              {needsAttention.slice(0, 2).map((item, idx) => (
-                <li key={idx} className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-500">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {/* Context - State name and status */}
+        <p className="text-sm text-muted-foreground mb-6">
+          {stateName} • {status.label}
+        </p>
 
-        {/* All good state */}
-        {needsAttention.length === 0 && readinessPercent >= 80 && (
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Looking good!</span>
-            </div>
-            <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-              Your compliance binder is well-documented.
-            </p>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="space-y-2">
-          <Link to="/compliance">
-            <Button size="sm" className="w-full gap-2">
-              Review Compliance
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-
-          {/* Inline Ask Nette link with context */}
-          <Link
-            to={`/chat?context=compliance&state=${stateCode}&stateName=${encodeURIComponent(stateName)}`}
-            className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors py-1"
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Ask Nette about {stateName} requirements</span>
-          </Link>
-        </div>
+        {/* Single CTA */}
+        <Link to="/compliance">
+          <Button size="sm" variant="ghost" className="gap-2">
+            Review Binder <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );

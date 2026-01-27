@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -59,19 +60,20 @@ export default function StateComparisonPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/compliance')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to Hub
-          </Button>
-        </div>
+    <SidebarLayout>
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/compliance')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Back to Hub
+            </Button>
+          </div>
 
         <div className="flex items-center gap-2">
           <Button
@@ -157,7 +159,8 @@ export default function StateComparisonPage() {
             </li>
           </ul>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </SidebarLayout>
   );
 }

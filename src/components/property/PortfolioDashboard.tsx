@@ -151,15 +151,23 @@ function PropertyRow({ property, healthScore, onClick }: PropertyRowProps) {
       onClick={onClick}
     >
       <div className="flex items-center gap-3">
-        <div className={cn(
-          'w-10 h-10 rounded-lg flex items-center justify-center',
-          healthScore ? getHealthScoreBackground(healthScore.overall_score) : 'bg-gray-100'
-        )}>
-          <Building2 className={cn(
-            'h-5 w-5',
-            healthScore ? getHealthScoreColor(healthScore.overall_score) : 'text-gray-600'
-          )} />
-        </div>
+        {property.photos && property.photos.length > 0 ? (
+          <img
+            src={property.photos[0]}
+            alt={property.nickname}
+            className="w-10 h-10 rounded-lg object-cover"
+          />
+        ) : (
+          <div className={cn(
+            'w-10 h-10 rounded-lg flex items-center justify-center',
+            healthScore ? getHealthScoreBackground(healthScore.overall_score) : 'bg-gray-100'
+          )}>
+            <Building2 className={cn(
+              'h-5 w-5',
+              healthScore ? getHealthScoreColor(healthScore.overall_score) : 'text-gray-600'
+            )} />
+          </div>
+        )}
         <div>
           <p className="font-medium">{property.nickname}</p>
           <p className="text-sm text-muted-foreground">

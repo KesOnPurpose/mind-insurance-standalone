@@ -142,7 +142,7 @@ async function fetchAssessmentData(userId: string) {
  */
 async function fetchJourneyProgress(userId: string) {
   const { data, error } = await supabase
-    .from('tactic_progress')
+    .from('gh_user_tactic_progress')
     .select('status')
     .eq('user_id', userId);
 
@@ -155,7 +155,7 @@ async function fetchJourneyProgress(userId: string) {
 
   // Get total tactics count
   const { count } = await supabase
-    .from('tactics')
+    .from('gh_tactics')
     .select('*', { count: 'exact', head: true });
 
   return {

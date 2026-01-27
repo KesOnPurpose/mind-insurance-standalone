@@ -593,6 +593,10 @@ export interface StateBinder {
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // Zoning content (Section 3 deep-dive)
+  zoning_content: string | null;
+  zoning_section_headers: BinderSectionHeader[] | null;
+  zoning_word_count: number | null;
 }
 
 export interface BinderSectionHeader {
@@ -605,7 +609,40 @@ export interface StateBinderOption {
   state_code: StateCode;
   state_name: string;
   has_binder: boolean;
+  has_zoning: boolean;
   last_updated?: string;
+  word_count?: number;
+  zoning_word_count?: number;
+}
+
+// ============================================================================
+// LOCAL COMPLIANCE BINDER TYPES (City/County Level)
+// ============================================================================
+// Types for city and county-level compliance binders.
+// Covers both cities (Pittsburgh, Linden) and counties (Queens County).
+// ============================================================================
+
+export type LocationType = 'city' | 'county' | 'state';
+
+export interface LocalBinder {
+  id: string;
+  location_name: string;  // "Pittsburgh" or "Queens County"
+  location_type: LocationType;
+  state_code: StateCode;
+  title: string;
+  content: string;
+  word_count: number | null;
+  section_headers: BinderSectionHeader[];
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LocalBinderOption {
+  location_name: string;
+  location_type: LocationType;
+  state_code: StateCode;
+  state_name: string;
   word_count?: number;
 }
 
