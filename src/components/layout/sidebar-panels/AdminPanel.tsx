@@ -11,6 +11,7 @@ import {
   Home,
   GraduationCap,
   Scale,
+  Megaphone,
   // GROUPHOME STANDALONE: Removed ClipboardCheck - was used for MIO Assessments
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -79,6 +80,12 @@ const ADMIN_NAV_ITEMS: Array<{
     icon: BookOpen,
     description: 'Nette AI knowledge',
     requiredTier: 'super_admin',
+  },
+  {
+    title: 'Broadcasts',
+    href: '/admin/broadcasts',
+    icon: Megaphone,
+    description: 'Send notifications to users',
   },
 ];
 

@@ -189,6 +189,93 @@ export async function buildLocalCallConfig(
     const context = await buildVoiceContext(userId);
     const userContextString = buildContextString(context);
 
+    // NEW: Fetch unified conversation context for cross-channel memory (chat → voice)
+    // This enables voice calls to know about recent chat conversations with Nette
+    let chatContext = '';
+
+    // Strategy: Try client-side first (RLS-compliant), then fallback to Edge Function
+    try {
+      console.log('[vapiService] Attempting client-side context fetch for user:', userId);
+
+      const { data: unifiedContext, error: unifiedError } = await supabase
+        .from('unified_conversation_context')
+        .select('context_for_voice')
+        .eq('user_id', userId)
+        .single();
+
+      if (!unifiedError && unifiedContext?.context_for_voice) {
+        chatContext = unifiedContext.context_for_voice;
+        console.log('[vapiService] ✅ Chat context loaded via client:', {
+          length: chatContext.length,
+          preview: chatContext.substring(0, 150),
+          hasContent: chatContext.length > 0
+        });
+      } else {
+        // Client-side fetch failed or returned empty - try Edge Function fallback
+        console.log('[vapiService] ⚠️ Client-side fetch failed, trying Edge Function fallback:', {
+          error: unifiedError?.message || null,
+          errorCode: unifiedError?.code || null,
+          userId,
+          dataReceived: !!unifiedContext
+        });
+
+        // Fallback: Call Edge Function which uses service role (bypasses RLS)
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hpyodaugrkctagkrfofj.supabase.co';
+          const { data: { session } } = await supabase.auth.getSession();
+
+          console.log('[vapiService] Auth session state:', {
+            hasSession: !!session,
+            sessionUserId: session?.user?.id || null,
+            matchesRequestedUserId: session?.user?.id === userId
+          });
+
+          if (session?.access_token) {
+            const response = await fetch(
+              `${supabaseUrl}/functions/v1/vapi-update-assistant`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                  action: 'get_voice_context',
+                  user_id: userId
+                })
+              }
+            );
+
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success && result.context_for_voice) {
+                chatContext = result.context_for_voice;
+                console.log('[vapiService] ✅ Chat context loaded via Edge Function fallback:', {
+                  length: chatContext.length,
+                  preview: chatContext.substring(0, 150)
+                });
+              } else {
+                console.log('[vapiService] Edge Function returned no context:', result);
+              }
+            } else {
+              const errorText = await response.text().catch(() => 'Unknown error');
+              console.log('[vapiService] Edge Function fallback failed:', {
+                status: response.status,
+                error: errorText
+              });
+            }
+          } else {
+            console.log('[vapiService] No auth session available for Edge Function call');
+          }
+        } catch (fallbackError) {
+          console.log('[vapiService] Edge Function fallback error:', fallbackError);
+        }
+      }
+    } catch (contextError) {
+      // Non-critical - continue without chat context
+      console.log('[vapiService] Chat context fetch skipped:', contextError);
+    }
+
     // Select assistant variant (random 50/50 if not forced)
     const variant = forceVariant || (Math.random() < 0.5 ? 'claude' : 'gpt4');
     const assistant = VAPI_ASSISTANTS[variant];
@@ -200,7 +287,9 @@ export async function buildLocalCallConfig(
       metadata: {
         user_id: userId,
         variant,
-        context_snapshot: context as unknown as Record<string, unknown>
+        context_snapshot: context as unknown as Record<string, unknown>,
+        // NEW: Include chat context for injection into variableValues
+        chat_context: chatContext
       }
     };
 
@@ -230,6 +319,123 @@ export function getAssistantByVariant(variant: 'claude' | 'gpt4'): VapiAssistant
 export function getAllAssistants(): { claude: VapiAssistant; gpt4: VapiAssistant } {
   return VAPI_ASSISTANTS;
 }
+
+// ============================================================================
+// NAME CORRECTION UTILITIES
+// ============================================================================
+
+/**
+ * Common TTS misheard variations of names
+ * Maps incorrect spellings to regex patterns for replacement
+ */
+const NAME_VARIATIONS: Record<string, string[]> = {
+  'Keston': ['Kaston', 'Keiston', 'Keaston', 'Caston', 'Kestin', 'Kesten'],
+  'Nette': ['Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette']
+};
+
+/**
+ * Phrase replacements for AI references in summaries
+ * These replace common phrases where "AI" is used instead of "Nette"
+ */
+const AI_PHRASE_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bThe AI\b/gi, replacement: 'Nette' },
+  { pattern: /\bthe AI\b/gi, replacement: 'Nette' },
+  { pattern: /\ban AI\b/gi, replacement: 'Nette' },
+  { pattern: /\bAI assistant\b/gi, replacement: 'Nette' },
+  { pattern: /\bThe assistant\b/gi, replacement: 'Nette' },
+  { pattern: /\bthe assistant\b/gi, replacement: 'Nette' },
+];
+
+/**
+ * Correct common TTS transcription errors in transcript text
+ * Uses the actual user name from context and fixes assistant name to "Nette"
+ * Also replaces generic "AI" references with "Nette"
+ * @param text - The transcript text to correct
+ * @param actualUserName - The user's actual name from database
+ */
+export function correctTranscriptNames(text: string, actualUserName?: string): string {
+  let corrected = text;
+
+  // First, replace AI phrase references (e.g., "The AI noted" -> "Nette noted")
+  for (const { pattern, replacement } of AI_PHRASE_REPLACEMENTS) {
+    corrected = corrected.replace(pattern, replacement);
+  }
+
+  // Then correct assistant name variations to "Nette"
+  const netteVariations = NAME_VARIATIONS['Nette'] || [];
+  for (const variation of netteVariations) {
+    // Use word boundary to avoid replacing parts of other words
+    const regex = new RegExp(`\\b${variation}\\b`, 'gi');
+    corrected = corrected.replace(regex, 'Nette');
+  }
+
+  // Correct user name if provided
+  if (actualUserName) {
+    // Find variations for this name if we have them
+    const userVariations = NAME_VARIATIONS[actualUserName] || [];
+
+    // Also create phonetic variations dynamically
+    const dynamicVariations = generatePhoneticVariations(actualUserName);
+    const allVariations = [...new Set([...userVariations, ...dynamicVariations])];
+
+    for (const variation of allVariations) {
+      if (variation.toLowerCase() !== actualUserName.toLowerCase()) {
+        const regex = new RegExp(`\\b${variation}\\b`, 'gi');
+        corrected = corrected.replace(regex, actualUserName);
+      }
+    }
+  }
+
+  return corrected;
+}
+
+/**
+ * Generate phonetic variations of a name that TTS might mishear
+ */
+function generatePhoneticVariations(name: string): string[] {
+  const variations: string[] = [];
+  const lower = name.toLowerCase();
+
+  // Common vowel substitutions
+  const vowelSubs: Record<string, string[]> = {
+    'e': ['a', 'i'],
+    'a': ['e', 'o'],
+    'i': ['e', 'y'],
+    'o': ['a', 'u'],
+    'u': ['o']
+  };
+
+  // Generate single-vowel substitutions
+  for (let i = 0; i < lower.length; i++) {
+    const char = lower[i];
+    if (vowelSubs[char]) {
+      for (const sub of vowelSubs[char]) {
+        const variant = lower.slice(0, i) + sub + lower.slice(i + 1);
+        // Capitalize first letter
+        variations.push(variant.charAt(0).toUpperCase() + variant.slice(1));
+      }
+    }
+  }
+
+  return variations;
+}
+
+/**
+ * Correct transcript entries array
+ */
+export function correctTranscriptEntries(
+  entries: Array<{ role: string; text: string; timestamp?: string }>,
+  actualUserName?: string
+): Array<{ role: string; text: string; timestamp?: string }> {
+  return entries.map(entry => ({
+    ...entry,
+    text: correctTranscriptNames(entry.text, actualUserName)
+  }));
+}
+
+// ============================================================================
+// STATUS FORMATTING
+// ============================================================================
 
 /**
  * Format call status for display
@@ -420,6 +626,7 @@ export async function fetchVapiCallLogs(
       .from('vapi_call_logs')
       .select(selectFields)
       .eq('user_id', userId)
+      .eq('hidden_by_user', false)  // Filter out hidden calls
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -526,6 +733,36 @@ export async function getVariantMetrics(): Promise<{
   }
 }
 
+/**
+ * Hide a call from the user's view (soft delete)
+ * The call remains in the database for admin/analytics purposes
+ * @param callId - The database ID of the call log (not vapi_call_id)
+ * @param userId - The user ID (for security - only allow hiding own calls)
+ */
+export async function hideVapiCall(callId: string, userId: string): Promise<boolean> {
+  console.log('[vapiService] Hiding call:', callId, 'for user:', userId);
+
+  try {
+    const { error } = await supabase
+      .from('vapi_call_logs')
+      .update({ hidden_by_user: true })
+      .eq('id', callId)
+      .eq('user_id', userId);  // Security: only allow hiding own calls
+
+    if (error) {
+      console.error('[vapiService] Error hiding call:', error);
+      return false;
+    }
+
+    console.log('[vapiService] Call hidden successfully');
+    return true;
+
+  } catch (err) {
+    console.error('[vapiService] hideVapiCall failed:', err);
+    return false;
+  }
+}
+
 export default {
   fetchVapiCallConfig,
   buildLocalCallConfig,
@@ -537,5 +774,8 @@ export default {
   logCallEnd,
   fetchVapiCallLogs,
   fetchVapiCallDetail,
-  getVariantMetrics
+  getVariantMetrics,
+  correctTranscriptNames,
+  correctTranscriptEntries,
+  hideVapiCall
 };

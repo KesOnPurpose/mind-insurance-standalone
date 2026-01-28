@@ -8,7 +8,6 @@ import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
 import { VoiceCallCard } from "@/components/chat/VoiceCallCard";
-import { PhoneVerificationModal } from "@/components/phone/PhoneVerificationModal";
 import { VoiceTabContent } from "@/components/chat/VoiceTabContent";
 import type { ChatMode } from "@/components/chat/ChatSidebar";
 import { CoachType, COACHES } from "@/types/coach";
@@ -64,13 +63,10 @@ interface TacticHelpState {
 
 interface ChatPageContentProps {
   activeMode: ChatMode;
-  onPhoneVerified: (phone: string) => void;
-  showPhoneVerification: boolean;
-  setShowPhoneVerification: (show: boolean) => void;
 }
 
 // Inner component that uses sidebar context
-function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, setShowPhoneVerification }: ChatPageContentProps) {
+function ChatPageContent({ activeMode }: ChatPageContentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { setOpenMobile, isMobile } = useSidebar();
@@ -514,22 +510,6 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
     }
   };
 
-  // Handle phone verification success
-  const handlePhoneVerifiedInternal = (phone: string) => {
-    console.log('[PhoneVerification] Phone verified:', phone.slice(0, 4) + '****');
-    // Update profile with verified phone for voice caller identification
-    setUserProfile(prev => prev ? {
-      ...prev,
-      verified_phone: phone,
-      phone: prev.phone || phone  // Also set phone if not already set
-    } : null);
-    onPhoneVerified(phone);
-    toast({
-      title: 'Phone Verified',
-      description: 'Nette will now recognize you on voice calls.',
-    });
-  };
-
   // Show welcome screen for new conversations (only in chat mode)
   if (activeMode === 'chat' && isNewConversation && messages.length === 0) {
     return (
@@ -543,16 +523,6 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
           onSendMessage={handleWelcomeMessage}
           isLoading={isTyping}
         />
-
-        {/* Phone Verification Modal */}
-        {user && (
-          <PhoneVerificationModal
-            isOpen={showPhoneVerification}
-            onClose={() => setShowPhoneVerification(false)}
-            onVerified={handlePhoneVerifiedInternal}
-            userId={user.id}
-          />
-        )}
       </SidebarInset>
     );
   }
@@ -565,21 +535,26 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
         <SidebarTrigger className="-ml-1" />
       </header>
       <div className="min-h-[calc(100vh-3.5rem)] flex flex-col bg-white">
-        {/* Header */}
-        <div
-          className="text-white transition-all"
-          style={{ background: COACHES[selectedCoach].gradient }}
-        >
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3">
-              <img
-                src={COACHES[selectedCoach].avatar}
-                alt={COACHES[selectedCoach].name}
-                className="w-12 h-12 rounded-full object-cover bg-white/20 backdrop-blur-sm"
-              />
-              <div>
-                <h1 className="text-2xl font-bold">Chat with {COACHES[selectedCoach].name}</h1>
-                <p className="text-white/90 text-sm">{COACHES[selectedCoach].title}</p>
+        {/* Header - Premium Glassmorphic Banner */}
+        <div className="mx-4 mt-4 mb-2">
+          <div
+            className="text-white transition-all rounded-2xl overflow-hidden shadow-lg"
+            style={{
+              background: COACHES[selectedCoach].gradient,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 128, 128, 0.15)'
+            }}
+          >
+            <div className="px-5 py-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={COACHES[selectedCoach].avatar}
+                  alt={COACHES[selectedCoach].name}
+                  className="w-12 h-12 rounded-full object-cover bg-white/20 backdrop-blur-sm ring-2 ring-white/30"
+                />
+                <div>
+                  <h1 className="text-xl font-semibold">Chat with {COACHES[selectedCoach].name}</h1>
+                  <p className="text-white/80 text-sm">{COACHES[selectedCoach].title}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -590,13 +565,10 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
           <div className="flex-1 container mx-auto px-4 overflow-y-auto">
             <div className="max-w-4xl mx-auto">
               <VoiceTabContent
-                voiceCalls={voiceCalls}
-                verifiedPhone={userProfile?.verified_phone ?? null}
                 userId={user?.id ?? ''}
                 ghlContactId={userProfile?.ghl_contact_id ?? null}
-                userTimezone={userProfile?.timezone ?? undefined}
-                onPhoneVerify={() => setShowPhoneVerification(true)}
-                isLoading={isLoadingHistory}
+                verifiedPhone={userProfile?.verified_phone ?? null}
+                userName={userProfile?.full_name?.split(' ')[0] ?? null}
               />
             </div>
           </div>
@@ -707,16 +679,6 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
           </>
         )}
       </div>
-
-      {/* Phone Verification Modal */}
-      {user && (
-        <PhoneVerificationModal
-          isOpen={showPhoneVerification}
-          onClose={() => setShowPhoneVerification(false)}
-          onVerified={handlePhoneVerifiedInternal}
-          userId={user.id}
-        />
-      )}
     </SidebarInset>
   );
 }
@@ -724,26 +686,11 @@ function ChatPageContent({ activeMode, onPhoneVerified, showPhoneVerification, s
 // Main ChatPage component with providers
 const ChatPage = () => {
   const [activeMode, setActiveMode] = useState<ChatMode>('chat');
-  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
-
-  const handlePhoneVerified = (phone: string) => {
-    setVerifiedPhone(phone);
-  };
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <ChatSidebar
-        onModeChange={setActiveMode}
-        verifiedPhone={verifiedPhone}
-        onVerifyPhone={() => setShowPhoneVerification(true)}
-      />
-      <ChatPageContent
-        activeMode={activeMode}
-        onPhoneVerified={handlePhoneVerified}
-        showPhoneVerification={showPhoneVerification}
-        setShowPhoneVerification={setShowPhoneVerification}
-      />
+      <ChatSidebar onModeChange={setActiveMode} />
+      <ChatPageContent activeMode={activeMode} />
     </SidebarProvider>
   );
 };

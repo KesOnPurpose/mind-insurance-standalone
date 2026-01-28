@@ -144,11 +144,29 @@ function mapStatus(status: string): string {
   return statusMap[status] || status;
 }
 
-function calculateDuration(startedAt?: string, endedAt?: string): number | null {
-  if (!startedAt || !endedAt) return null;
-  const start = new Date(startedAt).getTime();
-  const end = new Date(endedAt).getTime();
-  return Math.round((end - start) / 1000);
+/**
+ * Calculate call duration from timestamps with fallback support
+ * Vapi's startedAt/endedAt may not be set correctly for web calls,
+ * so we accept a fallback from client-calculated duration.
+ */
+function calculateDuration(startedAt?: string, endedAt?: string, fallbackSeconds?: number): number | null {
+  // Try to calculate from timestamps first
+  if (startedAt && endedAt) {
+    const start = new Date(startedAt).getTime();
+    const end = new Date(endedAt).getTime();
+    const calculated = Math.round((end - start) / 1000);
+    // Only use calculated value if it's positive and reasonable
+    if (calculated > 0 && calculated < 86400) { // Less than 24 hours
+      return calculated;
+    }
+  }
+
+  // Fall back to provided value if timestamps didn't work
+  if (fallbackSeconds && fallbackSeconds > 0) {
+    return fallbackSeconds;
+  }
+
+  return null;
 }
 
 function extractSentiment(messages?: Array<{ role: string; message: string }>): 'positive' | 'neutral' | 'negative' | 'mixed' {
@@ -283,7 +301,7 @@ async function handleEndOfCallReport(
   console.log('[vapi-call-webhook] Processing end-of-call report:', call.id);
 
   const variant = extractVariantFromAssistantId(call.assistantId);
-  const duration = calculateDuration(call.startedAt, call.endedAt);
+  // Duration will be calculated with fallback after we fetch existing record
   const topics = extractTopics(report.transcript || '');
   const sentiment = extractSentiment(call.messages);
 
@@ -292,25 +310,105 @@ async function handleEndOfCallReport(
     ? Math.round(call.costBreakdown.total * 100)
     : null;
 
-  const callLog = {
+  // CRITICAL: Check if record already exists and preserve client-captured data
+  // The client's logCallStart() sets user_id correctly, and logCallEnd() saves transcript/duration.
+  // Vapi's metadata doesn't flow through webhooks reliably. We must preserve existing data
+  // to avoid overwriting client-captured values with webhook NULL values.
+  let existingUserId: string | null = null;
+  let existingTranscript: unknown = null;
+  let existingDuration: number | null = null;
+  let existingSummary: string | null = null;
+
+  const { data: existingRecord } = await supabase
+    .from('vapi_call_logs')
+    .select('user_id, transcript, duration_seconds, summary')
+    .eq('vapi_call_id', call.id)
+    .single();
+
+  if (existingRecord) {
+    existingUserId = existingRecord.user_id;
+    existingTranscript = existingRecord.transcript;
+    existingDuration = existingRecord.duration_seconds;
+    existingSummary = existingRecord.summary;
+
+    console.log('[vapi-call-webhook] Preserving existing data:', {
+      user_id: existingUserId ? 'present' : 'missing',
+      transcript: existingTranscript ? 'present' : 'missing',
+      duration: existingDuration,
+      summary: existingSummary ? 'present' : 'missing'
+    });
+  }
+
+  // Use existing user_id if available, otherwise try metadata, otherwise null
+  const userId = existingUserId || call.metadata?.user_id || null;
+
+  // Calculate duration with fallback to client-captured value
+  const calculatedDuration = calculateDuration(call.startedAt, call.endedAt, existingDuration ?? undefined);
+
+  // CRITICAL FIX: Don't overwrite existing duration with null
+  // The client (VapiCallButton) calculates accurate duration from session.startedAt
+  // Webhook may arrive with invalid Vapi timestamps resulting in null
+  // Preserve the client-captured duration if webhook calculation failed
+  const finalDuration = calculatedDuration ?? existingDuration;
+
+  // INTELLIGENT MERGE: Preserve client data when webhook data is null or less useful
+  // Client captures transcript/duration in real-time, webhook may arrive with NULLs
+  const webhookTranscript = report.transcript || call.artifact?.transcript || null;
+  const webhookSummary = report.summary || call.analysis?.summary || null;
+
+  // CRITICAL FIX: Check if existing transcript is a JSON array (client-captured)
+  // Client stores transcript as JSON array: [{role, text, timestamp}, ...]
+  // Webhook provides plain text: "AI: Hello..."
+  // JSON array is BETTER data - preserve it over plain text
+  const isExistingTranscriptJsonArray = existingTranscript &&
+    (Array.isArray(existingTranscript) ||
+     (typeof existingTranscript === 'string' && existingTranscript.startsWith('[')));
+
+  console.log('[vapi-call-webhook] Transcript merge decision:', {
+    hasWebhookTranscript: !!webhookTranscript,
+    hasExistingTranscript: !!existingTranscript,
+    isExistingJsonArray: isExistingTranscriptJsonArray,
+    decision: isExistingTranscriptJsonArray ? 'PRESERVE_CLIENT' : 'USE_WEBHOOK_OR_EXISTING'
+  });
+
+  // Extract recording URL - this is critical for playback functionality
+  const recordingUrl = report.recordingUrl || null;
+
+  // Build callLog dynamically to avoid overwriting good data with null
+  const callLog: Record<string, unknown> = {
     vapi_call_id: call.id,
-    user_id: call.metadata?.user_id || null,
+    user_id: userId,
     assistant_id: call.assistantId || '',
     assistant_variant: variant,
     direction: mapDirection(call.type),
     phone_number: call.customer?.number || call.phoneNumber?.number || null,
     started_at: call.startedAt || null,
     ended_at: call.endedAt || null,
-    duration_seconds: duration,
     status: 'completed',
     end_reason: call.endedReason || null,
-    transcript: report.transcript || call.artifact?.transcript || null,
-    summary: report.summary || call.analysis?.summary || null,
+    // PREFER client JSON array transcript over webhook plain text
+    // Client-captured JSON array: [{role, text, timestamp}, ...] is BETTER data
+    // Webhook plain text: "AI: Hello..." is less structured
+    transcript: isExistingTranscriptJsonArray ? existingTranscript : (webhookTranscript ?? existingTranscript),
+    // Use webhook summary if available, otherwise preserve client summary
+    summary: webhookSummary ?? existingSummary,
+    // Recording URL for playback
+    recording_url: recordingUrl,
     topics: topics,
     sentiment: sentiment,
     context_snapshot: call.metadata?.context_snapshot || {},
     cost_cents: costCents
   };
+
+  // Only include duration_seconds if we have a valid value
+  // This prevents overwriting client-captured duration with null
+  if (finalDuration !== null && finalDuration !== undefined) {
+    callLog.duration_seconds = finalDuration;
+  } else if (existingDuration) {
+    // Explicitly preserve existing duration if we calculated null
+    callLog.duration_seconds = existingDuration;
+  }
+  // If both are null, don't include duration_seconds to avoid overwriting any value
 
   // Upsert call log (update if exists, insert if new)
   const { error } = await supabase
@@ -324,15 +422,19 @@ async function handleEndOfCallReport(
   } else {
     console.log('[vapi-call-webhook] Call log stored:', {
       call_id: call.id,
+      user_id: userId,
       variant: variant,
-      duration: duration,
+      duration: callLog.duration_seconds ?? 'not_set',
+      duration_source: calculatedDuration ? 'vapi' : (existingDuration ? 'client_preserved' : 'none'),
+      recording_url: recordingUrl ? 'present' : 'missing',
+      summary: webhookSummary ? 'present' : (existingSummary ? 'preserved' : 'missing'),
       sentiment: sentiment,
       topics: topics
     });
   }
 
   // Update assistant config metrics (if exists)
-  await updateAssistantMetrics(supabase, variant, duration, sentiment);
+  await updateAssistantMetrics(supabase, variant, finalDuration, sentiment);
 }
 
 async function handleStatusUpdate(
@@ -347,9 +449,25 @@ async function handleStatusUpdate(
   // Only create a record if call is starting (queued/ringing/in-progress)
   // End-of-call-report will update with full data
   if (['queued', 'ringing', 'in-progress'].includes(update.status)) {
+    // CRITICAL: Check if record already exists and preserve user_id
+    let existingUserId: string | null = null;
+    const { data: existingRecord } = await supabase
+      .from('vapi_call_logs')
+      .select('user_id')
+      .eq('vapi_call_id', call.id)
+      .single();
+
+    if (existingRecord?.user_id) {
+      existingUserId = existingRecord.user_id;
+      console.log('[vapi-call-webhook] Preserving existing user_id in status update:', existingUserId);
+    }
+
+    // Use existing user_id if available, otherwise try metadata, otherwise null
+    const userId = existingUserId || call.metadata?.user_id || null;
+
     const callLog = {
       vapi_call_id: call.id,
-      user_id: call.metadata?.user_id || null,
+      user_id: userId,
       assistant_id: call.assistantId || '',
       assistant_variant: variant,
       direction: mapDirection(call.type),
@@ -379,9 +497,10 @@ async function handleToolCalls(
   console.log('[vapi-call-webhook] Tool calls:', call.id, toolCallMessage.toolCalls.length);
 
   // Fetch existing call log and append tool calls
+  // Also fetch user_id to preserve it
   const { data: existingLog, error: fetchError } = await supabase
     .from('vapi_call_logs')
-    .select('tools_called')
+    .select('tools_called, user_id')
     .eq('vapi_call_id', call.id)
     .single();
 
@@ -392,6 +511,9 @@ async function handleToolCalls(
 
   // Parse existing tools or start fresh
   const existingTools = existingLog?.tools_called || [];
+
+  // Preserve existing user_id
+  const userId = existingLog?.user_id || call.metadata?.user_id || null;
 
   // Format new tool calls
   const newTools = toolCallMessage.toolCalls.map(tc => ({
@@ -404,11 +526,12 @@ async function handleToolCalls(
   // Combine tools
   const allTools = [...existingTools, ...newTools];
 
-  // Update call log with tools
+  // Update call log with tools (preserving user_id)
   const { error: updateError } = await supabase
     .from('vapi_call_logs')
     .upsert({
       vapi_call_id: call.id,
+      user_id: userId,
       assistant_id: call.assistantId || '',
       assistant_variant: extractVariantFromAssistantId(call.assistantId),
       direction: mapDirection(call.type),

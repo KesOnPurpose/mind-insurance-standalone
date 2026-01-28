@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, LogOut, User, MessageSquare, Shield, Home, FileText, Calculator, Phone, PhoneCall, History, CheckCircle2, BookOpen, FolderOpen, ChevronDown, ChevronRight, ClipboardCheck, Building2 } from 'lucide-react';
+import { Settings, LogOut, User, MessageSquare, Shield, Home, FileText, Calculator, Phone, BookOpen, FolderOpen, ChevronDown, ChevronRight, ClipboardCheck, Building2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -24,8 +24,6 @@ export type ChatMode = 'chat' | 'voice';
 
 interface ChatSidebarProps {
   onModeChange?: (mode: ChatMode) => void;
-  verifiedPhone?: string | null;
-  onVerifyPhone?: () => void;
 }
 
 // GROUPHOME STANDALONE: Product branding for Grouphome only
@@ -37,7 +35,7 @@ const PRODUCT_BRANDING = {
   chatRoute: '/chat',
 };
 
-export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: ChatSidebarProps) {
+export function ChatSidebar({ onModeChange }: ChatSidebarProps) {
   const [mode, setMode] = useState<ChatMode>('chat');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -76,11 +74,6 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
   const handleModeChange = (newMode: ChatMode) => {
     setMode(newMode);
   };
-
-  // Mask phone number for display
-  const maskedPhone = verifiedPhone
-    ? verifiedPhone.replace(/(\d{1,3})(\d{3})(\d{4})$/, '$1 ***-$3')
-    : null;
 
   const handleNewChat = () => {
     startNewConversation();
@@ -124,23 +117,35 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
           </span>
         </Link>
 
-        {/* Chat/Voice Mode Toggle - Premium Apple-style */}
-        <div className="relative flex items-center p-1 rounded-xl bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
-          {/* Animated background indicator */}
+        {/* Chat/Voice Mode Toggle - Premium Glassmorphic */}
+        <div
+          className="relative flex items-center p-1.5 rounded-2xl border border-white/20 shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.15)'
+          }}
+        >
+          {/* Animated background indicator - BOTH states use teal gradient */}
           <div
             className={cn(
-              "absolute inset-y-1 w-[calc(50%-4px)] rounded-lg bg-white dark:bg-mi-navy-light",
-              "shadow-md transition-all duration-200 ease-out",
-              mode === 'voice' && "translate-x-[calc(100%+4px)]"
+              "absolute inset-y-1.5 w-[calc(50%-6px)] rounded-xl",
+              "shadow-md transition-all duration-300 ease-out",
+              mode === 'voice' && "translate-x-[calc(100%+6px)]"
             )}
+            style={{
+              background: 'linear-gradient(135deg, hsl(187 85% 35% / 0.95), hsl(187 75% 45% / 0.85))',
+              boxShadow: '0 4px 12px rgba(0, 128, 128, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2)'
+            }}
           />
           <button
             onClick={() => handleModeChange('chat')}
             className={cn(
-              "relative flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
-              "transition-colors duration-200 z-10",
+              "relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium",
+              "transition-all duration-200 z-10",
               mode === 'chat'
-                ? "text-foreground"
+                ? "text-white font-semibold"
                 : "text-muted-foreground hover:text-foreground/80"
             )}
           >
@@ -150,10 +155,10 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
           <button
             onClick={() => handleModeChange('voice')}
             className={cn(
-              "relative flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
-              "transition-colors duration-200 z-10",
+              "relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium",
+              "transition-all duration-200 z-10",
               mode === 'voice'
-                ? "text-primary"
+                ? "text-white font-semibold"
                 : "text-muted-foreground hover:text-foreground/80"
             )}
           >
@@ -162,43 +167,22 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
           </button>
         </div>
 
-        {/* Mode-specific action button */}
+        {/* Mode-specific action button - Premium Glassmorphic Teal */}
         {mode === 'chat' ? (
           <Button
             onClick={handleNewChat}
-            className="w-full justify-start gap-2 transition-colors"
-            variant="outline"
+            className="w-full justify-start gap-2 transition-all duration-200 text-white font-medium rounded-xl border border-white/20 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             style={{
-              borderColor: activeCoach.color,
-              color: activeCoach.color
+              background: 'linear-gradient(135deg, hsl(187 85% 35% / 0.95), hsl(187 75% 45% / 0.85))',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: '0 4px 12px rgba(0, 128, 128, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2)'
             }}
           >
             <MessageSquare className="h-4 w-4" />
             Ask {activeCoach.name}
           </Button>
-        ) : (
-          <div className="space-y-3">
-            {/* Phone verification status - compact version */}
-            {verifiedPhone ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Verified</p>
-                  <p className="text-xs text-muted-foreground font-mono truncate">{maskedPhone}</p>
-                </div>
-              </div>
-            ) : (
-              <Button
-                onClick={onVerifyPhone}
-                variant="outline"
-                className="w-full justify-start gap-2 border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
-              >
-                <Phone className="h-4 w-4" />
-                Verify Phone
-              </Button>
-            )}
-          </div>
-        )}
+        ) : null}
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -223,35 +207,21 @@ export function ChatSidebar({ onModeChange, verifiedPhone, onVerifyPhone }: Chat
             />
           </div>
         ) : (
-          /* Voice Mode: Voice-specific quick actions */
+          /* Voice Mode: Voice-specific info */
           <div className="flex-[2] min-h-[150px]">
-            <div className="text-xs font-medium px-2 py-2 text-muted-foreground">
-              Voice Actions
-            </div>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton className="group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <PhoneCall className="h-4 w-4 text-primary" />
-                  <span>Call Nette</span>
-                  <div className="ml-auto flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs text-muted-foreground">Available</span>
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Call History">
-                  <History className="h-4 w-4" />
-                  <span>Call History</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-
             {/* Voice mode info card */}
-            <div className="mt-4 mx-2 p-3 rounded-lg bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
+            <div className="mt-2 mx-2 p-4 rounded-xl bg-gradient-to-br from-[hsl(187_85%_35%/0.08)] to-transparent border border-[hsl(187_85%_35%/0.15)]">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(187_85%_35%)] to-[hsl(187_75%_45%)] flex items-center justify-center flex-shrink-0">
+                  <Phone className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Talk with Nette</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Use the call button above</p>
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Voice calls with Nette are private, encrypted, and tailored to your grouphome journey.
+                Voice calls are private, encrypted, and tailored to your grouphome journey.
               </p>
             </div>
           </div>

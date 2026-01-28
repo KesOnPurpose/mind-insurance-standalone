@@ -20,8 +20,8 @@ export const COACHES: Record<CoachType, Coach> = {
     title: 'Group Home Expert',
     description: 'Your educational guide and assessment expert. I conduct your readiness assessment, generate personalized roadmaps, and provide state-specific licensing guidance to get you started.',
     avatar: '/nette-avatar.png',
-    color: 'hsl(221 83% 53%)', // Primary blue
-    gradient: 'linear-gradient(135deg, hsl(221 83% 53%), hsl(221 70% 60%))',
+    color: 'hsl(187 85% 35%)', // Teal matching call button
+    gradient: 'linear-gradient(135deg, hsl(187 85% 35%), hsl(187 75% 45%), hsl(187 65% 55%))',
     personality: 'Warm and encouraging, patient educator, detail-oriented, and compliance-focused.',
     expertise: [
       'Comprehensive assessments',

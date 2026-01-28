@@ -79,6 +79,8 @@ import LessonEditorPage from "./pages/admin/LessonEditorPage";
 import AdminLearnerDetailPage from "./pages/admin/AdminLearnerDetailPage";
 // Compliance Binder Generator
 import ComplianceBinderGeneratorPage from "./pages/admin/ComplianceBinderGeneratorPage";
+// Admin Notification Broadcasts
+import BroadcastsPage from "./pages/admin/BroadcastsPage";
 
 // Other
 import NotFound from "./pages/NotFound";
@@ -271,6 +273,8 @@ const App = () => {
                       <Route path="/admin/programs/:programId/learners/:userId" element={<ProtectedRoute><AdminRoute><AdminLearnerDetailPage /></AdminRoute></ProtectedRoute>} />
                       {/* Compliance Binder Generator */}
                       <Route path="/admin/compliance" element={<ProtectedRoute><AdminRoute><ComplianceBinderGeneratorPage /></AdminRoute></ProtectedRoute>} />
+                      {/* Admin Notification Broadcasts */}
+                      <Route path="/admin/broadcasts" element={<ProtectedRoute><AdminRoute><BroadcastsPage /></AdminRoute></ProtectedRoute>} />
 
                       {/* Legacy route redirects - for backwards compatibility */}
                       <Route path="/mind-insurance/*" element={<Navigate to="/dashboard" replace />} />

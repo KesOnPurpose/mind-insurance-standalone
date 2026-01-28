@@ -115,12 +115,18 @@ async function generateAISummary(
     return null;
   }
 
-  const systemPrompt = `You are analyzing a voice conversation transcript between a user and Nette, an AI assistant for the Grouphome business startup journey.
+  const systemPrompt = `You are analyzing a voice conversation transcript between a user and an AI assistant named Nette.
+
+CRITICAL RULES:
+- The AI assistant is ALWAYS named "Nette" (never Nick, Nat, or any other name)
+- Refer to the AI assistant as "Nette" in the summary
+- Do NOT invent or guess the user's name - refer to them as "the user" unless their name is clearly stated
+- If a name appears in the transcript, spell it EXACTLY as shown
 
 Your task is to create a structured summary in JSON format.
 
 Extract:
-1. "summary": A 2-3 sentence summary of what was discussed
+1. "summary": A 2-3 sentence summary of what was discussed. Use "Nette" for the assistant and "the user" for the human.
 2. "next_steps": Array of specific action items or next steps (as strings)
 3. "topics": Array of main topics from this list: ${GROUPHOME_TOPICS.join(', ')}
 4. "sentiment": Overall call sentiment (positive/neutral/negative/mixed)
@@ -261,6 +267,23 @@ serve(async (req) => {
     // Build update payload
     const updatePayload: Record<string, unknown> = {};
 
+    // Check existing record to avoid overwriting client-captured data
+    // We'll do a full check below after fetching, but for timestamps we can update now
+    if (vapiCall.startedAt) {
+      updatePayload.started_at = vapiCall.startedAt;
+    }
+    if (vapiCall.endedAt) {
+      updatePayload.ended_at = vapiCall.endedAt;
+    }
+
+    // Note: Duration will be handled below after checking existing record
+    // to avoid overwriting client-captured duration with potentially incorrect Vapi data
+
+    // Store end reason if available
+    if (vapiCall.endedReason) {
+      updatePayload.end_reason = vapiCall.endedReason;
+    }
+
     // Add recording URL if available
     if (vapiCall.recordingUrl) {
       updatePayload.recording_url = vapiCall.recordingUrl;
@@ -272,6 +295,61 @@ serve(async (req) => {
 
     // Get transcript for AI summary
     const transcript = vapiCall.transcript || '';
+
+    // CRITICAL: Check if client already captured transcript before overwriting
+    // The client's logCallEnd() captures transcript in real-time, which is more reliable
+    // than Vapi's post-call messages. Only use Vapi transcript as a fallback.
+    const { data: existingCall } = await supabase
+      .from('vapi_call_logs')
+      .select('transcript, duration_seconds, user_id')
+      .eq('vapi_call_id', vapi_call_id)
+      .single();
+
+    const hasExistingTranscript = existingCall?.transcript &&
+      (Array.isArray(existingCall.transcript) ? existingCall.transcript.length > 0 : true);
+
+    console.log('[vapi-call-complete] Existing transcript check:', {
+      hasExisting: hasExistingTranscript,
+      existingType: existingCall?.transcript ? typeof existingCall.transcript : 'none',
+      vapiHasMessages: vapiCall.messages?.length || 0
+    });
+
+    // Store Vapi messages as transcript ONLY if client didn't capture it
+    if (!hasExistingTranscript && vapiCall.messages && vapiCall.messages.length > 0) {
+      // Convert Vapi messages to our transcript format
+      const vapiTranscript = vapiCall.messages
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .map(msg => ({
+          role: msg.role,
+          text: msg.content,
+          timestamp: msg.secondsFromStart
+            ? new Date(Date.now() - (msg.secondsFromStart * 1000)).toISOString()
+            : new Date().toISOString()
+        }));
+
+      if (vapiTranscript.length > 0) {
+        updatePayload.transcript = vapiTranscript;
+        console.log('[vapi-call-complete] Stored Vapi messages as transcript (client had none), count:', vapiTranscript.length);
+      }
+    } else if (hasExistingTranscript) {
+      console.log('[vapi-call-complete] Preserving client-captured transcript');
+    }
+
+    // Calculate duration only if client didn't capture it
+    const hasExistingDuration = existingCall?.duration_seconds && existingCall.duration_seconds > 0;
+
+    if (!hasExistingDuration && vapiCall.startedAt && vapiCall.endedAt) {
+      const startTime = new Date(vapiCall.startedAt).getTime();
+      const endTime = new Date(vapiCall.endedAt).getTime();
+      const durationSeconds = Math.round((endTime - startTime) / 1000);
+
+      if (durationSeconds > 0 && durationSeconds < 86400) { // Reasonable bounds
+        updatePayload.duration_seconds = durationSeconds;
+        console.log('[vapi-call-complete] Duration calculated from Vapi timestamps (client had none):', durationSeconds, 'seconds');
+      }
+    } else if (hasExistingDuration) {
+      console.log('[vapi-call-complete] Preserving client-captured duration:', existingCall?.duration_seconds, 'seconds');
+    }
 
     // Generate AI summary if we have transcript and Anthropic key
     if (transcript && anthropicKey) {
@@ -318,6 +396,36 @@ serve(async (req) => {
       }
 
       console.log('[vapi-call-complete] Call log updated successfully');
+
+      // NEW: Trigger cross-channel context sync (voice → chat)
+      // This updates unified_conversation_context so chat knows about this voice call
+      if (existingCall?.user_id) {
+        try {
+          const syncResponse = await fetch(`${supabaseUrl}/functions/v1/sync-conversation-context`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`
+            },
+            body: JSON.stringify({
+              user_id: existingCall.user_id,
+              source_type: 'voice_call',
+              source_id: vapi_call_id
+            })
+          });
+
+          if (syncResponse.ok) {
+            console.log('[vapi-call-complete] Context sync triggered successfully');
+          } else {
+            console.error('[vapi-call-complete] Context sync failed:', syncResponse.status);
+          }
+        } catch (syncError) {
+          console.error('[vapi-call-complete] Context sync error:', syncError);
+          // Don't fail the main operation if sync fails
+        }
+      } else {
+        console.log('[vapi-call-complete] No user_id found, skipping context sync');
+      }
     } else {
       console.log('[vapi-call-complete] No updates to apply');
     }

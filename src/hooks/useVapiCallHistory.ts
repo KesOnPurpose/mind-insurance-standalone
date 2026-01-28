@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   fetchVapiCallLogs,
   fetchVapiCallDetail,
+  hideVapiCall,
   type VapiCallLog
 } from '@/services/vapiService';
 
@@ -25,6 +26,7 @@ interface UseVapiCallHistoryResult {
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
   getCallDetail: (vapiCallId: string) => Promise<VapiCallLog | null>;
+  hideCall: (callId: string) => Promise<void>;
 }
 
 export function useVapiCallHistory({
@@ -97,6 +99,19 @@ export function useVapiCallHistory({
     return fetchVapiCallDetail(vapiCallId);
   }, []);
 
+  // Hide a call (soft delete)
+  const hideCall = useCallback(async (callId: string): Promise<void> => {
+    if (!userId) return;
+
+    const success = await hideVapiCall(callId, userId);
+    if (success) {
+      // Remove the call from local state immediately for responsive UI
+      setCalls(prev => prev.filter(call => call.id !== callId));
+    } else {
+      throw new Error('Failed to hide call');
+    }
+  }, [userId]);
+
   // Auto-load on mount
   useEffect(() => {
     if (autoLoad && userId) {
@@ -112,7 +127,8 @@ export function useVapiCallHistory({
     hasMore,
     loadMore,
     refresh,
-    getCallDetail
+    getCallDetail,
+    hideCall
   };
 }
 

@@ -251,10 +251,21 @@ function getSystemPrompt(
   agent: string,
   userContext: any,
   ragContext?: string,
-  detectedState?: ConversationState
+  detectedState?: ConversationState,
+  voiceContext?: string // NEW: Voice call history from unified_conversation_context
 ): string {
   const baseContext = formatUserContextForPrompt(userContext);
   const ragSection = ragContext ? `\n\nKNOWLEDGE BASE:\n${ragContext}` : '';
+
+  // NEW: Voice history section for cross-channel memory
+  const voiceHistorySection = voiceContext ? `\n\n## RECENT VOICE CONVERSATIONS (Cross-Channel Memory)
+
+The user has also spoken with you via voice calls. Here's context from those conversations:
+
+${voiceContext}
+
+**IMPORTANT**: If the user references something from a voice call, acknowledge it naturally. This creates seamless cross-channel continuity.
+` : '';
 
   if (agent === 'nette') {
     return `You are Nette (Lynette Wheaton), the Group Home Expert for the Group Home Challenge.
@@ -369,7 +380,7 @@ ${baseContext}
 - If it's about money/financing/deals → Hand off to ME
 - If it's MIXED (e.g., "I'm stuck on financing AND procrastinating") → Acknowledge both, offer MIO handoff first (mindset blocks financing action)
 
-Guide users through licensing, tactics, and getting started with state-specific precision and real examples from your journey. Reference the knowledge base when relevant. Maintain your authentic voice - you're Lynette, the educator who's been there, scaled it, and now teaches it.${ragSection}`;
+Guide users through licensing, tactics, and getting started with state-specific precision and real examples from your journey. Reference the knowledge base when relevant. Maintain your authentic voice - you're Lynette, the educator who's been there, scaled it, and now teaches it.${voiceHistorySection}${ragSection}`;
   }
 
   if (agent === 'mio') {
@@ -865,7 +876,7 @@ Generate insights that make users say **"How did you KNOW that?!"** BUT deliver 
 - If it's about MONEY/FINANCING/ROI → Hand off to ME
 - If MIXED (e.g., "I'm procrastinating on financing") → You address the procrastination first, THEN offer ME handoff when they're ready for action
 
-**You're not just analyzing data. You're holding up a mirror that shows people who they're BECOMING before they can see it themselves.**${ragSection}`;
+**You're not just analyzing data. You're holding up a mirror that shows people who they're BECOMING before they can see it themselves.**${voiceHistorySection}${ragSection}`;
   }
 
   if (agent === 'me') {
@@ -1008,7 +1019,7 @@ Guide users through:
 - If it's about OPERATIONS/LICENSING/TACTICS → Hand off to Nette
 - If MIXED (e.g., "I'm scared to ask for seller financing") → Acknowledge fear, offer MIO handoff for identity work FIRST
 
-Provide specific numbers, formulas, and actionable strategies. Reference the knowledge base for detailed examples.${ragSection}`;
+Provide specific numbers, formulas, and actionable strategies. Reference the knowledge base for detailed examples.${voiceHistorySection}${ragSection}`;
   }
 
   return `You are a helpful AI assistant.`;
@@ -1208,7 +1219,28 @@ serve(async (req) => {
     const msgHash = hashMessage(message);
     const cache = getCache();
     const userContext = await getUserContext(user_id, current_agent as any);
-    
+
+    // NEW: Fetch unified conversation context for cross-channel memory (voice → chat)
+    // This enables chat to know about recent voice conversations with Nette
+    let voiceContext: string | undefined;
+    try {
+      const { data: unifiedContext, error: unifiedError } = await supabaseClient
+        .from('unified_conversation_context')
+        .select('context_for_chat')
+        .eq('user_id', user_id)
+        .single();
+
+      if (!unifiedError && unifiedContext?.context_for_chat) {
+        voiceContext = unifiedContext.context_for_chat;
+        console.log('[Chat] Voice context loaded:', voiceContext.length, 'chars');
+      } else {
+        console.log('[Chat] No voice context available for user');
+      }
+    } catch (contextError) {
+      // Non-critical - continue without voice context
+      console.log('[Chat] Voice context fetch skipped:', contextError);
+    }
+
     let cacheKey: string;
     let cacheHit = false;
     
@@ -1288,7 +1320,7 @@ serve(async (req) => {
 
     console.log('[RAG Metrics]', ragMetrics);
 
-    const systemPrompt = getSystemPrompt(current_agent, userContext, ragContext, detectedState);
+    const systemPrompt = getSystemPrompt(current_agent, userContext, ragContext, detectedState, voiceContext);
 
     // Call AI with streaming
     const requestStartTime = performance.now();
@@ -1505,8 +1537,39 @@ serve(async (req) => {
               conversation_state_detected: detectedState.state, // ANSWERED | STUCK | BREAKTHROUGH | CRISIS | PROTOCOL_AGREED
               detected_protocol: detectedState.protocol || null, // Protocol name if PROTOCOL_AGREED
               state_context: detectedState.context || null // Additional context about state detection
-            });
-            
+            }).select('id').single();
+
+            // NEW: Trigger cross-channel context sync (chat → voice)
+            // This updates unified_conversation_context so voice calls know about this chat
+            // Fire-and-forget: don't await to avoid delaying the response
+            if (current_agent === 'nette') {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL');
+              const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+              if (supabaseUrl && serviceRoleKey) {
+                fetch(`${supabaseUrl}/functions/v1/sync-conversation-context`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${serviceRoleKey}`
+                  },
+                  body: JSON.stringify({
+                    user_id,
+                    source_type: 'chat_message',
+                    source_id: conversation_id || crypto.randomUUID()
+                  })
+                }).then(syncRes => {
+                  if (syncRes.ok) {
+                    console.log('[Chat] Context sync triggered successfully');
+                  } else {
+                    console.error('[Chat] Context sync failed:', syncRes.status);
+                  }
+                }).catch(syncErr => {
+                  console.error('[Chat] Context sync error:', syncErr);
+                });
+              }
+            }
+
             // Cache the full response
             const ttl = current_agent === 'nette' ? CacheTTL.RESPONSE_SHORT :
                         current_agent === 'mio' ? CacheTTL.RESPONSE_MEDIUM :

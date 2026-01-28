@@ -20,6 +20,7 @@ import type { VapiCallLog } from '@/services/vapiService';
 
 interface VapiCallHistoryProps {
   userId: string;
+  userName?: string | null;  // User's first name for transcript/summary name correction
   pageSize?: number;
   className?: string;
   title?: string;
@@ -110,6 +111,7 @@ const ErrorState = ({ error, onRetry }: ErrorStateProps) => (
 
 export const VapiCallHistory = ({
   userId,
+  userName,
   pageSize = 10,
   className,
   title = 'Call History',
@@ -123,7 +125,8 @@ export const VapiCallHistory = ({
     hasMore,
     loadMore,
     refresh,
-    getCallDetail
+    getCallDetail,
+    hideCall
   } = useVapiCallHistory({ userId, pageSize });
 
   // Pull-to-refresh state
@@ -147,6 +150,11 @@ export const VapiCallHistory = ({
   const handleLoadTranscript = useCallback(async (vapiCallId: string): Promise<VapiCallLog | null> => {
     return getCallDetail(vapiCallId);
   }, [getCallDetail]);
+
+  // Handle hide call callback
+  const handleHideCall = useCallback(async (callId: string): Promise<void> => {
+    await hideCall(callId);
+  }, [hideCall]);
 
   // Pull-to-refresh touch handlers (mobile)
   useEffect(() => {
@@ -255,7 +263,9 @@ export const VapiCallHistory = ({
               <VapiVoiceCallCard
                 key={call.id}
                 call={call}
+                userName={userName}
                 onLoadTranscript={handleLoadTranscript}
+                onHideCall={handleHideCall}
               />
             ))}
           </div>

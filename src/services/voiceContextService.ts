@@ -1,6 +1,11 @@
 // ============================================================================
 // VOICE CONTEXT SERVICE
-// Fetches and formats user context for GHL Voice AI
+// Fetches and formats user context for Voice AI
+//
+// NOTE: GHL Voice AI has been decommissioned. We are now 100% Vapi.
+// - syncVoiceContextToGHL is DEPRECATED (Edge Function removed)
+// - fetchContextFromN8n is DEPRECATED
+// - buildVoiceContext is still useful for Vapi context building
 // ============================================================================
 
 import { supabase } from "@/integrations/supabase/client";
@@ -238,48 +243,21 @@ export async function buildVoiceContext(userId: string): Promise<VoiceContextPay
 /**
  * Sync voice context to GHL contact custom fields
  * Uses Edge Function to update GHL contact
+ *
+ * @deprecated GHL Voice AI decommissioned. Edge Function removed. This is now a no-op.
  */
 export async function syncVoiceContextToGHL(
   contactId: string,
   context: VoiceContextPayload
 ): Promise<VoiceContextSyncResponse> {
-  console.log('[voiceContextService] Syncing context to GHL contact:', contactId);
-
-  try {
-    const { data, error } = await supabase.functions.invoke('sync-ghl-voice-context', {
-      body: {
-        contact_id: contactId,
-        context
-      }
-    });
-
-    if (error) {
-      console.error('[voiceContextService] Edge function error:', error);
-      return {
-        success: false,
-        message: 'Failed to sync context to GHL',
-        error: error.message,
-        ghl_contact_updated: false
-      };
-    }
-
-    console.log('[voiceContextService] Successfully synced to GHL:', data);
-    return {
-      success: true,
-      message: 'Context synced to GHL successfully',
-      context,
-      ghl_contact_updated: true
-    };
-
-  } catch (err) {
-    console.error('[voiceContextService] Sync exception:', err);
-    return {
-      success: false,
-      message: 'Exception during GHL sync',
-      error: err instanceof Error ? err.message : 'Unknown error',
-      ghl_contact_updated: false
-    };
-  }
+  // DEPRECATED: GHL Voice AI decommissioned. This is now a no-op.
+  console.log('[voiceContextService] syncVoiceContextToGHL is deprecated (GHL decommissioned)');
+  return {
+    success: true,
+    message: 'GHL sync deprecated - using Vapi-only system',
+    context,
+    ghl_contact_updated: false
+  };
 }
 
 /**

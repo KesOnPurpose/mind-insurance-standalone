@@ -18,10 +18,10 @@ VITE_N8N_WEBHOOK_URL = "https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedCha
 # Deploy with: npx wrangler pages deploy dist --env staging
 # Domain: staging.mindinsurancechallange.pages.dev
 # =============================================================================
-[env.staging]
-name = "mindhouse-prodigy-staging"
+[env.preview]
+name = "mindhouse-prodigy-preview"
 
-[env.staging.vars]
+[env.preview.vars]
 VITE_SUPABASE_URL = "https://hpyodaugrkctagkrfofj.supabase.co"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3ODY2MjIsImV4cCI6MjA3NDM2MjYyMn0.COFyvu_J-FnwTjbPCzi2v7yVR9cLWcg_sodKRV_Wlvs"
 VITE_API_URL = "https://mio-fastapi-production-production.up.railway.app"

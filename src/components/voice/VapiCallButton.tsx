@@ -6,9 +6,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Vapi from '@vapi-ai/web';
-import { Phone, PhoneOff, Loader2, Mic, MicOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PhoneOff, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { VoiceActivityIndicator } from './VoiceActivityIndicator';
+import { VoiceVisualization } from './VoiceVisualization';
+import { ModernCallIcon } from './ModernCallIcon';
+import { cn } from '@/lib/utils';
+import type { VoiceCallState } from '@/types/voice-visualization';
 import {
   getVapiPublicKey,
   buildLocalCallConfig,
@@ -91,7 +95,7 @@ export const VapiCallButton = ({
       setStatus('connected');
     });
 
-    vapi.on('call-end', () => {
+    vapi.on('call-end', async () => {
       console.log('[VapiCallButton] Call ended');
       setStatus('ended');
       setVolume(0);
@@ -111,11 +115,14 @@ export const VapiCallButton = ({
 
       // Log call end with transcript and duration
       if (session) {
-        logCallEnd(session.callId, finalTranscript, durationSeconds);
+        // CRITICAL: Await logCallEnd before enrichment to prevent race condition
+        const logSuccess = await logCallEnd(session.callId, finalTranscript, durationSeconds);
+        console.log('[VapiCallButton] Call logged to DB:', logSuccess ? 'success' : 'failed');
+
         callbacksRef.current.onCallEnd?.(session.callId);
 
         // Call Edge Function to enrich call log with recording URL and AI summary
-        // This runs async and doesn't block the UI
+        // This runs AFTER logCallEnd completes to ensure data is in DB
         supabase.functions.invoke('vapi-call-complete', {
           body: { vapi_call_id: session.callId }
         }).then(({ data, error }) => {
@@ -258,10 +265,20 @@ export const VapiCallButton = ({
         target_demographics: (snapshot.target_demographics as string) || 'Not specified',
 
         // Legacy field for backwards compatibility
-        user_name: userName || (snapshot.first_name as string) || 'there'
+        user_name: userName || (snapshot.first_name as string) || 'there',
+
+        // Cross-channel memory: Recent chat conversations for unified context
+        recentChats: (config.metadata.chat_context as string) || ''
       };
 
-      console.log('[VapiCallButton] Variable values for Vapi:', variableValues);
+      // DEBUG: Log chat context specifically
+      const chatContextValue = (config.metadata.chat_context as string) || '';
+      console.log('[VapiCallButton] Chat context for cross-channel memory:', {
+        hasContext: !!chatContextValue,
+        contextLength: chatContextValue.length,
+        contextPreview: chatContextValue.substring(0, 200) || '(empty)',
+        fullVariableValues: variableValues
+      });
 
       // Start the call with metadata for webhook identification
       const call = await vapiRef.current.start(config.assistant.id, {
@@ -294,7 +311,7 @@ export const VapiCallButton = ({
 
       toast({
         title: 'Call Connected',
-        description: `Connected with ${config.assistant.name}`
+        description: 'Connected with Nette'
       });
 
     } catch (err) {
@@ -350,11 +367,13 @@ export const VapiCallButton = ({
   // ============================================================================
 
   const getButtonContent = () => {
+    const iconSize = size === 'sm' ? 20 : size === 'lg' ? 28 : 24;
+
     switch (status) {
       case 'connecting':
         return (
           <>
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <ModernCallIcon isActive={false} isConnecting={true} size={iconSize} />
             <span className="sr-only">Connecting...</span>
           </>
         );
@@ -363,45 +382,41 @@ export const VapiCallButton = ({
       case 'listening':
         return (
           <>
-            <PhoneOff className="h-5 w-5" />
+            <PhoneOff className={cn(
+              "text-white",
+              size === 'sm' ? 'h-5 w-5' : size === 'lg' ? 'h-7 w-7' : 'h-6 w-6'
+            )} />
             <span className="sr-only">End call</span>
           </>
         );
       case 'ended':
-        return (
-          <>
-            <Phone className="h-5 w-5" />
-            <span className="sr-only">Call ended</span>
-          </>
-        );
       case 'error':
-        return (
-          <>
-            <Phone className="h-5 w-5" />
-            <span className="sr-only">Error</span>
-          </>
-        );
       default:
         return (
           <>
-            <Phone className="h-5 w-5" />
-            <span className="sr-only">Start call</span>
+            <ModernCallIcon isActive={false} size={iconSize} />
+            <span className="sr-only">{status === 'ended' ? 'Call ended' : status === 'error' ? 'Error' : 'Start call'}</span>
           </>
         );
     }
   };
 
-  const getButtonVariant = (): 'default' | 'destructive' | 'outline' | 'secondary' => {
-    switch (status) {
-      case 'connected':
-      case 'speaking':
-      case 'listening':
-        return 'destructive';
-      case 'error':
-        return 'outline';
-      default:
-        return 'default';
+  // Get glassmorphic button classes based on state
+  const getButtonClasses = () => {
+    const baseClasses = cn(
+      "rounded-full flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      size === 'sm' ? 'h-14 w-14' : size === 'lg' ? 'h-24 w-24' : 'h-20 w-20'
+    );
+
+    if (isCallActive) {
+      return cn(baseClasses, "modern-call-button modern-call-button--active");
     }
+
+    if (status === 'connecting') {
+      return cn(baseClasses, "modern-call-button modern-call-button--connecting");
+    }
+
+    return cn(baseClasses, "modern-call-button");
   };
 
   const isCallActive = ['connected', 'speaking', 'listening'].includes(status);
@@ -410,52 +425,83 @@ export const VapiCallButton = ({
   // RENDER
   // ============================================================================
 
+  // Map VapiCallStatus to VoiceCallState for visualization
+  const getVisualizationState = (): VoiceCallState => {
+    return status as VoiceCallState;
+  };
+
   return (
     <div className={`flex flex-col items-center gap-4 ${className}`}>
-      {/* Main Call Button with Activity Indicator */}
-      <VoiceActivityIndicator isRecording={isCallActive} volume={volume}>
-        <Button
-          variant={getButtonVariant()}
-          size={size}
-          onClick={isCallActive ? endCall : startCall}
-          disabled={status === 'connecting' || status === 'ended' || isEnding}
-          className={`
-            rounded-full transition-all duration-200
-            ${size === 'sm' ? 'h-12 w-12' : size === 'lg' ? 'h-20 w-20' : 'h-16 w-16'}
-            ${isCallActive ? 'bg-destructive hover:bg-destructive/90' : ''}
-          `}
-          aria-label={isCallActive ? 'End call with Nette' : 'Start call with Nette'}
-        >
-          {getButtonContent()}
-        </Button>
-      </VoiceActivityIndicator>
+      {/* Main Call Button with Voice Visualization */}
+      <VoiceVisualization
+        isActive={isCallActive}
+        state={getVisualizationState()}
+        volume={volume}
+        className={size === 'sm' ? 'w-28 h-28' : size === 'lg' ? 'w-40 h-40' : 'w-36 h-36'}
+      >
+        <div className="relative">
+          {/* Outer glow effect */}
+          <div className="modern-call-glow" />
 
-      {/* Status Text */}
-      <p className="text-sm text-muted-foreground text-center min-h-[20px]">
-        {formatCallStatus(status)}
-      </p>
+          {/* Main button */}
+          <button
+            onClick={isCallActive ? endCall : startCall}
+            disabled={status === 'connecting' || status === 'ended' || isEnding}
+            className={cn(
+              getButtonClasses(),
+              (status === 'connecting' || status === 'ended' || isEnding) && 'opacity-70 cursor-not-allowed'
+            )}
+            aria-label={isCallActive ? 'End call with Nette' : 'Start call with Nette'}
+          >
+            {getButtonContent()}
+          </button>
+        </div>
+      </VoiceVisualization>
+
+      {/* Animated Status Text */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={status}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.2 }}
+          className="text-sm text-muted-foreground text-center min-h-[20px]"
+        >
+          {formatCallStatus(status)}
+        </motion.p>
+      </AnimatePresence>
 
       {/* Mute Button (only during active call) */}
       {isCallActive && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleMute}
-          className="flex items-center gap-2"
-          aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
         >
-          {isMuted ? (
-            <>
-              <MicOff className="h-4 w-4" />
-              <span>Unmute</span>
-            </>
-          ) : (
-            <>
-              <Mic className="h-4 w-4" />
-              <span>Mute</span>
-            </>
-          )}
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleMute}
+            className={cn(
+              "flex items-center gap-2 glass rounded-full px-4",
+              isMuted && "border-destructive/30 text-destructive"
+            )}
+            aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+          >
+            {isMuted ? (
+              <>
+                <MicOff className="h-4 w-4" />
+                <span>Unmute</span>
+              </>
+            ) : (
+              <>
+                <Mic className="h-4 w-4" />
+                <span>Mute</span>
+              </>
+            )}
+          </Button>
+        </motion.div>
       )}
 
       {/* Live Transcript (optional, hidden by default) */}
