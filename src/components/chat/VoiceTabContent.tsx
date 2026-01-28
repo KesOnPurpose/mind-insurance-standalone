@@ -85,6 +85,7 @@ export function VoiceTabContent({
         'voice-tab-content',
         'flex flex-col gap-4 p-4',
         'max-w-2xl mx-auto w-full',
+        'overflow-x-hidden', // Prevent horizontal overflow from voice visualization effects on mobile
         className
       )}
     >
@@ -96,8 +97,8 @@ export function VoiceTabContent({
         </p>
       </div>
 
-      {/* Vapi Call Button */}
-      <div className="flex justify-center py-8">
+      {/* Vapi Call Button - px-8 provides space for the extended waveform visualization */}
+      <div className="flex justify-center items-center py-8 px-8 mx-auto">
         <VapiCallButton
           userId={userId}
           size="lg"

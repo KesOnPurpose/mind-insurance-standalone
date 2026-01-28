@@ -140,7 +140,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
         <div className="text-xs font-medium px-2 py-2 text-muted-foreground">
           Navigation
         </div>
-        <SidebarMenu>
+        <SidebarMenu data-tour-target="sidebar-navigation">
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
@@ -166,7 +166,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
+          <SidebarMenuItem data-tour-target="chat-nette">
             <SidebarMenuButton
               asChild
               tooltip="Chat with Nette"

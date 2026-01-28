@@ -173,7 +173,7 @@ CREATE POLICY "Admins can manage broadcasts" ON notification_broadcasts
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -184,7 +184,7 @@ CREATE POLICY "Coaches can manage own broadcasts" ON notification_broadcasts
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier = 'coach'
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -198,7 +198,7 @@ CREATE POLICY "Admins can manage deliveries" ON notification_broadcast_deliverie
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -209,7 +209,7 @@ CREATE POLICY "Admins can manage groups" ON user_notification_groups
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -219,7 +219,7 @@ CREATE POLICY "Coaches can view groups" ON user_notification_groups
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('coach', 'admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -230,7 +230,7 @@ CREATE POLICY "Admins can manage group members" ON user_notification_group_membe
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -240,7 +240,7 @@ CREATE POLICY "Coaches can view group members" ON user_notification_group_member
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('coach', 'admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -254,7 +254,7 @@ CREATE POLICY "Admins can view preferences" ON user_notification_preferences
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 
@@ -265,7 +265,7 @@ CREATE POLICY "Admins can view audit log" ON notification_broadcast_audit_log
       SELECT 1 FROM gh_approved_users
       WHERE user_id = auth.uid()
       AND tier IN ('admin', 'super_admin', 'owner')
-      AND is_approved = true
+      AND is_active = true
     )
   );
 

@@ -18,6 +18,14 @@ export interface VapiAssistant {
   provider: 'anthropic' | 'openai';
 }
 
+// Recency data for dynamic greetings
+export interface RecencyData {
+  minutes_ago: number;
+  type: 'voice' | 'chat' | 'none';
+  last_topic: string;
+  greeting_style: 'continuation' | 'same_day' | 'recent' | 'reference' | 'fresh';
+}
+
 export interface VapiContextResponse {
   success: boolean;
   user_context: string;
@@ -26,7 +34,10 @@ export interface VapiContextResponse {
     user_id: string;
     variant: 'claude' | 'gpt4';
     context_snapshot: Record<string, unknown>;
+    chat_context?: string;
   };
+  // Recency data for dynamic, context-aware greetings
+  recency?: RecencyData;
   error?: string;
 }
 
@@ -175,8 +186,8 @@ export async function fetchVapiCallConfig(
 }
 
 /**
- * Build call configuration from local context (fallback)
- * Use this when Edge Function is not available
+ * Build call configuration from local context with Edge Function recency data
+ * Fetches recency data from vapi-context-builder for dynamic greetings
  */
 export async function buildLocalCallConfig(
   userId: string,
@@ -189,91 +200,89 @@ export async function buildLocalCallConfig(
     const context = await buildVoiceContext(userId);
     const userContextString = buildContextString(context);
 
-    // NEW: Fetch unified conversation context for cross-channel memory (chat → voice)
-    // This enables voice calls to know about recent chat conversations with Nette
+    // NEW: Fetch recency data and chat context from vapi-context-builder Edge Function
+    // This enables dynamic, recency-aware greetings
     let chatContext = '';
+    let recencyData: RecencyData | undefined;
 
-    // Strategy: Try client-side first (RLS-compliant), then fallback to Edge Function
     try {
-      console.log('[vapiService] Attempting client-side context fetch for user:', userId);
+      console.log('[vapiService] Fetching recency data from vapi-context-builder...');
 
-      const { data: unifiedContext, error: unifiedError } = await supabase
-        .from('unified_conversation_context')
-        .select('context_for_voice')
-        .eq('user_id', userId)
-        .single();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hpyodaugrkctagkrfofj.supabase.co';
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!unifiedError && unifiedContext?.context_for_voice) {
-        chatContext = unifiedContext.context_for_voice;
-        console.log('[vapiService] ✅ Chat context loaded via client:', {
-          length: chatContext.length,
-          preview: chatContext.substring(0, 150),
-          hasContent: chatContext.length > 0
-        });
-      } else {
-        // Client-side fetch failed or returned empty - try Edge Function fallback
-        console.log('[vapiService] ⚠️ Client-side fetch failed, trying Edge Function fallback:', {
-          error: unifiedError?.message || null,
-          errorCode: unifiedError?.code || null,
-          userId,
-          dataReceived: !!unifiedContext
-        });
+      if (session?.access_token) {
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/vapi-context-builder`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              user_id: userId,
+              force_variant: forceVariant
+            })
+          }
+        );
 
-        // Fallback: Call Edge Function which uses service role (bypasses RLS)
-        try {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hpyodaugrkctagkrfofj.supabase.co';
-          const { data: { session } } = await supabase.auth.getSession();
-
-          console.log('[vapiService] Auth session state:', {
-            hasSession: !!session,
-            sessionUserId: session?.user?.id || null,
-            matchesRequestedUserId: session?.user?.id === userId
+        if (response.ok) {
+          const result = await response.json();
+          console.log('[vapiService] vapi-context-builder response:', {
+            success: result.success,
+            hasRecency: !!result.recency,
+            hasChatContext: !!result.conversation_context
           });
 
-          if (session?.access_token) {
-            const response = await fetch(
-              `${supabaseUrl}/functions/v1/vapi-update-assistant`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({
-                  action: 'get_voice_context',
-                  user_id: userId
-                })
-              }
-            );
-
-            if (response.ok) {
-              const result = await response.json();
-              if (result.success && result.context_for_voice) {
-                chatContext = result.context_for_voice;
-                console.log('[vapiService] ✅ Chat context loaded via Edge Function fallback:', {
-                  length: chatContext.length,
-                  preview: chatContext.substring(0, 150)
-                });
-              } else {
-                console.log('[vapiService] Edge Function returned no context:', result);
-              }
-            } else {
-              const errorText = await response.text().catch(() => 'Unknown error');
-              console.log('[vapiService] Edge Function fallback failed:', {
-                status: response.status,
-                error: errorText
-              });
-            }
-          } else {
-            console.log('[vapiService] No auth session available for Edge Function call');
+          // Extract recency data for dynamic greetings
+          if (result.recency) {
+            recencyData = {
+              minutes_ago: result.recency.minutes_ago,
+              type: result.recency.type,
+              last_topic: result.recency.last_topic,
+              greeting_style: result.recency.greeting_style
+            };
+            console.log('[vapiService] ✅ Recency data loaded:', recencyData);
           }
-        } catch (fallbackError) {
-          console.log('[vapiService] Edge Function fallback error:', fallbackError);
+
+          // Extract chat context for cross-channel memory
+          if (result.conversation_context) {
+            chatContext = result.conversation_context;
+            console.log('[vapiService] ✅ Chat context loaded:', {
+              length: chatContext.length,
+              preview: chatContext.substring(0, 150)
+            });
+          }
+        } else {
+          const errorText = await response.text().catch(() => 'Unknown error');
+          console.log('[vapiService] vapi-context-builder failed, falling back:', {
+            status: response.status,
+            error: errorText
+          });
+        }
+      } else {
+        console.log('[vapiService] No auth session, falling back to client-side fetch');
+      }
+
+      // Fallback: Try client-side unified_conversation_context if Edge Function failed
+      if (!chatContext) {
+        const { data: unifiedContext, error: unifiedError } = await supabase
+          .from('unified_conversation_context')
+          .select('context_for_voice')
+          .eq('user_id', userId)
+          .single();
+
+        if (!unifiedError && unifiedContext?.context_for_voice) {
+          chatContext = unifiedContext.context_for_voice;
+          console.log('[vapiService] ✅ Chat context loaded via client fallback:', {
+            length: chatContext.length
+          });
         }
       }
     } catch (contextError) {
-      // Non-critical - continue without chat context
-      console.log('[vapiService] Chat context fetch skipped:', contextError);
+      // Non-critical - continue without recency/chat context
+      console.log('[vapiService] Context fetch error (non-critical):', contextError);
     }
 
     // Select assistant variant (random 50/50 if not forced)
@@ -288,9 +297,10 @@ export async function buildLocalCallConfig(
         user_id: userId,
         variant,
         context_snapshot: context as unknown as Record<string, unknown>,
-        // NEW: Include chat context for injection into variableValues
         chat_context: chatContext
-      }
+      },
+      // Include recency data for dynamic greeting generation
+      recency: recencyData
     };
 
   } catch (err) {

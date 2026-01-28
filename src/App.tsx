@@ -82,6 +82,9 @@ import ComplianceBinderGeneratorPage from "./pages/admin/ComplianceBinderGenerat
 // Admin Notification Broadcasts
 import BroadcastsPage from "./pages/admin/BroadcastsPage";
 
+// FEAT-GH-TOUR: Tour Test Page
+import TourTestPage from "./pages/TourTestPage";
+
 // Other
 import NotFound from "./pages/NotFound";
 
@@ -275,6 +278,9 @@ const App = () => {
                       <Route path="/admin/compliance" element={<ProtectedRoute><AdminRoute><ComplianceBinderGeneratorPage /></AdminRoute></ProtectedRoute>} />
                       {/* Admin Notification Broadcasts */}
                       <Route path="/admin/broadcasts" element={<ProtectedRoute><AdminRoute><BroadcastsPage /></AdminRoute></ProtectedRoute>} />
+
+                      {/* FEAT-GH-TOUR: Tour Test Page (for development/testing) */}
+                      <Route path="/tour-test" element={<ProtectedRoute><TourTestPage /></ProtectedRoute>} />
 
                       {/* Legacy route redirects - for backwards compatibility */}
                       <Route path="/mind-insurance/*" element={<Navigate to="/dashboard" replace />} />

@@ -78,7 +78,7 @@ export function ComplianceStatusCard() {
   const status = getReadinessStatus(readinessPercent);
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden" data-tour-target="compliance-status">
       <CardContent className="pt-6 pb-6 text-center">
         {/* Icon + Title row */}
         <div className="flex items-center justify-center gap-2 mb-4">

@@ -104,7 +104,7 @@ export function ProgramProgressCard() {
     : Math.round(continueProgram.progress_percent);
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden" data-tour-target="program-progress">
       <CardContent className="pt-6 pb-6 text-center">
         {/* Icon + Title row */}
         <div className="flex items-center justify-center gap-2 mb-4">

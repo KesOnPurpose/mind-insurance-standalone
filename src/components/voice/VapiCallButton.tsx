@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Vapi from '@vapi-ai/web';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PhoneOff, Mic, MicOff } from 'lucide-react';
+import { PhoneOff, Mic, MicOff, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VoiceVisualization } from './VoiceVisualization';
 import { ModernCallIcon } from './ModernCallIcon';
@@ -25,6 +25,17 @@ import {
 } from '@/services/vapiService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+// ============================================================================
+// CALL TIMER CONSTANTS
+// ============================================================================
+const CALL_LIMIT_SECONDS = 600; // 10 minutes
+const WARNING_TIMES = [
+  { seconds: 120, message: '2 minutes remaining' },   // 8 min mark
+  { seconds: 60, message: '1 minute remaining' },     // 9 min mark
+  { seconds: 30, message: '30 seconds remaining' },   // 9:30 mark
+  { seconds: 10, message: '10 seconds remaining' }    // Final warning
+];
 
 // ============================================================================
 // TYPES
@@ -64,10 +75,13 @@ export const VapiCallButton = ({
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [currentSession, setCurrentSession] = useState<VapiCallSession | null>(null);
   const [isEnding, setIsEnding] = useState(false); // Visual state for button disable
+  const [callElapsedSeconds, setCallElapsedSeconds] = useState(0); // Timer for call duration
+  const [timeWarningShown, setTimeWarningShown] = useState<Set<number>>(new Set()); // Track shown warnings
 
   // Refs
   const vapiRef = useRef<Vapi | null>(null);
   const volumeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null); // Call duration timer
   const isEndingRef = useRef(false); // Prevent multiple end call attempts
   const currentSessionRef = useRef<VapiCallSession | null>(null); // Ref to avoid useEffect re-runs
   const callbacksRef = useRef({ onCallEnd, onError }); // Store callbacks in ref
@@ -149,6 +163,8 @@ export const VapiCallButton = ({
         transcriptRef.current = []; // Also clear the ref
         isEndingRef.current = false; // Reset for next call
         setIsEnding(false);
+        setCallElapsedSeconds(0); // Reset timer
+        setTimeWarningShown(new Set()); // Reset warnings
       }, 2000);
     });
 
@@ -184,13 +200,39 @@ export const VapiCallButton = ({
     vapi.on('error', (error: unknown) => {
       console.error('[VapiCallButton] Error:', error);
       setStatus('error');
-      const err = error instanceof Error ? error : new Error(String(error));
+
+      // Properly extract error message - handle various error formats
+      let errorMessage = 'An error occurred during the call';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        // Handle VAPI error objects which may have message or error properties
+        const errObj = error as Record<string, unknown>;
+        if (typeof errObj.message === 'string') {
+          errorMessage = errObj.message;
+        } else if (typeof errObj.error === 'string') {
+          errorMessage = errObj.error;
+        } else if (typeof errObj.errorMessage === 'string') {
+          errorMessage = errObj.errorMessage;
+        } else {
+          // Last resort - try to stringify but catch circular refs
+          try {
+            errorMessage = JSON.stringify(error);
+          } catch {
+            errorMessage = 'Call ended unexpectedly';
+          }
+        }
+      }
+
+      const err = error instanceof Error ? error : new Error(errorMessage);
       callbacksRef.current.onError?.(err);
 
       toast({
         variant: 'destructive',
         title: 'Call Error',
-        description: err.message || 'An error occurred during the call'
+        description: errorMessage
       });
 
       // Reset after delay
@@ -202,6 +244,8 @@ export const VapiCallButton = ({
         transcriptRef.current = []; // Also clear the ref
         isEndingRef.current = false; // Reset for next call
         setIsEnding(false);
+        setCallElapsedSeconds(0); // Reset timer
+        setTimeWarningShown(new Set()); // Reset warnings
       }, 3000);
     });
 
@@ -216,6 +260,51 @@ export const VapiCallButton = ({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]); // Only toast - callbacks accessed via ref to prevent re-runs
+
+  // ============================================================================
+  // CALL TIMER - Track elapsed time and show warnings
+  // ============================================================================
+
+  useEffect(() => {
+    const isCallActive = ['connected', 'speaking', 'listening'].includes(status);
+
+    if (isCallActive) {
+      // Start the timer
+      callTimerRef.current = setInterval(() => {
+        setCallElapsedSeconds(prev => {
+          const newElapsed = prev + 1;
+          const remaining = CALL_LIMIT_SECONDS - newElapsed;
+
+          // Check for time warnings
+          WARNING_TIMES.forEach(({ seconds, message }) => {
+            if (remaining === seconds && !timeWarningShown.has(seconds)) {
+              toast({
+                title: '⏱️ Time Warning',
+                description: message,
+                duration: 4000
+              });
+              setTimeWarningShown(prev => new Set([...prev, seconds]));
+            }
+          });
+
+          return newElapsed;
+        });
+      }, 1000);
+    } else {
+      // Clear timer when not in active call
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
+      }
+    };
+  }, [status, timeWarningShown, toast]);
 
   // ============================================================================
   // CALL HANDLERS
@@ -268,15 +357,29 @@ export const VapiCallButton = ({
         user_name: userName || (snapshot.first_name as string) || 'there',
 
         // Cross-channel memory: Recent chat conversations for unified context
-        recentChats: (config.metadata.chat_context as string) || ''
+        recentChats: (config.metadata.chat_context as string) || '',
+
+        // NEW: Recency-aware greeting variables for dynamic, personalized openings
+        // These enable Voice Nette to adapt her greeting based on interaction history
+        lastInteractionMinutesAgo: String(config.recency?.minutes_ago ?? -1),
+        lastInteractionType: config.recency?.type || 'none',
+        lastTopicDiscussed: config.recency?.last_topic || 'your group home journey',
+        greetingStyle: config.recency?.greeting_style || 'fresh'
       };
 
-      // DEBUG: Log chat context specifically
+      // DEBUG: Log recency and chat context for dynamic greeting
       const chatContextValue = (config.metadata.chat_context as string) || '';
-      console.log('[VapiCallButton] Chat context for cross-channel memory:', {
+      console.log('[VapiCallButton] Context for cross-channel memory and dynamic greeting:', {
         hasContext: !!chatContextValue,
         contextLength: chatContextValue.length,
         contextPreview: chatContextValue.substring(0, 200) || '(empty)',
+        // Recency data for dynamic greeting
+        recency: {
+          minutesAgo: config.recency?.minutes_ago ?? -1,
+          type: config.recency?.type || 'none',
+          lastTopic: config.recency?.last_topic || 'your group home journey',
+          greetingStyle: config.recency?.greeting_style || 'fresh'
+        },
         fullVariableValues: variableValues
       });
 
@@ -365,6 +468,27 @@ export const VapiCallButton = ({
   // ============================================================================
   // RENDER HELPERS
   // ============================================================================
+
+  // Format seconds as MM:SS for timer display
+  const formatTime = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Get remaining time in seconds
+  const getRemainingSeconds = (): number => {
+    return Math.max(0, CALL_LIMIT_SECONDS - callElapsedSeconds);
+  };
+
+  // Get timer color class based on remaining time
+  const getTimerColorClass = (): string => {
+    const remaining = getRemainingSeconds();
+    if (remaining <= 30) return 'text-destructive font-bold animate-pulse';
+    if (remaining <= 60) return 'text-destructive';
+    if (remaining <= 120) return 'text-yellow-500';
+    return 'text-muted-foreground';
+  };
 
   const getButtonContent = () => {
     const iconSize = size === 'sm' ? 20 : size === 'lg' ? 28 : 24;
@@ -471,6 +595,21 @@ export const VapiCallButton = ({
           {formatCallStatus(status)}
         </motion.p>
       </AnimatePresence>
+
+      {/* Call Timer Display (only during active call) */}
+      {isCallActive && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="flex items-center justify-center gap-2 glass rounded-full px-4 py-2"
+        >
+          <Clock className={cn("h-4 w-4", getTimerColorClass())} />
+          <span className={cn("text-sm font-mono", getTimerColorClass())}>
+            {formatTime(getRemainingSeconds())} remaining
+          </span>
+        </motion.div>
+      )}
 
       {/* Mute Button (only during active call) */}
       {isCallActive && (

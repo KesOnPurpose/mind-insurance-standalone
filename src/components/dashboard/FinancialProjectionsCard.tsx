@@ -120,7 +120,7 @@ export function FinancialProjectionsCard() {
   const breakEvenHealthy = output.breakEvenOccupancy <= 75;
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden" data-tour-target="financial-projections">
       <CardContent className="py-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           {/* Left: Icon + Label + Two Metrics */}

@@ -86,6 +86,20 @@ interface UserContext {
   context_text: string;
 }
 
+// ============================================================================
+// RECENCY TYPES - For dynamic, context-aware greetings
+// ============================================================================
+
+type GreetingStyle = 'continuation' | 'same_day' | 'recent' | 'reference' | 'fresh';
+type InteractionType = 'voice' | 'chat' | 'none';
+
+interface RecencyData {
+  minutes_ago: number;
+  type: InteractionType;
+  last_topic: string;
+  greeting_style: GreetingStyle;
+}
+
 interface CallConfig {
   success: boolean;
   assistant_id: string;
@@ -93,8 +107,17 @@ interface CallConfig {
   assistant_name: string;
   variable_values: {
     user_context: string;
+    recentChats: string;
+    // NEW: Recency-aware greeting variables
+    lastInteractionMinutesAgo: string;
+    lastInteractionType: string;
+    lastTopicDiscussed: string;
+    greetingStyle: string;
   };
   user_context: UserContext;
+  conversation_context: string;
+  // NEW: Recency data for frontend
+  recency: RecencyData;
   error?: string;
 }
 
@@ -159,8 +182,264 @@ function buildContextText(context: Partial<UserContext>): string {
 }
 
 // ============================================================================
+// RECENCY DETECTION - For dynamic, context-aware greetings
+// ============================================================================
+
+/**
+ * Calculate recency of last interaction and determine appropriate greeting style.
+ *
+ * Greeting Style Tiers:
+ * - continuation (< 30 min): "Picking right back up from our compliance discussion..."
+ * - same_day (30 min - 2 hours): "Good to hear from you again today!"
+ * - recent (2 - 24 hours): "Welcome back! Last time we talked about..."
+ * - reference (1 - 7 days): "A few days ago we discussed..."
+ * - fresh (> 7 days or first time): "Hi! Great to connect..."
+ */
+function calculateRecency(
+  chatHistory: Array<{ created_at: string }>,
+  voiceHistory: Array<{ created_at: string }>
+): {
+  minutesSinceLastInteraction: number;
+  lastInteractionType: InteractionType;
+  greetingStyle: GreetingStyle;
+} {
+  const now = new Date();
+
+  // Find most recent interaction from either channel
+  const lastChat = chatHistory[0]?.created_at ? new Date(chatHistory[0].created_at) : null;
+  const lastVoice = voiceHistory[0]?.created_at ? new Date(voiceHistory[0].created_at) : null;
+
+  let lastInteraction: Date | null = null;
+  let lastInteractionType: InteractionType = 'none';
+
+  if (lastChat && lastVoice) {
+    // Compare both - pick the more recent one
+    if (lastChat > lastVoice) {
+      lastInteraction = lastChat;
+      lastInteractionType = 'chat';
+    } else {
+      lastInteraction = lastVoice;
+      lastInteractionType = 'voice';
+    }
+  } else if (lastChat) {
+    lastInteraction = lastChat;
+    lastInteractionType = 'chat';
+  } else if (lastVoice) {
+    lastInteraction = lastVoice;
+    lastInteractionType = 'voice';
+  }
+
+  // No previous interactions - first time user
+  if (!lastInteraction) {
+    console.log('[vapi-context-builder] No previous interactions found - first time user');
+    return {
+      minutesSinceLastInteraction: -1,
+      lastInteractionType: 'none',
+      greetingStyle: 'fresh'
+    };
+  }
+
+  // Calculate minutes since last interaction
+  const minutesAgo = Math.floor((now.getTime() - lastInteraction.getTime()) / (1000 * 60));
+
+  // Determine greeting style based on recency tiers
+  let greetingStyle: GreetingStyle;
+  if (minutesAgo < 30) {
+    greetingStyle = 'continuation';  // < 30 min: Continue the conversation
+  } else if (minutesAgo < 120) {
+    greetingStyle = 'same_day';      // 30 min - 2 hours: Same-day follow-up
+  } else if (minutesAgo < 1440) {
+    greetingStyle = 'recent';        // 2 - 24 hours: Recent context
+  } else if (minutesAgo < 10080) {
+    greetingStyle = 'reference';     // 1 - 7 days: Reference prior
+  } else {
+    greetingStyle = 'fresh';         // > 7 days: Fresh start with context
+  }
+
+  console.log('[vapi-context-builder] Recency calculated:', {
+    minutesAgo,
+    lastInteractionType,
+    greetingStyle,
+    lastInteractionTime: lastInteraction.toISOString()
+  });
+
+  return {
+    minutesSinceLastInteraction: minutesAgo,
+    lastInteractionType,
+    greetingStyle
+  };
+}
+
+/**
+ * Extract the main topic from the most recent conversation.
+ * Priority: Voice topics > Voice summary > Chat keywords > Default
+ */
+function extractLastTopic(
+  voiceHistory: Array<{ summary: string | null; topics: string[] | null }>,
+  chatHistory: Array<{ user_message: string }>
+): string {
+  // Priority 1: Voice call topics array (most reliable)
+  if (voiceHistory[0]?.topics && voiceHistory[0].topics.length > 0) {
+    const topic = voiceHistory[0].topics[0];
+    console.log('[vapi-context-builder] Topic from voice topics array:', topic);
+    return topic;
+  }
+
+  // Priority 2: Extract from voice call summary
+  if (voiceHistory[0]?.summary) {
+    const summary = voiceHistory[0].summary;
+    // Look for common patterns in summaries
+    const topicPatterns = [
+      /about\s+(\w+(?:\s+\w+)?)/i,
+      /regarding\s+(\w+(?:\s+\w+)?)/i,
+      /discussed\s+(\w+(?:\s+\w+)?)/i,
+      /focused\s+on\s+(\w+(?:\s+\w+)?)/i,
+      /working\s+on\s+(\w+(?:\s+\w+)?)/i
+    ];
+
+    for (const pattern of topicPatterns) {
+      const match = summary.match(pattern);
+      if (match) {
+        console.log('[vapi-context-builder] Topic extracted from voice summary:', match[1]);
+        return match[1];
+      }
+    }
+  }
+
+  // Priority 3: Recent chat message keywords
+  if (chatHistory[0]?.user_message) {
+    const msg = chatHistory[0].user_message.toLowerCase();
+
+    // Group home industry topics (most likely for this app)
+    const industryTopics = [
+      { keyword: 'compliance', display: 'compliance requirements' },
+      { keyword: 'licensing', display: 'licensing' },
+      { keyword: 'staffing', display: 'staffing' },
+      { keyword: 'funding', display: 'funding options' },
+      { keyword: 'location', display: 'finding a location' },
+      { keyword: 'zoning', display: 'zoning requirements' },
+      { keyword: 'regulations', display: 'regulations' },
+      { keyword: 'seniors', display: 'serving seniors' },
+      { keyword: 'elderly', display: 'elderly care' },
+      { keyword: 'veterans', display: 'serving veterans' },
+      { keyword: 'disabled', display: 'disability services' },
+      { keyword: 'mental health', display: 'mental health services' },
+      { keyword: 'business plan', display: 'your business plan' },
+      { keyword: 'marketing', display: 'marketing strategies' },
+      { keyword: 'insurance', display: 'insurance requirements' },
+      { keyword: 'medicaid', display: 'Medicaid reimbursement' },
+      { keyword: 'training', display: 'staff training' }
+    ];
+
+    for (const { keyword, display } of industryTopics) {
+      if (msg.includes(keyword)) {
+        console.log('[vapi-context-builder] Topic from chat keyword:', display);
+        return display;
+      }
+    }
+  }
+
+  // Default fallback
+  console.log('[vapi-context-builder] Using default topic');
+  return 'your group home journey';
+}
+
+// ============================================================================
 // DATA FETCHING
 // ============================================================================
+
+// ============================================================================
+// NEW: Fetch recent chat conversations from agent_conversations
+// ============================================================================
+async function fetchChatHistory(supabase: ReturnType<typeof createClient>, userId: string) {
+  const { data, error } = await supabase
+    .from('agent_conversations')
+    .select('user_message, agent_response, agent_type, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error('[vapi-context-builder] Error fetching chat history:', error);
+    return [];
+  }
+
+  console.log(`[vapi-context-builder] Fetched ${data?.length || 0} chat messages`);
+  return data || [];
+}
+
+// ============================================================================
+// NEW: Fetch previous voice call summaries from vapi_call_logs
+// ============================================================================
+async function fetchVoiceHistory(supabase: ReturnType<typeof createClient>, userId: string) {
+  const { data, error } = await supabase
+    .from('vapi_call_logs')
+    .select('summary, topics, created_at, transcript')
+    .eq('user_id', userId)
+    .not('summary', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error('[vapi-context-builder] Error fetching voice history:', error);
+    return [];
+  }
+
+  console.log(`[vapi-context-builder] Fetched ${data?.length || 0} voice call summaries`);
+  return data || [];
+}
+
+// ============================================================================
+// NEW: Build unified conversation context for voice injection
+// ============================================================================
+function buildConversationContext(
+  chatHistory: Array<{ user_message: string; agent_response: string; agent_type: string; created_at: string }>,
+  voiceHistory: Array<{ summary: string | null; topics: string[] | null; created_at: string; transcript: string | null }>
+): string {
+  const sections: string[] = [];
+
+  // Voice call history (most important for voice continuity)
+  if (voiceHistory && voiceHistory.length > 0) {
+    sections.push('=== PREVIOUS VOICE CONVERSATIONS ===');
+    voiceHistory.forEach((call, index) => {
+      const callDate = new Date(call.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+      sections.push(`[Voice Call ${index + 1} - ${callDate}]`);
+      if (call.summary) {
+        sections.push(`Summary: ${call.summary}`);
+      }
+      if (call.topics && call.topics.length > 0) {
+        sections.push(`Topics: ${call.topics.join(', ')}`);
+      }
+      sections.push('---');
+    });
+  }
+
+  // Chat history (recent text conversations)
+  if (chatHistory && chatHistory.length > 0) {
+    sections.push('=== RECENT CHAT MESSAGES ===');
+    // Show most recent 5 chat messages for context
+    chatHistory.slice(0, 5).forEach((msg) => {
+      const msgDate = new Date(msg.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+      const agentLabel = msg.agent_type?.toUpperCase() || 'NETTE';
+      sections.push(`[${msgDate} - ${agentLabel}]`);
+      sections.push(`User: ${msg.user_message.substring(0, 150)}${msg.user_message.length > 150 ? '...' : ''}`);
+      sections.push(`Agent: ${msg.agent_response.substring(0, 200)}${msg.agent_response.length > 200 ? '...' : ''}`);
+      sections.push('---');
+    });
+  }
+
+  if (sections.length === 0) {
+    return 'No previous conversations found. This appears to be the first interaction.';
+  }
+
+  return sections.join('\n');
+}
 
 async function fetchUserProfile(supabase: ReturnType<typeof createClient>, userId: string) {
   const { data, error } = await supabase
@@ -227,15 +506,40 @@ async function fetchJourneyProgress(supabase: ReturnType<typeof createClient>, u
   };
 }
 
-async function buildUserContext(supabase: ReturnType<typeof createClient>, userId: string): Promise<UserContext> {
+interface BuildContextResult {
+  userContext: UserContext;
+  conversationContext: string;
+  recency: RecencyData;
+}
+
+async function buildUserContext(supabase: ReturnType<typeof createClient>, userId: string): Promise<BuildContextResult> {
   console.log('[vapi-context-builder] Building context for user:', userId);
 
-  // Fetch all data in parallel
-  const [profile, assessment, progress] = await Promise.all([
+  // Fetch all data in parallel - NOW INCLUDING CHAT AND VOICE HISTORY
+  const [profile, assessment, progress, chatHistory, voiceHistory] = await Promise.all([
     fetchUserProfile(supabase, userId),
     fetchAssessmentData(supabase, userId),
-    fetchJourneyProgress(supabase, userId)
+    fetchJourneyProgress(supabase, userId),
+    fetchChatHistory(supabase, userId),    // NEW: Get recent chat messages
+    fetchVoiceHistory(supabase, userId)    // NEW: Get previous voice call summaries
   ]);
+
+  // Build conversation context for voice injection
+  const conversationContext = buildConversationContext(chatHistory, voiceHistory);
+  console.log('[vapi-context-builder] Built conversation context, length:', conversationContext.length);
+
+  // NEW: Calculate recency for dynamic greetings
+  const recencyCalc = calculateRecency(chatHistory, voiceHistory);
+  const lastTopic = extractLastTopic(voiceHistory, chatHistory);
+
+  const recency: RecencyData = {
+    minutes_ago: recencyCalc.minutesSinceLastInteraction,
+    type: recencyCalc.lastInteractionType,
+    last_topic: lastTopic,
+    greeting_style: recencyCalc.greetingStyle
+  };
+
+  console.log('[vapi-context-builder] Recency data:', recency);
 
   // Extract first name
   const firstName = profile?.full_name?.split(' ')[0] || 'User';
@@ -286,10 +590,18 @@ async function buildUserContext(supabase: ReturnType<typeof createClient>, userI
     first_name: context.first_name,
     journey_day: context.journey_day,
     tier_level: context.tier_level,
-    completion_rate: context.completion_rate
+    completion_rate: context.completion_rate,
+    chat_messages: chatHistory.length,
+    voice_calls: voiceHistory.length,
+    greeting_style: recency.greeting_style,
+    last_topic: recency.last_topic
   });
 
-  return context;
+  return {
+    userContext: context,
+    conversationContext,
+    recency
+  };
 }
 
 // ============================================================================
@@ -336,8 +648,8 @@ serve(async (req) => {
 
     console.log('[vapi-context-builder] Processing request for user:', user_id);
 
-    // Build user context
-    const userContext = await buildUserContext(supabase, user_id);
+    // Build user context, conversation history, AND recency data
+    const { userContext, conversationContext, recency } = await buildUserContext(supabase, user_id);
 
     // Select assistant variant (A/B test)
     const variant = selectAssistantVariant(force_variant);
@@ -349,7 +661,7 @@ serve(async (req) => {
       model: assistant.model
     });
 
-    // Build call configuration
+    // Build call configuration with user_context, recentChats, AND recency variables
     const callConfig: CallConfig = {
       success: true,
       assistant_id: assistant.id,
@@ -357,9 +669,20 @@ serve(async (req) => {
       assistant_name: assistant.name,
       variable_values: {
         // This will replace {{user_context}} in the system prompt
-        user_context: userContext.context_text
+        user_context: userContext.context_text,
+        // This will replace {{recentChats}} in the system prompt
+        // Enables Voice Nette to remember ALL previous conversations
+        recentChats: conversationContext,
+        // NEW: Recency-aware greeting variables for dynamic openings
+        // These enable context-aware greetings based on time since last interaction
+        lastInteractionMinutesAgo: String(recency.minutes_ago),
+        lastInteractionType: recency.type,
+        lastTopicDiscussed: recency.last_topic,
+        greetingStyle: recency.greeting_style
       },
-      user_context: userContext
+      user_context: userContext,
+      conversation_context: conversationContext,  // Raw context for debugging
+      recency  // Structured recency data for frontend
     };
 
     // Log for debugging
@@ -367,7 +690,15 @@ serve(async (req) => {
       success: true,
       assistant_variant: variant,
       first_name: userContext.first_name,
-      journey_day: userContext.journey_day
+      journey_day: userContext.journey_day,
+      conversation_context_length: conversationContext.length,
+      has_recent_chats: conversationContext.includes('RECENT CHAT'),
+      has_voice_history: conversationContext.includes('VOICE CONVERSATIONS'),
+      // NEW: Recency information for dynamic greetings
+      greeting_style: recency.greeting_style,
+      minutes_since_last: recency.minutes_ago,
+      last_interaction_type: recency.type,
+      last_topic: recency.last_topic
     });
 
     return new Response(

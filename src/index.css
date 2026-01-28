@@ -917,3 +917,242 @@ body:has([data-active-tab="chat"]) [id*="ghl-chat"] {
     animation: none;
   }
 }
+
+/* ============================================
+   FEAT-GH-TOUR: Nette Onboarding Tour Animations
+   Premium glass-morphism tour experience with
+   Nette avatar speaking animations
+   ============================================ */
+
+/* Subtle bounce animation for Nette avatar when speaking */
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Sound wave animation for Nette speaking indicator */
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.8);
+  }
+}
+
+/* Tour spotlight pulse animation */
+@keyframes spotlight-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px hsl(var(--primary) / 0.2),
+      0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px hsl(var(--primary) / 0.3),
+      0 0 30px hsl(var(--primary) / 0.4);
+  }
+}
+
+/* Tour tooltip entrance animation */
+@keyframes tour-tooltip-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tour confetti/celebration animation */
+@keyframes tour-celebrate {
+  0% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.1);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  40%, 100% {
+    transform: scale(1);
+  }
+}
+
+/* Roadmap milestone animation */
+@keyframes milestone-complete {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Progress bar fill animation */
+@keyframes progress-fill {
+  from {
+    width: 0%;
+  }
+}
+
+/* Utility classes for tour animations */
+.animate-subtle-bounce {
+  animation: subtle-bounce 1s ease-in-out infinite;
+}
+
+.animate-wave {
+  animation: wave 0.5s ease-in-out infinite;
+}
+
+.animate-spotlight-pulse {
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+.animate-tour-tooltip-enter {
+  animation: tour-tooltip-enter 0.3s ease-out forwards;
+}
+
+.animate-tour-celebrate {
+  animation: tour-celebrate 0.8s ease-out forwards;
+}
+
+.animate-milestone-complete {
+  animation: milestone-complete 0.4s ease-out forwards;
+}
+
+.animate-progress-fill {
+  animation: progress-fill 0.8s ease-out forwards;
+}
+
+/* Tour overlay transition */
+.tour-overlay-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tour glass card effect */
+.tour-glass-card {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--background) / 0.95) 0%,
+    hsl(var(--background) / 0.9) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow:
+    0 8px 32px hsl(var(--primary) / 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.dark .tour-glass-card {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--background) / 0.95) 0%,
+    hsl(var(--background) / 0.85) 100%
+  );
+  border: 1px solid hsl(var(--border) / 0.3);
+}
+
+/* Nette avatar glow effect */
+.nette-avatar-glow {
+  position: relative;
+}
+
+.nette-avatar-glow::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at center,
+    hsl(var(--primary) / 0.4) 0%,
+    hsl(var(--primary) / 0.1) 60%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.nette-avatar-glow.is-speaking::before {
+  opacity: 1;
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+/* Tour progress indicator */
+.tour-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: hsl(var(--muted));
+  transition: all 0.3s ease;
+}
+
+.tour-progress-dot.active {
+  background: hsl(var(--primary));
+  transform: scale(1.25);
+}
+
+.tour-progress-dot.completed {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Income roadmap card gradient */
+.roadmap-card-gradient {
+  background: linear-gradient(
+    145deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--primary) / 0.05) 100%
+  );
+}
+
+/* Milestone timeline connector */
+.milestone-connector {
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary)) 0%,
+    hsl(var(--border)) 100%
+  );
+}
+
+/* Accessibility: Respect reduced motion preference for tour */
+@media (prefers-reduced-motion: reduce) {
+  .animate-subtle-bounce,
+  .animate-wave,
+  .animate-spotlight-pulse,
+  .animate-tour-tooltip-enter,
+  .animate-tour-celebrate,
+  .animate-milestone-complete,
+  .animate-progress-fill {
+    animation: none;
+  }
+
+  .tour-overlay-transition {
+    transition: none;
+  }
+
+  .nette-avatar-glow.is-speaking::before {
+    animation: none;
+  }
+}

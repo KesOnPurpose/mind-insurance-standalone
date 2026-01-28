@@ -258,3 +258,158 @@ export interface CompletionGateResult {
   blockedBy: CompletionGateType[];
   message?: string; // User-friendly explanation
 }
+
+// ============================================
+// FEAT-GH-TOUR: Nette Onboarding Tour Types
+// Guided onboarding with income replacement roadmap
+// ============================================
+
+/**
+ * Position for tour tooltip relative to target element
+ */
+export type TourTooltipPosition = 'top' | 'bottom' | 'left' | 'right' | 'center';
+
+/**
+ * A single step in the guided tour
+ */
+export interface TourStep {
+  id: string;
+  targetSelector: string; // data-tour-target attribute value
+  title: string;
+  content: string;
+  position: TourTooltipPosition;
+  audioScript?: string; // Text for ElevenLabs TTS
+  audioUrl?: string; // Pre-generated or cached audio URL
+  showAvatar?: boolean;
+  avatarPosition?: 'left' | 'right';
+  highlightPadding?: number;
+  allowSkip?: boolean;
+  onEnter?: () => void;
+  onExit?: () => void;
+}
+
+/**
+ * Configuration for the tour system
+ */
+export interface TourConfig {
+  id: string;
+  name: string;
+  steps: TourStep[];
+  showProgressIndicator?: boolean;
+  allowSkipTour?: boolean;
+  persistProgress?: boolean;
+  onComplete?: () => void;
+  onSkip?: () => void;
+}
+
+/**
+ * User consent response for Nette's proactive message
+ */
+export type ProactiveMessageConsent =
+  | 'yes_show_roadmap'
+  | 'maybe_later'
+  | 'no_thanks';
+
+/**
+ * Tour-related fields stored in user_onboarding table
+ */
+export interface UserOnboardingTourData {
+  income_replacement_target?: number;
+  properties_needed?: number;
+  income_roadmap_shown?: boolean;
+  gh_tour_completed?: boolean;
+  gh_tour_completed_at?: string;
+  nette_proactive_message_shown?: boolean;
+  nette_proactive_message_consent?: ProactiveMessageConsent;
+}
+
+/**
+ * Income replacement roadmap calculation result
+ */
+export interface IncomeReplacementRoadmap {
+  targetMonthlyIncome: number;
+  currentIncomeGap: number;
+  propertiesNeeded: number;
+  revenuePerProperty: number;
+  netProfitPerProperty: number;
+  timelineMonths: number;
+  stateCode: string;
+  ownershipModel: string;
+  readinessLevel: string;
+  milestones: IncomeReplacementMilestone[];
+}
+
+/**
+ * Milestone in the income replacement journey
+ */
+export interface IncomeReplacementMilestone {
+  propertyNumber: number;
+  cumulativeMonthlyIncome: number;
+  percentageOfGoal: number;
+  estimatedMonthsToReach: number;
+  celebrationMessage: string;
+}
+
+/**
+ * State-specific revenue matrix data
+ */
+export interface StateRevenueData {
+  stateCode: string;
+  stateName: string;
+  avgMonthlyRevenuePerBed: number;
+  avgMonthlyExpensesPerBed: number;
+  licensingTimelineMonths: number;
+  difficultyLevel: 'easy' | 'moderate' | 'difficult';
+}
+
+/**
+ * Proactive message from Nette after tour completion
+ */
+export interface NetteProactiveMessage {
+  id: string;
+  type: 'tour_completion' | 'income_roadmap' | 'milestone_celebration';
+  title: string;
+  message: string;
+  avatarUrl?: string;
+  audioScript?: string;
+  actions: NetteProactiveAction[];
+  timestamp: string;
+}
+
+/**
+ * Action button for Nette's proactive message
+ */
+export interface NetteProactiveAction {
+  id: string;
+  label: string;
+  variant: 'primary' | 'secondary' | 'ghost';
+  consentValue?: ProactiveMessageConsent;
+  navigateTo?: string;
+  onClick?: () => void;
+}
+
+/**
+ * Tour state managed by the tour provider
+ */
+export interface TourState {
+  isActive: boolean;
+  currentStepIndex: number;
+  completedSteps: string[];
+  tourConfig: TourConfig | null;
+  isAudioPlaying: boolean;
+  audioProgress: number;
+}
+
+/**
+ * Tour context actions
+ */
+export interface TourActions {
+  startTour: (config: TourConfig) => void;
+  nextStep: () => void;
+  previousStep: () => void;
+  skipTour: () => void;
+  completeTour: () => void;
+  goToStep: (stepIndex: number) => void;
+  pauseAudio: () => void;
+  resumeAudio: () => void;
+}

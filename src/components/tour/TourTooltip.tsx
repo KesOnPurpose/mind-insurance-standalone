@@ -1,163 +1,293 @@
 /**
- * TourTooltip Component
- * Hub Tour System
+ * FEAT-GH-TOUR: Tour Tooltip Component
  *
- * Premium glass-morphism tooltip component for the guided tour.
- * Luxury aesthetic with gold accents matching Mind Insurance design language.
+ * Glass-morphism tooltip that appears next to highlighted
+ * elements during the tour. Features Nette avatar, progress
+ * indicator, and navigation controls.
  *
- * Features:
- * - Smooth animations with Framer Motion
- * - Step progress indicator with gold gradient
- * - Floating particles animation
- * - Responsive positioning
- * - Skip/Next/Finish controls
+ * SMART POSITIONING: Implements collision detection to prevent
+ * tooltips from obscuring highlighted elements.
  */
 
-import React, { useEffect, useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Sparkles } from 'lucide-react';
-import type { TourStep, TourPosition } from '@/hooks/useHubTour';
-
-// ============================================================================
-// TYPES
-// ============================================================================
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, ChevronRight, X, Volume2, VolumeX } from 'lucide-react';
+import { NetteAvatar } from './NetteAvatar';
+import type { TourStep, TourTooltipPosition } from '@/types/assessment';
 
 interface TourTooltipProps {
   step: TourStep;
-  currentStep: number;
+  stepIndex: number;
   totalSteps: number;
+  isAudioPlaying: boolean;
   onNext: () => void;
+  onPrevious: () => void;
   onSkip: () => void;
-  onComplete: () => void;
+  onToggleAudio: () => void;
+  showSkip?: boolean;
 }
 
-interface TooltipPosition {
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-  arrowPosition: 'top' | 'bottom' | 'left' | 'right';
+interface Position {
+  top: number;
+  left: number;
+  transformOrigin: string;
 }
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
+interface TooltipSize {
+  width: number;
+  height: number;
+}
 
-function calculateTooltipPosition(
-  targetRect: DOMRect | null,
-  position: TourPosition,
-  tooltipWidth: number = 340,
-  tooltipHeight: number = 220
-): TooltipPosition | null {
-  if (!targetRect) return null;
+interface Rect {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
 
-  const OFFSET = 16; // Gap between target and tooltip
-  const VIEWPORT_PADDING = 16;
+// Minimum gap between tooltip and highlighted element
+const GAP = 16;
+const TOOLTIP_WIDTH = 360;
+const VIEWPORT_MARGIN = 16;
+// Default tooltip height estimate for initial render
+const DEFAULT_TOOLTIP_HEIGHT = 220;
 
-  let result: TooltipPosition;
+/**
+ * Position fallback priorities - try each position until one works
+ */
+const POSITION_FALLBACKS: Record<TourTooltipPosition, TourTooltipPosition[]> = {
+  top: ['top', 'bottom', 'left', 'right'],
+  bottom: ['bottom', 'top', 'left', 'right'],
+  left: ['left', 'right', 'top', 'bottom'],
+  right: ['right', 'left', 'top', 'bottom'],
+  center: ['center'],
+};
 
-  switch (position) {
+/**
+ * Check if two rectangles overlap
+ */
+function checkOverlap(rect1: Rect, rect2: Rect): boolean {
+  return !(
+    rect1.right < rect2.left ||
+    rect1.left > rect2.right ||
+    rect1.bottom < rect2.top ||
+    rect1.top > rect2.bottom
+  );
+}
+
+/**
+ * Check if a rectangle fits within the viewport
+ */
+function fitsInViewport(rect: Rect): boolean {
+  return (
+    rect.top >= VIEWPORT_MARGIN &&
+    rect.left >= VIEWPORT_MARGIN &&
+    rect.right <= window.innerWidth - VIEWPORT_MARGIN &&
+    rect.bottom <= window.innerHeight - VIEWPORT_MARGIN
+  );
+}
+
+/**
+ * Calculate position for a specific placement relative to target
+ */
+function calculatePositionForPlacement(
+  placement: TourTooltipPosition,
+  targetRect: Rect,
+  tooltipSize: TooltipSize,
+  padding: number
+): Position {
+  const targetWithPadding = {
+    top: targetRect.top - padding,
+    left: targetRect.left - padding,
+    right: targetRect.right + padding,
+    bottom: targetRect.bottom + padding,
+    width: targetRect.width + padding * 2,
+    height: targetRect.height + padding * 2,
+  };
+
+  switch (placement) {
     case 'top':
-      result = {
-        bottom: window.innerHeight - targetRect.top + OFFSET,
-        left: Math.max(
-          VIEWPORT_PADDING,
-          Math.min(
-            targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - VIEWPORT_PADDING
-          )
-        ),
-        arrowPosition: 'bottom',
+      return {
+        top: targetWithPadding.top - tooltipSize.height - GAP,
+        left: targetWithPadding.left + targetWithPadding.width / 2 - tooltipSize.width / 2,
+        transformOrigin: 'bottom center',
       };
-      break;
-
     case 'bottom':
-      result = {
-        top: targetRect.bottom + OFFSET,
-        left: Math.max(
-          VIEWPORT_PADDING,
-          Math.min(
-            targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - VIEWPORT_PADDING
-          )
-        ),
-        arrowPosition: 'top',
+      return {
+        top: targetWithPadding.bottom + GAP,
+        left: targetWithPadding.left + targetWithPadding.width / 2 - tooltipSize.width / 2,
+        transformOrigin: 'top center',
       };
-      break;
-
     case 'left':
-      result = {
-        top: Math.max(
-          VIEWPORT_PADDING,
-          targetRect.top + targetRect.height / 2 - tooltipHeight / 2
-        ),
-        right: window.innerWidth - targetRect.left + OFFSET,
-        arrowPosition: 'right',
+      return {
+        top: targetWithPadding.top + targetWithPadding.height / 2 - tooltipSize.height / 2,
+        left: targetWithPadding.left - tooltipSize.width - GAP,
+        transformOrigin: 'right center',
       };
-      break;
-
     case 'right':
-      result = {
-        top: Math.max(
-          VIEWPORT_PADDING,
-          targetRect.top + targetRect.height / 2 - tooltipHeight / 2
-        ),
-        left: targetRect.right + OFFSET,
-        arrowPosition: 'left',
+      return {
+        top: targetWithPadding.top + targetWithPadding.height / 2 - tooltipSize.height / 2,
+        left: targetWithPadding.right + GAP,
+        transformOrigin: 'left center',
       };
-      break;
-
+    case 'center':
     default:
-      result = {
-        top: targetRect.bottom + OFFSET,
-        left: targetRect.left,
-        arrowPosition: 'top',
+      return {
+        top: window.innerHeight / 2,
+        left: window.innerWidth / 2,
+        transformOrigin: 'center center',
       };
   }
-
-  return result;
 }
 
-// ============================================================================
-// COMPONENT
-// ============================================================================
+/**
+ * Get the best position that doesn't overlap the target and fits in viewport
+ */
+function findBestPosition(
+  preferredPosition: TourTooltipPosition,
+  targetRect: Rect | null,
+  tooltipSize: TooltipSize,
+  padding: number
+): Position {
+  // Handle center position (no target needed)
+  if (preferredPosition === 'center' || !targetRect) {
+    return {
+      top: window.innerHeight / 2,
+      left: window.innerWidth / 2,
+      transformOrigin: 'center center',
+    };
+  }
 
-export function TourTooltip({
-  step,
-  currentStep,
-  totalSteps,
-  onNext,
-  onSkip,
-  onComplete,
-}: TourTooltipProps) {
-  const [position, setPosition] = useState<TooltipPosition | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const fallbacks = POSITION_FALLBACKS[preferredPosition] || POSITION_FALLBACKS.bottom;
+  const targetWithPadding = {
+    top: targetRect.top - padding,
+    left: targetRect.left - padding,
+    right: targetRect.right + padding,
+    bottom: targetRect.bottom + padding,
+    width: targetRect.width + padding * 2,
+    height: targetRect.height + padding * 2,
+  };
 
-  const isLastStep = currentStep === totalSteps - 1;
+  // Try each position in the fallback chain
+  for (const placement of fallbacks) {
+    const pos = calculatePositionForPlacement(placement, targetRect, tooltipSize, padding);
 
-  // Calculate position based on target element
-  useEffect(() => {
-    const targetElement = document.querySelector(step.targetSelector);
-    if (!targetElement) {
-      console.warn('[TourTooltip] Target element not found:', step.targetSelector);
-      return;
-    }
-
-    const updatePosition = () => {
-      const rect = targetElement.getBoundingClientRect();
-      const tooltipWidth = tooltipRef.current?.offsetWidth || 340;
-      const tooltipHeight = tooltipRef.current?.offsetHeight || 220;
-      const newPosition = calculateTooltipPosition(rect, step.position, tooltipWidth, tooltipHeight);
-      setPosition(newPosition);
+    const tooltipRect: Rect = {
+      top: pos.top,
+      left: pos.left,
+      right: pos.left + tooltipSize.width,
+      bottom: pos.top + tooltipSize.height,
+      width: tooltipSize.width,
+      height: tooltipSize.height,
     };
 
-    // Initial position
+    // Check if this position works (fits in viewport and doesn't overlap target)
+    if (fitsInViewport(tooltipRect) && !checkOverlap(tooltipRect, targetWithPadding)) {
+      return pos;
+    }
+  }
+
+  // Final fallback: constrain to viewport and accept overlap
+  const lastResortPos = calculatePositionForPlacement(preferredPosition, targetRect, tooltipSize, padding);
+  return constrainToViewport(lastResortPos, tooltipSize);
+}
+
+/**
+ * Ensure tooltip stays within viewport bounds
+ */
+function constrainToViewport(position: Position, tooltipSize: TooltipSize): Position {
+  const maxTop = window.innerHeight - tooltipSize.height - VIEWPORT_MARGIN;
+  const maxLeft = window.innerWidth - tooltipSize.width - VIEWPORT_MARGIN;
+
+  return {
+    ...position,
+    top: Math.max(VIEWPORT_MARGIN, Math.min(position.top, maxTop)),
+    left: Math.max(VIEWPORT_MARGIN, Math.min(position.left, maxLeft)),
+  };
+}
+
+/**
+ * TourTooltip - Glass-morphism tooltip for tour steps
+ *
+ * Uses smart positioning to avoid obscuring highlighted elements:
+ * 1. Measures actual tooltip dimensions
+ * 2. Tries preferred position first
+ * 3. Falls back through alternatives if overlap detected
+ * 4. Ensures tooltip stays within viewport
+ */
+export function TourTooltip({
+  step,
+  stepIndex,
+  totalSteps,
+  isAudioPlaying,
+  onNext,
+  onPrevious,
+  onSkip,
+  onToggleAudio,
+  showSkip = true,
+}: TourTooltipProps) {
+  const [position, setPosition] = useState<Position | null>(null);
+  const [tooltipSize, setTooltipSize] = useState<TooltipSize>({
+    width: TOOLTIP_WIDTH,
+    height: DEFAULT_TOOLTIP_HEIGHT,
+  });
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const isFirstStep = stepIndex === 0;
+  const isLastStep = stepIndex === totalSteps - 1;
+  const isCentered = step.position === 'center';
+  const progressPercent = ((stepIndex + 1) / totalSteps) * 100;
+
+  // Measure actual tooltip dimensions after render
+  useLayoutEffect(() => {
+    if (tooltipRef.current) {
+      const rect = tooltipRef.current.getBoundingClientRect();
+      setTooltipSize({
+        width: rect.width || TOOLTIP_WIDTH,
+        height: rect.height || DEFAULT_TOOLTIP_HEIGHT,
+      });
+    }
+  }, [step, stepIndex]);
+
+  // Get target element rect
+  const getTargetRect = useCallback((): Rect | null => {
+    if (step.position === 'center') return null;
+
+    const element = document.querySelector(`[data-tour-target="${step.targetSelector}"]`);
+    if (!element) return null;
+
+    const rect = element.getBoundingClientRect();
+    return {
+      top: rect.top,
+      left: rect.left,
+      right: rect.right,
+      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
+    };
+  }, [step.targetSelector, step.position]);
+
+  // Calculate and update position using smart positioning
+  const updatePosition = useCallback(() => {
+    const targetRect = getTargetRect();
+    const padding = step.highlightPadding || 8;
+
+    const newPosition = findBestPosition(
+      step.position,
+      targetRect,
+      tooltipSize,
+      padding
+    );
+
+    setPosition(newPosition);
+  }, [step.position, step.highlightPadding, tooltipSize, getTargetRect]);
+
+  useEffect(() => {
     updatePosition();
 
-    // Update on resize/scroll
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
 
@@ -165,198 +295,131 @@ export function TourTooltip({
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [step]);
-
-  // Handle action button click
-  const handleAction = () => {
-    if (isLastStep) {
-      onComplete();
-    } else {
-      onNext();
-    }
-  };
+  }, [updatePosition]);
 
   if (!position) return null;
 
-  // Build position style
-  // z-index 70 to be above sidebar sheet (z-50) and tour highlight (z-60)
-  // pointer-events: auto ensures clicks are captured
-  const positionStyle: React.CSSProperties = {
-    position: 'fixed',
-    zIndex: 70,
-    pointerEvents: 'auto',
-    ...(position.top !== undefined && { top: position.top }),
-    ...(position.bottom !== undefined && { bottom: position.bottom }),
-    ...(position.left !== undefined && { left: position.left }),
-    ...(position.right !== undefined && { right: position.right }),
-  };
-
   return (
-    <motion.div
+    <div
       ref={tooltipRef}
-      style={positionStyle}
       className={cn(
-        'w-[340px] sm:w-[380px] p-0 rounded-2xl overflow-hidden',
-        // SOLID background for strong contrast (not glass-morphism)
-        'bg-gradient-to-br from-mi-navy via-mi-navy-light to-mi-navy',
-        // STRONGER border for visibility
-        'border-2 border-mi-cyan/60',
-        // STRONGER shadow for depth
-        'shadow-[0_8px_40px_rgba(5,195,221,0.4),0_0_100px_rgba(5,195,221,0.2)]'
+        'fixed z-[10000]',
+        'w-[360px] max-w-[calc(100vw-32px)]',
+        // Glass-morphism effect
+        'bg-background/95 backdrop-blur-xl',
+        'border border-border/50',
+        'rounded-2xl shadow-2xl',
+        // Animation
+        'animate-in fade-in-0 zoom-in-95 duration-300',
+        isCentered && '-translate-x-1/2 -translate-y-1/2'
       )}
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      style={{
+        top: position.top,
+        left: position.left,
+        transformOrigin: position.transformOrigin,
+      }}
+      role="dialog"
+      aria-labelledby="tour-tooltip-title"
+      aria-describedby="tour-tooltip-content"
     >
-      {/* Animated gradient border glow - STRONGER */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-[-2px] bg-gradient-to-br from-mi-cyan/50 via-transparent to-mi-gold/50 opacity-70" />
-      </div>
+      {/* Glow border effect */}
+      <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-primary/30 via-transparent to-primary/30 blur-xl opacity-50" />
 
-      {/* Background gradient mesh - STRONGER */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-gradient-to-br from-mi-cyan/30 to-transparent opacity-60 blur-2xl" />
-        <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-mi-gold/20 blur-xl" />
-      </div>
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
-            className={cn(
-              "absolute rounded-full",
-              i % 2 === 0 ? "w-1 h-1 bg-mi-cyan/50" : "w-0.5 h-0.5 bg-mi-gold/60"
-            )}
-            initial={{
-              x: Math.random() * 300,
-              y: Math.random() * 100 + 20,
-              opacity: 0,
-              scale: 0,
-            }}
-            animate={{
-              y: [null, -20, 0],
-              opacity: [0, 0.8, 0],
-              scale: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3,
-              delay: i * 0.3,
-              repeat: Infinity,
-              repeatType: 'loop',
-            }}
+      {/* Header with avatar and controls */}
+      <div className="flex items-start gap-3 p-4 pb-2">
+        {step.showAvatar && (
+          <NetteAvatar
+            size="md"
+            isPlaying={isAudioPlaying}
+            showSoundIndicator
+            onToggleSound={onToggleAudio}
           />
-        ))}
-      </div>
+        )}
 
-      {/* Arrow indicator */}
-      <TooltipArrow position={position.arrowPosition} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <h3
+              id="tour-tooltip-title"
+              className="font-semibold text-foreground truncate"
+            >
+              {step.title}
+            </h3>
 
-      {/* Content */}
-      <div className="relative p-5">
-        {/* Top gradient accent line */}
-        <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-mi-cyan/70 to-transparent" />
+            {showSkip && (
+              <button
+                onClick={onSkip}
+                className="p-1 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                aria-label="Skip tour"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-        {/* TOUR Badge + Step indicator */}
-        <div className="flex items-center gap-3 mb-4">
-          <Badge className="bg-mi-cyan text-mi-navy font-bold px-2.5 py-0.5 text-xs uppercase tracking-wide shadow-lg shadow-mi-cyan/30">
-            Tour
-          </Badge>
-          <span className="text-mi-cyan text-sm font-medium">
-            Step {currentStep + 1} of {totalSteps}
+          {/* Step indicator */}
+          <span className="text-xs text-muted-foreground">
+            Step {stepIndex + 1} of {totalSteps}
           </span>
         </div>
+      </div>
 
-        {/* Step progress dots */}
-        <div className="flex gap-1.5 mb-4">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              className={cn(
-                'h-2 rounded-full transition-all duration-300',
-                i === currentStep
-                  ? 'w-10 bg-gradient-to-r from-mi-cyan to-mi-gold shadow-md shadow-mi-cyan/50'
-                  : i < currentStep
-                  ? 'w-3 bg-mi-cyan/70'
-                  : 'w-3 bg-white/30'
-              )}
-            />
-          ))}
-        </div>
+      {/* Content */}
+      <div className="px-4 pb-3">
+        <p
+          id="tour-tooltip-content"
+          className="text-sm text-muted-foreground leading-relaxed"
+        >
+          {step.content}
+        </p>
+      </div>
 
-        {/* Title with sparkles icon */}
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-5 w-5 text-mi-gold" />
-          <h3 className="text-xl font-bold text-white">{step.title}</h3>
-        </div>
+      {/* Progress bar */}
+      <div className="px-4 pb-3">
+        <Progress value={progressPercent} className="h-1" />
+      </div>
 
-        {/* Description */}
-        <p className="text-gray-300 text-sm mb-5 leading-relaxed">{step.description}</p>
+      {/* Navigation */}
+      <div className="flex items-center justify-between gap-2 px-4 pb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onPrevious}
+          disabled={isFirstStep}
+          className="gap-1"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back
+        </Button>
 
-        {/* Actions */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={onSkip}
-            className="text-gray-500 text-sm hover:text-gray-300 transition-colors"
-          >
-            Skip tour
-          </button>
+        <div className="flex items-center gap-2">
+          {/* Audio toggle button */}
           <Button
-            size="sm"
-            onClick={handleAction}
-            className={cn(
-              'px-5 h-10 font-semibold',
-              'bg-gradient-to-r from-mi-cyan via-mi-cyan to-cyan-400',
-              'hover:from-mi-cyan-dark hover:via-mi-cyan hover:to-cyan-500',
-              'text-white shadow-lg shadow-mi-cyan/30',
-              'border border-mi-cyan/50',
-              'transition-all duration-300',
-              'hover:shadow-xl hover:shadow-mi-cyan/40',
-              'hover:scale-[1.02]'
-            )}
+            variant="ghost"
+            size="icon"
+            onClick={onToggleAudio}
+            className="h-8 w-8"
+            aria-label={isAudioPlaying ? 'Pause audio' : 'Play audio'}
           >
-            {isLastStep ? (
-              <span className="flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                Finish Tour
-              </span>
+            {isAudioPlaying ? (
+              <Volume2 className="h-4 w-4 text-primary" />
             ) : (
-              <span className="flex items-center gap-1">
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </span>
+              <VolumeX className="h-4 w-4 text-muted-foreground" />
             )}
           </Button>
+
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onNext}
+            className="gap-1"
+          >
+            {isLastStep ? 'Finish' : 'Next'}
+            {!isLastStep && <ChevronRight className="h-4 w-4" />}
+          </Button>
         </div>
-
       </div>
-    </motion.div>
+    </div>
   );
-}
-
-// ============================================================================
-// ARROW COMPONENT
-// ============================================================================
-
-function TooltipArrow({ position }: { position: 'top' | 'bottom' | 'left' | 'right' }) {
-  const arrowClasses = cn(
-    'absolute w-3 h-3 transform rotate-45',
-    // Glass effect for arrow
-    'bg-mi-navy/80 backdrop-blur-xl',
-    'border-mi-cyan/20',
-    {
-      'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 border-l border-t': position === 'top',
-      'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-r border-b': position === 'bottom',
-      'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 border-l border-b': position === 'left',
-      'right-0 top-1/2 translate-x-1/2 -translate-y-1/2 border-r border-t': position === 'right',
-    }
-  );
-
-  return <div className={arrowClasses} />;
 }
 
 export default TourTooltip;
