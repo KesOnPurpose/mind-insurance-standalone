@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -13,6 +14,8 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
   const { user, loading } = useAuth();
   const location = useLocation();
   const [assessmentStatus, setAssessmentStatus] = useState<'loading' | 'completed' | 'not_completed'>('loading');
+  // FEAT-GHCF-007: Subscription check (fail-open)
+  const { status: subscriptionStatus, isLoading: subLoading } = useSubscriptionCheck();
 
   useEffect(() => {
     const checkAssessment = async () => {
@@ -84,6 +87,13 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
 
   if (requireAssessment && assessmentStatus === 'not_completed' && !isOnAssessmentPage) {
     return <Navigate to="/mind-insurance/assessment" replace />;
+  }
+
+  // FEAT-GHCF-007: Redirect to subscription-expired if explicitly inactive
+  // FAIL-OPEN: Only redirect when edge function explicitly returns active=false
+  // Loading, errors, or missing status = allow access
+  if (!subLoading && subscriptionStatus && !subscriptionStatus.active) {
+    return <Navigate to="/subscription-expired" replace />;
   }
 
   return <>{children}</>;

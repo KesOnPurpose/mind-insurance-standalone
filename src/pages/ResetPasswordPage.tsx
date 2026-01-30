@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ const ResetPasswordPage = () => {
   const [error, setError] = useState('');
   const [isValidating, setIsValidating] = useState(true);
   const [isValidSession, setIsValidSession] = useState(false);
+  const resolvedRef = useRef(false);
 
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
@@ -30,81 +31,128 @@ const ResetPasswordPage = () => {
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
-    let hasValidSession = false;
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session check error:', error);
-          return false;
-        }
+    const markValid = (source: string) => {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+      console.log('[ResetPassword] Session validated via:', source);
+      setIsValidSession(true);
+      setIsValidating(false);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (subscription) subscription.unsubscribe();
+    };
 
-        if (session) {
-          console.log('Found existing session for password reset');
-          return true;
-        }
-
-        return false;
-      } catch (err) {
-        console.error('Error checking session:', err);
-        return false;
-      }
+    const markInvalid = (reason: string) => {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+      console.log('[ResetPassword] Session invalid:', reason);
+      setIsValidating(false);
+      toast({
+        title: "Invalid or expired link",
+        description: "Please request a new password reset link.",
+        variant: "destructive",
+      });
+      navigate('/forgot-password');
     };
 
     const handleRecoveryFlow = async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state change:', event, session ? 'has session' : 'no session');
+      console.log('[ResetPassword] Starting recovery flow...');
+      console.log('[ResetPassword] URL:', window.location.href);
+      console.log('[ResetPassword] Hash:', window.location.hash ? 'present' : 'empty');
+      console.log('[ResetPassword] Search:', window.location.search || 'empty');
 
-        if (event === 'PASSWORD_RECOVERY') {
-          console.log('PASSWORD_RECOVERY event detected');
-          hasValidSession = true;
-          setIsValidSession(true);
-          setIsValidating(false);
-          if (timeoutId) clearTimeout(timeoutId);
-        } else if (event === 'SIGNED_IN' && session) {
-          console.log('SIGNED_IN event detected');
-          hasValidSession = true;
-          setIsValidSession(true);
-          setIsValidating(false);
-          if (timeoutId) clearTimeout(timeoutId);
+      // Step 1: Listen for auth state changes (catches events that fire after mount)
+      const sub = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('[ResetPassword] Auth event:', event, session ? 'has session' : 'no session');
+        if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+          markValid(`auth event: ${event}`);
         }
       });
+      subscription = sub.data.subscription;
 
-      const existingSession = await checkSession();
-      if (existingSession) {
-        hasValidSession = true;
-        setIsValidSession(true);
-        setIsValidating(false);
-        subscription.unsubscribe();
-        return;
+      // Step 2: Handle PKCE code flow (query param ?code=XXX)
+      // Supabase may send ?code= instead of #access_token= if server uses PKCE
+      const queryParams = new URLSearchParams(window.location.search);
+      const code = queryParams.get('code');
+
+      if (code) {
+        console.log('[ResetPassword] Found PKCE code in URL, exchanging...');
+        try {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error('[ResetPassword] Code exchange error:', exchangeError);
+            markInvalid(`code exchange failed: ${exchangeError.message}`);
+            return;
+          }
+          // Code exchange fires auth events; wait briefly for them to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            markValid('PKCE code exchange');
+            return;
+          }
+        } catch (err) {
+          console.error('[ResetPassword] Code exchange exception:', err);
+        }
       }
 
-      timeoutId = setTimeout(() => {
-        if (!hasValidSession) {
-          console.log('Timeout reached, no valid session found');
-          setIsValidating(false);
-          toast({
-            title: "Invalid or expired link",
-            description: "Please request a new password reset link.",
-            variant: "destructive",
-          });
-          navigate('/forgot-password');
-        }
-        subscription.unsubscribe();
-      }, 5000);
+      // Step 3: Handle implicit flow tokens in hash (#access_token=...&type=recovery)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
 
-      return () => {
-        subscription.unsubscribe();
-        if (timeoutId) clearTimeout(timeoutId);
-      };
+      if (accessToken && refreshToken) {
+        console.log('[ResetPassword] Found tokens in hash, setting session...');
+        try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError) {
+            console.error('[ResetPassword] setSession error:', sessionError);
+          } else {
+            // Wait for session to propagate
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              markValid('hash token setSession');
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('[ResetPassword] setSession exception:', err);
+        }
+      }
+
+      // Step 4: Check if detectSessionInUrl already processed the tokens
+      // (getSession waits for Supabase initialization to complete)
+      try {
+        console.log('[ResetPassword] Checking existing session...');
+        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+        if (sessionErr) {
+          console.error('[ResetPassword] getSession error:', sessionErr);
+        }
+        if (session) {
+          markValid('existing session (detectSessionInUrl)');
+          return;
+        }
+      } catch (err) {
+        console.error('[ResetPassword] getSession exception:', err);
+      }
+
+      // Step 5: No session found yet — wait up to 15s for auth event
+      console.log('[ResetPassword] No session yet, waiting for auth events (15s timeout)...');
+      timeoutId = setTimeout(() => {
+        markInvalid('timeout after 15s');
+      }, 15000);
     };
 
     handleRecoveryFlow();
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
+      if (subscription) subscription.unsubscribe();
     };
   }, [navigate, toast]);
 
@@ -133,7 +181,7 @@ const ResetPasswordPage = () => {
     } else {
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/mind-insurance');
+        navigate('/dashboard');
       }, 3000);
     }
   };

@@ -87,55 +87,11 @@ const AuthCallback = () => {
     }
   };
 
-  // Smart redirect based on Identity Collision assessment completion status
-  // Mind Insurance uses Identity Collision Assessment as the gating assessment
-  const smartRedirect = async (userId: string) => {
-    try {
-      console.log('AuthCallback: Checking Identity Collision assessment for smart redirect...');
-
-      // Check if user has completed Identity Collision Assessment (MI-specific)
-      // Check user_profiles.collision_patterns first (fastest check)
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('collision_patterns')
-        .eq('id', userId)
-        .single();
-
-      // If collision_patterns exists and has data, user has completed assessment
-      const hasCollisionPatterns = profile?.collision_patterns &&
-        typeof profile.collision_patterns === 'object' &&
-        Object.keys(profile.collision_patterns).length > 0 &&
-        (profile.collision_patterns as Record<string, unknown>).primary_pattern;
-
-      if (hasCollisionPatterns) {
-        // Assessment completed - redirect to Mind Insurance Hub
-        console.log('AuthCallback: Identity Collision completed - redirecting to /mind-insurance');
-        window.location.href = '/mind-insurance';
-        return;
-      }
-
-      // Also check identity_collision_assessments table as fallback
-      const { data: collisionAssessment } = await supabase
-        .from('identity_collision_assessments')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (collisionAssessment) {
-        console.log('AuthCallback: Found assessment record - redirecting to /mind-insurance');
-        window.location.href = '/mind-insurance';
-        return;
-      }
-
-      // No assessment found - redirect to Identity Collision Assessment
-      console.log('AuthCallback: No Identity Collision assessment - redirecting to /mind-insurance/assessment');
-      window.location.href = '/mind-insurance/assessment';
-    } catch (err) {
-      console.error('Smart redirect error, defaulting to assessment:', err);
-      // On error, default to assessment (safer - ensures onboarding)
-      window.location.href = '/mind-insurance/assessment';
-    }
+  // Smart redirect after authentication
+  // GROUPHOME STANDALONE: Redirects to /dashboard (legacy MI routes removed)
+  const smartRedirect = async (_userId: string) => {
+    console.log('AuthCallback: Redirecting to /dashboard');
+    window.location.href = '/dashboard';
   };
 
   useEffect(() => {
@@ -245,6 +201,18 @@ const AuthCallback = () => {
           console.log('Session after code exchange:', !!newSession);
 
           if (newSession) {
+            // PASSWORD RECOVERY: If this code exchange was for a password reset,
+            // redirect to /reset-password instead of the normal smart redirect.
+            // AuthContext's PASSWORD_RECOVERY handler also does this, but we handle
+            // it here explicitly to avoid racing with smartRedirect.
+            const hashType = hashParams.get('type');
+            const queryType = queryParams.get('type');
+            if (hashType === 'recovery' || queryType === 'recovery') {
+              console.log('AuthCallback: Recovery code exchange — redirecting to /reset-password');
+              window.location.replace('/reset-password');
+              return;
+            }
+
             console.log('Session established, checking for provider merge...');
             await handleAuthenticatedUser(newSession);
             return;

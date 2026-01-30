@@ -20,7 +20,7 @@ export function ComplianceStatusCard() {
 
   if (isLoading) {
     return (
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden" data-tour-target="compliance-status">
         <CardContent className="pt-6 pb-6 text-center">
           <Skeleton className="h-5 w-32 mx-auto mb-4" />
           <Skeleton className="h-12 w-20 mx-auto mb-2" />
@@ -34,7 +34,7 @@ export function ComplianceStatusCard() {
   // No binders - show CTA to start compliance
   if (!binders || binders.length === 0) {
     return (
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden" data-tour-target="compliance-status">
         <CardContent className="pt-6 pb-6 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <ClipboardCheck className="w-5 h-5 text-primary" />

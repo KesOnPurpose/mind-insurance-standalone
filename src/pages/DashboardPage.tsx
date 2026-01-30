@@ -8,11 +8,49 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
+import { TourProvider } from "@/contexts/TourContext";
+import { TourController } from "@/components/tour";
+import { useTour } from "@/hooks/useTour";
+import { GROUPHOME_DASHBOARD_TOUR } from "@/config/GrouphomeTourSteps";
 import { FinancialProjectionsCard } from "@/components/dashboard/FinancialProjectionsCard";
 import { ProgramProgressCard } from "@/components/dashboard/ProgramProgressCard";
 import { PortfolioSnapshotCard } from "@/components/dashboard/PortfolioSnapshotCard";
 import { ComplianceStatusCard } from "@/components/dashboard/ComplianceStatusCard";
 import { WeeklyFocusCard } from "@/components/dashboard/WeeklyFocusCard";
+
+/**
+ * Auto-starts the Nette tour for users who haven't completed it.
+ * Must be rendered inside TourProvider.
+ */
+function DashboardTourAutoStart({
+  onboardingData,
+  showWelcomeModal,
+}: {
+  onboardingData: any;
+  showWelcomeModal: boolean;
+}) {
+  const { startTour, isActive } = useTour();
+  const [hasTriggered, setHasTriggered] = useState(false);
+
+  useEffect(() => {
+    // Don't start if tour already active/triggered or welcome modal is showing
+    if (hasTriggered || isActive || showWelcomeModal) return;
+
+    // Don't start if tour was already completed
+    if (onboardingData?.gh_tour_completed === true) return;
+
+    // Delay to let dashboard cards render before starting tour
+    const timer = setTimeout(() => {
+      console.log('[DashboardTourAutoStart] Starting Nette tour for new user');
+      setHasTriggered(true);
+      startTour(GROUPHOME_DASHBOARD_TOUR);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [hasTriggered, isActive, showWelcomeModal, onboardingData, startTour]);
+
+  return null;
+}
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
@@ -89,79 +127,93 @@ const DashboardPage = () => {
 
   return (
     <SidebarLayout>
-      {/* Welcome Modal - shows on first dashboard visit after assessment */}
-      {onboardingData && user?.id && (
-        <WelcomeModal
-          isOpen={showWelcomeModal}
-          onClose={() => setShowWelcomeModal(false)}
-          userProfile={{
-            name: onboardingData.business_name,
-            readiness_level: onboardingData.readiness_level,
-            ownership_model: onboardingData.ownership_model,
-            timeline: onboardingData.timeline,
-            overall_score: onboardingData.overall_score,
-            immediate_priority: onboardingData.immediate_priority,
-          }}
-          userId={user.id}
+      <TourProvider>
+        {/* Nette Tour - auto-starts for users who haven't completed it */}
+        <DashboardTourAutoStart
+          onboardingData={onboardingData}
+          showWelcomeModal={showWelcomeModal}
         />
-      )}
+        <TourController
+          userId={user?.id}
+          userState={onboardingData?.user_state || 'texas'}
+          targetIncome={onboardingData?.income_replacement_target || 10000}
+          ownershipModel={onboardingData?.ownership_model || 'ownership'}
+        />
 
-      <div className="space-y-4 pb-20 md:pb-4">
-        {/* Welcome Header - Simple greeting with streak indicator */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">
-              Welcome back{onboardingData?.business_name || userProfile?.full_name ? `, ${onboardingData?.business_name || userProfile?.full_name}` : ''}!
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Here's an overview of your group home journey.
-            </p>
-          </div>
-          {protectStreak > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 dark:bg-orange-950/50 rounded-full">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                {protectStreak} day streak
-              </span>
-            </div>
-          )}
-        </div>
+        {/* Welcome Modal - shows on first dashboard visit after assessment */}
+        {onboardingData && user?.id && (
+          <WelcomeModal
+            isOpen={showWelcomeModal}
+            onClose={() => setShowWelcomeModal(false)}
+            userProfile={{
+              name: onboardingData.business_name,
+              readiness_level: onboardingData.readiness_level,
+              ownership_model: onboardingData.ownership_model,
+              timeline: onboardingData.timeline,
+              overall_score: onboardingData.overall_score,
+              immediate_priority: onboardingData.immediate_priority,
+            }}
+            userId={user.id}
+          />
+        )}
 
-        {/* Main Dashboard Cards - 2x2 grid on desktop, stack on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ProgramProgressCard />
-          <PortfolioSnapshotCard />
-          <ComplianceStatusCard />
-          <WeeklyFocusCard />
-        </div>
-
-        {/* Financial Projections - Auto-calculated from profile */}
-        <FinancialProjectionsCard />
-
-        {/* Mind Insurance - Secondary CTA with streak info */}
-        <Card className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">
+        <div className="space-y-4 pb-20 md:pb-4">
+          {/* Welcome Header - Simple greeting with streak indicator */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">PROTECT Your Mindset</p>
-                <p className="text-xs text-muted-foreground">
-                  {protectStreak === 0
-                    ? "Start your daily mindset practice today"
-                    : `Day ${protectStreak} complete - Keep the momentum!`}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Welcome back{onboardingData?.business_name || userProfile?.full_name ? `, ${onboardingData?.business_name || userProfile?.full_name}` : ''}!
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Here's an overview of your group home journey.
+              </p>
             </div>
-            <Link to="/mind-insurance">
-              <Button size="sm" variant="secondary" className="bg-purple-600 hover:bg-purple-700 text-white">
-                {protectStreak === 0 ? 'Start Practice' : 'Continue'} →
-              </Button>
-            </Link>
+            {protectStreak > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 dark:bg-orange-950/50 rounded-full">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                  {protectStreak} day streak
+                </span>
+              </div>
+            )}
           </div>
-        </Card>
-      </div>
+
+          {/* Main Dashboard Cards - 2x2 grid on desktop, stack on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ProgramProgressCard />
+            <PortfolioSnapshotCard />
+            <ComplianceStatusCard />
+            <WeeklyFocusCard />
+          </div>
+
+          {/* Financial Projections - Auto-calculated from profile */}
+          <FinancialProjectionsCard />
+
+          {/* Mind Insurance - Secondary CTA with streak info */}
+          <Card className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">PROTECT Your Mindset</p>
+                  <p className="text-xs text-muted-foreground">
+                    {protectStreak === 0
+                      ? "Start your daily mindset practice today"
+                      : `Day ${protectStreak} complete - Keep the momentum!`}
+                  </p>
+                </div>
+              </div>
+              <Link to="/mind-insurance">
+                <Button size="sm" variant="secondary" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  {protectStreak === 0 ? 'Start Practice' : 'Continue'} →
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </TourProvider>
     </SidebarLayout>
   );
 };
