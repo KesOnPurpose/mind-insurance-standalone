@@ -78,7 +78,7 @@ export function FinancialProjectionsCard() {
 
   if (isLoading) {
     return (
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden" data-tour-target="financial-projections">
         <CardContent className="py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -96,7 +96,7 @@ export function FinancialProjectionsCard() {
   // If no projection data, show CTA to set up profile
   if (!projection || error) {
     return (
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden" data-tour-target="financial-projections">
         <CardContent className="py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

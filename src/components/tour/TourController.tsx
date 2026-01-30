@@ -11,6 +11,7 @@ import { useTourAudio } from '@/hooks/useTourAudio';
 import { tourAudioService } from '@/services/tourAudioService';
 import { TOUR_AUDIO_SCRIPTS } from '@/config/GrouphomeTourSteps';
 import { SidebarContext } from '@/components/ui/sidebar';
+import { useSheetTour } from '@/components/ui/sheet';
 import { TourOverlay } from './TourOverlay';
 import { TourTooltip } from './TourTooltip';
 import { NetteProactiveMessage } from './NetteProactiveMessage';
@@ -87,7 +88,7 @@ export function TourController({
     playCurrentStep,
   } = useTourAudio();
 
-  // Sidebar control for step 5 (sidebar-navigation)
+  // Sidebar control for steps 5/6 (sidebar-navigation, chat-nette)
   // Use useContext directly so we get null (not throw) when SidebarProvider is missing
   const sidebarContext = useContext(SidebarContext);
   const setOpenMobile = sidebarContext?.setOpenMobile ?? (() => {});
@@ -96,6 +97,9 @@ export function TourController({
   const setOpen = sidebarContext?.setOpen ?? (() => {});
   const open = sidebarContext?.open ?? false;
   const sidebarOpenedByTourRef = useRef(false);
+
+  // Sheet tour context - raises sidebar z-index above tour overlay on mobile
+  const { setTourHighlightingSidebar } = useSheetTour();
   const lastPlayedStepRef = useRef<string | null>(null);
 
   const [showProactiveMessage, setShowProactiveMessage] = useState(false);
@@ -164,40 +168,50 @@ export function TourController({
   const [consent, setConsent] = useState<ProactiveMessageConsent | null>(null);
 
   /**
-   * Open sidebar when reaching the sidebar-navigation step
-   * This makes the sidebar slide out so users can see it being highlighted
+   * Open sidebar when reaching sidebar steps (sidebar-navigation, chat-nette)
+   * This makes the sidebar slide out so users can see it being highlighted.
+   * Also raises the Sheet z-index on mobile so sidebar appears above tour overlay.
    */
   useEffect(() => {
     if (!isActive || !currentStep) return;
 
-    const isSidebarStep = currentStep.id === 'sidebar-navigation';
+    const SIDEBAR_STEP_IDS = ['sidebar-navigation', 'chat-nette'];
+    const isSidebarStep = SIDEBAR_STEP_IDS.includes(currentStep.id);
 
     if (isSidebarStep) {
+      // Raise Sheet z-index on mobile so sidebar is above tour overlay
+      if (isMobile) {
+        setTourHighlightingSidebar(true);
+      }
+
       // Open sidebar for this step
       if (isMobile && !openMobile) {
-        console.log('[TourController] Opening mobile sidebar for sidebar-navigation step');
+        console.log('[TourController] Opening mobile sidebar for step:', currentStep.id);
         sidebarOpenedByTourRef.current = true;
         setOpenMobile(true);
       } else if (!isMobile && !open) {
-        console.log('[TourController] Opening desktop sidebar for sidebar-navigation step');
+        console.log('[TourController] Opening desktop sidebar for step:', currentStep.id);
         sidebarOpenedByTourRef.current = true;
         setOpen(true);
       }
     } else {
-      // Close sidebar if tour opened it and we're leaving that step
+      // Reset Sheet z-index when leaving sidebar steps
+      setTourHighlightingSidebar(false);
+
+      // Close sidebar if tour opened it and we're leaving sidebar steps
       if (sidebarOpenedByTourRef.current) {
         if (isMobile && openMobile) {
-          console.log('[TourController] Closing mobile sidebar after leaving sidebar-navigation step');
+          console.log('[TourController] Closing mobile sidebar after leaving sidebar step');
           setOpenMobile(false);
         }
         // Don't close desktop sidebar - it looks better to leave it open
         sidebarOpenedByTourRef.current = false;
       }
     }
-  }, [isActive, currentStep, isMobile, openMobile, open, setOpenMobile, setOpen]);
+  }, [isActive, currentStep, isMobile, openMobile, open, setOpenMobile, setOpen, setTourHighlightingSidebar]);
 
   /**
-   * Close sidebar when tour ends (if it was opened by the tour)
+   * Close sidebar and reset z-index when tour ends (if it was opened by the tour)
    */
   useEffect(() => {
     if (!isActive && sidebarOpenedByTourRef.current) {
@@ -205,9 +219,10 @@ export function TourController({
         console.log('[TourController] Tour ended, closing mobile sidebar');
         setOpenMobile(false);
       }
+      setTourHighlightingSidebar(false);
       sidebarOpenedByTourRef.current = false;
     }
-  }, [isActive, isMobile, openMobile, setOpenMobile]);
+  }, [isActive, isMobile, openMobile, setOpenMobile, setTourHighlightingSidebar]);
 
   /**
    * Calculate roadmap when needed

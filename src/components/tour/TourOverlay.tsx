@@ -6,7 +6,7 @@
  * for smooth performance.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TourOverlayProps {
@@ -42,17 +42,47 @@ export function TourOverlay({
 }: TourOverlayProps) {
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
 
-  // Find and measure the target element
+  // Track the current selector to scroll only on step change
+  const prevSelectorRef = useRef<string | null>(null);
+
+  // Find and measure the target element, scrolling into view if needed
   const updateTargetRect = useCallback(() => {
     // 'none' means no spotlight - show full overlay
     if (targetSelector === 'none' || !targetSelector) {
       setTargetRect(null);
+      prevSelectorRef.current = targetSelector;
       return;
     }
 
     const element = document.querySelector(`[data-tour-target="${targetSelector}"]`);
 
     if (element) {
+      // Scroll into view on step change (not on every resize/scroll)
+      if (prevSelectorRef.current !== targetSelector) {
+        prevSelectorRef.current = targetSelector;
+        // Only scroll if element is outside the viewport
+        const rect = element.getBoundingClientRect();
+        const isOffScreen =
+          rect.bottom < 0 ||
+          rect.top > window.innerHeight ||
+          rect.right < 0 ||
+          rect.left > window.innerWidth;
+        if (isOffScreen) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Re-measure after scroll animation completes
+          setTimeout(() => {
+            const newRect = element.getBoundingClientRect();
+            setTargetRect({
+              top: newRect.top - padding,
+              left: newRect.left - padding,
+              width: newRect.width + padding * 2,
+              height: newRect.height + padding * 2,
+            });
+          }, 400);
+          return;
+        }
+      }
+
       const rect = element.getBoundingClientRect();
       setTargetRect({
         top: rect.top - padding,

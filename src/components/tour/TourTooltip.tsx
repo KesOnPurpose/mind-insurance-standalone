@@ -270,10 +270,32 @@ export function TourTooltip({
     };
   }, [step.targetSelector, step.position]);
 
+  // Check if target is inside the mobile sidebar
+  const isTargetInSidebar = useCallback((): boolean => {
+    if (step.position === 'center') return false;
+    const element = document.querySelector(`[data-tour-target="${step.targetSelector}"]`);
+    if (!element) return false;
+    return !!element.closest('[data-sidebar="sidebar"]');
+  }, [step.targetSelector, step.position]);
+
   // Calculate and update position using smart positioning
   const updatePosition = useCallback(() => {
     const targetRect = getTargetRect();
     const padding = step.highlightPadding || 8;
+    const isMobileViewport = window.innerWidth < 768;
+
+    // On mobile, when target is inside sidebar, force bottom-anchored positioning
+    // The sidebar takes up most of the screen width, so right/left positions fail
+    // and the Next button becomes inaccessible
+    if (isMobileViewport && isTargetInSidebar()) {
+      const tooltipWidth = Math.min(TOOLTIP_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+      setPosition({
+        top: window.innerHeight - tooltipSize.height - VIEWPORT_MARGIN,
+        left: (window.innerWidth - tooltipWidth) / 2,
+        transformOrigin: 'bottom center',
+      });
+      return;
+    }
 
     const newPosition = findBestPosition(
       step.position,
@@ -283,7 +305,7 @@ export function TourTooltip({
     );
 
     setPosition(newPosition);
-  }, [step.position, step.highlightPadding, tooltipSize, getTargetRect]);
+  }, [step.position, step.highlightPadding, tooltipSize, getTargetRect, isTargetInSidebar]);
 
   useEffect(() => {
     updatePosition();
