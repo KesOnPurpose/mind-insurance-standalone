@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, MessageSquare, Phone } from "lucide-react";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
@@ -10,6 +10,7 @@ import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
 import { VoiceCallCard } from "@/components/chat/VoiceCallCard";
 import { VoiceTabContent } from "@/components/chat/VoiceTabContent";
 import type { ChatMode } from "@/components/chat/ChatSidebar";
+import { cn } from "@/lib/utils";
 import { CoachType, COACHES } from "@/types/coach";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversationContext } from "@/contexts/ConversationContext";
@@ -63,10 +64,11 @@ interface TacticHelpState {
 
 interface ChatPageContentProps {
   activeMode: ChatMode;
+  onModeChange?: (mode: ChatMode) => void;
 }
 
 // Inner component that uses sidebar context
-function ChatPageContent({ activeMode }: ChatPageContentProps) {
+function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { setOpenMobile, isMobile } = useSidebar();
@@ -514,9 +516,38 @@ function ChatPageContent({ activeMode }: ChatPageContentProps) {
   if (activeMode === 'chat' && isNewConversation && messages.length === 0) {
     return (
       <SidebarInset>
-        {/* Sticky header with sidebar toggle */}
+        {/* Sticky header with sidebar toggle + mobile mode toggle */}
         <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
           <SidebarTrigger className="-ml-1" />
+          {/* ANI-010-A: Mobile Chat/Voice toggle — visible only on mobile */}
+          {isMobile && onModeChange && (
+            <div className="flex items-center ml-auto bg-muted rounded-lg p-0.5">
+              <button
+                onClick={() => onModeChange('chat')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                  activeMode === 'chat'
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                )}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                Chat
+              </button>
+              <button
+                onClick={() => onModeChange('voice')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                  activeMode === 'voice'
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                )}
+              >
+                <Phone className="h-3.5 w-3.5" />
+                Voice
+              </button>
+            </div>
+          )}
         </header>
         <ChatWelcomeScreen
           userName={userProfile?.full_name ?? null}
@@ -530,9 +561,38 @@ function ChatPageContent({ activeMode }: ChatPageContentProps) {
   // Full chat interface
   return (
     <SidebarInset>
-      {/* Sticky header with sidebar toggle */}
+      {/* Sticky header with sidebar toggle + mobile mode toggle */}
       <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
         <SidebarTrigger className="-ml-1" />
+        {/* ANI-010-A: Mobile Chat/Voice toggle — visible only on mobile */}
+        {isMobile && onModeChange && (
+          <div className="flex items-center ml-auto bg-muted rounded-lg p-0.5">
+            <button
+              onClick={() => onModeChange('chat')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                activeMode === 'chat'
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              Chat
+            </button>
+            <button
+              onClick={() => onModeChange('voice')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                activeMode === 'voice'
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Phone className="h-3.5 w-3.5" />
+              Voice
+            </button>
+          </div>
+        )}
       </header>
       <div className="min-h-[calc(100vh-3.5rem)] flex flex-col bg-white">
         {/* Header - Premium Glassmorphic Banner */}
@@ -690,7 +750,7 @@ const ChatPage = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <ChatSidebar onModeChange={setActiveMode} />
-      <ChatPageContent activeMode={activeMode} />
+      <ChatPageContent activeMode={activeMode} onModeChange={setActiveMode} />
     </SidebarProvider>
   );
 };

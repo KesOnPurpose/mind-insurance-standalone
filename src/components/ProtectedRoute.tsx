@@ -2,6 +2,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
+import { SubscriptionBanner } from '@/components/SubscriptionBanner';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -13,6 +15,7 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
   const { user, loading } = useAuth();
   const location = useLocation();
   const [assessmentStatus, setAssessmentStatus] = useState<'loading' | 'completed' | 'not_completed'>('loading');
+  const { status: subscriptionStatus, isLoading: subscriptionLoading } = useSubscriptionCheck();
 
   useEffect(() => {
     const checkAssessment = async () => {
@@ -86,5 +89,19 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     return <Navigate to="/mind-insurance/assessment" replace />;
   }
 
-  return <>{children}</>;
+  // GHCF Subscription Check (AFTER assessment check)
+  // FAIL-OPEN: If loading or error, allow access. Only redirect if definitively inactive.
+  if (!subscriptionLoading && subscriptionStatus.hasRecord && !subscriptionStatus.isActive) {
+    return <Navigate to="/subscription-expired" replace />;
+  }
+
+  // Show warning banner for grace period users, then render children
+  const showBanner = subscriptionStatus.hasRecord && subscriptionStatus.isGracePeriod;
+
+  return (
+    <>
+      {showBanner && <SubscriptionBanner status={subscriptionStatus} />}
+      {children}
+    </>
+  );
 }

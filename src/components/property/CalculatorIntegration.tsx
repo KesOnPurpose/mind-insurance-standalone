@@ -359,7 +359,7 @@ export function CalculatorIntegration({
                     <span className="hidden sm:inline">New Scenario</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+                <DialogContent className="max-w-3xl max-h-[85dvh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Calculator className="h-5 w-5" />

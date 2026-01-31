@@ -6,7 +6,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, GraduationCap, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, Mail, Sparkles } from 'lucide-react';
 
 interface EmptyProgramsStateProps {
   filterStatus?: string;
@@ -41,7 +41,7 @@ export const EmptyProgramsState = ({
       default:
         return {
           title: "You're not enrolled in any programs yet",
-          description: 'Browse available programs to start your learning journey.',
+          description: 'Contact your administrator to get enrolled in a program and start your learning journey.',
           icon: BookOpen,
         };
     }
@@ -64,8 +64,9 @@ export const EmptyProgramsState = ({
         </p>
 
         {filterStatus === 'all' && onBrowsePrograms && (
-          <Button onClick={onBrowsePrograms}>
-            Browse Programs
+          <Button onClick={onBrowsePrograms} variant="outline">
+            <Mail className="h-4 w-4 mr-2" />
+            Contact Administrator
           </Button>
         )}
       </CardContent>

@@ -169,10 +169,15 @@ export function RoomManager({
       <Card className="mb-6">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <BedDouble className="h-5 w-5" />
-              Room Configuration
-            </CardTitle>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BedDouble className="h-5 w-5" />
+                Room Configuration
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Each room represents one bed in your group home
+              </p>
+            </div>
 
             {!isReadOnly && (
               <div className="flex items-center gap-2">
@@ -370,7 +375,7 @@ export function RoomManager({
           <DialogHeader>
             <DialogTitle>Add New Room</DialogTitle>
             <DialogDescription>
-              Add a room to track occupancy and revenue.
+              Each room represents one bed. Add a room to track occupancy and revenue.
             </DialogDescription>
           </DialogHeader>
 

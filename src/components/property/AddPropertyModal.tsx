@@ -339,8 +339,8 @@ function ConfigurationStep({ data, onChange, errors }: StepProps) {
           <Input
             id="default_rate_per_bed"
             type="number"
-            value={data.default_rate_per_bed || 907}
-            onChange={(e) => onChange('default_rate_per_bed', e.target.value ? parseInt(e.target.value) : 907)}
+            value={data.default_rate_per_bed ?? ''}
+            onChange={(e) => onChange('default_rate_per_bed', e.target.value ? parseInt(e.target.value) : 0)}
             placeholder="907"
           />
           <p className="text-xs text-muted-foreground">Default: $907 (SSI max)</p>
@@ -500,7 +500,7 @@ export function AddPropertyModal({
       operating_since: data.operating_since,
       amenities: data.amenities,
       configured_beds: data.configured_beds,
-      default_rate_per_bed: data.default_rate_per_bed,
+      default_rate_per_bed: data.default_rate_per_bed || 907,
       target_occupancy_percent: data.target_occupancy_percent,
     });
 

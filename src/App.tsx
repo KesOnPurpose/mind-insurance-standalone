@@ -85,6 +85,9 @@ import BroadcastsPage from "./pages/admin/BroadcastsPage";
 // FEAT-GH-TOUR: Tour Test Page
 import TourTestPage from "./pages/TourTestPage";
 
+// GHCF Post-Purchase pages
+import SubscriptionExpiredPage from "./pages/SubscriptionExpiredPage";
+
 // Other
 import NotFound from "./pages/NotFound";
 
@@ -212,6 +215,9 @@ const App = () => {
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
+
+                      {/* GHCF Post-Purchase: Subscription expired page (public, no auth) */}
+                      <Route path="/subscription-expired" element={<SubscriptionExpiredPage />} />
 
                       {/* Public share link route - no auth required */}
                       <Route path="/compliance/binder/share/:token" element={<SharedBinderPage />} />
