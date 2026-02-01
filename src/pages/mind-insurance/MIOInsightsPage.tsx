@@ -23,6 +23,7 @@ import { useNotificationStatus } from '@/hooks/usePushNotifications';
 import { useFirstSessionStatus } from '@/hooks/useFirstSessionStatus';
 import { useIdentityCollisionStatus } from '@/hooks/useIdentityCollisionStatus';
 import { MindInsuranceErrorBoundary } from '@/components/mind-insurance/MindInsuranceErrorBoundary';
+import { GHLVoiceWidget } from '@/components/chat/GHLVoiceWidget';
 import { injectMIOFirstEngagementQuestion } from '@/services/mioInsightsThreadService';
 import { getActiveInsightProtocol } from '@/services/mioInsightProtocolService';
 
@@ -111,8 +112,8 @@ export default function MIOInsightsPage() {
   return (
     <MindInsuranceErrorBoundary fallbackTitle="Error loading MIO Insights" showHomeButton>
     <div className="min-h-screen bg-mi-navy flex flex-col">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-mi-cyan/20 to-mi-gold/20 border-b border-mi-cyan/30">
+      {/* Header - with tour target for guided tour */}
+      <div className="bg-gradient-to-r from-mi-cyan/20 to-mi-gold/20 border-b border-mi-cyan/30" data-tour-target="mio-header">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -172,6 +173,9 @@ export default function MIOInsightsPage() {
           </div>
         )}
       </div>
+
+      {/* GHL Voice AI Widget - floating button for voice calls with MIO */}
+      <GHLVoiceWidget />
     </div>
     </MindInsuranceErrorBoundary>
   );

@@ -7,6 +7,9 @@ import ChatWelcomeScreen from "@/components/chat/ChatWelcomeScreen";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { AssessmentActionCard } from "@/components/chat/AssessmentActionCard";
 import { VoiceInputButton } from "@/components/chat/VoiceInputButton";
+import { ChatVoiceTabSwitcher } from "@/components/chat/ChatVoiceTabSwitcher";
+import { VoiceTabContent } from "@/components/chat/VoiceTabContent";
+import { VoiceOptInModal } from "@/components/onboarding/VoiceOptInModal";
 import { CoachType, COACHES } from "@/types/coach";
 import { type AssessmentType } from "@/hooks/useAssessmentInvitations";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,15 +99,24 @@ function ChatPageContent() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    full_name: string | null;
+    phone: string | null;
+    voice_calls_enabled: boolean;
+    timezone: string | null;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice tab state
+  const [activeTab, setActiveTab] = useState<'chat' | 'voice'>('chat');
+  const [showVoiceOptIn, setShowVoiceOptIn] = useState(false);
 
   // Ref to preserve messages during state transitions (prevents race condition)
   // When a quick action is clicked, messages are stored here BEFORE setActiveConversation
   // This prevents the loadConversation useEffect from resetting messages to []
   const pendingMessagesRef = useRef<Message[]>([]);
 
-  // Fetch user profile for personalized greeting
+  // Fetch user profile for personalized greeting and voice settings
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user?.id) return;
@@ -112,7 +124,7 @@ function ChatPageContent() {
       try {
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('full_name')
+          .select('full_name, phone, voice_calls_enabled, timezone')
           .eq('id', user.id)
           .single();
 
@@ -121,8 +133,13 @@ function ChatPageContent() {
           return;
         }
 
-        setUserProfile(data);
-        console.log('[UserProfile] Loaded:', data?.full_name);
+        setUserProfile({
+          full_name: data?.full_name || null,
+          phone: data?.phone || null,
+          voice_calls_enabled: data?.voice_calls_enabled || false,
+          timezone: data?.timezone || null,
+        });
+        console.log('[UserProfile] Loaded:', data?.full_name, 'Phone:', data?.phone ? 'Yes' : 'No');
       } catch (error) {
         console.error('[UserProfile] Error:', error);
       }
@@ -471,123 +488,178 @@ function ChatPageContent() {
           style={{ background: productBg.headerGradient || COACHES[selectedCoach].gradient }}
         >
           <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
-                {COACHES[selectedCoach].avatar}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl">
+                  {COACHES[selectedCoach].avatar}
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    {activeTab === 'chat' ? `Chat with ${COACHES[selectedCoach].name}` : 'Voice Calls'}
+                  </h1>
+                  <p className="text-white/90 text-sm">
+                    {activeTab === 'chat' ? COACHES[selectedCoach].title : 'Talk directly with Nette'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">Chat with {COACHES[selectedCoach].name}</h1>
-                <p className="text-white/90 text-sm">{COACHES[selectedCoach].title}</p>
-              </div>
+
+              {/* Chat/Voice Tab Switcher */}
+              {isMindInsurance && (
+                <ChatVoiceTabSwitcher
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                />
+              )}
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
-            {/* Messages */}
-            <div className="space-y-6 mb-6">
-              {isLoadingHistory ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                  <span className="ml-2 text-muted-foreground">Loading conversation...</span>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <div key={message.id}>
-                    <ChatMessage
-                      role={message.role}
-                      content={message.content}
-                      timestamp={message.timestamp}
-                      coachType={message.coachType}
-                    />
-                    {/* Show AssessmentActionCard if MIO suggests an assessment */}
-                    {message.suggestedAction?.type === 'assessment' && message.suggestedAction.assessment_type && (
-                      <AssessmentActionCard
-                        assessmentType={message.suggestedAction.assessment_type}
-                        reason={message.suggestedAction.reason}
-                        buttonText={message.suggestedAction.button_text}
-                      />
-                    )}
-                  </div>
-                ))
-              )}
-
-              {/* MIO Loading Animation */}
-              {isTyping && (
-                <div className="flex flex-col items-center justify-center py-8 gap-4">
-                  {/* Animated MIO Avatar */}
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
-                    style={{ background: 'linear-gradient(135deg, #05c3dd, #0099aa)' }}
-                  >
-                    M
-                  </div>
-
-                  {/* Thinking text */}
-                  <p className="text-gray-400 text-sm">MIO is analyzing your message...</p>
-
-                  {/* Animated dots */}
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        </div>
-
-        {/* Input */}
-        <div className={`border-t sticky bottom-0 ${isMindInsurance ? 'bg-[#0a1628] border-[#05c3dd]/20' : 'bg-background'}`}>
-          <div className="container mx-auto px-4 py-4">
+        {/* Content - Conditional based on active tab */}
+        {activeTab === 'voice' && isMindInsurance ? (
+          <VoiceTabContent
+            isActive={true}
+            userId={user?.id}
+            userPhone={userProfile?.phone}
+            voiceEnabled={userProfile?.voice_calls_enabled}
+            userTimezone={userProfile?.timezone ?? undefined}
+            onPhoneAction={() => setShowVoiceOptIn(true)}
+            className="flex-1"
+          />
+        ) : (
+          <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
             <div className="max-w-4xl mx-auto">
-              {/* Active Conversation Indicator */}
-              {activeConversationId && messages.length > 0 && (
-                <div className={`text-xs text-center mb-2 ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                  Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <div className="relative flex-1 flex items-center">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
-                    className={`flex-1 pr-10 ${isMindInsurance ? 'mi-input' : ''}`}
-                    disabled={isTyping || isLoadingHistory}
-                  />
-                  <div className="absolute right-1">
-                    <VoiceInputButton
-                      onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
-                      onTranscriptUpdate={(text) => setInput(text)}
-                      disabled={isTyping || isLoadingHistory}
-                      variant={isMindInsurance ? 'mi' : 'default'}
-                    />
+              {/* Messages */}
+              <div className="space-y-6 mb-6">
+                {isLoadingHistory ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading conversation...</span>
                   </div>
-                </div>
-                <Button
-                  onClick={handleSend}
-                  size="icon"
-                  disabled={isTyping || isLoadingHistory || !input.trim()}
-                  style={{ background: COACHES[selectedCoach].gradient }}
-                  className="text-white hover:opacity-90"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+                ) : (
+                  messages.map((message) => (
+                    <div key={message.id}>
+                      <ChatMessage
+                        role={message.role}
+                        content={message.content}
+                        timestamp={message.timestamp}
+                        coachType={message.coachType}
+                      />
+                      {/* Show AssessmentActionCard if MIO suggests an assessment */}
+                      {message.suggestedAction?.type === 'assessment' && message.suggestedAction.assessment_type && (
+                        <AssessmentActionCard
+                          assessmentType={message.suggestedAction.assessment_type}
+                          reason={message.suggestedAction.reason}
+                          buttonText={message.suggestedAction.button_text}
+                        />
+                      )}
+                    </div>
+                  ))
+                )}
+
+                {/* MIO Loading Animation */}
+                {isTyping && (
+                  <div className="flex flex-col items-center justify-center py-8 gap-4">
+                    {/* Animated MIO Avatar */}
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl animate-pulse"
+                      style={{ background: 'linear-gradient(135deg, #05c3dd, #0099aa)' }}
+                    >
+                      M
+                    </div>
+
+                    {/* Thinking text */}
+                    <p className="text-gray-400 text-sm">MIO is analyzing your message...</p>
+
+                    {/* Animated dots */}
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-[#05c3dd] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-              <p className={`text-xs mt-2 text-center ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
-              </p>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Input - Only show on Chat tab */}
+        {activeTab === 'chat' && (
+          <div className={`border-t sticky bottom-0 ${isMindInsurance ? 'bg-[#0a1628] border-[#05c3dd]/20' : 'bg-background'}`}>
+            <div className="container mx-auto px-4 py-4">
+              <div className="max-w-4xl mx-auto">
+                {/* Active Conversation Indicator */}
+                {activeConversationId && messages.length > 0 && (
+                  <div className={`text-xs text-center mb-2 ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                    Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1 flex items-center">
+                    <Input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                      placeholder={`Ask ${COACHES[selectedCoach].name} about ${COACHES[selectedCoach].expertise[0].toLowerCase()}...`}
+                      className={`flex-1 pr-10 ${isMindInsurance ? 'mi-input' : ''}`}
+                      disabled={isTyping || isLoadingHistory}
+                    />
+                    <div className="absolute right-1">
+                      <VoiceInputButton
+                        onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                        onTranscriptUpdate={(text) => setInput(text)}
+                        disabled={isTyping || isLoadingHistory}
+                        variant={isMindInsurance ? 'mi' : 'default'}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleSend}
+                    size="icon"
+                    disabled={isTyping || isLoadingHistory || !input.trim()}
+                    style={{ background: COACHES[selectedCoach].gradient }}
+                    className="text-white hover:opacity-90"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className={`text-xs mt-2 text-center ${isMindInsurance ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                  Currently chatting with {COACHES[selectedCoach].name} • {COACHES[selectedCoach].title}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Voice Opt-In Modal */}
+      <VoiceOptInModal
+        isOpen={showVoiceOptIn}
+        onClose={() => setShowVoiceOptIn(false)}
+        onSuccess={() => {
+          // Refresh user profile to get updated phone
+          const fetchUpdatedProfile = async () => {
+            if (!user?.id) return;
+            const { data } = await supabase
+              .from('user_profiles')
+              .select('full_name, phone, voice_calls_enabled, timezone')
+              .eq('id', user.id)
+              .single();
+            if (data) {
+              setUserProfile({
+                full_name: data.full_name || null,
+                phone: data.phone || null,
+                voice_calls_enabled: data.voice_calls_enabled || false,
+                timezone: data.timezone || null,
+              });
+            }
+          };
+          fetchUpdatedProfile();
+        }}
+        onSkip={() => setShowVoiceOptIn(false)}
+      />
     </SidebarInset>
   );
 }

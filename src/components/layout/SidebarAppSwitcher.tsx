@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Shield, DollarSign, LucideIcon } from 'lucide-react';
+import { Home, Shield, DollarSign, Heart, LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +40,17 @@ const APPS: AppConfig[] = [
     pathPrefix: '/mind-insurance',
   },
   {
+    id: 'relationship-kpis',
+    name: 'Relationship KPIs',
+    shortName: 'Relationship',
+    description: 'Strengthen your bond',
+    icon: Heart,
+    gradient: 'from-rose-500 to-rose-600',
+    href: '/relationship-kpis',
+    isDisabled: false,
+    pathPrefix: '/relationship-kpis',
+  },
+  {
     id: 'me-wealth',
     name: 'Millionaire Essentials',
     shortName: 'ME Wealth',
@@ -65,19 +76,22 @@ export function SidebarAppSwitcher() {
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
 
-  // Check if we're in the Mind Insurance section for dark theme
+  // Check if we're in a dark-themed section (MI or RKPI)
   const isMindInsurance = useMemo(() => {
-    return location.pathname.startsWith('/mind-insurance');
+    return location.pathname.startsWith('/mind-insurance') || location.pathname.startsWith('/relationship-kpis');
   }, [location.pathname]);
 
   // Determine which app is currently active based on path
   const getIsActive = (app: AppConfig): boolean => {
+    if (app.id === 'relationship-kpis') {
+      return location.pathname.startsWith('/relationship-kpis');
+    }
     if (app.id === 'mind-insurance') {
       return location.pathname.startsWith('/mind-insurance');
     }
     // Grouphome is active for all other paths (dashboard, roadmap, chat, resources, etc.)
     if (app.id === 'grouphome') {
-      return !location.pathname.startsWith('/mind-insurance');
+      return !location.pathname.startsWith('/mind-insurance') && !location.pathname.startsWith('/relationship-kpis');
     }
     return false;
   };

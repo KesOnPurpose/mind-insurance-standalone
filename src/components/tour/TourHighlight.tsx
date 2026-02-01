@@ -144,7 +144,7 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[60] pointer-events-auto"
+        className="fixed inset-0 z-[100] pointer-events-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -215,13 +215,13 @@ export function TourHighlight({ targetSelector, isActive }: TourHighlightProps) 
             </filter>
           </defs>
 
-          {/* Dark overlay with mask applied - 85% opacity */}
+          {/* Dark overlay with mask applied - 40% opacity for better visibility of highlighted content */}
           <rect
             x="0"
             y="0"
             width="100%"
             height="100%"
-            fill="rgba(0, 0, 0, 0.85)"
+            fill="rgba(0, 0, 0, 0.40)"
             mask="url(#tour-highlight-mask)"
           />
 

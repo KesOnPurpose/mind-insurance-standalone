@@ -25,6 +25,8 @@ import { useFirstSessionStatus } from '@/hooks/useFirstSessionStatus';
 import { MIOInsightMessage } from './MIOInsightMessage';
 import { VoiceInputButton } from './VoiceInputButton';
 import { cn } from '@/lib/utils';
+import { useHubTourContext } from '@/contexts/HubTourContext';
+import { usePracticeTourContext } from '@/contexts/PracticeTourContext';
 
 interface MIOInsightsThreadViewProps {
   onBack?: () => void;
@@ -55,6 +57,12 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
   // Check if user has completed first engagement (for Coverage Center CTA)
   const { data: firstSessionStatus } = useFirstSessionStatus();
 
+  // Check if tour is active (to prevent auto-scroll during tour)
+  const { isActive: isTourActive } = useHubTourContext();
+
+  // Practice tour context for CTA
+  const { startTour: startPracticeTour } = usePracticeTourContext();
+
   const [inputValue, setInputValue] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -68,12 +76,12 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
     }
   }, [unreadCount, markAsRead]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages (disabled during tour to keep header visible)
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !isTourActive) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages.length]);
+  }, [messages.length, isTourActive]);
 
   // Handle send message
   const handleSend = useCallback(async () => {
@@ -105,6 +113,15 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
   const cancelReply = useCallback(() => {
     setReplyingTo(null);
   }, []);
+
+  // Handle Practice Tour CTA click
+  const handlePracticeTourCTA = useCallback(() => {
+    // Navigate to practice page and start tour after a short delay
+    navigate('/mind-insurance/practice');
+    setTimeout(() => {
+      startPracticeTour();
+    }, 500);
+  }, [navigate, startPracticeTour]);
 
   // Get message being replied to
   const replyingToMessage = replyingTo
@@ -237,6 +254,7 @@ export function MIOInsightsThreadView({ onBack, hideHeader = false }: MIOInsight
                 message={message}
                 onReply={handleReply}
                 showReplyButton={true}
+                onPracticeTourCTA={handlePracticeTourCTA}
               />
             ))}
 

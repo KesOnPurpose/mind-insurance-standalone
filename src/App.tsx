@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { AdminProvider } from "@/contexts/AdminContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { ConversationProvider } from "@/contexts/ConversationContext";
 import { ConversationsProvider } from "@/contexts/ConversationsContext";
+import { RelationshipProvider } from "@/contexts/RelationshipContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 // MI STANDALONE: AccessGate removed - uses gh_approved_users which is GH-specific
@@ -27,6 +29,8 @@ import EmailVerificationPage from "./pages/EmailVerificationPage";
 
 // Mind Insurance pages
 import MILandingPage from "./pages/MILandingPage";
+import ForCoachesPage from "./pages/ForCoachesPage";
+import FoundersPage from "./pages/FoundersPage";
 import MindInsuranceHub from "./pages/mind-insurance/MindInsuranceHub";
 import IdentityCollisionAssessmentPage from "./pages/mind-insurance/IdentityCollisionAssessmentPage";
 import { IdentityCollisionGuard } from "@/components/mind-insurance/IdentityCollisionGuard";
@@ -55,6 +59,7 @@ import ExternalMentalPillarAssessmentPage from "./pages/external/ExternalMentalP
 import ChatPage from "./pages/ChatPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import CEODashboardPage from "./pages/CEODashboardPage";
 
 // Admin pages
 import AdminDashboard from "./pages/AdminDashboard";
@@ -64,6 +69,21 @@ import ProtocolManagement from "./pages/admin/ProtocolManagement";
 import ReportManagement from "./pages/admin/ReportManagement";
 import AssessmentCenter from "./pages/admin/AssessmentCenter";
 import UserManagement from "./pages/admin/UserManagement";
+
+// Relationship KPIs pages
+import RelationshipDashboardPage from "./pages/relationship-kpis/RelationshipDashboardPage";
+import RelationshipCheckInPage from "./pages/relationship-kpis/RelationshipCheckInPage";
+import RelationshipHistoryPage from "./pages/relationship-kpis/RelationshipHistoryPage";
+import RelationshipPartnerPage from "./pages/relationship-kpis/RelationshipPartnerPage";
+import RelationshipPromptsPage from "./pages/relationship-kpis/RelationshipPromptsPage";
+import AcceptPartnerInvite from "./pages/relationship-kpis/AcceptPartnerInvite";
+
+// RIE lazy-loaded pages (code-split for performance)
+const RelationshipSeasonsPage = lazy(() => import("./pages/relationship-kpis/RelationshipSeasonsPage"));
+const RelationshipLearningPage = lazy(() => import("./pages/relationship-kpis/RelationshipLearningPage"));
+const RelationshipDateNightsPage = lazy(() => import("./pages/relationship-kpis/RelationshipDateNightsPage"));
+const RelationshipSafeSpacePage = lazy(() => import("./pages/relationship-kpis/RelationshipSafeSpacePage"));
+const RelationshipJournalPage = lazy(() => import("./pages/relationship-kpis/RelationshipJournalPage"));
 
 // Other
 import NotFound from "./pages/NotFound";
@@ -186,6 +206,12 @@ const App = () => {
                       {/* Landing - MI-specific */}
                       <Route path="/" element={<MILandingPage />} />
 
+                      {/* MIO for Coaches - Full Pitch Deck Page */}
+                      <Route path="/for-coaches" element={<ForCoachesPage />} />
+
+                      {/* Meet the Founders Page */}
+                      <Route path="/founders" element={<FoundersPage />} />
+
                       {/* Auth routes */}
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/auth/callback" element={<AuthCallback />} />
@@ -258,6 +284,24 @@ const App = () => {
                       {/* User Settings & Profile */}
                       <Route path="/settings" element={<ProtectedRoute><IdentityCollisionGuard><SidebarLayout><SettingsPage /></SidebarLayout></IdentityCollisionGuard></ProtectedRoute>} />
                       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+
+                      {/* Relationship KPIs Routes */}
+                      <Route path="/relationship-kpis" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><RelationshipDashboardPage /></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/check-in" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><RelationshipCheckInPage /></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/history" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><RelationshipHistoryPage /></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/partner" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><RelationshipPartnerPage /></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/prompts" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><RelationshipPromptsPage /></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/accept-partner-invite" element={<RelationshipProvider><AcceptPartnerInvite /></RelationshipProvider>} />
+
+                      {/* RIE New Routes (lazy-loaded) */}
+                      <Route path="/relationship-kpis/seasons" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}><RelationshipSeasonsPage /></Suspense></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/learning" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}><RelationshipLearningPage /></Suspense></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/date-nights" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}><RelationshipDateNightsPage /></Suspense></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/safe-space" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}><RelationshipSafeSpacePage /></Suspense></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/journal" element={<ProtectedRoute><RelationshipProvider><SidebarLayout><Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}><RelationshipJournalPage /></Suspense></SidebarLayout></RelationshipProvider></ProtectedRoute>} />
+
+                      {/* CEO Dashboard - Protected route for owner only */}
+                      <Route path="/ceo-dashboard" element={<ProtectedRoute><CEODashboardPage /></ProtectedRoute>} />
 
                       {/* Admin routes */}
                       <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminDashboard /></AdminRoute></ProtectedRoute>} />

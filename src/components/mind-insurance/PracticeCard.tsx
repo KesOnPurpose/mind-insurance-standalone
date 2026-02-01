@@ -88,7 +88,15 @@ export const PracticeCard = ({
                 <h3 className="font-semibold text-base text-white">
                   {practice.name}
                 </h3>
-                <PROTECTInfoTooltip letter={practiceType as PROTECTLetter} />
+                <PROTECTInfoTooltip
+                  letter={practiceType as PROTECTLetter}
+                  data-tour-target={
+                    practiceType === 'P' ? 'practice-p-info' :
+                    practiceType === 'R' ? 'practice-r-info' :
+                    practiceType === 'O' ? 'practice-o-info' :
+                    undefined
+                  }
+                />
               </div>
               <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
                 {practice.description}

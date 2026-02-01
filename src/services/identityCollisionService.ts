@@ -194,25 +194,31 @@ export async function saveAssessmentResult(
   }
 
   try {
-    // 0. Ensure user_profile exists (prevents FK errors)
-    const { error: profileEnsureError } = await supabase
+    // 0. Verify user_profile exists (required for FK constraint)
+    // Note: We just check existence - do NOT upsert because user_profiles has required fields
+    // (email, challenge_start_date) that we don't have access to here
+    const { data: profileCheck, error: profileCheckError } = await supabase
       .from('user_profiles')
-      .upsert({
-        id: userId,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'id',
-        ignoreDuplicates: true,
-      });
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
 
-    if (profileEnsureError) {
-      console.warn('[identityCollisionService] Could not ensure user_profile exists:', profileEnsureError);
-      // Continue anyway - the profile might already exist
+    if (profileCheckError) {
+      console.warn('[identityCollisionService] Error checking user_profile:', profileCheckError);
     }
 
-    // 1. Save to identity_collision_assessments table
+    if (!profileCheck) {
+      console.error('[identityCollisionService] User profile does not exist for userId:', userId);
+      return {
+        success: false,
+        error: 'User profile not found. Please ensure you are logged in.'
+      };
+    }
+
+    // 1. Try to save to identity_collision_assessments table (may fail due to RLS)
     // Generate a session ID for this assessment
     const sessionId = crypto.randomUUID();
+    let assessmentId: string | undefined;
 
     const { data: assessmentData, error: assessmentError } = await supabase
       .from('identity_collision_assessments')
@@ -236,11 +242,14 @@ export async function saveAssessmentResult(
       .single();
 
     if (assessmentError) {
-      console.error('[identityCollisionService] Error saving assessment:', assessmentError);
-      return { success: false, error: assessmentError.message };
+      // Log but don't fail - RLS may block this table, continue with user_profiles
+      console.warn('[identityCollisionService] Could not save to identity_collision_assessments (RLS may be blocking):', assessmentError.message);
+    } else {
+      assessmentId = assessmentData?.id;
     }
 
-    // 2. Update user_profiles.collision_patterns for quick access
+    // 2. Update user_profiles.collision_patterns - THIS IS THE PRIMARY SAVE
+    // Even if identity_collision_assessments failed, this should work
     // NOW INCLUDES intro_selections from the pre-assessment intro screens
     // ALSO sets mind_insurance_assessment_completed_at to mark assessment as done
     const { error: profileError } = await supabase
@@ -268,8 +277,11 @@ export async function saveAssessmentResult(
 
     if (profileError) {
       console.error('[identityCollisionService] Error updating user_profiles:', profileError);
-      // Don't fail if profile update fails - assessment is already saved
-    } else if (hasIntroSelections) {
+      // This is now our primary save path - fail if it doesn't work
+      return { success: false, error: `Failed to save assessment: ${profileError.message}` };
+    }
+
+    if (hasIntroSelections) {
       // Clear localStorage after successful save to database
       clearIntroSelectionsFromStorage();
       console.log('[identityCollisionService] Intro selections saved and cleared from localStorage');
@@ -331,7 +343,7 @@ export async function saveAssessmentResult(
       user_id: userId,
       user_name: await getUserName(userId),
       collision_pattern: result.primaryPattern,
-      assessment_id: assessmentData?.id,
+      assessment_id: assessmentId,
       // NEW: Include intro selections for protocol personalization
       intro_selections: hasIntroSelections ? {
         categories: introSelections.categories,  // What areas they struggle with (career, relationships, etc.)
@@ -344,7 +356,7 @@ export async function saveAssessmentResult(
 
     return {
       success: true,
-      assessmentId: assessmentData?.id,
+      assessmentId: assessmentId,
     };
   } catch (error) {
     console.error('[identityCollisionService] Unexpected error:', error);

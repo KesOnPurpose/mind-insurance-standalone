@@ -66,6 +66,48 @@ N8N_URL="https://n8n-n8n.vq00fr.easypanel.host"
 
 ---
 
+## Deployment Safety (CRITICAL)
+
+**STAGING ONLY**: `mindinsurancechallange.pages.dev`
+
+**NEVER DEPLOY TO**:
+- `mymindinsurance.com` (production - requires explicit CEO approval)
+- `grouphome4newbies.com` (different product - NEVER touch)
+- Any other domain
+
+### When Deploying Code Changes
+
+1. **ALWAYS** deploy to `mindinsurancechallange.pages.dev`
+2. **NEVER** push to production without explicit user approval
+3. Use: `wrangler pages deploy dist --project-name=mindinsurancechallange`
+
+### Production Deployment (RARE)
+
+Production deployments require:
+1. **Explicit user approval** - Quote the approval
+2. **Security Auditor clearance** - No VETO
+3. **QA Validator sign-off** - All tests passing
+4. **COO (Jaz) review** - Strategic alignment confirmed
+
+**When asked to deploy to production, respond**:
+> "Production deployment requires explicit approval. Please confirm with: 'Approved for production deployment to mymindinsurance.com'. I'll verify Security and QA have cleared this."
+
+---
+
+## GoHighLevel (GHL) Integration
+
+**Location ID**: `3KJeKktlnhQab7T0zrpM`
+**API Key**: `pit-c7f7d071-00b6-483c-870d-99cb26c803a4`
+
+Use GHL MCP tools for:
+- Contact search/management
+- SMS sending
+- Email campaigns
+- Workflow triggers
+- Tag management
+
+---
+
 ## User Source Tag System (CRITICAL)
 
 **Mind Insurance users are identified by**: `user_profiles.user_source = 'mi_standalone'`

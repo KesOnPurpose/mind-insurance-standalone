@@ -79,11 +79,11 @@ const VaultPage = () => {
           </Button>
         </div>
 
-        {/* Page Header */}
-        <div>
+        {/* Page Header - with tour target for guided tour */}
+        <div data-tour-target="vault-header">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
             <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-mi-cyan flex-shrink-0" />
-            Recording Vault
+            My Evidence
           </h1>
           <p className="text-sm sm:text-base text-gray-400 mt-1">
             Your recordings, patterns, and victories from practices

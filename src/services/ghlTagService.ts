@@ -36,7 +36,14 @@ export type MioTag =
   // Patterns
   | 'mio-pattern-past-prison'
   | 'mio-pattern-success-sabotage'
-  | 'mio-pattern-compass-crisis';
+  | 'mio-pattern-compass-crisis'
+  // Relationship KPIs
+  | 'relationship-partner-invited'
+  | 'relationship-partner-paired'
+  | 'relationship-check-in-started'
+  | 'relationship-consistent'
+  | 'relationship-at-risk'
+  | 'relationship-needs-support';
 
 interface TagUpdateResult {
   success: boolean;
@@ -163,6 +170,49 @@ export async function tagPattern(
 }
 
 // ============================================================================
+// RELATIONSHIP KPI TAG HELPERS
+// ============================================================================
+
+/**
+ * Tag user when they invite a partner.
+ */
+export async function tagPartnerInvited(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['relationship-partner-invited']);
+}
+
+/**
+ * Tag both users when a partnership is accepted.
+ */
+export async function tagPartnerPaired(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['relationship-partner-paired']);
+}
+
+/**
+ * Tag user on their first completed check-in.
+ */
+export async function tagCheckInStarted(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['relationship-check-in-started']);
+}
+
+/**
+ * Tag user as consistent (4+ consecutive weekly check-ins).
+ */
+export async function tagRelationshipConsistent(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(
+    userId,
+    ['relationship-consistent'],
+    ['relationship-at-risk'] // Clear risk tag
+  );
+}
+
+/**
+ * Tag user as needing support (any KPI score 1-3).
+ */
+export async function tagNeedsSupport(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['relationship-needs-support']);
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 
@@ -175,5 +225,10 @@ export default {
   clearHighRiskTag,
   tagDay3Celebration,
   tagPushEnabled,
-  tagPattern
+  tagPattern,
+  tagPartnerInvited,
+  tagPartnerPaired,
+  tagCheckInStarted,
+  tagRelationshipConsistent,
+  tagNeedsSupport,
 };

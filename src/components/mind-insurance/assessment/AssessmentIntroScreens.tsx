@@ -288,7 +288,7 @@ function ScreenMIOIntro({ onNext }: { onNext: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.4 }}
-        className="text-base text-gray-300 max-w-sm mb-5"
+        className="text-base text-gray-200 max-w-sm mb-5"
       >
         Built for entrepreneurs and high-achievers who keep getting in their own way.
       </motion.p>
@@ -301,7 +301,7 @@ function ScreenMIOIntro({ onNext }: { onNext: () => void }) {
         className="mb-8"
       >
         <Card className="bg-white/5 border-white/20 p-4 max-w-sm">
-          <p className="text-sm text-gray-300 leading-relaxed">
+          <p className="text-sm text-gray-200 leading-relaxed">
             Unlike apps that track habits{' '}
             <span className="text-red-400 font-semibold">AFTER</span> they fail,
             Mind Insurance catches your self-sabotage{' '}
@@ -350,7 +350,7 @@ function ScreenHook({ onNext }: { onNext: () => void }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="space-y-2 text-base sm:text-lg text-gray-300 max-w-sm mx-auto"
+          className="space-y-2 text-base sm:text-lg text-gray-200 max-w-sm mx-auto"
         >
           <p>The courses. The coaches. The podcasts.</p>
           <p>You've done the work.</p>
@@ -367,7 +367,7 @@ function ScreenHook({ onNext }: { onNext: () => void }) {
         <p className="text-xl sm:text-2xl font-semibold text-white mb-4">
           So why are you still <span className="text-mi-cyan">HERE</span>?
         </p>
-        <div className="space-y-1 text-base text-gray-400">
+        <div className="space-y-1 text-base text-gray-200">
           <p>Reading another thing.</p>
           <p>Looking for another answer.</p>
         </div>
@@ -380,7 +380,7 @@ function ScreenHook({ onNext }: { onNext: () => void }) {
         transition={{ delay: 1.0, duration: 0.4 }}
         className="bg-white/5 rounded-xl px-5 py-3 mb-8 border border-white/10 max-w-sm"
       >
-        <p className="text-base text-gray-300 leading-relaxed">
+        <p className="text-base text-gray-200 leading-relaxed">
           What if the problem was never{' '}
           <span className="text-mi-gold font-semibold">information</span>?
         </p>
@@ -490,7 +490,7 @@ function ScreenCategories({ onNext }: { onNext: () => void }) {
                   flex items-center gap-3 transition-all duration-200
                   ${isSelected
                     ? 'border-white shadow-lg shadow-white/30 scale-[1.02]'
-                    : 'border-transparent opacity-70 hover:opacity-90 hover:scale-[1.01]'}
+                    : 'border-transparent opacity-90 hover:opacity-100 hover:scale-[1.01]'}
                 `}
               >
                 <div className="w-10 h-10 rounded-lg bg-white/30 flex items-center justify-center flex-shrink-0">
@@ -500,7 +500,7 @@ function ScreenCategories({ onNext }: { onNext: () => void }) {
                   <h3 className="font-bold text-sm text-gray-900 tracking-wide">
                     {category.label}
                   </h3>
-                  <p className="text-xs text-gray-700 truncate">
+                  <p className="text-xs text-gray-700">
                     "{category.hook}"
                   </p>
                 </div>
@@ -582,7 +582,7 @@ function ScreenExplained({ onNext }: { onNext: () => void }) {
             <span className="text-mi-cyan font-bold">Identity Collision</span>.
           </p>
 
-          <p className="text-base text-gray-300 leading-relaxed">
+          <p className="text-base text-gray-200 leading-relaxed">
             It's what happens when your past programming, fears, and unconscious beliefs{' '}
             <span className="text-mi-gold font-semibold">COLLIDE</span> with your future goals.
           </p>
@@ -592,7 +592,7 @@ function ScreenExplained({ onNext }: { onNext: () => void }) {
             <p className="text-sm text-gray-200 leading-relaxed italic">
               Like driving with the parking brake on.
             </p>
-            <p className="text-sm text-gray-300 leading-relaxed mt-2">
+            <p className="text-sm text-gray-200 leading-relaxed mt-2">
               The engine is fine. <span className="text-white font-medium">You're fine.</span>
               <br />
               But something invisible is holding you back.
@@ -715,7 +715,7 @@ function ScreenPatterns({ onNext }: { onNext: () => void }) {
                   min-h-[130px] justify-center
                   ${isSelected
                     ? 'border-white shadow-lg shadow-white/30 scale-[1.03]'
-                    : 'border-transparent opacity-70 hover:opacity-90 hover:scale-[1.02]'}
+                    : 'border-transparent opacity-90 hover:opacity-100 hover:scale-[1.02]'}
                 `}
               >
                 {/* Selection checkmark badge - top right corner */}
@@ -846,10 +846,16 @@ function ScreenPhoneCapture({ onNext }: { onNext: () => void }) {
         profile?.full_name || undefined
       );
 
+      // Accept both full GHL success AND local_only graceful degradation
       if (!result?.success) {
         setError(result?.message || 'Failed to enable SMS notifications');
         setIsLoading(false);
         return;
+      }
+
+      // local_only means phone was stored locally (GHL failed but user can proceed)
+      if (result.source === 'local_only') {
+        console.log('[PhoneCapture] Phone stored locally, GHL sync will be retried later');
       }
 
       setSuccess(true);
@@ -900,7 +906,7 @@ function ScreenPhoneCapture({ onNext }: { onNext: () => void }) {
           <h3 className="text-xl font-bold text-white mb-2">
             You're All Set!
           </h3>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-200 text-sm">
             MIO will text you when your first protocol is ready.
           </p>
         </motion.div>
@@ -934,7 +940,7 @@ function ScreenPhoneCapture({ onNext }: { onNext: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
-            className="text-sm text-gray-300 max-w-sm mb-6"
+            className="text-sm text-gray-200 max-w-sm mb-6"
           >
             Your patterns are identified. Now let's make sure you don't fall back into them.
           </motion.p>
@@ -1082,7 +1088,7 @@ function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className="text-sm text-gray-300 mb-5"
+        className="text-sm text-gray-200 mb-5"
       >
         Your policy includes the{' '}
         <span className="text-mi-gold font-semibold">P.R.O.T.E.C.T. Method™</span>
@@ -1106,16 +1112,16 @@ function ScreenPROTECTMethod({ onNext }: { onNext: () => void }) {
               <span className="text-mi-gold font-bold text-lg w-6 flex-shrink-0">
                 {practice.letter}
               </span>
-              <Icon className="w-5 h-5 text-gray-300 flex-shrink-0" />
+              <Icon className="w-5 h-5 text-gray-200 flex-shrink-0" />
               <div className="text-left flex-1 min-w-0">
                 <span className="text-white font-medium text-sm block">
                   {practice.name}
                 </span>
-                <p className="text-xs text-gray-300 truncate">
+                <p className="text-xs text-gray-200">
                   {practice.description}
                 </p>
               </div>
-              <span className="text-xs text-gray-400 flex-shrink-0">
+              <span className="text-xs text-gray-300 flex-shrink-0">
                 {practice.time}
               </span>
             </motion.div>
@@ -1212,7 +1218,7 @@ function ScreenPolicyPreview({ onNext }: { onNext: () => void }) {
                   className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
                 >
                   <Icon className={`w-5 h-5 ${item.color} flex-shrink-0`} />
-                  <span className="text-sm text-gray-300 text-left">{item.label}</span>
+                  <span className="text-sm text-gray-200 text-left">{item.label}</span>
                 </motion.div>
               );
             })}
@@ -1227,7 +1233,7 @@ function ScreenPolicyPreview({ onNext }: { onNext: () => void }) {
         transition={{ delay: 0.8, duration: 0.4 }}
         className="mb-6 max-w-sm"
       >
-        <p className="text-base text-gray-400 leading-relaxed">
+        <p className="text-base text-gray-200 leading-relaxed">
           In <span className="text-mi-gold font-semibold">3 minutes</span>, you'll have your
           personalized policy to protect against identity collision.
         </p>

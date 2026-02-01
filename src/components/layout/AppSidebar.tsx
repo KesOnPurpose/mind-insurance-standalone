@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Settings, LogOut, User, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MILogo } from '@/components/brand/MILogo';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -19,8 +20,9 @@ import { MindInsurancePanel } from './sidebar-panels/MindInsurancePanel';
 import { ProfilePanel } from './sidebar-panels/ProfilePanel';
 import { DefaultPanel } from './sidebar-panels/DefaultPanel';
 import { AdminPanel } from './sidebar-panels/AdminPanel';
+import { RelationshipKPIsPanel } from './sidebar-panels/RelationshipKPIsPanel';
 
-export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'admin' | 'default';
+export type SidebarMode = 'chat' | 'roadmap' | 'dashboard' | 'mind-insurance' | 'relationship-kpis' | 'model-week' | 'resources' | 'resources-documents' | 'resources-calculator' | 'profile' | 'admin' | 'default';
 
 interface AppSidebarProps {
   mode: SidebarMode;
@@ -34,6 +36,8 @@ function SidebarContextPanel({ mode }: { mode: SidebarMode }) {
   switch (mode) {
     case 'mind-insurance':
       return <MindInsurancePanel />;
+    case 'relationship-kpis':
+      return <RelationshipKPIsPanel />;
     case 'profile':
       return <ProfilePanel />;
     case 'admin':
@@ -54,6 +58,8 @@ function getSectionLabel(mode: SidebarMode): string {
   switch (mode) {
     case 'mind-insurance':
       return 'PROTECT Practice';
+    case 'relationship-kpis':
+      return 'Relationship KPIs';
     case 'profile':
       return 'Your Profile';
     case 'admin':
@@ -114,12 +120,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
             className="flex items-center gap-2 mb-4 text-white"
             onClick={() => isMobile && setOpenMobile(false)}
           >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-mi-cyan to-mi-cyan/60">
-              <span className="text-white font-bold text-sm">MI</span>
-            </div>
-            <span className="font-semibold text-lg text-white">
-              Mind Insurance
-            </span>
+            <MILogo size="sm" variant="icon" showText />
           </Link>
         </div>
 

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 
-export type ProductType = 'grouphome' | 'mind-insurance' | 'me-wealth';
+export type ProductType = 'grouphome' | 'mind-insurance' | 'me-wealth' | 'relationship-kpis';
 
 interface ProductContextType {
   currentProduct: ProductType;
@@ -59,6 +59,18 @@ const productConfig: Record<ProductType, ProductConfig> = {
     available: false,
     route: '/wealth',
   },
+  'relationship-kpis': {
+    id: 'relationship-kpis',
+    name: 'Relationship KPIs',
+    shortName: 'Relationship',
+    description: 'Strengthen your bond',
+    icon: 'Heart',
+    color: 'text-rose-500',
+    bgGradient: 'from-rose-500/10 to-rose-500/5',
+    borderColor: 'border-rose-500/30',
+    available: true,
+    route: '/relationship-kpis',
+  },
 };
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -68,7 +80,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [currentProduct, setCurrentProductState] = useState<ProductType>(() => {
     // Load from localStorage if available
     const saved = localStorage.getItem('currentProduct');
-    if (saved && (saved === 'grouphome' || saved === 'mind-insurance' || saved === 'me-wealth')) {
+    if (saved && (saved === 'grouphome' || saved === 'mind-insurance' || saved === 'me-wealth' || saved === 'relationship-kpis')) {
       return saved as ProductType;
     }
     return 'grouphome';
@@ -84,8 +96,13 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const path = location.pathname;
 
+    // Relationship KPIs routes
+    if (path.startsWith('/relationship-kpis')) {
+      setCurrentProductState('relationship-kpis');
+      localStorage.setItem('currentProduct', 'relationship-kpis');
+    }
     // Mind Insurance routes (check first - includes /mind-insurance/chat)
-    if (path.includes('/protect') || path.startsWith('/mind-insurance')) {
+    else if (path.includes('/protect') || path.startsWith('/mind-insurance')) {
       setCurrentProductState('mind-insurance');
       localStorage.setItem('currentProduct', 'mind-insurance');
     }

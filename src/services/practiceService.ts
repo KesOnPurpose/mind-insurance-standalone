@@ -1,6 +1,10 @@
 /**
  * Practice Service - CRUD Operations for PROTECT Practices
  * Handles all database operations for the Mind Insurance Challenge practice system
+ *
+ * MIO v3.0 ENHANCEMENT:
+ * Now includes session_telemetry for behavioral analysis
+ * This enables capabilities 16-33 (keystroke dynamics, pause patterns, etc.)
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +14,9 @@ import type {
   PracticeData,
   PracticeStreak,
   PracticeCompletionStatus,
+  SessionTelemetry,
+  VoiceMetadata,
+  EnrichedPracticeData,
   PRACTICE_CONFIG,
   DAILY_SCHEDULE
 } from '@/types/practices';
@@ -22,6 +29,10 @@ export interface CreatePracticeData {
   data: PracticeData;
   completed?: boolean;
   completed_at?: string;
+  /** MIO v3.0 - Session telemetry for behavioral analysis */
+  session_telemetry?: SessionTelemetry;
+  /** MIO v3.0 - Voice metadata from recording (if applicable) */
+  voice_metadata?: VoiceMetadata;
 }
 
 // Type for user stats
@@ -75,22 +86,38 @@ export async function getTodayPractices(
 /**
  * Create a new practice entry
  * Validates data and calculates points before saving
+ *
+ * MIO v3.0: Now includes session_telemetry for behavioral analysis
  */
 export async function createPractice(
   data: CreatePracticeData
 ): Promise<DailyPractice> {
   try {
-    const { user_id, practice_date, practice_type, data: practiceData } = data;
+    const {
+      user_id,
+      practice_date,
+      practice_type,
+      data: practiceData,
+      session_telemetry,
+      voice_metadata
+    } = data;
 
     // Calculate points based on practice type (no late penalty)
     const points = calculatePracticePoints(practice_type, false);
+
+    // MIO v3.0 - Build enriched practice data with telemetry
+    const enrichedData = buildEnrichedPracticeData(
+      practiceData,
+      session_telemetry,
+      voice_metadata
+    );
 
     // Create the practice record
     const practiceRecord = {
       user_id,
       practice_date,
       practice_type,
-      data: practiceData,
+      data: practiceData, // Original data for backward compatibility
       completed: data.completed ?? true,
       completed_at: data.completed_at ?? new Date().toISOString(),
       points_earned: points,
@@ -108,9 +135,141 @@ export async function createPractice(
       throw error;
     }
 
+    // MIO v3.0 - Store enriched practice data to mio_practice_feedback if telemetry exists
+    if (session_telemetry || voice_metadata) {
+      await storePracticeTelemetry(
+        user_id,
+        newPractice.id,
+        practice_type,
+        enrichedData
+      ).catch(err => {
+        // Non-blocking - telemetry storage failure shouldn't fail practice creation
+        console.warn('[createPractice] Failed to store telemetry:', err);
+      });
+    }
+
     return newPractice as DailyPractice;
   } catch (error) {
     console.error('Failed to create practice:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// MIO v3.0 - TELEMETRY HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Determine time of day category for circadian analysis
+ */
+function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 21) return 'evening';
+  return 'night';
+}
+
+/**
+ * Build enriched practice data with MIO v3.0 telemetry
+ */
+function buildEnrichedPracticeData(
+  practiceData: PracticeData,
+  sessionTelemetry?: SessionTelemetry,
+  voiceMetadata?: VoiceMetadata
+): EnrichedPracticeData {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+
+  const enrichedData: EnrichedPracticeData = {
+    practiceData,
+    practiceContext: {
+      timeOfDay: getTimeOfDay(),
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6
+    }
+  };
+
+  // Add session telemetry if available
+  if (sessionTelemetry) {
+    enrichedData.sessionTelemetry = {
+      ...sessionTelemetry,
+      // Add voice metadata to session telemetry if both exist
+      voiceMetadata: voiceMetadata || sessionTelemetry.voiceMetadata
+    };
+  } else if (voiceMetadata) {
+    // Create minimal session telemetry with just voice metadata
+    enrichedData.sessionTelemetry = {
+      sessionId: `voice-${Date.now()}`,
+      deviceType: voiceMetadata.deviceType,
+      sessionDurationMs: voiceMetadata.totalSessionTimeMs,
+      startTime: voiceMetadata.recordingStartTime,
+      endTime: voiceMetadata.recordingEndTime,
+      voiceMetadata
+    };
+  }
+
+  return enrichedData;
+}
+
+/**
+ * Store practice telemetry to mio_practice_feedback table
+ * This feeds into MIO's behavioral analysis capabilities
+ */
+async function storePracticeTelemetry(
+  userId: string,
+  practiceId: string,
+  practiceType: PracticeType,
+  enrichedData: EnrichedPracticeData
+): Promise<void> {
+  try {
+    // Check if there's an existing feedback record for this practice
+    const { data: existing } = await supabase
+      .from('mio_practice_feedback')
+      .select('id, enriched_practice_data')
+      .eq('practice_id', practiceId)
+      .single();
+
+    if (existing) {
+      // Update existing record with telemetry
+      const { error } = await supabase
+        .from('mio_practice_feedback')
+        .update({
+          enriched_practice_data: {
+            ...(existing.enriched_practice_data as object || {}),
+            session_telemetry: enrichedData.sessionTelemetry,
+            practice_context: enrichedData.practiceContext
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+
+      if (error) throw error;
+    } else {
+      // Create new feedback record with telemetry
+      const { error } = await supabase
+        .from('mio_practice_feedback')
+        .insert({
+          user_id: userId,
+          practice_id: practiceId,
+          practice_type: practiceType,
+          enriched_practice_data: {
+            session_telemetry: enrichedData.sessionTelemetry,
+            practice_context: enrichedData.practiceContext
+          }
+        });
+
+      if (error) throw error;
+    }
+
+    console.log('[storePracticeTelemetry] Telemetry stored:', {
+      practiceId,
+      hasKeystrokeMetrics: !!enrichedData.sessionTelemetry?.keystrokeMetrics,
+      hasVoiceMetadata: !!enrichedData.sessionTelemetry?.voiceMetadata,
+      cognitiveLoad: enrichedData.sessionTelemetry?.cognitiveLoadScore
+    });
+
+  } catch (error) {
+    console.error('[storePracticeTelemetry] Failed:', error);
     throw error;
   }
 }

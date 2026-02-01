@@ -382,3 +382,212 @@ Before any behavioral analysis:
 2. Never send more than 1 intervention per 24 hours per user
 3. Flag CRITICAL risk users for human review
 4. Document intervention rationale in `section_type` field
+
+---
+
+## AUTONOMOUS HARNESS INTEGRATION
+
+### Batch Analysis Mode (Overnight Sessions)
+
+When running in overnight autonomous mode, MIO Oracle can proactively analyze user behavior:
+
+#### Nightly Analysis Batch Workflow
+
+```
+1. Query users with practices in last 48 hours
+   - CRITICAL: WHERE user_source = 'mi_standalone'
+
+2. Run 15 forensic capabilities on each user
+   - Calculate dropout risk score
+   - Calculate breakthrough probability
+   - Detect active patterns (Past Prison, Success Sabotage, Compass Crisis)
+
+3. Generate priority lists:
+   - CRITICAL (dropout risk >70%): Queue for emergency intervention
+   - HIGH (dropout risk 50-70%): Queue for 24h outreach
+   - CELEBRATION (breakthrough probability >70%): Queue positive reinforcement
+
+4. Save insights to pending-review/mio-insights/
+   - NEVER send directly (queue for morning approval)
+```
+
+#### Database Safety Protocol (CRITICAL)
+
+```sql
+-- ALL MIO queries MUST include this filter
+WHERE user_source = 'mi_standalone'
+
+-- Example: At-Risk User Detection
+SELECT up.id, up.email, uat.inactive_days
+FROM user_profiles up
+JOIN mio_user_activity_tracking uat ON up.id = uat.user_id
+WHERE up.user_source = 'mi_standalone'  -- CRITICAL FILTER
+AND uat.inactive_days >= 3;
+```
+
+**VETO CONDITION**: If any query is written without `user_source = 'mi_standalone'`, session STOPS immediately.
+
+#### Harness Output Format
+
+Save each insight to `harness/state/pending-review/mio-insights/{user_id}_{priority}.md`:
+
+```markdown
+## MIO Insight: {user_name}
+
+**Generated**: {timestamp}
+**Session**: {session_id}
+**Priority**: CRITICAL | HIGH | CELEBRATION | ROUTINE
+
+### User Profile
+- User ID: {user_id}
+- Email: {email}
+- Current Day: {day}
+- User Source: mi_standalone
+
+### Pattern Detection
+**Primary Pattern**: Past Prison | Success Sabotage | Compass Crisis
+**Sub-Pattern**: {specific sub-pattern}
+**Confidence**: {percentage}%
+
+### Risk Scores
+| Metric | Score | Threshold | Status |
+|--------|-------|-----------|--------|
+| Dropout Risk | {score}/100 | >50 = HIGH | {status} |
+| Breakthrough Probability | {score}/100 | >70 = IMMINENT | {status} |
+| Reframe Quality | {score}/10 | <4 = CONCERN | {status} |
+
+### Triggered Capabilities
+- [x] Capability {n}: {name} - {finding}
+- [x] Capability {n}: {name} - {finding}
+
+### Insight Title
+{Personalized title based on detected pattern}
+
+### Insight Content
+{Full insight text using forensic templates}
+
+### Recommended Intervention Protocol
+{7-day neural rewiring protocol}
+
+### Delivery Recommendation
+| Method | Workflow ID | Timing |
+|--------|-------------|--------|
+| SMS | {workflow_id} | {4h | 24h | weekly} |
+| Email | {workflow_id} | {timing} |
+
+### Approval Required
+- [ ] Content approved by user in morning review
+- [ ] Delivery timing confirmed
+- [ ] N8n workflow trigger authorized
+
+=== END INSIGHT ===
+```
+
+#### Batch Priority Summary
+
+Generate `harness/state/pending-review/mio-insights/PRIORITY-SUMMARY.md`:
+
+```markdown
+# MIO Insights Batch Summary
+
+**Generated**: {timestamp}
+**Session**: {session_id}
+**Users Analyzed**: {count}
+
+## CRITICAL INTERVENTIONS (Send within 4 hours)
+| User | Pattern | Risk Score | Insight |
+|------|---------|------------|---------|
+| {name} | {pattern} | {score} | [Link](user_123_critical.md) |
+
+## HIGH PRIORITY (Send within 24 hours)
+| User | Pattern | Risk Score | Insight |
+|------|---------|------------|---------|
+
+## CELEBRATIONS (Reinforce within 12 hours)
+| User | Breakthrough Type | Probability | Insight |
+|------|------------------|-------------|---------|
+
+## ROUTINE (Weekly digest)
+| Users | Status |
+|-------|--------|
+| {count} users | On track, no intervention needed |
+
+## N8n Workflow Queue
+After approval, trigger:
+- Sp5RhDpa8xFPnlWI: MIO Insights Reply (individual)
+- 56JoMTczqhHS3eME: MIO Weekly Report (batch)
+
+## Database Safety Verification
+- All queries filtered by user_source: YES
+- Shared table access: {tables accessed}
+- Filter violations: NONE
+```
+
+### Harness Session Checkpoint
+
+Every 30 minutes during analysis:
+
+```markdown
+=== MIO CHECKPOINT ===
+Time: {timestamp}
+Session: {session_id}
+
+## Analysis Progress
+- Users scanned: {count} of {total}
+- Current user: {user_id}
+- Time elapsed: {minutes}
+
+## Insights Generated
+- CRITICAL: {count}
+- HIGH: {count}
+- CELEBRATION: {count}
+- ROUTINE: {count}
+
+## Database Queries
+- Total queries executed: {count}
+- All filtered by user_source: YES
+- Errors: NONE
+
+## Capabilities Triggered
+| Capability | Users Affected |
+|------------|----------------|
+| 3-Day Rule | {count} |
+| Week 3 Danger Zone | {count} |
+| Breakthrough Probability | {count} |
+
+## Next Steps
+1. Continue to user {next_user_id}
+2. Complete batch by {estimated_time}
+3. Generate priority summary
+
+=== END CHECKPOINT ===
+```
+
+### Integration with N8n Workflows
+
+**Available Workflows** (trigger ONLY after morning approval):
+- `Sp5RhDpa8xFPnlWI` - MIO Insights Reply (individual insight delivery)
+- `56JoMTczqhHS3eME` - MIO Weekly Report (batch summary)
+
+**Harness Constraint**: Insights are QUEUED, not delivered. User approves in morning review before N8n trigger.
+
+### Quality Gates for MIO Tasks
+
+| Gate | Check | Blocking? |
+|------|-------|-----------|
+| user_source filter | All queries include filter | YES (VETO) |
+| Insight quality | Uses forensic templates | YES |
+| Priority classification | Correct thresholds applied | YES |
+| Output format | Matches harness template | YES |
+
+---
+
+## Quick Reference
+
+| Item | Value |
+|------|-------|
+| Database | hpyodaugrkctagkrfofj.supabase.co |
+| User Filter | `user_source = 'mi_standalone'` |
+| Output Location | `harness/state/pending-review/mio-insights/` |
+| Delivery Approval | Morning review (never auto-send) |
+| N8n Workflows | Sp5RhDpa8xFPnlWI, 56JoMTczqhHS3eME |

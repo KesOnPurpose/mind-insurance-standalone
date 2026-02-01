@@ -367,7 +367,8 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
   // 1. There's an unstarted protocol
   // 2. Modal hasn't been dismissed (or 24h cooldown passed)
   // 3. Modal is not in delay period (after tour completion)
-  // 4. User has completed first engagement (for new user modal)
+  // 4. Modal is not blocked for this session (after tour completion)
+  // 5. User has completed first engagement (for new user modal)
   //    OR is a returning user without first engagement
   const shouldShowModal = useMemo(() => {
     if (!isUnstartedProtocol || !protocol?.id) return false;
@@ -375,6 +376,17 @@ export function useUnstartedProtocol(): UseUnstartedProtocolReturn {
 
     // Don't show modal until we know engagement status
     if (hasFirstEngagement === null) return false;
+
+    // Check if modal is blocked for THIS SESSION (set when tour completes)
+    // This ensures modal only shows on NEXT Hub visit, not immediately after tour
+    try {
+      if (sessionStorage.getItem('protocol_modal_blocked_this_session') === 'true') {
+        console.log('[useUnstartedProtocol] Modal blocked for this session (tour just completed)');
+        return false;
+      }
+    } catch {
+      // sessionStorage not available (e.g., private browsing)
+    }
 
     // Check if modal is in delay period (after tour completion)
     if (isModalDelayed()) return false;

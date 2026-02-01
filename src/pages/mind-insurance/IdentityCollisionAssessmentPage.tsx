@@ -474,9 +474,9 @@ const IdentityCollisionAssessmentPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentStep, hasCurrentAnswer, isLastQuestion, showResults, goToNextStep, goToPreviousStep]);
 
-  // Intro screen handlers (7 screens: 0-6)
+  // Intro screen handlers (8 screens: 0-7)
   const handleIntroNext = useCallback(() => {
-    if (introStep < 6) {
+    if (introStep < 7) {
       setIntroStep((prev) => prev + 1);
     } else {
       setIntroCompleted();

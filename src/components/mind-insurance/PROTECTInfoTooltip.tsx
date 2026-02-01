@@ -130,6 +130,7 @@ interface PROTECTInfoTooltipProps {
   letter: PROTECTLetter;
   variant?: 'icon' | 'inline';
   className?: string;
+  'data-tour-target'?: string;
 }
 
 /**
@@ -142,6 +143,7 @@ export function PROTECTInfoTooltip({
   letter,
   variant = 'icon',
   className = '',
+  'data-tour-target': dataTourTarget,
 }: PROTECTInfoTooltipProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
@@ -190,6 +192,7 @@ export function PROTECTInfoTooltip({
           <button
             className={`inline-flex items-center justify-center p-1 rounded-full text-gray-400 hover:text-mi-cyan hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] ${className}`}
             aria-label={`Info about ${info.name}`}
+            data-tour-target={dataTourTarget}
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(true);
@@ -231,6 +234,7 @@ export function PROTECTInfoTooltip({
           <button
             className={`inline-flex items-center justify-center p-0.5 rounded-full text-gray-400 hover:text-mi-cyan hover:bg-white/10 transition-colors ${className}`}
             aria-label={`Info about ${info.name}`}
+            data-tour-target={dataTourTarget}
             onClick={(e) => e.stopPropagation()}
           >
             <Info className="w-4 h-4" />

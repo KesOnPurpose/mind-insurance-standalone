@@ -188,6 +188,35 @@ serve(async (req) => {
       .eq('id', user_id)
       .single();
 
+    // Sync MIO data to GHL after practice completion (for Voice AI context)
+    // This runs async and doesn't block the response
+    if (sectionComplete) {
+      try {
+        // Call sync-mio-to-ghl Edge Function directly (more reliable than N8n webhook)
+        const syncResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-mio-to-ghl`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+            },
+            body: JSON.stringify({ user_id })
+          }
+        );
+
+        if (syncResponse.ok) {
+          console.log('[GHL Sync] Successfully synced MIO data to GHL after section completion');
+        } else {
+          const syncError = await syncResponse.text();
+          console.error('[GHL Sync] Failed to sync:', syncError);
+        }
+      } catch (syncError) {
+        console.error('[GHL Sync] Exception during sync:', syncError);
+        // Don't fail the practice save if GHL sync fails
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

@@ -300,8 +300,8 @@ export function AssessmentResultsReveal({
               transition={{ delay: 1, duration: 0.4 }}
               className="mt-4"
             >
-              <summary className="text-xs text-gray-700 cursor-pointer hover:text-gray-900 text-center">
-                Tap to read more
+              <summary className="text-sm text-mi-gold font-medium cursor-pointer hover:text-yellow-400 text-center flex items-center justify-center gap-1">
+                <span>▼</span> Tap to read more
               </summary>
               <p className="text-sm text-gray-700 leading-relaxed mt-2 bg-white/10 rounded-lg p-3">
                 {patternInfo.fullDescription}

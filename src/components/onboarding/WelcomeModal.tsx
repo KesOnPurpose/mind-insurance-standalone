@@ -138,7 +138,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className={`p-3 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 ${levelInfo.color}`}>
+            <div className={`p-3 rounded-full bg-gradient-to-br from-mi-cyan/20 to-mi-gold/20 ${levelInfo.color}`}>
               <LevelIcon className="w-6 h-6" />
             </div>
             <DialogTitle className="text-2xl">
@@ -146,24 +146,24 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
             </DialogTitle>
           </div>
           <DialogDescription className="text-base space-y-4 pt-2">
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="bg-gradient-to-r from-mi-cyan/10 to-mi-gold/10 p-4 rounded-lg border border-mi-cyan/30">
               <h3 className={`font-semibold text-lg mb-2 ${levelInfo.color}`}>
                 {levelInfo.title}
               </h3>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p className="text-gray-300">
                 {levelInfo.message}
               </p>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Target className="w-4 h-4 text-purple-600" />
+              <h4 className="font-semibold text-gray-100 flex items-center gap-2">
+                <Target className="w-4 h-4 text-mi-cyan" />
                 Your Personalized Plan
               </h4>
 
               <div className="grid gap-2 text-sm">
                 {userProfile.ownership_model && (
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-gray-300">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span>
                       <strong>Business Model:</strong>{' '}
@@ -173,7 +173,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
                 )}
 
                 {userProfile.immediate_priority && (
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-gray-300">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span>
                       {priorityMessages[userProfile.immediate_priority as keyof typeof priorityMessages] ||
@@ -183,7 +183,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
                 )}
 
                 {userProfile.timeline && (
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-gray-300">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span>
                       <strong>Timeline:</strong> {userProfile.timeline}
@@ -192,7 +192,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
                 )}
 
                 {userProfile.overall_score !== undefined && (
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-gray-300">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span>
                       <strong>Readiness Score:</strong> {Math.round(userProfile.overall_score)}/100
@@ -202,21 +202,21 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
               </div>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+            <div className="bg-mi-navy-light p-4 rounded-lg border border-mi-cyan/20">
+              <h4 className="font-semibold text-mi-cyan mb-2">
                 What's Next?
               </h4>
-              <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+              <ul className="space-y-2 text-sm text-gray-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">→</span>
+                  <span className="text-mi-gold mt-0.5">→</span>
                   <span>Review your personalized roadmap with tactics matched to your goals</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">→</span>
+                  <span className="text-mi-gold mt-0.5">→</span>
                   <span>Start with Week 1 to build your foundation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">→</span>
+                  <span className="text-mi-gold mt-0.5">→</span>
                   <span>Track your progress and unlock milestones as you go</span>
                 </li>
               </ul>
@@ -236,7 +236,7 @@ export const WelcomeModal = ({ isOpen, onClose, userProfile, userId }: WelcomeMo
           <Button
             onClick={handleStartJourney}
             disabled={isStarting}
-            className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            className="w-full sm:w-auto bg-gradient-to-r from-mi-cyan to-mi-gold hover:from-mi-cyan-dark hover:to-mi-gold-dark text-mi-navy font-semibold"
           >
             {isStarting ? 'Starting...' : 'Start My Journey 🚀'}
           </Button>

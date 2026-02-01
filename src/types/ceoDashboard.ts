@@ -357,7 +357,8 @@ export type CEODashboardTab =
   | 'health'
   | 'nutrition'
   | 'documents'
-  | 'facts';
+  | 'facts'
+  | 'relational';
 
 export interface CEODashboardState {
   activeTab: CEODashboardTab;

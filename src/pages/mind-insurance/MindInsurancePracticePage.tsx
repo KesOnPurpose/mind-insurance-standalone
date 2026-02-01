@@ -338,79 +338,85 @@ export default function MindInsurancePracticePage() {
           </Card>
         </div>
 
-        {/* Time Windows */}
+        {/* Time Windows - Each section has tour target for Practice Tour */}
         <div className="space-y-4">
           {/* Championship Setup Window */}
-          <TimeWindowSection
-            window={TIME_WINDOWS.CHAMPIONSHIP_SETUP}
-            practices={getPracticesForWindow('CHAMPIONSHIP_SETUP').map(type => ({
-              id: type,
-              name: PRACTICE_CONFIG[type].name,
-              category: 'morning',
-              completed: isPracticeCompleted(type)
-            }))}
-            currentTime={currentTime}
-            defaultOpen={expandedSection === 'CHAMPIONSHIP_SETUP'}
-          >
-            {getPracticesForWindow('CHAMPIONSHIP_SETUP').map(practiceType => (
-              <PracticeCard
-                key={practiceType}
-                practiceType={practiceType}
-                isCompleted={isPracticeCompleted(practiceType)}
-                isAvailable={isPracticeAvailable(practiceType)}
-                pointsEarned={getPracticePoints(practiceType)}
-                onClick={() => handlePracticeClick(practiceType)}
-              />
-            ))}
-          </TimeWindowSection>
+          <div data-tour-target="section-championship-setup">
+            <TimeWindowSection
+              window={TIME_WINDOWS.CHAMPIONSHIP_SETUP}
+              practices={getPracticesForWindow('CHAMPIONSHIP_SETUP').map(type => ({
+                id: type,
+                name: PRACTICE_CONFIG[type].name,
+                category: 'morning',
+                completed: isPracticeCompleted(type)
+              }))}
+              currentTime={currentTime}
+              defaultOpen={expandedSection === 'CHAMPIONSHIP_SETUP'}
+            >
+              {getPracticesForWindow('CHAMPIONSHIP_SETUP').map(practiceType => (
+                <PracticeCard
+                  key={practiceType}
+                  practiceType={practiceType}
+                  isCompleted={isPracticeCompleted(practiceType)}
+                  isAvailable={isPracticeAvailable(practiceType)}
+                  pointsEarned={getPracticePoints(practiceType)}
+                  onClick={() => handlePracticeClick(practiceType)}
+                />
+              ))}
+            </TimeWindowSection>
+          </div>
 
           {/* NASCAR Pit Stop Window */}
-          <TimeWindowSection
-            window={TIME_WINDOWS.NASCAR_PIT_STOP}
-            practices={getPracticesForWindow('NASCAR_PIT_STOP').map(type => ({
-              id: type,
-              name: PRACTICE_CONFIG[type].name,
-              category: 'midday',
-              completed: isPracticeCompleted(type)
-            }))}
-            currentTime={currentTime}
-            defaultOpen={expandedSection === 'NASCAR_PIT_STOP'}
-          >
-            {getPracticesForWindow('NASCAR_PIT_STOP').map(practiceType => (
-              <PracticeCard
-                key={practiceType}
-                practiceType={practiceType}
-                isCompleted={isPracticeCompleted(practiceType)}
-                isAvailable={isPracticeAvailable(practiceType)}
-                pointsEarned={getPracticePoints(practiceType)}
-                onClick={() => handlePracticeClick(practiceType)}
-              />
-            ))}
-          </TimeWindowSection>
+          <div data-tour-target="section-nascar-pit-stop">
+            <TimeWindowSection
+              window={TIME_WINDOWS.NASCAR_PIT_STOP}
+              practices={getPracticesForWindow('NASCAR_PIT_STOP').map(type => ({
+                id: type,
+                name: PRACTICE_CONFIG[type].name,
+                category: 'midday',
+                completed: isPracticeCompleted(type)
+              }))}
+              currentTime={currentTime}
+              defaultOpen={expandedSection === 'NASCAR_PIT_STOP'}
+            >
+              {getPracticesForWindow('NASCAR_PIT_STOP').map(practiceType => (
+                <PracticeCard
+                  key={practiceType}
+                  practiceType={practiceType}
+                  isCompleted={isPracticeCompleted(practiceType)}
+                  isAvailable={isPracticeAvailable(practiceType)}
+                  pointsEarned={getPracticePoints(practiceType)}
+                  onClick={() => handlePracticeClick(practiceType)}
+                />
+              ))}
+            </TimeWindowSection>
+          </div>
 
           {/* Victory Lap Window */}
-          <TimeWindowSection
-            window={TIME_WINDOWS.VICTORY_LAP}
-            practices={getPracticesForWindow('VICTORY_LAP').map(type => ({
-              id: type,
-              name: PRACTICE_CONFIG[type].name,
-              category: 'evening',
-              completed: isPracticeCompleted(type)
-            }))}
-            currentTime={currentTime}
-            defaultOpen={expandedSection === 'VICTORY_LAP'}
-          >
-            {getPracticesForWindow('VICTORY_LAP').map(practiceType => (
-              <PracticeCard
-                key={practiceType}
-                practiceType={practiceType}
-                isCompleted={isPracticeCompleted(practiceType)}
-                isAvailable={isPracticeAvailable(practiceType)}
-                pointsEarned={getPracticePoints(practiceType)}
-                onClick={() => handlePracticeClick(practiceType)}
-              />
-            ))}
-          </TimeWindowSection>
+          <div data-tour-target="section-victory-lap">
+            <TimeWindowSection
+              window={TIME_WINDOWS.VICTORY_LAP}
+              practices={getPracticesForWindow('VICTORY_LAP').map(type => ({
+                id: type,
+                name: PRACTICE_CONFIG[type].name,
+                category: 'evening',
+                completed: isPracticeCompleted(type)
+              }))}
+              currentTime={currentTime}
+              defaultOpen={expandedSection === 'VICTORY_LAP'}
+            >
+              {getPracticesForWindow('VICTORY_LAP').map(practiceType => (
+                <PracticeCard
+                  key={practiceType}
+                  practiceType={practiceType}
+                  isCompleted={isPracticeCompleted(practiceType)}
+                  isAvailable={isPracticeAvailable(practiceType)}
+                  pointsEarned={getPracticePoints(practiceType)}
+                  onClick={() => handlePracticeClick(practiceType)}
+                />
+              ))}
+            </TimeWindowSection>
+          </div>
         </div>
 
         {/* Quick Navigation */}

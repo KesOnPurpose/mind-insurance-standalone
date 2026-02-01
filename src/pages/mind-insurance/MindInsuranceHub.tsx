@@ -17,9 +17,9 @@ import { ProtocolUnlockModal } from '@/components/coverage-center/ProtocolUnlock
 import { ProtocolReadyBadge } from '@/components/coverage-center/ProtocolReadyBadge';
 import { startProtocol } from '@/services/mioInsightProtocolService';
 
-// Hub Tour System
-import { useHubTour } from '@/hooks/useHubTour';
-import { TourHighlight, TourTooltip, TourOfferDialog, TourSidebarController } from '@/components/tour';
+// Hub Tour System - uses shared context from SidebarLayout
+import { useHubTourContext } from '@/contexts/HubTourContext';
+import { TourOfferDialog } from '@/components/tour';
 import { useSidebar } from '@/components/ui/sidebar';
 
 // Push Notifications
@@ -72,18 +72,14 @@ export default function MindInsuranceHub() {
     dismissDailyModal,
   } = useUnstartedProtocol();
 
-  // Hub Tour System
+  // Hub Tour System - uses shared context from SidebarLayout
   const {
     isActive: isTourActive,
-    stepData,
-    currentStep,
-    totalSteps,
     startTour,
-    nextStep,
     skipTour,
     completeTour,
     hasCompletedTour,
-  } = useHubTour();
+  } = useHubTourContext();
 
   // Sidebar control for mobile tour (open sidebar for Steps 2-4)
   const { setOpenMobile, isMobile } = useSidebar();
@@ -202,8 +198,15 @@ export default function MindInsuranceHub() {
   const handleTourComplete = () => {
     completeTour();
 
-    // Delay the Protocol Unlock Modal by 30 minutes to reduce overwhelm
-    // User can explore MIO chat first, then modal appears on next visit
+    // Block Protocol Modal for THIS SESSION - shows on next Hub visit instead
+    // This prevents overwhelming user with modal immediately after tour
+    try {
+      sessionStorage.setItem('protocol_modal_blocked_this_session', 'true');
+    } catch (e) {
+      console.warn('[MindInsuranceHub] Could not set session storage:', e);
+    }
+
+    // Also set the 30-min delay as a fallback
     setModalDelay();
 
     // On mobile, close sidebar before navigating (with delay for animation)
@@ -275,32 +278,8 @@ export default function MindInsuranceHub() {
         onSkip={handleSkipTour}
       />
 
-      {/* Tour Sidebar Controller (opens sidebar on mobile for Steps 2-4) */}
-      <TourSidebarController
-        currentStep={currentStep}
-        isActive={isTourActive}
-        totalSteps={totalSteps}
-      />
-
-      {/* Tour Overlay (when active) */}
-      <AnimatePresence>
-        {isTourActive && stepData && (
-          <>
-            <TourHighlight
-              targetSelector={stepData.targetSelector}
-              isActive={isTourActive}
-            />
-            <TourTooltip
-              step={stepData}
-              currentStep={currentStep}
-              totalSteps={totalSteps}
-              onNext={currentStep === totalSteps - 1 ? handleTourComplete : nextStep}
-              onSkip={skipTour}
-              onComplete={handleTourComplete}
-            />
-          </>
-        )}
-      </AnimatePresence>
+      {/* NOTE: Tour overlay (TourHighlight, TourTooltip, TourSidebarController) */}
+      {/* is now rendered in SidebarLayout to persist across page navigation */}
 
       <div className="min-h-screen bg-mi-navy">
         <div className="container mx-auto p-4 md:p-6 space-y-6">

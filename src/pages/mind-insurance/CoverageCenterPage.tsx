@@ -46,6 +46,7 @@ import { useIdentityCollisionStatus } from '@/hooks/useIdentityCollisionStatus';
 import { useMentalPillarAssessmentStatus } from '@/hooks/useMentalPillarAssessment';
 import { useIdentityCollisionGrip } from '@/hooks/useIdentityCollisionGrip';
 import { useUnstartedProtocol } from '@/hooks/useUnstartedProtocol';
+import { useHubTourContext } from '@/contexts/HubTourContext';
 
 // Services
 import { getActiveInsightProtocol, startProtocol } from '@/services/mioInsightProtocolService';
@@ -64,6 +65,7 @@ export default function CoverageCenterPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { isActive: isTourActive } = useHubTourContext();
 
   // Streak and token state from hook
   const {
@@ -312,18 +314,20 @@ export default function CoverageCenterPage() {
   return (
     <div className="min-h-screen bg-mi-navy">
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <CoverageHeader
-          currentStreak={currentStreak}
-          longestStreak={longestStreak}
-          skipTokens={skipTokens}
-          milestones={milestones}
-          protocolDaysCompleted={activeProtocol?.days_completed ?? 0}
-          protocolTotalDays={activeProtocol?.total_days ?? 7}
-          isLoading={isLoading}
-          onBack={() => navigate('/mind-insurance')}
-          onRefresh={handleRefresh}
-        />
+        {/* Header - with tour target for guided tour */}
+        <div data-tour-target="coverage-header">
+          <CoverageHeader
+            currentStreak={currentStreak}
+            longestStreak={longestStreak}
+            skipTokens={skipTokens}
+            milestones={milestones}
+            protocolDaysCompleted={activeProtocol?.days_completed ?? 0}
+            protocolTotalDays={activeProtocol?.total_days ?? 7}
+            isLoading={isLoading}
+            onBack={() => navigate('/mind-insurance')}
+            onRefresh={handleRefresh}
+          />
+        </div>
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -458,9 +462,9 @@ export default function CoverageCenterPage() {
           tokensRemaining={Math.max(0, skipTokens - 1)}
         />
 
-        {/* Protocol Unlock Modal - shows after 30-min delay post-tour */}
+        {/* Protocol Unlock Modal - shows after 30-min delay post-tour (hidden during tour) */}
         <ProtocolUnlockModal
-          isOpen={shouldShowUnlockModal && hasUnstartedProtocol}
+          isOpen={shouldShowUnlockModal && hasUnstartedProtocol && !isTourActive}
           protocol={unstartedProtocol}
           variant={isNewUser ? 'new_user' : 'returning_user'}
           onBeginDay1={handleBeginDay1}

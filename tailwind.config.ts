@@ -71,12 +71,23 @@ export default {
         'mi-gold-dark': '#e0b52d',
         'mi-navy': '#0A1628',
         'mi-navy-light': '#132337',
+        // Metallic red for warning/negative states
+        'mi-red': '#A41E22',
+        'mi-red-light': '#B52D31',
+        'mi-red-dark': '#8B1A1D',
+      },
+      fontFamily: {
+        // ClintPulver typography pattern
+        'heading': ['Oswald', 'sans-serif'],
+        'body': ['Open Sans', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-breakthrough': 'var(--gradient-breakthrough)',
         'gradient-success': 'var(--gradient-success)',
         'gradient-card': 'var(--gradient-card)',
+        // Radial gradient for logo glow effect
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',

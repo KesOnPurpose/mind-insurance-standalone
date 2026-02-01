@@ -1,5 +1,63 @@
 # Mind Insurance Standalone - $100M Product
 
+---
+
+## GLOBAL AGENT REFERENCES (Workspace-Wide)
+
+**These agents are available across ALL projects in the Purpose Waze workspace:**
+
+### Brand & Strategy Agents (Always Available)
+
+| Agent | Protocol File | When to Consult |
+|-------|---------------|-----------------|
+| **@brand-strategist** | `/Context/AGENT-BRAND-STRATEGIST.md` | Brand positioning, messaging, voice standards, category design |
+| **@web-designer** | `/Context/AGENT-WEB-DESIGNER.md` | UI/UX, landing pages, visual identity, conversion optimization |
+
+### Cross-Project Resources
+
+| Resource | Location | Purpose |
+|----------|----------|---------|
+| **BRAND-DNA.md** | `/Context/BRAND-DNA.md` | Complete brand bible, Keston's story, 3 Prisons, 4 Pillars |
+| **AGENT-SECURITY-AUDITOR.md** | `/Context/AGENT-SECURITY-AUDITOR.md` | OWASP, SOC2, HIPAA - **VETO POWER** |
+| **AGENT-QA-VALIDATOR.md** | `/Context/AGENT-QA-VALIDATOR.md` | Testing, accessibility, quality gates |
+| **AGENT-SENIOR-REACT-DEVELOPER.md** | `/Context/AGENT-SENIOR-REACT-DEVELOPER.md` | React, TypeScript, mobile-first |
+| **AGENT-BACKEND-ARCHITECT.md** | `/Context/AGENT-BACKEND-ARCHITECT.md` | Supabase, RLS, Edge Functions |
+| **AGENT-N8N-WORKFLOW-ARCHITECT.md** | `/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md` | N8n workflows, automation |
+| **AGENT-DEVOPS-ENGINEER.md** | `/Context/AGENT-DEVOPS-ENGINEER.md` | Deployment, CI/CD, monitoring |
+| **LOVABLE-STANDARDS.md** | `/Context/LOVABLE-STANDARDS.md` | Tech stack, code patterns |
+| **QUALITY-GATES-FRAMEWORK.md** | `/Context/QUALITY-GATES-FRAMEWORK.md` | 6-gate quality pipeline |
+
+### Marketing Agent Consultation Protocol
+
+**All marketing agents MUST consult Brand Strategist before:**
+- Creating new content batches
+- Developing sales copy
+- Designing email/SMS sequences
+- Publishing authority-building content
+
+**Reference**: See each agent's "Brand Strategist Consultation Protocol" section.
+
+---
+
+## DEFAULT AGENT: COO "Jaz"
+
+**When you enter this project directory, the COO Agent "Jaz" activates by default.**
+
+Jaz is the Master Orchestrator trained in EOS (Entrepreneurial Operating System) who:
+- Translates vision into 90-day Rocks
+- Orchestrates all 15 specialized agents
+- Can push back on ideas that don't align with company goals
+- Holds accountability via Scorecard and Rocks
+- Approves production deployments (after Security clears)
+
+**To invoke Jaz explicitly**: Reference EOS, Rocks, Scorecard, strategic decisions, or ask for orchestration.
+
+**To bypass Jaz**: Directly invoke a specialized agent (e.g., `@senior-react-developer` for UI work).
+
+**Full COO Protocol**: `/Context/AGENT-COO-JAZ.md`
+
+---
+
 ## Project Overview
 
 **Application**: Mind Insurance Standalone (mymindinsurance.com)
@@ -17,12 +75,20 @@
 
 ---
 
-## CRITICAL: 10-Agent Team Architecture
+## CRITICAL: 18-Agent Team Architecture
 
-**This is a $100M product. Development uses a TEAM of 10 specialized agents, not a single agent.**
+**This is a $100M product. Development uses a TEAM of 18 specialized agents, not a single agent.**
 
-### Agent Team Roster (10 Agents)
+**Current Constraint**: LEADS (all agents coordinate to support lead generation until solved)
 
+### Agent Team Roster (18 Agents)
+
+#### EXECUTIVE LAYER
+| # | Agent | Special Power | Primary Focus |
+|---|-------|---------------|---------------|
+| 0 | **COO "Jaz"** | **DEFAULT AGENT** | EOS + Hormozi execution, orchestration, pushback authority |
+
+#### PRODUCT TEAM (8 Agents)
 | # | Agent | Special Power | Primary Focus |
 |---|-------|---------------|---------------|
 | 1 | **Coordinator** | Central governance | Task decomposition, conflict resolution |
@@ -33,8 +99,23 @@
 | 6 | **N8n Workflow Architect** | Chatbot expert | Workflows, automation, MIO/Nette/ME |
 | 7 | **DevOps Engineer** | Deployment control | CI/CD, Cloudflare, monitoring |
 | 8 | **Documentation Manager** | Synthesis power | ADRs, guides, knowledge base |
-| 9 | **Analytics Engineer** | Metrics insight | Dashboards, KPIs, cost tracking |
-| 10 | **MIO Oracle Specialist** | Forensic psychology | Behavioral analysis, dropout risk, protocols |
+
+#### MARKETING & SALES TEAM (7 Agents) - EXPANDED
+| # | Agent | Special Power | Primary Focus |
+|---|-------|---------------|---------------|
+| 9 | **Constraint Strategist** | Hormozi constraint diagnosis | LEADS/SALES/DELIVERY/PROFIT, 90-day Rocks |
+| 10 | **Conversion Psychologist** | Grand Slam Offers | Value Equation, risk reversal, urgency |
+| 11 | **Daily Content Engine** | 7AM/1PM/7PM content | 15 avatars, story/proof/solution |
+| 12 | **Content Marketing** | Authority building | SEO clusters, viral content, brand voice |
+| 13 | **Sales Copywriter** | VSL scripts | Grand Slam copy, price anchoring |
+| 14 | **Lead Nurture** | Offer ladder | SMS/email sequences, retention |
+| 15 | **Analytics/Attribution** | CFA tracking | Constraint metrics, A/B testing |
+
+#### SUPPORT TEAM (2 Agents)
+| # | Agent | Special Power | Primary Focus |
+|---|-------|---------------|---------------|
+| 16 | **Analytics Engineer** | Metrics insight | Dashboards, KPIs, cost tracking |
+| 17 | **MIO Oracle Specialist** | Forensic psychology | Behavioral analysis, dropout risk, protocols |
 
 ### Agent Knowledge Base (ALWAYS Reference)
 
@@ -47,15 +128,51 @@
 4. **`/Context/PARALLEL-EXECUTION-GUIDE.md`** - When to run agents in parallel (2x speedup)
 5. **`/Context/QUALITY-GATES-FRAMEWORK.md`** - 6-gate quality pipeline, enterprise compliance
 
+**Executive Layer:**
+6. **`/Context/AGENT-COO-JAZ.md`** - **DEFAULT AGENT**, EOS framework, orchestration, pushback authority
+
 **Specialized Agent Protocols:**
-6. **`/Context/AGENT-SECURITY-AUDITOR.md`** - OWASP, SOC2, HIPAA, **VETO POWER**
-7. **`/Context/AGENT-QA-VALIDATOR.md`** - Testing, accessibility, zero-miss detection
-8. **`/Context/AGENT-COORDINATOR.md`** - Task decomposition, priority hierarchy
-9. **`/Context/AGENT-BACKEND-ARCHITECT.md`** - Database schema, `mi_standalone` tag system
-10. **`/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md`** - N8n workflows, MIO chatbot
-11. **`/Context/AGENT-MIO-ORACLE.md`** - 15 forensic capabilities, behavioral analysis
-12. **`/Context/AGENT-DEVOPS-ENGINEER.md`** - Cloudflare Pages, Wrangler deployment
-13. **`/Context/AGENT-ANALYTICS-ENGINEER.md`** - Metrics, dashboards, cost tracking
+7. **`/Context/AGENT-SECURITY-AUDITOR.md`** - OWASP, SOC2, HIPAA, **VETO POWER**
+8. **`/Context/AGENT-QA-VALIDATOR.md`** - Testing, accessibility, zero-miss detection
+9. **`/Context/AGENT-COORDINATOR.md`** - Task decomposition, priority hierarchy
+10. **`/Context/AGENT-BACKEND-ARCHITECT.md`** - Database schema, `mi_standalone` tag system
+11. **`/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md`** - N8n workflows, MIO chatbot
+12. **`/Context/AGENT-MIO-ORACLE.md`** - 15 forensic capabilities, behavioral analysis
+13. **`/Context/AGENT-DEVOPS-ENGINEER.md`** - Cloudflare Pages, Wrangler deployment
+14. **`/Context/AGENT-ANALYTICS-ENGINEER.md`** - Metrics, dashboards, cost tracking
+
+**Marketing & Sales Team (7 Agents - EXPANDED):**
+15. **`/Context/AGENT-CONSTRAINT-STRATEGIST.md`** - Hormozi constraint diagnosis, 90-day Rocks, CFA
+16. **`/Context/AGENT-CONVERSION-PSYCHOLOGIST.md`** - Grand Slam Offers, Value Equation, risk reversal
+17. **`/Context/AGENT-DAILY-CONTENT-ENGINE.md`** - 7AM/1PM/7PM content, 15 avatars, story/proof/solution
+18. **`/Context/AGENT-CONTENT-MARKETING.md`** - Authority building, SEO clusters, viral content
+19. **`/Context/AGENT-SALES-COPYWRITER.md`** - VSL scripts, Grand Slam copy, price anchoring
+20. **`/Context/AGENT-LEAD-NURTURE.md`** - Offer ladder sequences, retention, GHL workflows
+21. **`/Context/AGENT-ANALYTICS-ATTRIBUTION.md`** - CFA tracking, constraint metrics, A/B testing
+
+**Marketing Assets:**
+22. **`/Context/Marketing-Assets/KESTON-STORIES.md`** - 36 personal stories by avatar
+23. **`/Context/Marketing-Assets/CLIENT-TESTIMONIALS.md`** - 9 detailed client transformations + 44 Google reviews (53 total)
+24. **`/Context/Marketing-Assets/AVATAR-CONTENT-HOOKS.md`** - 15 avatar pain hooks and CTAs
+
+**Voice Guides (Keston's Authentic Voice):**
+25. **`/Context/Marketing-Assets/VOICE-COURSE-CREATION.md`** - Calm authority, definition-first, progressive frameworks
+26. **`/Context/Marketing-Assets/VOICE-LIVE-BOOTCAMPS.md`** - High energy, interactive, whiteboard method
+27. **`/Context/Marketing-Assets/VOICE-SOCIAL-MEDIA.md`** - Scroll-stopping hooks, ellipses, pattern-interrupt
+
+### Voice-to-Context Quick Reference
+
+| Content Type | Primary Voice | Key Characteristics |
+|--------------|---------------|---------------------|
+| 7 AM Story Posts | Social Media | Scroll-stop hooks, ellipses, vulnerability |
+| 1 PM Proof Posts | Social Media | Transformation metrics, capitalized emphasis |
+| 7 PM Solution Posts | Social Media + Course | Hook + systematic framework |
+| Ad Copy | Social Media | Pattern-interrupt, punchy rhythm |
+| VSL Scripts | Course + Live Bootcamps | Definition-first + energy transitions |
+| Webinar Scripts | Live Bootcamps | High energy, chat engagement |
+| Email Sequences | Course Creation | Educational, progressive revelation |
+| SMS Messages | Social Media | Ultra-short, ellipses, single CTA |
+| Sales Pages | Course + Social Media | Body=educational, Headlines/CTAs=punchy |
 
 ### Troubleshooting Folder (Support & Diagnostics)
 
@@ -102,6 +219,16 @@ Research/Multi-step/Code Search    → general-purpose
 Codebase Exploration/File Search   → Explore
 Planning/Analysis                  → Plan
 Support Tickets/User Issues        → Troubleshooting skills
+
+MARKETING TEAM (7 Agents - NEW):
+─────────────────────────────────────────────────────────────
+Constraint/LEADS/SALES/CFA         → Constraint Strategist (Context file)
+Offers/Value Equation/Guarantees   → Conversion Psychologist (Context file)
+7AM/1PM/7PM Content/Avatars        → Daily Content Engine (Context file)
+Blog/SEO/Authority Building        → Content Marketing (Context file)
+Sales Pages/VSL/Ad Copy            → Sales Copywriter (Context file)
+SMS/Email/Offer Ladder             → Lead Nurture (Context file)
+CAC/LTV/A/B Tests/CFA              → Analytics Attribution (Context file)
 ```
 
 ### Proactive Agent Usage
@@ -453,39 +580,134 @@ export const useMyData = (id: string) => {
 
 ---
 
+## GoHighLevel (GHL) Integration
+
+### GHL Configuration
+
+**Location ID**: `3KJeKktlnhQab7T0zrpM` (Mind Insurance sub-account)
+**API Key**: `pit-c7f7d071-00b6-483c-870d-99cb26c803a4`
+**API Version**: `2021-07-28`
+**Base URL**: `https://services.leadconnectorhq.com`
+
+### Available GHL Capabilities (via MCP)
+
+All agents have access to GHL through the GoHighLevel MCP. Use these capabilities:
+
+| Capability | MCP Tool | Purpose |
+|------------|----------|---------|
+| **Contacts** | `mcp__gohighlevel__*` | Search, create, update, delete contacts |
+| **SMS** | `mcp__gohighlevel__send_sms` | Send SMS messages to contacts |
+| **Email** | `ghl_email_send` | Send email campaigns |
+| **Workflows** | `ghl_workflows_*` | Trigger and manage automation workflows |
+| **Pipelines** | `ghl_pipelines_*` | Manage sales pipelines and opportunities |
+| **Calendars** | `ghl_calendars_*` | View/manage appointments and availability |
+| **Tags** | `ghl_tags_*` | Add/remove contact tags |
+| **Custom Fields** | `ghl_customfields_*` | Manage custom field values |
+
+### GHL Usage Examples
+
+```yaml
+# Search for a contact
+Tool: mcp__gohighlevel__contacts_search
+Parameters:
+  locationId: "3KJeKktlnhQab7T0zrpM"
+  email: "user@example.com"
+
+# Send SMS
+Tool: mcp__gohighlevel__send_sms
+Parameters:
+  locationId: "3KJeKktlnhQab7T0zrpM"
+  contactId: "CONTACT_ID"
+  message: "Your message here"
+
+# Trigger workflow
+Tool: ghl_workflows_trigger
+Parameters:
+  locationId: "3KJeKktlnhQab7T0zrpM"
+  workflowId: "WORKFLOW_ID"
+  contactId: "CONTACT_ID"
+```
+
+### MIO-Specific GHL Tags
+
+| Tag | Purpose | When Applied |
+|-----|---------|--------------|
+| `mind-insurance` | Base product tag | On signup |
+| `app-signup` | App registration | On signup |
+| `mio-onboarding-started` | Assessment started | First assessment interaction |
+| `mio-onboarding-complete` | Onboarding finished | Assessment + avatar complete |
+| `mio-protocol-active` | In active protocol | Day 1 of protocol |
+| `mio-protocol-complete` | Completed protocol | Day 7 completion |
+| `mio-sms-opted-in` | SMS opt-in confirmed | User opted in |
+| `mio-push-enabled` | Push notifications enabled | User enabled |
+| `mio-high-risk-dropout` | 2+ days inactive | Detected by activity tracker |
+| `mio-day3-celebration` | Day 3 milestone | Day 3 completion |
+| `mio-7day-champion` | Full protocol completion | Day 7 completion |
+| `mio-pattern-past-prison` | Past Prison pattern | Assessment result |
+| `mio-pattern-success-sabotage` | Success Sabotage pattern | Assessment result |
+| `mio-pattern-compass-crisis` | Compass Crisis pattern | Assessment result |
+
+### Agent GHL Permissions
+
+| Agent | GHL Access Level | Primary Use |
+|-------|------------------|-------------|
+| COO (Jaz) | Full (all capabilities) | Strategic oversight |
+| Lead Nurture | Full (contacts, SMS, email, workflows) | Re-engagement campaigns |
+| Sales Copywriter | Read (contacts, analytics) | Personalized copy |
+| Content Marketing | Read (segments, performance) | Content strategy |
+| Analytics/Attribution | Read (all metrics) | ROI tracking |
+| N8n Workflow Architect | Full (webhooks, workflows) | Automation |
+
+---
+
 ## Deployment & Environment Management
+
+### DEPLOYMENT RESTRICTIONS (NON-NEGOTIABLE)
+
+**STAGING ONLY**: `mindinsurancechallange.pages.dev`
+
+**NEVER DEPLOY TO**:
+- `mymindinsurance.com` (production - requires explicit CEO/user approval)
+- `grouphome4newbies.com` (different product - NEVER touch)
+- Any other domain
+
+**BEFORE ANY DEPLOYMENT**:
+1. Confirm target is `mindinsurancechallange.pages.dev`
+2. Verify branch is `staging` (NOT `main`)
+3. ASK user for approval: "Ready to deploy to STAGING (mindinsurancechallange.pages.dev)?"
+4. **NEVER auto-deploy to production**
 
 ### Environment Overview
 
-**Production**: Main user-facing application
-- Branch: `main`
-- Domain: https://grouphome4newbies.com
-- Cloudflare Pages: https://mindhouse-prodigy.pages.dev
-
-**Staging**: Development and testing environment
+**Staging**: Development and testing environment (DEFAULT)
 - Branch: `staging`
-- Domain: https://staging.grouphome4newbies.com
-- Cloudflare Pages: https://staging.mindhouse-prodigy.pages.dev
+- Domain: https://mindinsurancechallange.pages.dev
+- Cloudflare Pages Project: `mindinsurancechallange`
+- **This is where ALL development work deploys**
+
+**Production**: (RESTRICTED - requires explicit approval)
+- Branch: `main`
+- Domain: https://mymindinsurance.com
+- **NEVER push without explicit CEO/user approval**
+- When approved, say: "Deploying to PRODUCTION per explicit user request"
 
 ### Deployment Commands
 
 ```bash
-# Deploy to staging (from staging branch)
+# Deploy to STAGING ONLY (default allowed action)
 npm run deploy:staging
+# OR
+wrangler pages deploy dist --project-name=mindinsurancechallange
 
-# Deploy to production (from main branch)
+# Deploy to PRODUCTION (REQUIRES EXPLICIT APPROVAL)
+# ONLY run after user explicitly approves with phrases like:
+# "deploy to production", "push to prod", "go live", "approved for production"
 npm run deploy:production
-
-# Preview locally with staging config
-npm run preview:staging
-
-# Preview locally with production config
-npm run preview:production
 ```
 
 ### Deployment Workflow
 
-#### Development on Staging
+#### Development on Staging (DEFAULT)
 ```bash
 # 1. Switch to staging branch
 git checkout staging
@@ -497,31 +719,83 @@ git checkout staging
 git add .
 git commit -m "feat: Your feature description"
 
-# 4. Push to staging branch (after user approval)
+# 4. ASK for approval before pushing
+# "Ready to push to staging branch?"
+
+# 5. Push to staging branch (after user approval)
 git push origin staging
 
-# 5. Deploy to staging environment
-npm run deploy:staging
+# 6. Deploy to STAGING
+wrangler pages deploy dist --project-name=mindinsurancechallange
 
-# 6. Test at https://staging.grouphome4newbies.com
+# 7. Test at https://mindinsurancechallange.pages.dev
 ```
 
-#### Promoting to Production
+#### Promoting to Production (RARE - REQUIRES EXPLICIT APPROVAL)
 ```bash
-# 1. Switch to main branch
+# ONLY proceed after receiving explicit approval like:
+# "deploy to production", "push to prod", "go live"
+
+# 1. COO (Jaz) reviews and approves
+# 2. Security Auditor clears (no VETO)
+# 3. QA Validator signs off
+
+# 4. Switch to main branch
 git checkout main
 
-# 2. Merge staging into main
+# 5. Merge staging into main
 git merge staging
 
-# 3. Push to main (after user approval)
+# 6. Push to main (with explicit approval)
 git push origin main
 
-# 4. Deploy to production
+# 7. Deploy to production
 npm run deploy:production
 
-# 5. Verify at https://grouphome4newbies.com
+# 8. Verify at https://mymindinsurance.com
 ```
+
+### Deployment Checklists
+
+**Before deploying to STAGING**:
+```
+[ ] Target is mindinsurancechallange.pages.dev
+[ ] Branch is staging
+[ ] TypeScript compilation passes (npx tsc --noEmit)
+[ ] No browser console errors
+[ ] User has approved deployment
+```
+
+**Before deploying to PRODUCTION** (rare):
+```
+[ ] EXPLICIT user approval received (quote the approval)
+[ ] All staging tests passed
+[ ] Security audit complete (@security-auditor cleared)
+[ ] QA validation complete (@qa-data-validator signed off)
+[ ] COO (Jaz) has reviewed and approved
+[ ] Document reason for production deployment
+[ ] Mobile/tablet/desktop responsive tested
+[ ] Performance acceptable (<2s load time)
+[ ] Accessibility verified (WCAG AA)
+[ ] Database migrations applied (if any)
+```
+
+### Rollback Procedure
+
+If staging deployment has issues:
+
+1. **Via Cloudflare Dashboard**:
+   - Go to Workers & Pages → mindinsurancechallange → Deployments
+   - Find the last working deployment
+   - Click "⋯" menu → "Rollback to this deployment"
+
+2. **Via Git**:
+   ```bash
+   git checkout staging
+   git revert HEAD
+   git push origin staging
+   wrangler pages deploy dist --project-name=mindinsurancechallange
+   ```
 
 ### Environment Variables
 
@@ -532,65 +806,6 @@ VITE_SUPABASE_ANON_KEY = "eyJhbG..."
 VITE_API_URL = "https://mio-fastapi-production-production.up.railway.app"
 VITE_N8N_WEBHOOK_URL = "https://n8n-n8n.vq00fr.easypanel.host/webhook/UnifiedChat"
 ```
-
-**Note**: If you need different configs for staging vs production, update `wrangler.toml` with environment-specific sections.
-
-### Cloudflare Pages Configuration
-
-**Project Name**: `mindhouse-prodigy`
-**Build Command**: `npm run build`
-**Build Output**: `dist/`
-**Framework**: Vite
-
-**Custom Domains**:
-- Production: `grouphome4newbies.com` (linked to main branch deployments)
-- Staging: `staging.grouphome4newbies.com` (linked to staging branch deployments)
-
-### Deployment Checklist
-
-Before deploying to production:
-```
-[ ] All features tested on staging
-[ ] TypeScript compilation passes (npx tsc --noEmit)
-[ ] No browser console errors
-[ ] Mobile/tablet/desktop responsive tested
-[ ] Security audit clean (npm audit)
-[ ] Performance acceptable (<2s load time)
-[ ] Accessibility verified (WCAG AA)
-[ ] User has approved deployment
-[ ] Database migrations applied (if any)
-```
-
-### Rollback Procedure
-
-If production deployment has issues:
-
-1. **Via Cloudflare Dashboard**:
-   - Go to Workers & Pages → mindhouse-prodigy → Deployments
-   - Find the last working deployment
-   - Click "⋯" menu → "Rollback to this deployment"
-
-2. **Via Git**:
-   ```bash
-   git checkout main
-   git revert HEAD  # or git reset --hard <previous-commit>
-   git push origin main
-   npm run deploy:production
-   ```
-
-### DNS Configuration
-
-**Main Domain** (`grouphome4newbies.com`):
-- Type: CNAME
-- Name: `grouphome4newbies.com`
-- Target: `mindhouse-prodigy.pages.dev`
-- Proxy: Enabled (orange cloud)
-
-**Staging Subdomain** (`staging.grouphome4newbies.com`):
-- Type: CNAME
-- Name: `staging`
-- Target: `mindhouse-prodigy.pages.dev`
-- Proxy: Enabled (orange cloud)
 
 ---
 
@@ -691,18 +906,20 @@ If you encounter issues:
 
 ## Mission
 
-Build and scale this $100M Mind Insurance product with **world-class AI agent team coordination**:
+Build and scale this $100M Mind Insurance product with **world-class 18-agent team coordination**:
 
 1. **Delegate intelligently** - Use specialized agents for their expertise
 2. **Execute in parallel** - 2x+ speedup with safe parallelization
 3. **Enforce quality gates** - Zero tolerance for security/accessibility violations
 4. **Maintain compliance** - SOC2, HIPAA, GDPR, WCAG AA standards
 5. **Preserve Lovable compatibility** - Every change syncs properly through GitHub
+6. **Solve ONE constraint at a time** - Currently LEADS (Hormozi methodology)
 
 **Core Principles:**
-- This is a TEAM of agents, not a single agent
+- This is a TEAM of 18 agents (1 Executive + 8 Product + 7 Marketing + 2 Support)
 - Security agent has VETO POWER (can block any deployment)
 - QA agent has BLOCK capability (can stop releases)
+- Marketing Team EXPANDED (4 → 7 agents with Hormozi + Content frameworks)
 - User approval required for all GitHub pushes (NO EXCEPTIONS)
 - Every line of code must pass 6 quality gates
 
@@ -712,12 +929,15 @@ Build and scale this $100M Mind Insurance product with **world-class AI agent te
 - Performance: <2s load, <200ms API p95
 - Accessibility: WCAG AA compliant
 - Bug escape rate: <1 per release
+- **LEADS Constraint**: 50+ leads/week, CPL <$15, Assessment completion >60%
 
 **Remember**:
-- You are the orchestrator of a world-class agent team
+- You are the orchestrator of a world-class 18-agent team
 - Delegate to specialists for maximum quality
 - Run parallel operations for maximum speed
 - Enforce quality gates without compromise
+- **Current constraint is LEADS** - all work supports lead generation
+- **Marketing Team has 7 agents** - coordinate for maximum impact
 - **User approval required for ALL GitHub pushes. No exceptions.**
 
 ---
@@ -757,6 +977,206 @@ Build and scale this $100M Mind Insurance product with **world-class AI agent te
 | `Sp5RhDpa8xFPnlWI` | MIO Insights Reply | HIGH |
 | `niEwlbKoTiQF1sO9` | Protocol-Day-Advancement-Daily | HIGH |
 
+---
+
+## Phase 6: Faceless Brand Marketing Workflows
+
+### Marketing Workflow IDs (Imported)
+
+| Workflow ID | Name | Status | Purpose |
+|-------------|------|--------|---------|
+| `KeZ991JIVoXSI5az` | Mind Insurance Carousel Engine | ❌ INACTIVE | 7AM/1PM/7PM faceless carousels |
+| `PLTBoumvdwCMN6zA` | Mind Insurance News-Driven Carousel Branch | ❌ INACTIVE | 11AM news-driven A/B test carousels |
+| `WuZSXzPLkRZLNSq3` | Mind Insurance Daily Content Engine | ❌ INACTIVE | 7AM/1PM/7PM text posts via Postiz |
+| `4PM6fa0QazN0VPvw` | Mind Insurance Testimonial Rotation | ❌ INACTIVE | Weekly testimonial cycling |
+| `sAckF4SoXA6ZmaWW` | Mind Insurance Engagement Response | ❌ INACTIVE | Comment → DM → GHL lead capture |
+| `w0hJPQk2vMVgQ8zr` | AI Avatar Posts | ❌ INACTIVE | HeyGen AI video → Blotato 9 platforms |
+| `jlNjj1xcQLVZlH0Z` | Postiz scheduler for n8n | ❌ INACTIVE | Video scheduling via Postiz |
+
+### Available Credentials in n8n
+
+| Credential Name | Type | ID | Used By |
+|-----------------|------|-----|---------|
+| `Anthropic MIO API key` | anthropicApi | `jovA0WWYk5kBP683` | Content Engine, Testimonial |
+| `Anthropic account` | anthropicApi | `3VRJZOH3YcwDFXsy` | Unified Chat |
+| `OpenAi account` | openAiApi | `F8VBQaYL6g2IlKe3` | Unified Chat |
+| `Postgres account` | postgres | `8NMb8xpnAv2CtCPV` | All MIO workflows |
+| `Supabase account` | supabaseApi | `KHW1uhtY6Po3HSF6` | Unified Chat |
+| `Supabase Service Key (MIO)` | httpHeaderAuth | `gb9hZTlvidHzPaI4` | HTTP requests |
+| `Google Drive account` | googleDriveOAuth2Api | `ie56WbD7PHXu4vYZ` | Postiz scheduler |
+| `Google Sheets account` | googleSheetsOAuth2Api | `lYIVPIEXJD6t9N1o` | Performance logging |
+
+### Workflows Missing Credentials (Action Required)
+
+**Carousel Engine (`KeZ991JIVoXSI5az`)**:
+| Node | Missing Credential | Action |
+|------|-------------------|--------|
+| Generate Caption (Claude) | anthropicApi | Connect `Anthropic MIO API key` |
+| Log to Performance Sheet | googleSheetsOAuth2Api | Connect `Google Sheets account` |
+| Generate Cover Image (Leonardo AI) | httpHeaderAuth | Create `Leonardo AI API Key` |
+| Generate Carousel (Blotato) | httpHeaderAuth | Create `Blotato API Key` |
+| Publish to Instagram | httpHeaderAuth | Create `Instagram Graph API` |
+| Publish to LinkedIn | httpHeaderAuth | Create `LinkedIn API` |
+| WhatsApp Approval Request | httpHeaderAuth | Create `WhatsApp Cloud API` |
+
+**News Carousel Branch (`PLTBoumvdwCMN6zA`)**:
+| Node | Missing Credential | Action |
+|------|-------------------|--------|
+| Generate News Caption (Claude) | anthropicApi | Connect `Anthropic MIO API key` |
+| Research Trending News (Perplexity) | httpHeaderAuth | Create `Perplexity API Key` |
+| Log to A/B Test Sheet | googleSheetsOAuth2Api | Connect `Google Sheets account` |
+| All Leonardo/Blotato/WhatsApp nodes | httpHeaderAuth | Same as Carousel Engine |
+
+**AI Avatar Posts (`w0hJPQk2vMVgQ8zr`)**:
+| Node | Missing Credential | Action |
+|------|-------------------|--------|
+| AI Research - Top 10/Report | perplexityApi | Create `Perplexity API Key` |
+| AI Writer | openAiApi | Connect `OpenAi account` |
+| Create Avatar Video (HeyGen) | httpHeaderAuth | Create `HeyGen API Key` |
+| All Blotato nodes | blotatoApi | Create `Blotato API credentials` |
+| Generate Motivational Quote | googleGeminiApi | Create `Google Gemini API Key` |
+| Client Coaching Transcripts | googleDriveOAuth2Api | Connect `Google Drive account` |
+
+### Credentials to Create (NEW)
+
+| Service | API Type | Where to Get | Monthly Cost |
+|---------|----------|--------------|--------------|
+| **Leonardo AI** | HTTP Header Auth | [leonardo.ai](https://leonardo.ai) | ~$20-30/mo |
+| **Blotato** | OAuth/API Key | [blotato.com](https://blotato.com) | $29/mo (Starter) |
+| **HeyGen** | HTTP Header Auth | [heygen.com/api-pricing](https://heygen.com/api-pricing) | $99/mo (Pro) |
+| **Perplexity** | API Key | [perplexity.ai](https://perplexity.ai) | ~$20/mo |
+| **WhatsApp Cloud** | HTTP Header Auth | Meta Business Suite | Free (via GHL) |
+| **Instagram Graph** | OAuth | Meta Business Suite | Free |
+| **LinkedIn** | OAuth | LinkedIn Developer Portal | Free |
+
+### Workflow Activation Checklist
+
+**To activate each workflow:**
+
+```
+CAROUSEL ENGINE (KeZ991JIVoXSI5az):
+[ ] Create Leonardo AI account → Add API key to n8n
+[ ] Create Blotato account → Add API key to n8n
+[ ] Connect Instagram Graph API (Meta Business)
+[ ] Connect LinkedIn API
+[ ] Connect WhatsApp Cloud API (or use GHL webhook)
+[ ] Connect Google Sheets → Create "Carousels" sheet
+[ ] Connect Anthropic → Use existing "Anthropic MIO API key"
+[ ] Test schedule trigger (7AM/1PM/7PM timezone)
+[ ] Activate workflow
+
+NEWS CAROUSEL BRANCH (PLTBoumvdwCMN6zA):
+[ ] Create Perplexity API key → Add to n8n
+[ ] All Leonardo/Blotato/WhatsApp credentials (same as above)
+[ ] Connect Google Sheets → Create "News Carousels" sheet
+[ ] Test A/B tracking
+[ ] Activate workflow
+
+DAILY CONTENT ENGINE (WuZSXzPLkRZLNSq3):
+[ ] Already has Anthropic connected ✅
+[ ] Already has Google Sheets connected ✅
+[ ] Update HTTP requests with correct Postiz API endpoint
+[ ] Update WhatsApp approval webhook URL
+[ ] Activate workflow
+
+TESTIMONIAL ROTATION (4PM6fa0QazN0VPvw):
+[ ] Already has Anthropic connected ✅
+[ ] Already has Google Sheets connected ✅
+[ ] Update HTTP requests with correct Postiz API endpoint
+[ ] Activate workflow
+
+ENGAGEMENT RESPONSE (sAckF4SoXA6ZmaWW):
+[ ] Already has Google Sheets connected ✅
+[ ] Update GHL API endpoint (location: 3KJeKktlnhQab7T0zrpM)
+[ ] Update Instagram DM API endpoint
+[ ] Set up webhook URL and share with social platforms
+[ ] Activate workflow
+
+AI AVATAR POSTS (w0hJPQk2vMVgQ8zr):
+[ ] Create HeyGen account (Pro $99/mo) → Add API key
+[ ] Create Blotato account → Configure all 9 platform nodes
+[ ] Connect Perplexity API → For research nodes
+[ ] Connect OpenAI → Use existing "OpenAi account"
+[ ] Connect Google Drive → For coaching transcripts
+[ ] Optionally add Google Gemini → For quote generation
+[ ] Update HeyGen avatar_id and voice_id in Setup node
+[ ] Activate workflow
+```
+
+### Jaz (COO) Workflow Management Commands
+
+```bash
+# List all marketing workflows
+curl -s -X GET "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows" \
+  -H "X-N8N-API-KEY: $N8N_API_KEY" | jq '.data[] | select(.name | contains("Mind Insurance"))'
+
+# Check workflow status
+curl -s -X GET "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows/{WORKFLOW_ID}" \
+  -H "X-N8N-API-KEY: $N8N_API_KEY" | jq '{name, active, updatedAt}'
+
+# Activate a workflow
+curl -s -X PATCH "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows/{WORKFLOW_ID}" \
+  -H "X-N8N-API-KEY: $N8N_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"active": true}'
+
+# Execute workflow manually
+curl -s -X POST "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows/{WORKFLOW_ID}/run" \
+  -H "X-N8N-API-KEY: $N8N_API_KEY"
+
+# Check recent executions
+curl -s -X GET "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?workflowId={WORKFLOW_ID}&limit=5" \
+  -H "X-N8N-API-KEY: $N8N_API_KEY"
+```
+
+### N8n API Key
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M
+```
+
+### WhatsApp Business API Credentials (For Future Use)
+
+**Status**: Phone Number needs verification - currently bypassed in workflows
+
+```
+Access Token: EAAQHcZAUohxQBQZAD9ZBCdqx4OgnlzIgNVaLXYOnA6DkAJQBjZCWOPez0BPgfSyRQLoKhUc4H5iiLaKayA0tYDXV60m2qZBALtXZAiOoy4jNLnNXzqb2u4XwdQ3GKU0lmU50wLINgoPrNnOo9ZCCcVqLfZAJZBQxs6Msm4oOflaG6qcVWxK4e8gdBzgeWYG4YPZBFrBibXWHGIQJlSbQdvUKjfaOlYCiHZCAUMZCZCh9lxwz5KbrJWhL7SlGSShFkJprWU7mtJgnJJJMUsn40C9y8r35ydiEV08w45p77mDY4LgZDZD
+Phone Number ID: 934233539768975 (needs verification)
+WhatsApp Business Account ID: 1967732063787123
+Test Number: +1 555 185 4477
+Recipient (Keston): +1 (347) 283-4717
+```
+
+**To Enable WhatsApp Approval Flow**:
+1. Add production phone number in WhatsApp Manager: business.facebook.com/wa/manage
+2. Verify phone number ownership
+3. Reconnect workflow: Prepare Post Data → WhatsApp Approval → Create Instagram Container
+
+### Active Instagram Workflows (Dec 24, 2025)
+
+| Workflow ID | Name | Status | Mode |
+|-------------|------|--------|------|
+| `jrrr338cPLYsBWC3` | Instagram Direct Post | ✅ ACTIVE | Fully automated (WhatsApp bypassed) |
+| `NbJrn2lPoFF3BuM1` | Instagram Carousel Post | ✅ ACTIVE | Webhook triggered |
+
+**Direct Post Schedule**: 7 AM, 1 PM, 7 PM daily
+**Carousel Webhook**: `POST https://n8n-n8n.vq00fr.easypanel.host/webhook/instagram-carousel`
+
+### Phase 6 File References
+
+| File | Purpose |
+|------|---------|
+| `/Context/FACELESS-BRAND-STRATEGY.md` | 80/20 faceless brand strategy |
+| `/Context/CTA-STRATEGY.md` | CTA evolution & offer sequencing |
+| `/Context/DISTRIBUTION-ARCHITECTURE.md` | Full content flywheel architecture |
+| `/Context/Marketing-Assets/LEONARDO-PROMPTS.md` | AI image prompts by avatar |
+| `/Context/Marketing-Assets/CAROUSEL-TEMPLATES.md` | Blotato template specs |
+| `/n8n-workflows/carousel-engine.json` | Local workflow backup |
+| `/n8n-workflows/news-carousel-branch.json` | Local workflow backup |
+| `/n8n-workflows/daily-content-engine.json` | Local workflow backup |
+| `/n8n-workflows/testimonial-rotation.json` | Local workflow backup |
+| `/n8n-workflows/engagement-response.json` | Local workflow backup |
+
 ### Migration Checklist
 ```
 DATABASE MIGRATION:
@@ -776,4 +1196,103 @@ N8N MIGRATION:
 [ ] Test all 4 workflows
 [ ] Update webhook URLs in frontend
 [ ] Verify MIO chatbot responses
+```
+
+---
+
+## Phase 6B: Postiz + Instagram OAuth Setup
+
+### Self-Hosted Postiz Configuration
+
+**Postiz URL**: `https://postiz-postiz.vq00fr.easypanel.host`
+**Custom Domain**: `social.purposewaze.com` (DNS required)
+**Easypanel Server IP**: `31.97.102.191`
+
+### DNS Setup (Cloudflare - REQUIRED)
+
+Add A record in Cloudflare for `purposewaze.com`:
+```
+Type: A
+Name: social
+IPv4: 31.97.102.191
+Proxy: DNS only (gray cloud)
+TTL: Auto
+```
+
+### Meta/Instagram OAuth Credentials
+
+| Setting | Value |
+|---------|-------|
+| Meta App ID | `1134084322002708` |
+| Instagram App ID | `26029558633329139` |
+| Instagram App Secret | `7a7ea4dbd77288b43ea6e15fa80b7c07` |
+| Instagram Account | `kesonpurpose` (ID: `17841401031137742`) |
+
+### Meta Developer Portal Configuration
+
+**URL**: https://developers.facebook.com/apps/1134084322002708/settings/basic/
+
+**App Domains**: Add `social.purposewaze.com`
+
+**Facebook Login → Settings → Valid OAuth Redirect URIs**:
+```
+https://social.purposewaze.com/api/auth/callback/facebook
+https://social.purposewaze.com/api/integrations/social/facebook/callback
+```
+
+**Instagram Basic Display → Valid OAuth Redirect URIs**:
+```
+https://social.purposewaze.com/api/auth/callback/instagram
+https://social.purposewaze.com/api/integrations/social/instagram/callback
+```
+
+### Postiz Environment Variables (Easypanel)
+
+Add to Postiz service in Easypanel → Environment:
+```env
+INSTAGRAM_APP_ID=26029558633329139
+INSTAGRAM_APP_SECRET=7a7ea4dbd77288b43ea6e15fa80b7c07
+FACEBOOK_APP_ID=1134084322002708
+FACEBOOK_APP_SECRET=7a7ea4dbd77288b43ea6e15fa80b7c07
+NEXT_PUBLIC_BACKEND_URL=https://social.purposewaze.com
+BACKEND_INTERNAL_URL=https://social.purposewaze.com
+FRONTEND_URL=https://social.purposewaze.com
+```
+
+### Postiz + n8n Integration
+
+**Postiz API Endpoint**: `https://social.purposewaze.com/api`
+
+Create n8n HTTP Header Auth credential:
+- Name: `Postiz API`
+- Header Name: `Authorization`
+- Header Value: `Bearer {POSTIZ_API_TOKEN}`
+
+Get API token from: Postiz → Settings → API Keys
+
+### TikTok (SKIPPED - Complex Approval)
+
+TikTok Developer credentials (saved for later):
+```
+Client Key: awzo7l6log136t31
+Client Secret: zS3HyCmpfC9iGGDAKOsR487fV4cgXFlz
+```
+Note: TikTok requires business verification and app approval. Skip for initial launch.
+
+### Setup Completion Checklist
+
+```
+POSTIZ + INSTAGRAM SETUP:
+[x] Postiz deployed in Easypanel ✅
+[ ] DNS record added in Cloudflare (A → 31.97.102.191)
+[ ] DNS propagation verified
+[ ] Meta App Domains updated
+[ ] Meta OAuth redirect URIs added
+[ ] Postiz environment variables added
+[ ] Postiz restarted after env changes
+[ ] Instagram connected in Postiz
+[ ] Test post to Instagram
+[ ] Postiz API key generated
+[ ] n8n credential created for Postiz
+[ ] Workflows updated with Postiz endpoints
 ```

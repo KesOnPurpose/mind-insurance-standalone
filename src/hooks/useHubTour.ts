@@ -25,6 +25,7 @@ export interface TourStep {
   title: string;
   description: string;
   position: TourPosition;
+  navigateTo?: string;  // Optional route to navigate to when this step activates
 }
 
 export interface UseHubTourReturn {
@@ -52,6 +53,7 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Practice Center',
     description: 'Your daily PROTECT practices live here. Complete all 7 each day to build your streak and level up.',
     position: 'bottom',
+    // No navigation - stays on Hub page
   },
   {
     id: 'menu',
@@ -59,27 +61,31 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Open Menu',
     description: 'Tap here to open the navigation menu. Coverage Center, My Evidence, and MIO are all inside.',
     position: 'right',
+    // No navigation - stays on Hub page
   },
   {
     id: 'coverage',
-    targetSelector: '[data-tour-target="sidebar-coverage"]',
+    targetSelector: '[data-tour-target="coverage-header"]',
     title: 'Coverage Center',
-    description: 'View your MIO protocol and track your 7-day transformation journey. This is where your personalized insights come to life.',
+    description: 'Track your MIO protocol and see your 7-day transformation journey unfold. Your personalized insights and progress are all here.',
     position: 'bottom',
+    navigateTo: '/mind-insurance/coverage',
   },
   {
     id: 'evidence',
-    targetSelector: '[data-tour-target="sidebar-vault"]',
+    targetSelector: '[data-tour-target="vault-header"]',
     title: 'My Evidence',
-    description: 'Save insights and track proof of your transformation. Your wins and breakthroughs are stored here as evidence of growth.',
+    description: 'Your recordings, patterns caught, and victories are stored here. Watch your evidence of transformation grow over time.',
     position: 'bottom',
+    navigateTo: '/mind-insurance/vault',
   },
   {
     id: 'mio',
-    targetSelector: '[data-tour-target="sidebar-mio"]',
+    targetSelector: '[data-tour-target="mio-header"]',
     title: 'Meet MIO',
-    description: 'Your AI coach is always here. Tap to chat with MIO anytime you need guidance or want to explore your patterns.',
+    description: 'Your AI coach is ready to help. This is where MIO delivers personalized insights based on your daily practices.',
     position: 'bottom',
+    navigateTo: '/mind-insurance/mio-insights',
   },
 ];
 
@@ -196,7 +202,7 @@ function clearTourState(): void {
 // HOOK
 // ============================================================================
 
-export function useHubTour(): UseHubTourReturn {
+export function useHubTour(onNavigate?: (path: string) => void): UseHubTourReturn {
   // State
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -236,11 +242,20 @@ export function useHubTour(): UseHubTourReturn {
   const nextStep = useCallback(() => {
     if (currentStep < TOUR_STEPS.length - 1) {
       const next = currentStep + 1;
+      const nextStepConfig = TOUR_STEPS[next];
+
+      // Navigate to page if step has navigateTo defined
+      if (nextStepConfig.navigateTo && onNavigate) {
+        console.log('[useHubTour] Navigating to:', nextStepConfig.navigateTo);
+        onNavigate(nextStepConfig.navigateTo);
+      }
+
       setCurrentStep(next);
       saveCurrentStep(next);
       console.log('[useHubTour] Next step:', next);
-      // Longer delay for sidebar steps (2-4) to allow sidebar animation to complete
-      const delay = next >= 2 ? 500 : 150;
+
+      // Longer delay for navigation steps to allow page to load
+      const delay = nextStepConfig.navigateTo ? 800 : 150;
       setTimeout(() => scrollToTarget(next), delay);
     } else {
       // Last step - complete the tour
@@ -249,7 +264,7 @@ export function useHubTour(): UseHubTourReturn {
       setHasCompletedTour(true);
       console.log('[useHubTour] Tour completed');
     }
-  }, [currentStep]);
+  }, [currentStep, onNavigate]);
 
   // Go to previous step
   const previousStep = useCallback(() => {

@@ -32,6 +32,8 @@ interface TourTooltipProps {
   onNext: () => void;
   onSkip: () => void;
   onComplete: () => void;
+  /** Optional content to display below the description (e.g., practice info) */
+  children?: React.ReactNode;
 }
 
 interface TooltipPosition {
@@ -59,31 +61,36 @@ function calculateTooltipPosition(
 
   let result: TooltipPosition;
 
+  // Calculate centered left position (used by most positions)
+  const centeredLeft = Math.max(
+    VIEWPORT_PADDING,
+    Math.min(
+      targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
+      window.innerWidth - tooltipWidth - VIEWPORT_PADDING
+    )
+  );
+
   switch (position) {
     case 'top':
       result = {
-        bottom: window.innerHeight - targetRect.top + OFFSET,
-        left: Math.max(
+        // Ensure tooltip doesn't go above viewport
+        top: Math.max(
           VIEWPORT_PADDING,
-          Math.min(
-            targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - VIEWPORT_PADDING
-          )
+          targetRect.top - tooltipHeight - OFFSET
         ),
+        left: centeredLeft,
         arrowPosition: 'bottom',
       };
       break;
 
     case 'bottom':
       result = {
-        top: targetRect.bottom + OFFSET,
-        left: Math.max(
-          VIEWPORT_PADDING,
-          Math.min(
-            targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - VIEWPORT_PADDING
-          )
+        // Ensure tooltip doesn't go below viewport
+        top: Math.min(
+          targetRect.bottom + OFFSET,
+          window.innerHeight - tooltipHeight - VIEWPORT_PADDING
         ),
+        left: centeredLeft,
         arrowPosition: 'top',
       };
       break;
@@ -92,7 +99,10 @@ function calculateTooltipPosition(
       result = {
         top: Math.max(
           VIEWPORT_PADDING,
-          targetRect.top + targetRect.height / 2 - tooltipHeight / 2
+          Math.min(
+            targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
+            window.innerHeight - tooltipHeight - VIEWPORT_PADDING
+          )
         ),
         right: window.innerWidth - targetRect.left + OFFSET,
         arrowPosition: 'right',
@@ -103,7 +113,10 @@ function calculateTooltipPosition(
       result = {
         top: Math.max(
           VIEWPORT_PADDING,
-          targetRect.top + targetRect.height / 2 - tooltipHeight / 2
+          Math.min(
+            targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
+            window.innerHeight - tooltipHeight - VIEWPORT_PADDING
+          )
         ),
         left: targetRect.right + OFFSET,
         arrowPosition: 'left',
@@ -112,10 +125,30 @@ function calculateTooltipPosition(
 
     default:
       result = {
-        top: targetRect.bottom + OFFSET,
-        left: targetRect.left,
+        top: Math.min(
+          targetRect.bottom + OFFSET,
+          window.innerHeight - tooltipHeight - VIEWPORT_PADDING
+        ),
+        left: centeredLeft,
         arrowPosition: 'top',
       };
+  }
+
+  // Final safety check: if tooltip would still be off-screen, center it
+  const isOffScreen = (pos: TooltipPosition): boolean => {
+    if (pos.top !== undefined && (pos.top < 0 || pos.top + tooltipHeight > window.innerHeight)) return true;
+    if (pos.bottom !== undefined && pos.bottom < 0) return true;
+    if (pos.left !== undefined && (pos.left < 0 || pos.left + tooltipWidth > window.innerWidth)) return true;
+    return false;
+  };
+
+  if (isOffScreen(result)) {
+    // Fallback: Center tooltip in viewport
+    result = {
+      top: Math.max(VIEWPORT_PADDING, (window.innerHeight - tooltipHeight) / 2),
+      left: Math.max(VIEWPORT_PADDING, (window.innerWidth - tooltipWidth) / 2),
+      arrowPosition: 'top',
+    };
   }
 
   return result;
@@ -132,6 +165,7 @@ export function TourTooltip({
   onNext,
   onSkip,
   onComplete,
+  children,
 }: TourTooltipProps) {
   const [position, setPosition] = useState<TooltipPosition | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -146,22 +180,38 @@ export function TourTooltip({
       return;
     }
 
+    // First, scroll target into center of viewport for better visibility
+    targetElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    });
+
     const updatePosition = () => {
       const rect = targetElement.getBoundingClientRect();
       const tooltipWidth = tooltipRef.current?.offsetWidth || 340;
-      const tooltipHeight = tooltipRef.current?.offsetHeight || 220;
-      const newPosition = calculateTooltipPosition(rect, step.position, tooltipWidth, tooltipHeight);
+      // Account for children content - practice info panel can make tooltip taller
+      const tooltipHeight = tooltipRef.current?.offsetHeight || 400;
+
+      // SMART POSITIONING: Choose 'top' or 'bottom' based on where target is in viewport
+      // If target is in bottom half of screen, show tooltip above; otherwise below
+      const viewportHeight = window.innerHeight;
+      const targetCenterY = rect.top + rect.height / 2;
+      const smartPosition: TourPosition = targetCenterY > viewportHeight / 2 ? 'top' : 'bottom';
+
+      const newPosition = calculateTooltipPosition(rect, smartPosition, tooltipWidth, tooltipHeight);
       setPosition(newPosition);
     };
 
-    // Initial position
-    updatePosition();
+    // Delay initial position calculation to allow scroll to settle
+    const scrollTimeout = setTimeout(updatePosition, 400);
 
     // Update on resize/scroll
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
 
     return () => {
+      clearTimeout(scrollTimeout);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
@@ -179,11 +229,11 @@ export function TourTooltip({
   if (!position) return null;
 
   // Build position style
-  // z-index 70 to be above sidebar sheet (z-50) and tour highlight (z-60)
+  // z-index 110 to be above sidebar sheet (z-50) and tour highlight (z-100)
   // pointer-events: auto ensures clicks are captured
   const positionStyle: React.CSSProperties = {
     position: 'fixed',
-    zIndex: 70,
+    zIndex: 110,
     pointerEvents: 'auto',
     ...(position.top !== undefined && { top: position.top }),
     ...(position.bottom !== undefined && { bottom: position.bottom }),
@@ -295,7 +345,17 @@ export function TourTooltip({
         </div>
 
         {/* Description */}
-        <p className="text-gray-300 text-sm mb-5 leading-relaxed">{step.description}</p>
+        <p className="text-gray-300 text-sm leading-relaxed">{step.description}</p>
+
+        {/* Optional children content (e.g., practice info panel) */}
+        {children && (
+          <div className="max-h-[200px] overflow-y-auto -mx-1 px-1">
+            {children}
+          </div>
+        )}
+
+        {/* Spacer before actions */}
+        <div className="mb-5" />
 
         {/* Actions */}
         <div className="flex justify-between items-center">

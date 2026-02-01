@@ -87,6 +87,112 @@ export interface VoiceRecording {
   created_at: string;
 }
 
+// ============================================================================
+// MIO v3.0 - SESSION TELEMETRY TYPES (Capabilities 16-33)
+// ============================================================================
+
+/**
+ * Voice metadata captured during recording (Capability 29)
+ * Used by MIO to detect confidence, hesitation, and emotional patterns
+ */
+export interface VoiceMetadata {
+  durationSeconds: number;
+  restartCount: number;
+  pauseTimestamps: number[];
+  pauseCount: number;
+  deviceType: 'mobile' | 'desktop' | 'tablet';
+  recordingStartTime: string;
+  recordingEndTime: string;
+  totalSessionTimeMs: number;
+  audioFormat: string;
+  estimatedSpeechRate?: 'slow' | 'normal' | 'fast';
+  confidenceIndicators: string[];
+  hesitationRatio: number;
+}
+
+/**
+ * Keystroke metrics from typing patterns (Capability 16)
+ */
+export interface KeystrokeMetrics {
+  totalKeystrokes: number;
+  avgDwellTimeMs: number;
+  avgFlightTimeMs: number;
+  rhythmConsistency: number;
+  typingSignature: string;
+}
+
+/**
+ * Pause patterns during practice completion (Capability 17)
+ */
+export interface PausePatterns {
+  totalPauses: number;
+  avgPauseDurationMs: number;
+  microHesitationCount: number;
+  thinkingPauseCount: number;
+  extendedPauseCount: number;
+  pauseBeforeTriggers: string[];
+  longestPauseContext: string;
+}
+
+/**
+ * Session telemetry for behavioral analysis
+ * Captured invisibly during practice completion
+ */
+export interface SessionTelemetry {
+  sessionId: string;
+  deviceType: 'mobile' | 'desktop' | 'tablet';
+  sessionDurationMs: number;
+  startTime: string;
+  endTime: string;
+
+  // Typing behavior (Capabilities 16-18)
+  keystrokeMetrics?: KeystrokeMetrics;
+  pausePatterns?: PausePatterns;
+  correctionRate?: number;
+
+  // Response timing (Capability 19)
+  fieldLatencies?: {
+    fieldId: string;
+    latencyMs: number;
+  }[];
+
+  // Session energy (Capability 21)
+  sessionEnergy?: {
+    startEnergy: number;
+    midEnergy: number;
+    endEnergy: number;
+    trajectoryType: string;
+  };
+
+  // Cognitive load score (Capability 26)
+  cognitiveLoadScore?: number;
+  cognitiveLoadIndicators?: string[];
+
+  // Voice metadata if recording was made (Capability 29)
+  voiceMetadata?: VoiceMetadata;
+}
+
+/**
+ * Extended practice data including MIO v3.0 telemetry
+ * This is what gets stored in enriched_practice_data JSONB
+ */
+export interface EnrichedPracticeData {
+  // Original practice data
+  practiceData: PracticeData;
+
+  // MIO v3.0 - Session telemetry for behavioral analysis
+  sessionTelemetry?: SessionTelemetry;
+
+  // Context about the practice session
+  practiceContext?: {
+    challengeDay?: number;
+    reportWeek?: number;
+    streakDay?: number;
+    timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+    isWeekend: boolean;
+  };
+}
+
 // Practice Streak Tracking
 export interface PracticeStreak {
   id: string;

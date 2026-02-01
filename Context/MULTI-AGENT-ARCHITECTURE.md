@@ -1,40 +1,125 @@
 # Multi-Agent Team Architecture for $100M Product
 
-**Version**: 1.0
-**Last Updated**: November 2025
-**Product**: Mind Insurance (Grouphome App)
+**Version**: 3.0
+**Last Updated**: December 2025
+**Product**: Mind Insurance Standalone
 **Target Scale**: $100M ARR
 
 ---
 
 ## EXECUTIVE SUMMARY
 
-Research shows that **multi-agent systems outperform single agents by 2-3x** for complex products. For a $100M product, you need:
+Research shows that **multi-agent systems outperform single agents by 2-3x** for complex products. For a $100M product, Mind Insurance uses:
 
-- **8-10 specialized agent roles** (not just 1 general agent)
-- **Coordinator pattern** for orchestration
+- **18 specialized agent roles** organized into 4 teams (expanded from 15)
+- **COO "Jaz"** as master orchestrator (EOS + Hormozi trained, DEFAULT AGENT)
+- **Coordinator pattern** for technical orchestration
+- **Marketing & Sales team** for revenue operations (EXPANDED: 4 → 7 agents)
+- **Hormozi methodology integration** for constraint-focused execution
 - **Parallel execution** with conflict resolution
 - **Quality gates** matching enterprise standards (SOC2, HIPAA, GDPR)
 - **MCP ecosystem** for extensibility
 
 **Key Insight**: Each agent operates with **isolated context windows**, preventing context pollution and allowing larger, more focused tasks.
 
+**Current Constraint**: LEADS (all agents coordinate to support lead generation until solved)
+
 ---
 
-## AGENT TEAM ROSTER
+## TEAM STRUCTURE OVERVIEW
 
-### 1. COORDINATOR AGENT (Orchestrator)
-**Role**: Central governance, task decomposition, conflict resolution
+```
+                        VISIONARY (User/CEO)
+                  Vision, Big Relationships, Culture
+                               │
+                               ▼
+              ┌────────────────────────────────────┐
+              │     COO "JAZ" (DEFAULT AGENT)      │
+              │  EOS + Hormozi Constraint Execution │
+              │      Strategic Pushback Authority   │
+              │     Current Constraint: LEADS       │
+              └────────────────┬───────────────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        │                      │                      │
+        ▼                      ▼                      ▼
+┌───────────────┐    ┌─────────────────┐    ┌───────────────┐
+│  PRODUCT TEAM │    │ MARKETING/SALES │    │ SUPPORT TEAM  │
+│  (8 agents)   │    │  (7 agents) ⬆   │    │  (2 agents)   │
+│               │    │                 │    │               │
+│ - Coordinator │    │ - Constraint    │    │ - Analytics   │
+│ - React Dev   │    │   Strategist    │    │   Engineer    │
+│ - Backend     │    │ - Conversion    │    │ - MIO Oracle  │
+│ - Security*   │    │   Psychologist  │    │               │
+│ - QA          │    │ - Daily Content │    │               │
+│ - N8n         │    │   Engine        │    │               │
+│ - DevOps      │    │ - Content Mktg  │    │               │
+│ - Docs        │    │ - Copywriter    │    │               │
+│               │    │ - Lead Nurture  │    │               │
+│               │    │ - Attribution   │    │               │
+└───────────────┘    └─────────────────┘    └───────────────┘
+
+* Security Auditor has VETO POWER over all teams
+* Marketing Team expanded from 4 → 7 agents (Hormozi integration)
+* TOTAL: 18 agents (1 Executive + 8 Product + 7 Marketing + 2 Support)
+```
+
+---
+
+## AGENT TEAM ROSTER (18 AGENTS)
+
+### EXECUTIVE LAYER
+
+#### 0. COO "Jaz" (Master Orchestrator) - DEFAULT AGENT
+
+**Role**: Strategic leadership, EOS execution, agent orchestration
+**Protocol File**: `/Context/AGENT-COO-JAZ.md`
+
+```yaml
+name: "coo-jaz"
+description: "100M COO - EOS-trained master orchestrator"
+default_agent: true  # Activates first on project entry
+model: "claude-opus-4-5"  # or claude-sonnet-4-5
+auto_invoke:
+  - "strategy"
+  - "EOS"
+  - "Rocks"
+  - "Scorecard"
+  - "priorities"
+  - "orchestration"
+  - "pushback"
+responsibilities:
+  - Translate vision to 90-day Rocks
+  - Orchestrate all 15 agents
+  - Push back on misaligned initiatives
+  - Approve production deployments
+  - Track Scorecard metrics
+  - Resolve strategic conflicts
+tools:
+  - All agent delegation
+  - Full GHL access
+  - All MCP tools
+priority_level: 2  # After Security VETO
+```
+
+---
+
+### PRODUCT TEAM (8 Agents)
+
+#### 1. Coordinator Agent (Technical Orchestrator)
+
+**Role**: Central governance, task decomposition, technical conflict resolution
+**Protocol File**: `/Context/AGENT-COORDINATOR.md`
 
 ```yaml
 name: "coordinator"
-description: "Central orchestrator for all agent tasks"
-auto_invoke: "Complex tasks requiring multiple agents"
+description: "Central orchestrator for technical agent tasks"
+auto_invoke: "Complex technical tasks requiring multiple agents"
 model: "claude-sonnet-4-5"
 responsibilities:
   - Analyze incoming requests and decompose into subtasks
   - Delegate to appropriate specialist agents
-  - Resolve conflicts between agents
+  - Resolve technical conflicts between agents
   - Enforce quality gates and policies
   - Aggregate results and ensure consistency
   - Track task dependencies
@@ -45,12 +130,14 @@ tools:
   - All other agents via Task tool
 ```
 
-### 2. SENIOR REACT/FRONTEND SPECIALIST
+#### 2. Senior React/Frontend Specialist
+
 **Role**: UI/UX, React components, TypeScript, accessibility
+**Protocol File**: `/Context/AGENT-LOVABLE-DEVELOPER.md`
 
 ```yaml
 name: "senior-react-developer"
-description: "UFB Purpose Waze React specialist with zero-error tolerance and visual validation"
+description: "React specialist with zero-error tolerance and visual validation"
 auto_invoke:
   - "component"
   - "UI"
@@ -58,7 +145,6 @@ auto_invoke:
   - "responsive"
   - "design"
   - "layout"
-  - "animation"
   - "ShadCN"
   - "Tailwind"
 model: "claude-sonnet-4-5"
@@ -70,23 +156,16 @@ responsibilities:
   - Ensure WCAG AA accessibility compliance
   - Take validation screenshots after UI changes
 tools:
-  - Read
-  - Write
-  - Edit
-  - MultiEdit
-  - Grep
-  - Glob
-  - Bash
+  - Read, Write, Edit, MultiEdit
+  - Grep, Glob, Bash
   - Playwright (screenshots, UI testing)
   - Context7 (React/TypeScript docs)
-context_files:
-  - "LOVABLE-STANDARDS.md"
-  - "src/components/"
-  - "src/pages/"
 ```
 
-### 3. BACKEND/API ARCHITECT
+#### 3. Backend/API Architect
+
 **Role**: APIs, database design, Supabase integration
+**Protocol File**: `/Context/AGENT-BACKEND-ARCHITECT.md`
 
 ```yaml
 name: "backend-architect"
@@ -96,7 +175,6 @@ auto_invoke:
   - "database"
   - "backend"
   - "auth"
-  - "service"
   - "schema"
   - "migration"
   - "Supabase"
@@ -109,21 +187,16 @@ responsibilities:
   - Configure Row Level Security (RLS)
   - Handle real-time subscriptions
   - Ensure <200ms API response time (p95)
+  - Filter MI users with user_source = 'mi_standalone'
 tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Grep
+  - Read, Write, Edit, Bash, Grep
   - Supabase MCP (CRUD, schema, RLS)
-context_files:
-  - "src/services/"
-  - "src/lib/supabase.ts"
-  - "supabase/migrations/"
 ```
 
-### 4. SECURITY & COMPLIANCE AUDITOR
+#### 4. Security & Compliance Auditor (VETO POWER)
+
 **Role**: Security scanning, vulnerability management, compliance
+**Protocol File**: `/Context/AGENT-SECURITY-AUDITOR.md`
 
 ```yaml
 name: "security-auditor"
@@ -142,20 +215,17 @@ responsibilities:
   - OWASP Top 10 validation
   - Dependency vulnerability scanning
   - SOC2/HIPAA/GDPR alignment checks
-  - Penetration testing recommendations
   - Secret exposure detection
   - API security review
   - MCP security assessment
-tools:
-  - Read
-  - Grep
-  - Bash (npm audit, security scans)
-  - WebSearch (CVE lookups)
-veto_power: true  # Can block deployments
+veto_power: true  # Can block ANY deployment
+priority_level: 1  # HIGHEST
 ```
 
-### 5. QA & DATA VALIDATOR
+#### 5. QA & Data Validator
+
 **Role**: Testing, quality assurance, data integrity
+**Protocol File**: `/Context/AGENT-QA-VALIDATOR.md`
 
 ```yaml
 name: "qa-data-validator"
@@ -174,56 +244,46 @@ responsibilities:
   - Cross-browser testing (Chrome, Firefox, Safari, mobile)
   - Accessibility compliance (WCAG AA minimum)
   - Data integrity checks across systems
-  - Test coverage analysis (>80% target)
+  - Test coverage analysis (>85% target)
   - Zero-miss detection patterns
-  - Edge case identification
-tools:
-  - Playwright (automated testing, screenshots)
-  - Read
-  - Bash (test runners)
-  - Grep
-browser_matrix:
-  - Chrome (latest)
-  - Firefox (latest)
-  - Safari (latest)
-  - iOS Safari (mobile)
-  - Android Chrome (mobile)
+release_blocking: true  # Can block releases
+priority_level: 3
 ```
 
-### 6. N8N WORKFLOW ARCHITECT
+#### 6. N8n Workflow Architect
+
 **Role**: Workflow orchestration, integrations, automation
+**Protocol File**: `/Context/AGENT-N8N-WORKFLOW-ARCHITECT.md`
 
 ```yaml
 name: "n8n-workflow-architect"
-description: "Workflow validation, OAuth verification, auto-remediation"
+description: "Workflow validation, chatbot expert, auto-remediation"
 auto_invoke:
   - "workflow"
   - "automation"
   - "integration"
-  - "GoHighLevel"
   - "N8n"
   - "webhook"
+  - "chatbot"
   - "trigger"
 model: "claude-sonnet-4-5"
 responsibilities:
   - Design and validate N8n workflows
-  - Manage GoHighLevel integrations
-  - Handle purchase processing pipelines
+  - Manage MIO/Nette/ME chatbot workflows
+  - Handle GHL integrations
   - Verify OAuth/authentication flows
   - Implement error handling and retries
-  - Auto-remediation logic
-tools:
-  - N8n MCP (workflow validation, node search)
-  - Read
-  - Bash
-  - WebFetch
-context_files:
-  - "workflows/"
-  - ".n8n/"
+critical_workflows:
+  - "0qiaQWEaDXbCxkhK"  # Unified Chat - MIO/Nette/ME
+  - "56JoMTczqhHS3eME"  # MIO Weekly Report
+  - "Sp5RhDpa8xFPnlWI"  # MIO Insights Reply
+  - "niEwlbKoTiQF1sO9"  # Protocol Day Advancement
 ```
 
-### 7. DEVOPS & INFRASTRUCTURE ENGINEER
+#### 7. DevOps & Infrastructure Engineer
+
 **Role**: Deployment, CI/CD, monitoring, infrastructure
+**Protocol File**: `/Context/AGENT-DEVOPS-ENGINEER.md`
 
 ```yaml
 name: "devops-engineer"
@@ -233,26 +293,24 @@ auto_invoke:
   - "infrastructure"
   - "CI/CD"
   - "monitoring"
-  - "Docker"
   - "pipeline"
-  - "environment"
+  - "Cloudflare"
 model: "claude-sonnet-4-5"
 responsibilities:
   - CI/CD pipeline design and maintenance
   - Deployment automation
   - Environment configuration
   - Performance monitoring setup
-  - Infrastructure as Code
-  - Uptime and alerting configuration
-tools:
-  - Bash (git, npm, docker)
-  - Read
-  - Write
-  - Grep
+deployment_rules:
+  staging_only: "mindinsurancechallange.pages.dev"
+  production_restricted: "mymindinsurance.com"
+  never_touch: "grouphome4newbies.com"
 ```
 
-### 8. DOCUMENTATION & KNOWLEDGE MANAGER
+#### 8. Documentation & Knowledge Manager
+
 **Role**: Technical documentation, knowledge base, onboarding
+**Protocol File**: (Context documentation)
 
 ```yaml
 name: "documentation-manager"
@@ -264,53 +322,288 @@ auto_invoke:
   - "knowledge"
   - "onboarding"
   - "ADR"
-model: "claude-opus"  # Better for synthesis and long-form
+model: "claude-opus-4-5"  # Better for synthesis
 responsibilities:
   - Generate API documentation
   - Create architectural decision records (ADRs)
   - Maintain development guides
   - Knowledge base organization
-  - Onboarding material creation
-  - Code commenting standards
-tools:
-  - Write
-  - Read
-  - Grep
-  - Bash (doc generation)
 ```
 
-### 9. PRODUCT RESEARCH & ANALYTICS SPECIALIST
-**Role**: Market research, competitive analysis, data insights
+---
+
+### MARKETING & SALES TEAM (7 Agents) - EXPANDED
+
+#### 9. Constraint Strategist (Hormozi Core) - NEW
+
+**Role**: Business constraint diagnosis, sequential resolution, offer ladder architecture
+**Protocol File**: `/Context/AGENT-CONSTRAINT-STRATEGIST.md`
 
 ```yaml
-name: "product-research-analyst"
-description: "Market research, competitive analysis, strategic insights"
+name: "constraint-strategist"
+description: "Diagnoses the ONE constraint blocking growth using Hormozi methodology"
 auto_invoke:
-  - "research"
-  - "analysis"
-  - "market"
-  - "competitors"
-  - "metrics"
-  - "KPIs"
-  - "user behavior"
+  - "constraint"
+  - "bottleneck"
+  - "LEADS"
+  - "SALES"
+  - "DELIVERY"
+  - "PROFIT"
+  - "CFA"
+  - "payback"
 model: "claude-sonnet-4-5"
 responsibilities:
-  - Conduct market/competitor research
-  - Analyze product metrics
-  - Validate feature assumptions
-  - Generate strategic recommendations
-  - User behavior analysis
-  - Industry trend tracking
-tools:
-  - WebSearch
-  - WebFetch
-  - Exa MCP (semantic search)
-  - Read
-  - Grep
+  - Diagnose current business constraint
+  - Recommend 90-day Rocks aligned to constraint
+  - Design offer ladder architecture
+  - Calculate CFA (Client Financed Acquisition) status
+  - Trigger constraint shift when solved
+frameworks:
+  - "4 Universal Constraints (LEADS/SALES/DELIVERY/PROFIT)"
+  - "Sequential Constraint Resolution"
+  - "CFA Calculator"
+  - "Offer Ladder Framework"
+current_constraint: "LEADS"
 ```
 
-### 10. MIO (MIND INSURANCE ORACLE) - BEHAVIORAL ANALYST
+#### 10. Conversion Psychologist (Hormozi Psychology) - NEW
+
+**Role**: Behavioral psychology for conversion optimization
+**Protocol File**: `/Context/AGENT-CONVERSION-PSYCHOLOGIST.md`
+
+```yaml
+name: "conversion-psychologist"
+description: "Makes offers so good people feel stupid saying no"
+auto_invoke:
+  - "offer"
+  - "Grand Slam"
+  - "Value Equation"
+  - "risk reversal"
+  - "guarantee"
+  - "urgency"
+  - "scarcity"
+  - "upsell"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Apply Grand Slam Offer framework
+  - Optimize Value Equation at every touchpoint
+  - Design risk reversals and guarantees
+  - Implement ethical urgency/scarcity
+  - Identify 5 Upsell Moments
+frameworks:
+  - "Grand Slam Offer"
+  - "Value Equation (Dream × Likelihood ÷ Time × Effort)"
+  - "5 Upsell Moments"
+  - "Risk Reversal Engineering"
+```
+
+#### 11. Daily Content Engine (Content System) - NEW
+
+**Role**: Time-segmented daily content creation with 15 avatar targeting
+**Protocol File**: `/Context/AGENT-DAILY-CONTENT-ENGINE.md`
+
+```yaml
+name: "daily-content-engine"
+description: "3 posts/day that move audience through funnel"
+auto_invoke:
+  - "7 AM"
+  - "1 PM"
+  - "7 PM"
+  - "daily content"
+  - "avatar"
+  - "content schedule"
+  - "story content"
+  - "proof content"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Create 7 AM story-driven content (awareness)
+  - Create 1 PM client proof content (credibility)
+  - Create 7 PM solution-focused content (conversion)
+  - Target 15 avatars with specific hooks
+  - Rotate testimonials and CTAs
+time_slots:
+  7_am: "Story-Driven (vulnerability, pattern connection)"
+  1_pm: "Client Proof (transformation metrics)"
+  7_pm: "Solution-Focused (Mind Insurance, CTA)"
+avatar_count: 15
+```
+
+#### 12. Content Marketing Specialist
+
+**Role**: Blog posts, social media, email sequences, thought leadership, authority building
+**Protocol File**: `/Context/AGENT-CONTENT-MARKETING.md`
+
+```yaml
+name: "content-marketing"
+description: "Authority building content + Hormozi reason-why storytelling"
+auto_invoke:
+  - "blog"
+  - "article"
+  - "post"
+  - "content"
+  - "social media"
+  - "LinkedIn"
+  - "Instagram"
+  - "email sequence"
+  - "newsletter"
+  - "authority"
+  - "viral"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Create brand-aligned content
+  - Manage content calendar
+  - SEO content clusters
+  - Hormozi authority building
+  - Viral/meme marketing
+  - User-generated content strategy
+ghl_access: "read"  # Campaigns, segments
+brand_voice:
+  tone: "Empowering, insightful, transformational"
+  patterns: ["Past Prison", "Success Sabotage", "Compass Crisis"]
+frameworks:
+  - "Reason Why Storytelling"
+  - "Authority Stack"
+  - "SEO Content Clusters"
+```
+
+#### 13. Sales Copywriter
+
+**Role**: Sales pages, funnels, ads, VSL scripts, Grand Slam Offer copy
+**Protocol File**: `/Context/AGENT-SALES-COPYWRITER.md`
+
+```yaml
+name: "sales-copywriter"
+description: "High-converting sales copy with Hormozi frameworks"
+auto_invoke:
+  - "sales page"
+  - "landing page"
+  - "funnel"
+  - "conversion"
+  - "CTA"
+  - "headline"
+  - "ad copy"
+  - "VSL"
+  - "webinar"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Write VSL scripts (45-minute structure)
+  - Create Grand Slam Offer copy
+  - Optimize conversion rates
+  - Price anchoring and payment psychology
+  - Before/After/Bridge storytelling
+frameworks:
+  - "VSL Script Framework"
+  - "Grand Slam Offer Language"
+  - "Before/After/Bridge"
+  - "Micro-Commitment Sequences"
+  - "Price Anchoring"
+ghl_access: "read"  # Contacts, analytics
+```
+
+#### 14. Lead Nurture Specialist
+
+**Role**: SMS campaigns, email sequences, offer ladder progression, re-engagement
+**Protocol File**: `/Context/AGENT-LEAD-NURTURE.md`
+
+```yaml
+name: "lead-nurture"
+description: "Lead nurturing with offer ladder sequences"
+auto_invoke:
+  - "follow-up"
+  - "nurture"
+  - "sequence"
+  - "SMS campaign"
+  - "re-engagement"
+  - "abandoned"
+  - "win-back"
+  - "offer ladder"
+  - "retention"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Design offer ladder sequences (Free→$47→$297→$997)
+  - Create urgency/countdown sequences
+  - Risk reversal messaging
+  - Day 1-30 retention sequences
+  - Referral incentive programs
+ghl_access: "full"  # Contacts, SMS, email, workflows
+sequences:
+  - "Offer Ladder Progression"
+  - "Post-Purchase Activation (Day 1-7)"
+  - "Urgency/Countdown"
+  - "Risk Reversal Messaging"
+  - "Retention (Day 8-30)"
+  - "Referral Incentive"
+```
+
+#### 15. Analytics & Attribution Specialist
+
+**Role**: CAC, LTV, CFA tracking, constraint metrics, A/B testing
+**Protocol File**: `/Context/AGENT-ANALYTICS-ATTRIBUTION.md`
+
+```yaml
+name: "analytics-attribution"
+description: "Revenue analytics with constraint metrics and CFA tracking"
+auto_invoke:
+  - "CAC"
+  - "LTV"
+  - "ROAS"
+  - "ROI"
+  - "attribution"
+  - "conversion tracking"
+  - "funnel metrics"
+  - "revenue"
+  - "CFA"
+  - "constraint metrics"
+  - "A/B test"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Track CAC and LTV
+  - CFA (Client Financed Acquisition) status
+  - Constraint metrics dashboard
+  - Offer ladder conversion tracking
+  - Time-slot content performance (7AM/1PM/7PM)
+  - Testimonial velocity metrics
+  - A/B test result logging
+ghl_access: "read"  # All analytics
+metrics:
+  cac_target: "<$50"
+  ltv_target: ">$200"
+  ltv_cac_ratio: ">3:1"
+  cfa_target: "30-day revenue > CAC"
+```
+
+---
+
+### SUPPORT TEAM (2 Agents)
+
+#### 16. Analytics Engineer
+
+**Role**: Dashboards, KPIs, technical data infrastructure
+**Protocol File**: `/Context/AGENT-ANALYTICS-ENGINEER.md`
+
+```yaml
+name: "analytics-engineer"
+description: "Technical analytics, dashboards, data pipelines"
+auto_invoke:
+  - "dashboard"
+  - "KPI"
+  - "metrics"
+  - "analytics"
+  - "data pipeline"
+  - "reporting"
+model: "claude-sonnet-4-5"
+responsibilities:
+  - Build analytics dashboards
+  - Design data pipelines
+  - Create KPI tracking systems
+  - Database query optimization
+  - Cost tracking and analysis
+```
+
+#### 17. MIO Oracle Specialist (Behavioral Analyst)
+
 **Role**: User behavioral patterns, forensic psychology, intervention design
+**Protocol File**: `/Context/AGENT-MIO-ORACLE.md`
 
 ```yaml
 name: "mio-mind-insurance-oracle"
@@ -325,385 +618,180 @@ auto_invoke:
   - "intervention"
   - "MIO"
 model: "claude-sonnet-4-5"
-responsibilities:
-  - Analyze user behavioral data from Supabase
-  - Detect dropout risk patterns (3-day gaps, Week 3 danger zone)
-  - Identify breakthrough opportunities
-  - Design personalized intervention protocols
-  - Generate forensic psychological insights
-  - Track identity collision patterns
-tools:
-  - Supabase MCP (query user practices)
-  - Read
-  - Bash (data analysis)
-  - Write (generate insights)
-database_tables:
-  - daily_practices
-  - weekly_assessment_scores
-  - avatar_assessments
-  - mio_forensic_analysis
-  - mio_practice_feedback
+capabilities:
+  1: "3-Day Rule Detection"
+  2: "Dropout Risk Scoring"
+  3: "Breakthrough Probability Engine"
+  4: "Week 3 Danger Zone Detection"
+  5: "Pattern Awareness Trending"
+  6: "Trigger Reset Analysis"
+  7: "Reframe Quality Scoring"
+  8: "Accountability Gap Detection"
+  9: "Identity Collision Analysis"
+  10: "Energy Depletion Patterns"
+  11: "Celebration Recognition"
+  12: "Neural Rewiring Protocol Design"
+  13: "Past Prison Pattern Detection"
+  14: "Success Sabotage Signature"
+  15: "Compass Crisis Detection"
 ```
 
 ---
 
-## ORCHESTRATION PATTERN: COORDINATOR MODEL
+## PRIORITY HIERARCHY
 
-### Architecture Diagram
+When agents conflict, resolve based on this hierarchy:
 
-```
-┌─────────────────────────────────────────┐
-│           User Request/Task             │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────▼────────────────────────┐
-│         COORDINATOR AGENT               │
-│  • Analyzes request complexity          │
-│  • Decomposes into subtasks             │
-│  • Identifies dependencies              │
-│  • Delegates to specialists             │
-│  • Monitors progress                    │
-│  • Resolves conflicts                   │
-│  • Aggregates results                   │
-└────────────────┬────────────────────────┘
-                 │
-         ┌───────┴──────┬──────────┬──────────┐
-         │              │          │          │
-    ┌────▼────┐   ┌────▼────┐ ┌───▼───┐  ┌───▼───┐
-    │Frontend │   │Backend  │ │Security│  │QA     │
-    │Specialist│  │Architect│ │Auditor │  │Validator│
-    │(Parallel)│  │(Serial) │ │(Veto)  │  │(Final) │
-    └─────────┘   └─────────┘ └────────┘  └────────┘
-```
+| Rank | Agent | Authority | Notes |
+|------|-------|-----------|-------|
+| 1 | **Security Auditor** | VETO POWER | Can block ANY deployment - immutable |
+| 2 | **COO (Jaz)** | Orchestration Authority | Strategic decisions, production approval |
+| 3 | **QA Validator** | Release Blocking | Can stop releases for quality |
+| 4 | **Backend Architect** | API Contract | Database/API decisions |
+| 5 | **Frontend Specialist** | UI/UX Decisions | Component/design decisions |
+| 6 | **Marketing/Sales Team** | Revenue Decisions | Within approved budget |
+| 7 | **Others** | Standard Priority | Default resolution |
 
-### Benefits of Coordinator Pattern
+### Conflict Resolution Matrix
 
-1. **Strong Governance**: Central control ensures compliance
-2. **Consistent Decisions**: Single source of truth
-3. **Easy Monitoring**: Clear audit trail
-4. **Conflict Resolution**: Central arbitration
-5. **Scalability**: Add agents without chaos
+| Conflict Type | Resolution Path |
+|---------------|----------------|
+| Security concern | Security Auditor VETO - immediate, non-negotiable |
+| Strategic misalignment | COO (Jaz) arbitrates, may escalate to Visionary |
+| Technical dispute | Coordinator facilitates, relevant architect decides |
+| Revenue decision | COO (Jaz) + Analytics Attribution review data |
+| Production deployment | Security → QA → Jaz approval chain |
+
+---
+
+## DEPLOYMENT RULES (ALL AGENTS)
+
+**STAGING ONLY**: `mindinsurancechallange.pages.dev`
+
+**NEVER DEPLOY TO**:
+- `mymindinsurance.com` (production - requires explicit CEO approval)
+- `grouphome4newbies.com` (different product - NEVER touch)
+- Any other domain
+
+**APPROVAL CHAIN FOR PRODUCTION**:
+1. Security Auditor clears (no VETO)
+2. QA Validator signs off
+3. COO (Jaz) approves
+4. User explicitly confirms
+
+---
+
+## GHL INTEGRATION (ALL AGENTS)
+
+**Location ID**: `3KJeKktlnhQab7T0zrpM`
+**API Key**: `pit-c7f7d071-00b6-483c-870d-99cb26c803a4`
+
+### Agent GHL Permissions
+
+| Agent | Access Level | Use Case |
+|-------|-------------|----------|
+| COO (Jaz) | Full | Strategic oversight |
+| Lead Nurture | Full | SMS, email, workflows |
+| Sales Copywriter | Read | Contacts, analytics |
+| Content Marketing | Read | Segments, performance |
+| Analytics/Attribution | Read | All metrics |
+| N8n Workflow | Full | Webhooks, automations |
 
 ---
 
 ## PARALLEL EXECUTION RULES
 
-### Safe to Parallelize (READ-ONLY Operations)
+### Safe to Parallelize (READ-ONLY)
+- Glob, Grep, Read
+- WebSearch, WebFetch
+- API GET requests
+- Database SELECT queries
+- Screenshot capture
+- Static analysis
+- Documentation generation
 
-```
-PARALLEL ALLOWED:
-├─ Glob (file pattern matching)
-├─ Grep (content search)
-├─ Read (file viewing)
-├─ WebSearch (research)
-├─ WebFetch (documentation)
-├─ API GET requests
-├─ Database SELECT queries
-├─ Screenshot capture
-└─ Static analysis
-```
-
-### Must Run Sequentially (WRITE Operations)
-
-```
-SERIAL REQUIRED:
-├─ Write (file creation)
-├─ Edit (file modification)
-├─ Bash (system commands)
-├─ API POST/PUT/DELETE
-├─ Database INSERT/UPDATE/DELETE
-├─ Git operations (add, commit, push)
-└─ Deployment commands
-```
-
-### Parallel Execution Example
-
-```markdown
-## Task: Implement User Dashboard Feature
-
-### Phase 1: Analysis (PARALLEL - All at once)
-- Frontend: Analyze existing component patterns
-- Backend: Review current API structure
-- Security: Preliminary threat model
-- QA: Identify test requirements
-- Docs: Create skeleton documentation
-
-### Sync Point 1
-- Coordinator validates all analyses
-- Checks for conflicts
-- Approves implementation plan
-
-### Phase 2: Implementation (SEQUENTIAL - One at a time)
-- Backend: Build API endpoints (depends on nothing)
-- Frontend: Build UI components (depends on backend API)
-- Security: Continuous code review
-- QA: Write tests as features complete
-
-### Sync Point 2
-- All tests must pass
-- Security approval required
-- Performance benchmarks met
-
-### Phase 3: Finalization (PARALLEL)
-- QA: Run all test suites
-- Security: Final audit
-- Docs: Complete documentation
-- DevOps: Prepare deployment
-```
+### Must Run Sequentially (WRITE)
+- Write, Edit, MultiEdit
+- Bash system commands
+- API POST/PUT/DELETE
+- Database INSERT/UPDATE/DELETE
+- Git operations
+- Deployment commands
+- SMS/Email campaigns
 
 ---
 
 ## QUALITY GATES (NON-NEGOTIABLE)
 
 ### Gate 1: Code Quality (Automated)
-```
-✓ TypeScript strict mode: 0 errors
-✓ ESLint: 0 violations
-✓ No console.log in production code
-✓ No any types without justification
-```
+- TypeScript strict mode: 0 errors
+- ESLint: 0 violations
+- No console.log in production
 
 ### Gate 2: Testing (Automated)
-```
-✓ Unit tests: >85% coverage
-✓ Integration tests: passing
-✓ E2E tests: critical paths covered
-✓ All tests: 0 failures
-```
+- Unit tests: >85% coverage
+- Integration tests: passing
+- E2E tests: critical paths
 
 ### Gate 3: Security (Agent Review)
-```
-✓ OWASP Top 10: validated
-✓ Dependency scan: 0 HIGH/CRITICAL
-✓ No exposed secrets
-✓ RLS policies verified
-✓ API rate limiting configured
-```
+- OWASP Top 10: validated
+- npm audit: 0 HIGH/CRITICAL
+- No exposed secrets
 
 ### Gate 4: Performance (Automated)
-```
-✓ Page load: <2s (Lighthouse >90)
-✓ API response: <200ms p95
-✓ Bundle size: no >10% regression
-✓ Mobile performance: optimized
-```
+- Page load: <2s (Lighthouse >90)
+- API response: <200ms p95
+- Bundle size: no >10% regression
 
 ### Gate 5: Accessibility (Automated)
-```
-✓ WCAG AA: compliant
-✓ Keyboard navigation: working
-✓ Screen reader: compatible
-✓ Color contrast: >4.5:1
-```
+- WCAG AA: compliant
+- Keyboard navigation: working
+- Screen reader: compatible
 
 ### Gate 6: User Approval (HUMAN)
-```
-✓ Git push: ALWAYS ask before pushing
-✓ Deployment: ALWAYS ask before deploying
-✓ Schema changes: ALWAYS ask before migrating
-✓ Breaking changes: ALWAYS warn and ask
-```
+- Git push: ALWAYS ask
+- Deployment: ALWAYS ask
+- Schema changes: ALWAYS ask
+- Breaking changes: ALWAYS warn
 
 ---
 
-## CONFLICT RESOLUTION PROTOCOL
+## SUCCESS METRICS
 
-### Priority Hierarchy
-1. **Security Auditor** - Can veto any change (highest priority)
-2. **QA Validator** - Can block if tests fail
-3. **Backend Architect** - API contract decisions
-4. **Frontend Specialist** - UI/UX decisions
-5. **Others** - Standard priority
-
-### Conflict Types & Resolution
-
-```
-CONFLICT TYPE              RESOLUTION
-─────────────────────────────────────────────────
-Resource Contention     → Coordinator queues requests
-Goal Misalignment       → Weighted priority voting
-Data Conflicts          → Last-write-wins OR merge
-Policy Violations       → Security agent blocks + escalate
-Architecture Disputes   → Coordinator + human decision
-```
-
-### Escalation Path
-
-```
-Agent Conflict Detected
-         │
-         ├─ Technical Issue
-         │  → Coordinator resolves with context
-         │
-         ├─ Security Concern
-         │  → Security Auditor veto power
-         │
-         └─ Strategic Decision
-            → ESCALATE TO HUMAN USER
-```
-
----
-
-## MCP ECOSYSTEM CONFIGURATION
-
-### Critical MCPs (Must Have)
-
-| MCP | Purpose | Agent User |
-|-----|---------|------------|
-| **Supabase** | Database CRUD, schema, RLS | Backend, MIO |
-| **Playwright** | UI testing, screenshots | Frontend, QA |
-| **N8n** | Workflow validation | Workflow Architect |
-| **Context7** | Latest documentation | All agents |
-| **Exa** | Semantic search | Research Analyst |
-
-### Recommended Additional MCPs
-
-| MCP | Purpose | Priority |
-|-----|---------|----------|
-| **Snyk CLI** | Dependency vulnerability scanning | HIGH |
-| **GitHub** | Repo management, PR automation | HIGH |
-| **Sentry** | Error tracking and monitoring | MEDIUM |
-| **Slack** | Team notifications | MEDIUM |
-
-### MCP Security Protocol
-
-Before adding ANY new MCP:
-1. Run MCPscan.ai static analysis
-2. Check for command injection vulnerabilities
-3. Verify access controls
-4. Test in staging first
-5. Monitor for 48 hours before production use
-
----
-
-## TASK DELEGATION PROTOCOL
-
-### When to Use Each Agent
-
-```
-IF task mentions "component", "UI", "responsive" →
-   DELEGATE TO: senior-react-developer
-
-IF task mentions "API", "database", "schema" →
-   DELEGATE TO: backend-architect
-
-IF task mentions "security", "vulnerability" →
-   DELEGATE TO: security-auditor
-
-IF task mentions "test", "validate", "QA" →
-   DELEGATE TO: qa-data-validator
-
-IF task mentions "workflow", "automation" →
-   DELEGATE TO: n8n-workflow-architect
-
-IF task mentions "deploy", "CI/CD" →
-   DELEGATE TO: devops-engineer
-
-IF task mentions "research", "market" →
-   DELEGATE TO: product-research-analyst
-
-IF task mentions "pattern", "insight", "MIO" →
-   DELEGATE TO: mio-mind-insurance-oracle
-
-IF task requires documentation →
-   DELEGATE TO: documentation-manager
-
-IF task is complex/multi-domain →
-   COORDINATOR handles orchestration
-```
-
-### Parallel Agent Invocation
-
-For independent tasks, launch multiple agents simultaneously:
-
-```markdown
-## Example: Full Feature Implementation
-
-User: "Build a new user settings page with security"
-
-Coordinator decomposes:
-
-**PARALLEL LAUNCH** (single message, multiple Task tool calls):
-1. Frontend Specialist → Design component structure
-2. Backend Architect → Design API endpoints
-3. Security Auditor → Threat model analysis
-4. QA Validator → Define test requirements
-5. Documentation Manager → Create API docs skeleton
-
-**WAIT FOR ALL** (sync point)
-
-**SEQUENTIAL** (after sync):
-1. Backend: Implement API
-2. Frontend: Build UI (depends on backend)
-3. Security: Review implementation
-4. QA: Execute all tests
-```
-
----
-
-## SUCCESS METRICS FOR AGENT TEAM
-
-### Productivity Metrics
-- **Task throughput**: 8 agents @ 320+ tasks/week (vs 40 with 1 agent)
-- **Feature velocity**: 40% faster than single-agent approach
-- **Code review time**: <1 day (vs 3-5 days manual)
+### Team Productivity
+- **Task throughput**: 15 agents @ 400+ tasks/week
+- **Feature velocity**: 50% faster than single-agent
+- **Code review time**: <1 day
 
 ### Quality Metrics
-- **Bug rate**: <1 per release (vs 5 with single agent)
-- **Test coverage**: >85% consistently
+- **Bug rate**: <1 per release
+- **Test coverage**: >85%
 - **Security issues**: 0 HIGH/CRITICAL
 - **Accessibility**: WCAG AA compliant
 
 ### Business Metrics
-- **Time to market**: 40% reduction
-- **Support tickets**: 80% reduction (proactive fixes)
-- **User satisfaction**: >95% first-time success
-- **Revenue impact**: Faster features = faster growth
-
----
-
-## IMPLEMENTATION ROADMAP
-
-### Week 1-2: Foundation
-- [x] Create Lovable Standards (DONE)
-- [x] Create Agent Protocol (DONE)
-- [x] Configure Supabase MCP (DONE)
-- [ ] Create Coordinator agent prompt
-- [ ] Create Frontend specialist prompt
-- [ ] Create Backend architect prompt
-- [ ] Create Security auditor prompt
-
-### Week 3-4: Expansion
-- [ ] Add QA Validator agent
-- [ ] Add N8n Workflow Architect agent
-- [ ] Implement parallel execution rules
-- [ ] Set up quality gates automation
-- [ ] Configure conflict resolution
-
-### Week 5-6: Advanced
-- [ ] Add MIO behavioral analyst
-- [ ] Add Documentation manager
-- [ ] Fine-tune orchestration patterns
-- [ ] Establish monitoring and metrics
-- [ ] Optimize agent performance
-
-### Week 7+: Enterprise Scale
-- [ ] Add DevOps engineer agent
-- [ ] Add Research analyst agent
-- [ ] SOC2 compliance automation
-- [ ] Advanced analytics dashboard
-- [ ] Continuous improvement cycle
+- **CAC**: <$50
+- **LTV**: >$200
+- **LTV:CAC**: >3:1
+- **Protocol completion**: >50%
 
 ---
 
 ## KEY TAKEAWAYS
 
-1. **Multi-agent > Single agent** for $100M products
-2. **Coordinator pattern** provides governance and scalability
-3. **Parallel execution** achieves 2x+ speedup
-4. **Quality gates** are non-negotiable for enterprise
-5. **MCP ecosystem** extends agent capabilities
-6. **Human approval** still required for critical actions (git push, deploy)
-7. **Specialized agents** with isolated context outperform generalists
+1. **18 agents organized into 4 teams** (1 Executive + 8 Product + 7 Marketing + 2 Support)
+2. **COO "Jaz" is DEFAULT agent** - EOS + Hormozi trained orchestrator
+3. **Marketing Team EXPANDED** - 4 → 7 agents (Hormozi methodology integration)
+4. **Current Constraint: LEADS** - All agents coordinate for lead generation
+5. **Security has VETO power** - Can block anything
+6. **Staging only by default** - Production requires explicit approval
+7. **GHL fully integrated** - All marketing agents have appropriate access
+8. **Quality gates are non-negotiable** - 6 gates, all must pass
+9. **Human approval still required** - For git push, deploy, schema changes
 
-**Remember**: This is a TEAM of agents working together, not a single agent trying to do everything.
+**New Marketing Agents**:
+- **Constraint Strategist** - Diagnoses ONE constraint blocking growth
+- **Conversion Psychologist** - Grand Slam Offers, Value Equation
+- **Daily Content Engine** - 7AM/1PM/7PM content + 15 avatars
+
+**Remember**: This is a COORDINATED TEAM of 18 agents led by COO Jaz, not chaos. All work supports the LEADS constraint until solved.

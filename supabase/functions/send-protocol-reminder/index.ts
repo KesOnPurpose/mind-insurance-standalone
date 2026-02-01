@@ -90,7 +90,7 @@ const DAY3_MILESTONE_SMS = `You did it. 72 hours of new neural pathways.
 
 The real change starts now. Your brain is literally rewiring.
 
-Day 4 awaits: https://mymindinsurance.com/protocol`;
+Day 4 awaits: https://mymindinsurance.com/mind-insurance/coverage`;
 
 // ============================================================================
 // GHL SMS SERVICE (Direct API)
@@ -579,11 +579,11 @@ serve(async (req) => {
           // Select the appropriate SMS message based on trigger type
           let smsMessage: string;
           if (trigger_type === 'missed_2_days') {
-            smsMessage = `Your protocol is waiting. Pick up where you left off: https://mymindinsurance.com/protocol`;
+            smsMessage = `Your protocol is waiting. Pick up where you left off: https://mymindinsurance.com/mind-insurance/coverage`;
           } else if (trigger_type === 'day3_milestone') {
             smsMessage = DAY3_MILESTONE_SMS;
           } else {
-            smsMessage = `${message.title}: ${message.body}\n\nStart now: https://mymindinsurance.com/protocol`;
+            smsMessage = `${message.title}: ${message.body}\n\nStart now: https://mymindinsurance.com/mind-insurance/coverage`;
           }
 
           smsSuccess = await sendGhlSms(

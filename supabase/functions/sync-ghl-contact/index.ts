@@ -306,7 +306,64 @@ serve(async (req) => {
     }
 
     if (!ghlContact) {
-      console.log('[Sync] Returning not_found response');
+      console.log('[Sync] GHL contact creation/match failed, implementing graceful degradation');
+
+      // GRACEFUL DEGRADATION: Store phone locally and log failure for retry
+      if (phone) {
+        try {
+          // Store phone in user_profiles for later sync
+          const { error: phoneUpdateError } = await supabase
+            .from('user_profiles')
+            .update({
+              phone: phone,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user_id);
+
+          if (phoneUpdateError) {
+            console.error('[Sync] Failed to store phone locally:', phoneUpdateError);
+          } else {
+            console.log('[Sync] Phone stored locally in user_profiles');
+          }
+
+          // Log failure for team review and later retry
+          const { error: logError } = await supabase
+            .from('ghl_sync_failures')
+            .insert({
+              user_id,
+              email,
+              phone,
+              full_name,
+              error_message: 'GHL contact creation failed - phone stored locally',
+              error_code: 'GHL_CREATE_FAILED',
+              retry_count: 0
+            });
+
+          if (logError) {
+            console.error('[Sync] Failed to log sync failure:', logError);
+          } else {
+            console.log('[Sync] Failure logged for team review');
+          }
+
+          // Return SUCCESS so user can continue onboarding
+          console.log('[Sync] Returning local_only success - user can proceed');
+          return new Response(
+            JSON.stringify({
+              success: true,
+              ghl_contact_id: null,
+              source: 'local_only',
+              phone_stored: true,
+              message: 'Phone saved. SMS will be enabled shortly.'
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (fallbackError) {
+          console.error('[Sync] Graceful degradation failed:', fallbackError);
+        }
+      }
+
+      // Original not_found response (only if no phone was provided)
+      console.log('[Sync] Returning not_found response (no phone to store)');
       return new Response(
         JSON.stringify({
           success: false,

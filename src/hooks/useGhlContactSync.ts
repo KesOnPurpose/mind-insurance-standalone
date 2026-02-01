@@ -17,8 +17,9 @@ import { useAuth } from '@/contexts/AuthContext';
 interface SyncResult {
   success: boolean;
   ghl_contact_id: string | null;
-  source: 'existing' | 'matched' | 'created' | 'not_found';
+  source: 'existing' | 'matched' | 'created' | 'not_found' | 'local_only';
   message?: string;
+  phone_stored?: boolean; // True when phone was stored locally (graceful degradation)
   ghl_contact?: {
     id: string;
     email: string;

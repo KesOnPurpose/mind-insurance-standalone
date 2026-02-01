@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Sparkles, Crown, Target, Trophy, Reply, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -32,6 +33,7 @@ interface MIOInsightMessageProps {
   onReply?: (messageId: string) => void;
   showReplyButton?: boolean;
   userTimezone?: string;
+  onPracticeTourCTA?: () => void;
 }
 
 // Section energy icons
@@ -45,7 +47,8 @@ export function MIOInsightMessage({
   message,
   onReply,
   showReplyButton = true,
-  userTimezone
+  userTimezone,
+  onPracticeTourCTA
 }: MIOInsightMessageProps) {
   const isMIO = message.role === 'mio';
   const isUser = message.role === 'user';
@@ -65,6 +68,7 @@ export function MIOInsightMessage({
   const isBreakthrough = message.reward_tier === 'pattern_breakthrough';
   const isBonusInsight = message.reward_tier === 'bonus_insight';
   const isReengagement = message.section_type === 'reengagement';
+  const isFirstEngagement = message.section_type === 'first_engagement' && message.role === 'mio';
 
   // Patterns detected display - handle both array and JSON string formats
   const patternsDetected = useMemo(() => {
@@ -222,6 +226,11 @@ export function MIOInsightMessage({
             </div>
           </div>
         )}
+
+        {/* Practice Tour CTA - REMOVED from first_engagement per user feedback
+         * User said: "too much information at once with MIO asking a question and giving directions"
+         * CTA should appear in follow-up message or triggered via hamburger menu instead
+         */}
 
         {/* User message timestamp */}
         {isUser && (

@@ -2,17 +2,13 @@
  * TourSidebarController Component
  * Hub Tour System - Mobile Sidebar Control
  *
- * Controls the sidebar open/close state during the Hub tour.
- * On mobile, the sidebar is collapsed by default and tour targets
- * (Coverage Center, My Evidence, MIO) are inside the sidebar.
- *
- * This component programmatically opens the sidebar when the tour
- * advances past Step 1 (Practice Center) to reveal the sidebar items.
+ * UPDATED: Steps 2-4 now navigate to actual pages instead of
+ * highlighting sidebar items. This component is simplified to only
+ * handle the first 2 steps on the Hub page.
  *
  * Features:
- * - Opens sidebar on mobile after Step 1
- * - Keeps sidebar open through Steps 2-4
- * - Provides callback to close sidebar on tour completion
+ * - Closes sidebar when tour ends (if it was opened during tour)
+ * - Tracks tour active state to avoid interfering with manual sidebar use
  */
 
 import { useEffect, useCallback, useRef } from 'react';
@@ -58,35 +54,17 @@ export function TourSidebarController({
     }
   }, [isActive]);
 
-  // Control Sheet overlay visibility based on tour step
-  // Steps 2-4 highlight sidebar items - hide the Sheet's bg-black/80 overlay
+  // Reset sheet tour context when tour is active
+  // (No longer needed for steps 2-4 since we navigate to pages now)
   useEffect(() => {
-    const isSidebarStep = isActive && currentStep >= 2;
-    setTourHighlightingSidebar(isSidebarStep);
-    console.log('[TourSidebarController] Sheet overlay hidden:', isSidebarStep);
+    // Always keep overlay visible - no sidebar highlighting needed
+    setTourHighlightingSidebar(false);
 
-    // Cleanup: restore overlay when tour ends or component unmounts
+    // Cleanup
     return () => {
       setTourHighlightingSidebar(false);
     };
-  }, [currentStep, isActive, setTourHighlightingSidebar]);
-
-  // Open sidebar on mobile when tour advances past Step 2 (Hamburger Menu)
-  useEffect(() => {
-    // Only act on mobile when tour is active
-    if (!isMobile || !isActive) return;
-
-    // Step 0 = Practice Center (on Hub page, sidebar closed)
-    // Step 1 = Hamburger Menu (highlight the menu button, sidebar still closed)
-    // Steps 2-4 = Coverage, Evidence, MIO (in sidebar, needs to be open)
-    if (currentStep >= 2 && !openMobile) {
-      console.log('[TourSidebarController] Opening sidebar for step:', currentStep);
-      // Delay to trigger sidebar open - TourHighlight will poll for elements
-      setTimeout(() => {
-        setOpenMobile(true);
-      }, 200);
-    }
-  }, [currentStep, isActive, isMobile, openMobile, setOpenMobile]);
+  }, [isActive, setTourHighlightingSidebar]);
 
   // Close sidebar when tour ends (transitions from active to inactive)
   // IMPORTANT: Only close if the tour WAS active during this session

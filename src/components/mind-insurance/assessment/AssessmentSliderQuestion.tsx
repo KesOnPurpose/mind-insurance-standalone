@@ -137,7 +137,7 @@ export function AssessmentSliderQuestion({
 
         {/* Subtitle */}
         {subtitle && (
-          <p className="text-xs sm:text-sm text-gray-400 mb-4">{subtitle}</p>
+          <p className="text-xs sm:text-sm text-gray-200 mb-4">{subtitle}</p>
         )}
 
         {/* Large Number Display */}
@@ -206,13 +206,13 @@ export function AssessmentSliderQuestion({
           {/* Min/Max Labels */}
           <div className="flex justify-between items-start text-sm">
             <div className="text-left">
-              <span className="text-gray-500">{sliderConfig.min}</span>
-              <p className="text-xs text-gray-600 mt-1">{sliderConfig.minLabel}</p>
+              <span className="text-gray-100">{sliderConfig.min}</span>
+              <p className="text-xs text-gray-200 mt-1">{sliderConfig.minLabel}</p>
             </div>
-            <div className="text-center text-gray-500">|</div>
+            <div className="text-center text-gray-300">|</div>
             <div className="text-right">
-              <span className="text-gray-500">{sliderConfig.max}</span>
-              <p className="text-xs text-gray-600 mt-1">{sliderConfig.maxLabel}</p>
+              <span className="text-gray-100">{sliderConfig.max}</span>
+              <p className="text-xs text-gray-200 mt-1">{sliderConfig.maxLabel}</p>
             </div>
           </div>
         </div>

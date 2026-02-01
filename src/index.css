@@ -431,6 +431,47 @@ div.mi-card-gold {
 }
 
 /* ================================================
+   CEO Dashboard - Date/Time Input Visibility Fix
+   Make calendar and clock icons visible on dark backgrounds
+   ================================================ */
+
+/* Make date picker calendar icon visible on dark theme */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Firefox support */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* CEO Dashboard specific input styling */
+.ceo-date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2) sepia(1) hue-rotate(180deg) saturate(5);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.ceo-time-input::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2) sepia(1) hue-rotate(30deg) saturate(3);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* ================================================
    MIO Insights - One-Time Reward Animations
    ================================================
    These animations play ONCE on load to celebrate
@@ -478,4 +519,160 @@ div.mi-card-gold {
   50% {
     box-shadow: 0 0 25px rgba(250, 204, 21, 0.5);
   }
+}
+
+/* ================================================
+   GHL Voice Widget - Native MI Styling
+   ================================================
+   Styles the GoHighLevel voice widget to blend
+   seamlessly with the Mind Insurance dark theme.
+   The widget appears embedded within the Voice tab.
+   ================================================ */
+
+/* GHL Widget Wrapper - Main container styling */
+.ghl-widget-wrapper {
+  background-color: #0D1B2A;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(5, 195, 221, 0.2);
+  box-shadow: 0 0 30px rgba(5, 195, 221, 0.15),
+              inset 0 0 20px rgba(5, 195, 221, 0.05);
+}
+
+/* Override GHL widget internal styles to match MI theme */
+.ghl-widget-wrapper iframe {
+  border-radius: 0.75rem;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* GHL Chat bubble override when widget is embedded */
+.ghl-widget-wrapper .ghl-chat-widget,
+.ghl-widget-wrapper [class*="lc_text-widget-container"] {
+  border-radius: 0.75rem;
+  background: transparent !important;
+}
+
+/* Hide GHL floating elements when embedded in Voice tab */
+.ghl-widget-wrapper [class*="lc_text-widget"],
+.ghl-widget-wrapper [class*="chat-widget-button"] {
+  position: static !important;
+  box-shadow: none !important;
+}
+
+/* ================================================
+   Chat/Voice Tab Switcher Styling
+   ================================================
+   Premium Apple-style segmented control for
+   switching between Chat and Voice modes.
+   ================================================ */
+
+/* Tab switcher container */
+.chat-voice-tab-switcher {
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Tab button base styles */
+.chat-voice-tab-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-out;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  cursor: pointer;
+}
+
+.chat-voice-tab-button:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Active tab state */
+.chat-voice-tab-button[data-state="active"] {
+  color: white;
+  background: transparent;
+}
+
+/* Voice tab active glow */
+.chat-voice-tab-button[data-tab="voice"][data-state="active"] {
+  color: #05c3dd;
+}
+
+/* Tab switcher active indicator (animated pill) */
+.chat-voice-tab-indicator {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  border-radius: 0.375rem;
+  background: linear-gradient(135deg, #132337 0%, #0D1B2A 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Voice tab indicator with cyan glow */
+.chat-voice-tab-indicator[data-tab="voice"] {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3),
+              0 0 15px rgba(5, 195, 221, 0.3);
+}
+
+/* ================================================
+   Voice Tab Content Animations
+   ================================================ */
+
+/* Fade in animation for voice tab content */
+@keyframes voice-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Voice call card hover effect */
+.voice-call-card {
+  transition: background-color 0.2s ease-out, transform 0.15s ease-out;
+}
+
+.voice-call-card:hover {
+  transform: translateX(2px);
+}
+
+/* Voice phone status badge transitions */
+.voice-phone-status {
+  transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+/* ================================================
+   GHL Widget Visibility Control
+   ================================================
+   Control GHL widget display based on Voice tab state.
+   Widget is hidden when Chat tab is active.
+   ================================================ */
+
+/* Hide default GHL floating widget globally when Voice tab exists */
+body:has(.voice-tab-active) [class*="lc_text-widget"]:not(.ghl-widget-wrapper *),
+body:has(.voice-tab-active) [class*="chat-widget-container"]:not(.ghl-widget-wrapper *) {
+  display: none !important;
+}
+
+/* Ensure embedded GHL widget is always visible when Voice tab is active */
+.ghl-widget-wrapper.voice-tab-active {
+  display: block;
+}
+
+.ghl-widget-wrapper:not(.voice-tab-active) {
+  display: none;
 }
