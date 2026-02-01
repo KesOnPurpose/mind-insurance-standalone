@@ -1,9 +1,13 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
+import { useAccessControl } from '@/hooks/useAccessControl';
+import { SubscriptionBanner } from '@/components/SubscriptionBanner';
+import { Loader2, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,11 +15,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAssessment = true }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const location = useLocation();
+  const { isApproved, isLoading: accessLoading, error: accessError } = useAccessControl();
   const [assessmentStatus, setAssessmentStatus] = useState<'loading' | 'completed' | 'not_completed'>('loading');
-  // FEAT-GHCF-007: Subscription check (fail-open)
-  const { status: subscriptionStatus, isLoading: subLoading } = useSubscriptionCheck();
+  const { status: subscriptionStatus, isLoading: subscriptionLoading } = useSubscriptionCheck();
 
   useEffect(() => {
     const checkAssessment = async () => {
@@ -57,7 +61,7 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     }
   }, [user?.id, requireAssessment]);
 
-  // First, handle auth loading state
+  // 1. Handle auth loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -66,12 +70,124 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     );
   }
 
-  // If not authenticated, redirect to auth page (check this BEFORE assessment status)
+  // 2. If not authenticated, redirect to auth page
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Now we know user exists, check assessment status loading
+  // 3. Access control loading - show spinner while checking approval
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // 4. FAIL-CLOSED: Not approved OR access check error → Members-only gate
+  //    Only the users in gh_approved_users with is_active=true can proceed.
+  //    If the RPC errors out or times out, deny access (fail-closed).
+  //    Show branded conversion page with checkout link.
+  if (!isApproved || accessError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-slate-50 px-4 py-12">
+        <div className="max-w-lg w-full text-center space-y-8">
+          {/* Lock icon with branded ring */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+              Members-Only Access
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              This platform is exclusively for Grouphome Cash Flow members.
+            </p>
+          </div>
+
+          {accessError && (
+            <p className="text-sm text-muted-foreground">
+              There was an issue verifying your access. Please try again later or contact support.
+            </p>
+          )}
+
+          {/* Value proposition card */}
+          <Card className="border-primary/20 bg-white/80 backdrop-blur-sm">
+            <CardContent className="pt-6 pb-4 space-y-4">
+              <p className="text-sm font-semibold text-primary uppercase tracking-wider">
+                What members get access to
+              </p>
+              <ul className="text-left space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Nette AI Assistant</span> — your personal group home business advisor, available 24/7</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Step-by-step programs</span> — from licensing to your first resident, fully guided</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Compliance tools</span> — state-specific requirements, document binders, and audit prep</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Cash flow calculators</span> — property analysis and portfolio tracking built for group homes</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Primary CTA */}
+          <div className="space-y-4">
+            <Button
+              asChild
+              size="lg"
+              className="w-full text-base font-semibold h-14 shadow-lg shadow-primary/25"
+            >
+              <a
+                href="https://go.grouphomecashflow.com/checkout-page-nette-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get Access Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </a>
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Already a member? Your access may take a few minutes to activate after purchase.
+            </p>
+          </div>
+
+          {/* Secondary actions */}
+          <div className="flex items-center justify-center gap-4 pt-2 text-sm">
+            <button
+              onClick={async () => { await signOut(); }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign Out
+            </button>
+            <span className="text-muted-foreground/40">|</span>
+            <a
+              href="mailto:support@grouphome4newbies.com"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. Now we know user is authenticated AND approved.
+  //    Check assessment status loading.
   if (requireAssessment && assessmentStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -89,12 +205,21 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     return <Navigate to="/mind-insurance/assessment" replace />;
   }
 
-  // FEAT-GHCF-007: Redirect to subscription-expired if explicitly inactive
-  // FAIL-OPEN: Only redirect when edge function explicitly returns active=false
-  // Loading, errors, or missing status = allow access
-  if (!subLoading && subscriptionStatus && !subscriptionStatus.active) {
+  // 6. GHCF Subscription Check (AFTER assessment check)
+  //    Only redirect if definitively inactive (has record AND not active).
+  //    Since user already passed the approval gate, a missing record here
+  //    would be unexpected but we handle it gracefully.
+  if (!subscriptionLoading && subscriptionStatus.hasRecord && !subscriptionStatus.isActive) {
     return <Navigate to="/subscription-expired" replace />;
   }
 
-  return <>{children}</>;
+  // Show warning banner for grace period users, then render children
+  const showBanner = subscriptionStatus.hasRecord && subscriptionStatus.isGracePeriod;
+
+  return (
+    <>
+      {showBanner && <SubscriptionBanner status={subscriptionStatus} />}
+      {children}
+    </>
+  );
 }

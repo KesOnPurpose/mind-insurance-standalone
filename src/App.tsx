@@ -88,6 +88,9 @@ import BroadcastsPage from "./pages/admin/BroadcastsPage";
 // FEAT-GH-TOUR: Tour Test Page
 import TourTestPage from "./pages/TourTestPage";
 
+// GHCF Post-Purchase pages
+import SubscriptionExpiredPage from "./pages/SubscriptionExpiredPage";
+
 // Other
 import NotFound from "./pages/NotFound";
 
@@ -252,6 +255,9 @@ const App = () => {
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
                       {/* FEAT-GHCF: Contract-to-Portal automation (public routes) */}
                       <Route path="/create-account" element={<CreateAccountPage />} />
+                      <Route path="/subscription-expired" element={<SubscriptionExpiredPage />} />
+
+                      {/* GHCF Post-Purchase: Subscription expired page (public, no auth) */}
                       <Route path="/subscription-expired" element={<SubscriptionExpiredPage />} />
 
                       {/* Public share link route - no auth required */}
