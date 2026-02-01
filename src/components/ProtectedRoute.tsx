@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { SubscriptionBanner } from '@/components/SubscriptionBanner';
-import { Loader2, ShieldX } from 'lucide-react';
+import { Loader2, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -83,38 +84,99 @@ export function ProtectedRoute({ children, requireAssessment = true }: Protected
     );
   }
 
-  // 4. FAIL-CLOSED: Not approved OR access check error → Access Denied
+  // 4. FAIL-CLOSED: Not approved OR access check error → Members-only gate
   //    Only the users in gh_approved_users with is_active=true can proceed.
   //    If the RPC errors out or times out, deny access (fail-closed).
+  //    Show branded conversion page with checkout link.
   if (!isApproved || accessError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="max-w-md w-full text-center space-y-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-slate-50 px-4 py-12">
+        <div className="max-w-lg w-full text-center space-y-8">
+          {/* Lock icon with branded ring */}
           <div className="flex justify-center">
-            <ShieldX className="h-16 w-16 text-destructive" />
+            <div className="relative">
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-10 w-10 text-primary" />
+              </div>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Access Denied</h1>
-          <p className="text-muted-foreground">
-            Your account is not authorized to access this application.
-            If you believe this is an error, please contact support.
-          </p>
+
+          {/* Headline */}
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+              Members-Only Access
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              This platform is exclusively for Grouphome Cash Flow members.
+            </p>
+          </div>
+
           {accessError && (
             <p className="text-sm text-muted-foreground">
-              There was an issue verifying your access. Please try again later.
+              There was an issue verifying your access. Please try again later or contact support.
             </p>
           )}
-          <div className="flex flex-col gap-3">
+
+          {/* Value proposition card */}
+          <Card className="border-primary/20 bg-white/80 backdrop-blur-sm">
+            <CardContent className="pt-6 pb-4 space-y-4">
+              <p className="text-sm font-semibold text-primary uppercase tracking-wider">
+                What members get access to
+              </p>
+              <ul className="text-left space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Nette AI Assistant</span> — your personal group home business advisor, available 24/7</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Step-by-step programs</span> — from licensing to your first resident, fully guided</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Compliance tools</span> — state-specific requirements, document binders, and audit prep</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><span className="font-medium text-foreground">Cash flow calculators</span> — property analysis and portfolio tracking built for group homes</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Primary CTA */}
+          <div className="space-y-4">
             <Button
-              variant="default"
-              onClick={async () => {
-                await signOut();
-              }}
+              asChild
+              size="lg"
+              className="w-full text-base font-semibold h-14 shadow-lg shadow-primary/25"
+            >
+              <a
+                href="https://go.grouphomecashflow.com/checkout-page-nette-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get Access Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </a>
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Already a member? Your access may take a few minutes to activate after purchase.
+            </p>
+          </div>
+
+          {/* Secondary actions */}
+          <div className="flex items-center justify-center gap-4 pt-2 text-sm">
+            <button
+              onClick={async () => { await signOut(); }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Sign Out
-            </Button>
+            </button>
+            <span className="text-muted-foreground/40">|</span>
             <a
               href="mailto:support@grouphome4newbies.com"
-              className="text-sm text-primary hover:underline"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact Support
             </a>
