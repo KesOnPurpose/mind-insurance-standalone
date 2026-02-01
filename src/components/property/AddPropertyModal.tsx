@@ -340,7 +340,7 @@ function ConfigurationStep({ data, onChange, errors }: StepProps) {
             id="default_rate_per_bed"
             type="number"
             value={data.default_rate_per_bed ?? ''}
-            onChange={(e) => onChange('default_rate_per_bed', e.target.value ? parseInt(e.target.value) : 0)}
+            onChange={(e) => onChange('default_rate_per_bed', e.target.value ? parseInt(e.target.value) : undefined)}
             placeholder="907"
           />
           <p className="text-xs text-muted-foreground">Default: $907 (SSI max)</p>

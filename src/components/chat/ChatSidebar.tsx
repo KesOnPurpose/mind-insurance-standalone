@@ -73,6 +73,10 @@ export function ChatSidebar({ onModeChange }: ChatSidebarProps) {
 
   const handleModeChange = (newMode: ChatMode) => {
     setMode(newMode);
+    // Auto-close sidebar on mobile when switching to Voice so content is visible
+    if (newMode === 'voice' && isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   const handleNewChat = () => {
