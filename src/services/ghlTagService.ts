@@ -36,7 +36,10 @@ export type MioTag =
   // Patterns
   | 'mio-pattern-past-prison'
   | 'mio-pattern-success-sabotage'
-  | 'mio-pattern-compass-crisis';
+  | 'mio-pattern-compass-crisis'
+  // Relationship
+  | 'rkpi-partner-invited'
+  | 'rkpi-partner-paired';
 
 interface TagUpdateResult {
   success: boolean;
@@ -163,6 +166,49 @@ export async function tagPattern(
 }
 
 // ============================================================================
+// RELATIONSHIP TAG HELPERS
+// ============================================================================
+
+/**
+ * Mark user as having invited a partner to Relationship KPIs
+ */
+export async function tagPartnerInvited(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['rkpi-partner-invited']);
+}
+
+/**
+ * Mark user as having a paired partner in Relationship KPIs
+ */
+export async function tagPartnerPaired(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(
+    userId,
+    ['rkpi-partner-paired'],
+    ['rkpi-partner-invited'] // Remove invited tag once paired
+  );
+}
+
+/**
+ * Mark user as having started their first relationship check-in
+ */
+export async function tagCheckInStarted(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['rkpi-checkin-started']);
+}
+
+/**
+ * Mark user as consistent in relationship check-ins (4+ streak)
+ */
+export async function tagRelationshipConsistent(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['rkpi-consistent']);
+}
+
+/**
+ * Flag user as needing support (critical KPI score <= 3)
+ */
+export async function tagNeedsSupport(userId: string): Promise<TagUpdateResult> {
+  return updateGhlTags(userId, ['rkpi-needs-support']);
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 
@@ -175,5 +221,10 @@ export default {
   clearHighRiskTag,
   tagDay3Celebration,
   tagPushEnabled,
-  tagPattern
+  tagPattern,
+  tagPartnerInvited,
+  tagPartnerPaired,
+  tagCheckInStarted,
+  tagRelationshipConsistent,
+  tagNeedsSupport,
 };
