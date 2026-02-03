@@ -1,17 +1,52 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, ExternalLink, LogOut, MessageCircle } from 'lucide-react';
+import { AlertCircle, ExternalLink, LogOut, MessageCircle, Play, Loader2, PauseCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionCheck } from '@/hooks/useSubscriptionCheck';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
+import { useToast } from '@/hooks/use-toast';
 
 const CHECKOUT_URL = 'https://go.grouphomecashflow.com/checkout-page-nette-ai';
 const SUPPORT_EMAIL = 'support@grouphomecashflow.com';
 
 const SubscriptionExpiredPage = () => {
   const { signOut } = useAuth();
-  const { status } = useSubscriptionCheck();
+  const { status, refetch } = useSubscriptionCheck();
+  const { resume } = useSubscriptionManagement();
+  const { toast } = useToast();
+  const [isResuming, setIsResuming] = useState(false);
+
+  const isPaused = status.isPaused;
+
+  const handleResume = async () => {
+    setIsResuming(true);
+    const success = await resume();
+    setIsResuming(false);
+    if (success) {
+      toast({
+        title: 'Subscription resumed',
+        description: 'Welcome back! Redirecting you to the app...',
+      });
+      // Refetch subscription status — this will trigger ProtectedRoute to allow access
+      await refetch();
+      window.location.reload();
+    } else {
+      toast({
+        title: 'Unable to resume',
+        description: 'Please contact support for help.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const getStatusMessage = () => {
+    if (isPaused) {
+      return {
+        title: 'Your Subscription Is Paused',
+        description: 'Your access is temporarily paused. Resume anytime to pick up right where you left off.',
+      };
+    }
     switch (status.enrollmentStatus) {
       case 'cancelled':
         return {
@@ -42,8 +77,14 @@ const SubscriptionExpiredPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-            <AlertCircle className="w-6 h-6 text-destructive" />
+          <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${
+            isPaused ? 'bg-orange-100' : 'bg-destructive/10'
+          }`}>
+            {isPaused ? (
+              <PauseCircle className="w-6 h-6 text-orange-600" />
+            ) : (
+              <AlertCircle className="w-6 h-6 text-destructive" />
+            )}
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription className="text-sm">
@@ -52,16 +93,31 @@ const SubscriptionExpiredPage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-            Your progress, documents, and data are safely preserved. When you resubscribe, everything will be right where you left it.
+            Your progress, documents, and data are safely preserved. {isPaused ? 'Resume to continue where you left off.' : 'When you resubscribe, everything will be right where you left it.'}
           </div>
 
-          <Button
-            className="w-full"
-            onClick={() => window.open(CHECKOUT_URL, '_blank')}
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Resubscribe Now
-          </Button>
+          {isPaused ? (
+            <Button
+              className="w-full"
+              onClick={handleResume}
+              disabled={isResuming}
+            >
+              {isResuming ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Resume Subscription
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={() => window.open(CHECKOUT_URL, '_blank')}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Resubscribe Now
+            </Button>
+          )}
 
           <Button
             variant="outline"

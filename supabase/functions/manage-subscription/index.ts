@@ -99,11 +99,11 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Look up user from gh_approved_users
+    // Don't filter by is_active — paused users need to be able to resume
     const { data: approvedUser, error: lookupError } = await adminClient
       .from('gh_approved_users')
-      .select('id, email, payment_source, whop_membership_id, tier, expires_at, is_active')
+      .select('id, email, payment_source, whop_membership_id, tier, expires_at, is_active, enrollment_status')
       .eq('email', user.email)
-      .eq('is_active', true)
       .single();
 
     if (lookupError || !approvedUser) {
@@ -188,6 +188,41 @@ Deno.serve(async (req) => {
           JSON.stringify({ error: `Unknown action: ${action}` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
+    }
+
+    // Update local database to reflect subscription state changes
+    if (!result.error) {
+      try {
+        if (action === 'pause') {
+          await adminClient
+            .from('gh_approved_users')
+            .update({ enrollment_status: 'paused', is_active: false })
+            .eq('id', approvedUser.id);
+        } else if (action === 'resume') {
+          await adminClient
+            .from('gh_approved_users')
+            .update({ enrollment_status: 'active', is_active: true })
+            .eq('id', approvedUser.id);
+        } else if (action === 'cancel') {
+          // Cancel at period end — user keeps access until expires_at
+          const whopData = result.data as Record<string, unknown> | undefined;
+          const renewalDate = whopData?.renewal_period_end as string | undefined;
+          await adminClient
+            .from('gh_approved_users')
+            .update({
+              enrollment_status: 'cancelled',
+              ...(renewalDate ? { expires_at: renewalDate } : {}),
+            })
+            .eq('id', approvedUser.id);
+        } else if (action === 'uncancel') {
+          await adminClient
+            .from('gh_approved_users')
+            .update({ enrollment_status: 'active' })
+            .eq('id', approvedUser.id);
+        }
+      } catch (dbError) {
+        console.error('Failed to update local subscription status:', dbError);
+      }
     }
 
     // Log the action to subscription_actions_log

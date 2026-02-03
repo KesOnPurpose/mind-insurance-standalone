@@ -193,7 +193,7 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
             {statusBadge()}
           </div>
           <CardDescription className={isMI ? 'text-white/60' : ''}>
-            Manage your Mind Insurance subscription
+            Manage your Nette AI subscription
           </CardDescription>
         </CardHeader>
 
@@ -208,7 +208,7 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
                   Plan
                 </p>
                 <p className={`font-semibold ${isMI ? 'text-white' : 'text-foreground'}`}>
-                  {status?.tier || 'Mind Insurance'}
+                  {status?.tier || 'Nette AI'}
                 </p>
               </div>
               <div className="text-right">

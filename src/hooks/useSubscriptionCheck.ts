@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface SubscriptionStatus {
   isActive: boolean;
+  isPaused: boolean;
   enrollmentStatus: string | null;
   paymentTier: string | null;
   expiresAt: string | null;
@@ -13,6 +14,7 @@ export interface SubscriptionStatus {
 
 const DEFAULT_STATUS: SubscriptionStatus = {
   isActive: true,
+  isPaused: false,
   enrollmentStatus: null,
   paymentTier: null,
   expiresAt: null,
@@ -93,8 +95,11 @@ export function useSubscriptionCheck() {
       // Active if: is_active=true OR in grace period
       const isActive = record.is_active === true || isGracePeriod;
 
+      const isPaused = record.enrollment_status === 'paused';
+
       setStatus({
         isActive,
+        isPaused,
         enrollmentStatus: record.enrollment_status,
         paymentTier: record.payment_tier,
         expiresAt: record.expires_at,

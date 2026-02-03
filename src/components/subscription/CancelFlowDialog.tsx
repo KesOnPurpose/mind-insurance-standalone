@@ -19,9 +19,9 @@ interface CancelFlowDialogProps {
   onOpenChange: (open: boolean) => void;
   isMI: boolean;
   expiresAt: string | null;
-  daysActive?: number;
-  practicesCompleted?: number;
-  patternsIdentified?: number;
+  daysMember?: number;
+  conversationsHeld?: number;
+  programsAccessed?: number;
   onCancel: (reason?: string, reasonText?: string) => Promise<boolean>;
   onPause: () => Promise<boolean>;
 }
@@ -31,9 +31,9 @@ export function CancelFlowDialog({
   onOpenChange,
   isMI,
   expiresAt,
-  daysActive,
-  practicesCompleted,
-  patternsIdentified,
+  daysMember,
+  conversationsHeld,
+  programsAccessed,
   onCancel,
   onPause,
 }: CancelFlowDialogProps) {
@@ -134,9 +134,9 @@ export function CancelFlowDialog({
         {currentStep === 'value' && (
           <ValueReminder
             isMI={isMI}
-            daysActive={daysActive}
-            practicesCompleted={practicesCompleted}
-            patternsIdentified={patternsIdentified}
+            daysMember={daysMember}
+            conversationsHeld={conversationsHeld}
+            programsAccessed={programsAccessed}
             onNext={handleValueNext}
           />
         )}
