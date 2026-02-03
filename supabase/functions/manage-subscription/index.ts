@@ -23,7 +23,7 @@ interface RequestBody {
   };
 }
 
-const WHOP_API_BASE = 'https://api.whop.com/api/v2';
+const WHOP_API_BASE = 'https://api.whop.com/api/v1';
 
 async function callWhopApi(
   method: string,
@@ -206,18 +206,25 @@ Deno.serve(async (req) => {
         } else if (action === 'cancel') {
           // Cancel at period end — user keeps access until expires_at
           const whopData = result.data as Record<string, unknown> | undefined;
-          const renewalDate = whopData?.renewal_period_end as string | undefined;
+          const renewalEnd = whopData?.renewal_period_end;
+          // v1 API returns ISO 8601 string; handle both string and legacy numeric (seconds) formats
+          let expiresAtIso: string | null = null;
+          if (typeof renewalEnd === 'string') {
+            expiresAtIso = new Date(renewalEnd).toISOString();
+          } else if (typeof renewalEnd === 'number') {
+            expiresAtIso = new Date(renewalEnd * 1000).toISOString();
+          }
           await adminClient
             .from('gh_approved_users')
             .update({
               enrollment_status: 'cancelled',
-              ...(renewalDate ? { expires_at: renewalDate } : {}),
+              ...(expiresAtIso ? { expires_at: expiresAtIso } : {}),
             })
             .eq('id', approvedUser.id);
         } else if (action === 'uncancel') {
           await adminClient
             .from('gh_approved_users')
-            .update({ enrollment_status: 'active' })
+            .update({ enrollment_status: 'active', is_active: true, expires_at: null })
             .eq('id', approvedUser.id);
         }
       } catch (dbError) {
@@ -244,9 +251,14 @@ Deno.serve(async (req) => {
     }
 
     if (result.error) {
+      // Don't forward Whop's raw status (e.g. 401) as our own — the Supabase client
+      // interprets 401 as an auth failure. Use 502 for upstream API errors.
+      const responseStatus = result.status === 401 || result.status === 403
+        ? 502
+        : result.status >= 500 ? 502 : 422;
       return new Response(
-        JSON.stringify({ error: result.error }),
-        { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: result.error, whop_status: result.status }),
+        { status: responseStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 

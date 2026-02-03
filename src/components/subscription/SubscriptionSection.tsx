@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
+import { useSubscriptionMetrics } from '@/hooks/useSubscriptionMetrics';
 import { CancelFlowDialog } from './CancelFlowDialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,6 +32,7 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
     isActioning,
     actionError,
   } = useSubscriptionManagement();
+  const { metrics } = useSubscriptionMetrics();
   const { toast } = useToast();
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -271,7 +273,7 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
                 asChild
                 className={isMI ? 'border-mi-cyan/30 text-white hover:bg-mi-navy' : ''}
               >
-                <a href={status.manageUrl} target="_blank" rel="noopener noreferrer">
+                <a href="https://whop.com/billing/manage/payment-methods/" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Update Payment Method
                 </a>
@@ -340,6 +342,9 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
         onOpenChange={setCancelDialogOpen}
         isMI={isMI}
         expiresAt={status?.expiresAt || null}
+        daysMember={metrics.daysMember}
+        conversationsHeld={metrics.conversationsHeld}
+        programsAccessed={metrics.programsAccessed}
         onCancel={handleCancel}
         onPause={handlePause}
       />

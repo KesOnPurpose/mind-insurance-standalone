@@ -88,6 +88,19 @@ import BroadcastsPage from "./pages/admin/BroadcastsPage";
 // FEAT-GH-TOUR: Tour Test Page
 import TourTestPage from "./pages/TourTestPage";
 
+// Relationship Intelligence Engine (RIE) pages
+import { RelationshipProvider } from "@/contexts/RelationshipContext";
+import RelationshipDashboardPage from "./pages/relationship-kpis/RelationshipDashboardPage";
+import RelationshipCheckInPage from "./pages/relationship-kpis/RelationshipCheckInPage";
+import RelationshipHistoryPage from "./pages/relationship-kpis/RelationshipHistoryPage";
+import RelationshipPartnerPage from "./pages/relationship-kpis/RelationshipPartnerPage";
+import RelationshipPromptsPage from "./pages/relationship-kpis/RelationshipPromptsPage";
+import RelationshipSeasonsPage from "./pages/relationship-kpis/RelationshipSeasonsPage";
+import RelationshipLearningPage from "./pages/relationship-kpis/RelationshipLearningPage";
+import RelationshipDateNightsPage from "./pages/relationship-kpis/RelationshipDateNightsPage";
+import RelationshipSafeSpacePage from "./pages/relationship-kpis/RelationshipSafeSpacePage";
+import RelationshipJournalPage from "./pages/relationship-kpis/RelationshipJournalPage";
+
 // Other
 import NotFound from "./pages/NotFound";
 
@@ -323,6 +336,18 @@ const App = () => {
 
                       {/* FEAT-GH-TOUR: Tour Test Page (for development/testing) */}
                       <Route path="/tour-test" element={<ProtectedRoute><TourTestPage /></ProtectedRoute>} />
+
+                      {/* Relationship Intelligence Engine (RIE) */}
+                      <Route path="/relationship-kpis" element={<ProtectedRoute><RelationshipProvider><RelationshipDashboardPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/check-in" element={<ProtectedRoute><RelationshipProvider><RelationshipCheckInPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/history" element={<ProtectedRoute><RelationshipProvider><RelationshipHistoryPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/partner" element={<ProtectedRoute><RelationshipProvider><RelationshipPartnerPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/prompts" element={<ProtectedRoute><RelationshipProvider><RelationshipPromptsPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/seasons" element={<ProtectedRoute><RelationshipProvider><RelationshipSeasonsPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/learning" element={<ProtectedRoute><RelationshipProvider><RelationshipLearningPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/date-nights" element={<ProtectedRoute><RelationshipProvider><RelationshipDateNightsPage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/safe-space" element={<ProtectedRoute><RelationshipProvider><RelationshipSafeSpacePage /></RelationshipProvider></ProtectedRoute>} />
+                      <Route path="/relationship-kpis/journal" element={<ProtectedRoute><RelationshipProvider><RelationshipJournalPage /></RelationshipProvider></ProtectedRoute>} />
 
                       {/* Legacy route redirects - for backwards compatibility */}
                       <Route path="/mind-insurance/*" element={<Navigate to="/dashboard" replace />} />

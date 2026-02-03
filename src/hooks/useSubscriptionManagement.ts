@@ -3,15 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface WhopMembership {
   id: string;
-  status: 'active' | 'past_due' | 'canceled' | 'paused' | 'trialing' | 'completed';
-  valid: boolean;
+  status: 'active' | 'past_due' | 'canceled' | 'canceling' | 'paused' | 'trialing' | 'completed' | 'expired';
+  valid?: boolean;
   cancel_at_period_end: boolean;
-  expires_at: number | null;
-  renewal_period_start: number | null;
-  renewal_period_end: number | null;
+  expires_at: string | number | null;
+  renewal_period_start: string | number | null;
+  renewal_period_end: string | number | null;
   manage_url: string | null;
-  plan: string | null;
-  product: string | null;
+  plan: { id: string } | string | null;
+  product: { id: string; title?: string } | string | null;
+  payment_collection_paused?: boolean;
 }
 
 export interface SubscriptionStatus {
@@ -80,20 +81,30 @@ export function useSubscriptionManagement() {
 
       const membership = response?.data as WhopMembership | null;
 
-      // Whop v2: "completed" with valid=true means active; expires_at is a unix timestamp
-      const expiresAtDate = membership?.renewal_period_end
-        ? new Date(membership.renewal_period_end * 1000).toISOString()
-        : membership?.expires_at
-          ? new Date(membership.expires_at * 1000).toISOString()
-          : null;
+      // Parse date — v1 returns ISO 8601 strings, v2 returned Unix timestamps
+      const parseDate = (val: string | number | null | undefined): string | null => {
+        if (!val) return null;
+        if (typeof val === 'string') return new Date(val).toISOString();
+        if (typeof val === 'number') return new Date(val * 1000).toISOString();
+        return null;
+      };
+
+      const expiresAtDate = parseDate(membership?.renewal_period_end)
+        || parseDate(membership?.expires_at)
+        || null;
+
+      const activeStatuses = ['active', 'trialing', 'completed'];
+      const isActive = membership
+        ? (membership.valid === true || activeStatuses.includes(membership.status))
+        : false;
 
       const subscriptionStatus: SubscriptionStatus = {
         membership,
         tier: null, // Will be enriched from gh_approved_users tier
         expiresAt: expiresAtDate,
-        isActive: membership?.valid === true && (membership?.status === 'completed' || membership?.status === 'active' || membership?.status === 'trialing'),
+        isActive: isActive && membership?.cancel_at_period_end !== true,
         isPendingCancel: membership?.cancel_at_period_end === true,
-        isPaused: membership?.status === 'paused',
+        isPaused: membership?.status === 'paused' || membership?.payment_collection_paused === true,
         manageUrl: membership?.manage_url || null,
         hasWhopLink: !!membership,
         isAdmin: false,
