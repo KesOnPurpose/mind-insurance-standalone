@@ -215,7 +215,7 @@ export function RoomManager({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-muted/50 rounded-lg">
               <p className="text-2xl font-bold">{totalBeds}</p>
-              <p className="text-xs text-muted-foreground">Total Beds</p>
+              <p className="text-xs text-muted-foreground">Total Rooms</p>
             </div>
 
             <div className="text-center p-3 bg-muted/50 rounded-lg">
@@ -274,7 +274,7 @@ export function RoomManager({
                 <BedDouble className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {totalBeds} Beds Configured
+                {totalBeds} Rooms Configured
               </h3>
               <p className="text-muted-foreground mb-4">
                 {formatCurrency(averageRate)} average per bed
