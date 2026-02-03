@@ -162,8 +162,9 @@ Deno.serve(async (req) => {
 
       case 'cancel': {
         // Always cancel at period end — never immediate
+        // Whop v1 API uses "cancellation_mode" (not "cancel_at_period_end")
         result = await callWhopApi('POST', `/memberships/${membershipId}/cancel`, whopApiKey, {
-          cancel_at_period_end: true,
+          cancellation_mode: 'at_period_end',
         });
         break;
       }
