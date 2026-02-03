@@ -85,7 +85,7 @@ export function VoiceTabContent({
         'voice-tab-content',
         'flex flex-col gap-4 p-4',
         'max-w-2xl mx-auto w-full',
-        'overflow-x-hidden', // Prevent horizontal overflow from voice visualization effects on mobile
+        // Note: no overflow-x-hidden here — it clips glow rings and waveform canvas
         className
       )}
     >
