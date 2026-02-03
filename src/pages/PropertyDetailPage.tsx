@@ -201,15 +201,15 @@ const PropertyDetailPage = () => {
     return Math.round(beds * rate * occupancy);
   };
 
-  // Helper: Get projected expenses from property or default values
+  // Helper: Get projected expenses from property data (fallback to reasonable defaults)
   const getProjectedExpenses = () => ({
     rent: property?.monthly_rent_or_mortgage ?? 0,
-    utilities: 400,
-    insurance: 200,
-    food: 600,
-    staffing: 0,
-    maintenance: 200,
-    misc: 200,
+    utilities: property?.projected_utilities ?? 400,
+    insurance: property?.projected_insurance ?? 200,
+    food: property?.projected_food ?? 600,
+    staffing: property?.projected_staffing ?? 0,
+    maintenance: property?.projected_maintenance ?? 200,
+    misc: property?.projected_misc ?? 200,
   });
 
   // Handle scenario operations
