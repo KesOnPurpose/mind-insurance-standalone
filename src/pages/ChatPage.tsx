@@ -220,21 +220,16 @@ function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
     };
   }, [user?.id]);
 
-  // Combine messages and voice calls into chronological order
+  // Chat items only contain messages - voice calls are shown in the Voice tab only
   const chatItems: ChatItem[] = useMemo(() => {
     const items: ChatItem[] = [];
 
-    // Add messages
+    // Add messages only (voice calls belong in Voice tab)
     messages.forEach(msg => {
       items.push({ type: 'message', data: msg });
     });
 
-    // Add voice calls
-    voiceCalls.forEach(call => {
-      items.push({ type: 'voice_call', data: call });
-    });
-
-    // Sort by timestamp (messages use Date, voice calls use string)
+    // Sort by timestamp
     items.sort((a, b) => {
       const getTime = (item: ChatItem): number => {
         if (item.type === 'message') {
@@ -246,7 +241,7 @@ function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
     });
 
     return items;
-  }, [messages, voiceCalls]);
+  }, [messages]);
 
   // Load conversation when activeConversationId changes
   useEffect(() => {
@@ -703,10 +698,9 @@ function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
             <div className="border-t sticky bottom-0 bg-background">
               <div className="container mx-auto px-4 py-4">
                 <div className="max-w-4xl mx-auto">
-                  {activeConversationId && (messages.length > 0 || voiceCalls.length > 0) && (
+                  {activeConversationId && messages.length > 0 && (
                     <div className="text-xs text-center mb-2 text-muted-foreground">
                       Active conversation • {messages.length} {messages.length === 1 ? 'message' : 'messages'}
-                      {voiceCalls.length > 0 && ` • ${voiceCalls.length} voice ${voiceCalls.length === 1 ? 'call' : 'calls'}`}
                     </div>
                   )}
 
