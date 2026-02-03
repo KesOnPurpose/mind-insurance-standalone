@@ -32,28 +32,79 @@ interface RawChatHistory {
 }
 
 /**
- * Extract the actual user message from the n8n formatted content
- * The human messages contain system prompts - we need to extract just the user's message
+ * Extract the actual user message from the n8n formatted content.
+ * n8n prepends system context (USER PROFILE, READINESS ASSESSMENT, CROSS-CHANNEL ACTIVITY,
+ * MIO INTELLIGENCE, INSTRUCTIONS, etc.) before the actual user message.
+ * The user's real message is the text AFTER the last system block.
  */
 function extractUserMessage(content: string): string {
-  // Look for "# USER'S NEW MESSAGE:" or similar markers
+  // Strategy 1: Look for [INSTRUCTIONS] block - user message follows after it
+  const instructionsIndex = content.lastIndexOf('[INSTRUCTIONS]');
+  if (instructionsIndex !== -1) {
+    const afterInstructions = content.substring(instructionsIndex);
+    const lines = afterInstructions.split('\n');
+
+    // Skip the [INSTRUCTIONS] header and its bullet points (lines starting with -)
+    let userMessageStartLine = -1;
+    let passedInstructions = false;
+    for (let i = 1; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed === '') {
+        passedInstructions = true;
+        continue;
+      }
+      // Once we've passed a blank line and hit a non-bullet line, that's the user message
+      if (passedInstructions && !trimmed.startsWith('-')) {
+        userMessageStartLine = i;
+        break;
+      }
+    }
+
+    if (userMessageStartLine !== -1) {
+      const userMessage = lines.slice(userMessageStartLine).join('\n').trim();
+      if (userMessage.length > 0) {
+        return userMessage;
+      }
+    }
+  }
+
+  // Strategy 2: Look for "# USER'S NEW MESSAGE:" marker (legacy format)
   const userMessageMarker = "# USER'S NEW MESSAGE:";
   const markerIndex = content.indexOf(userMessageMarker);
-
   if (markerIndex !== -1) {
-    // Extract everything after the marker
     let userMessage = content.substring(markerIndex + userMessageMarker.length).trim();
-
-    // Remove any trailing system content (usually starts with "# " or "---")
     const nextSectionIndex = userMessage.search(/\n#\s|\n---/);
     if (nextSectionIndex !== -1) {
       userMessage = userMessage.substring(0, nextSectionIndex).trim();
     }
-
     return userMessage;
   }
 
-  // If no marker found, return the original content (might be a simple message)
+  // Strategy 3: If content starts with "## USER PROFILE" or similar system context,
+  // try to find the user message after all markdown heading sections
+  if (content.trimStart().startsWith('## USER PROFILE') || content.trimStart().startsWith('# USER PROFILE')) {
+    // Find the last section block and get text after it
+    const lastBracketBlock = content.lastIndexOf('[');
+    if (lastBracketBlock !== -1) {
+      const closingBracket = content.indexOf(']', lastBracketBlock);
+      if (closingBracket !== -1) {
+        const afterLastBlock = content.substring(closingBracket + 1);
+        // Skip bullet points that belong to the block
+        const lines = afterLastBlock.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          const trimmed = lines[i].trim();
+          if (trimmed !== '' && !trimmed.startsWith('-') && !trimmed.startsWith('[') && !trimmed.startsWith('#')) {
+            const userMessage = lines.slice(i).join('\n').trim();
+            if (userMessage.length > 0) {
+              return userMessage;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // If no system context detected, return the original content
   return content;
 }
 
