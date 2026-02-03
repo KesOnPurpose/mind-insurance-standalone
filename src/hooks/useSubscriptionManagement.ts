@@ -105,20 +105,7 @@ export function useSubscriptionManagement() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch subscription status';
       setFetchState({ isLoading: false, error: message });
-
-      // If no Whop link, set a minimal status from the error response
-      setStatus({
-        membership: null,
-        tier: null,
-        expiresAt: null,
-        isActive: false,
-        isPendingCancel: false,
-        isPaused: false,
-        manageUrl: null,
-        hasWhopLink: false,
-        isAdmin: false,
-      });
-
+      // Don't set status on error — leave it null so the error card renders
       return null;
     }
   }, [callEdgeFunction]);

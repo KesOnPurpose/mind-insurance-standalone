@@ -145,14 +145,26 @@ export function SubscriptionSection({ isMI }: SubscriptionSectionProps) {
   const isPendingCancel = status?.isPendingCancel;
   const isPaused = status?.isPaused;
 
-  // Don't render for admins — they don't manage subscriptions
+  // Admin users — show read-only info card
   if (status?.isAdmin) {
-    return null;
-  }
-
-  // Don't render for expired / no subscription (handled by SubscriptionExpiredPage)
-  if (!status?.hasWhopLink && !status?.isActive && !isPendingCancel && !isPaused) {
-    return null;
+    return (
+      <Card className={isMI ? 'bg-mi-navy-light border-mi-cyan/20' : ''}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className={`flex items-center gap-2 ${isMI ? 'text-white' : ''}`}>
+              <CreditCard className={`h-5 w-5 ${isMI ? 'text-mi-cyan' : 'text-primary'}`} />
+              Subscription
+            </CardTitle>
+            <Badge className={isMI ? 'bg-mi-cyan/20 text-mi-cyan border-0' : 'bg-primary/10 text-primary border-0'}>
+              {status.tier || 'Admin'}
+            </Badge>
+          </div>
+          <CardDescription className={isMI ? 'text-white/60' : ''}>
+            Admin accounts have full access without a subscription.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
   // Status badge
