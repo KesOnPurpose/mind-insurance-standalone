@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { RoomFeatureSelector } from './RoomFeatureSelector';
 import type { PropertyRoom, RoomFeature } from '@/types/property';
+import { ROOM_FEATURE_LABELS } from '@/types/property';
 
 // ============================================================================
 // TYPES
@@ -141,10 +142,16 @@ export function RoomCard({
     }
   };
 
-  // Handle toggle occupancy
+  // Handle toggle occupancy with loading guard to prevent double-clicks
+  const [isToggling, setIsToggling] = useState(false);
   const handleToggleOccupancy = async () => {
-    if (!onToggleOccupancy) return;
-    await onToggleOccupancy(room.id);
+    if (!onToggleOccupancy || isToggling) return;
+    setIsToggling(true);
+    try {
+      await onToggleOccupancy(room.id);
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   return (
@@ -261,6 +268,7 @@ export function RoomCard({
                           ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
                           : 'hover:bg-muted/80'}
                         ${!isReadOnly && onToggleOccupancy ? 'cursor-pointer active:scale-95 transition-all' : ''}
+                        ${isToggling ? 'opacity-50 pointer-events-none' : ''}
                       `}
                       onClick={!isReadOnly && onToggleOccupancy ? handleToggleOccupancy : undefined}
                       role={!isReadOnly && onToggleOccupancy ? 'button' : undefined}
@@ -327,7 +335,7 @@ export function RoomCard({
                         key={idx}
                         className="px-2 py-0.5 text-xs bg-muted rounded-full"
                       >
-                        {feature}
+                        {ROOM_FEATURE_LABELS[feature as RoomFeature] || feature}
                       </span>
                     ))}
                   </div>

@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -270,13 +271,9 @@ export function TourTooltip({
     };
   }, [step.targetSelector, step.position]);
 
-  // Check if target is inside the mobile sidebar
-  const isTargetInSidebar = useCallback((): boolean => {
-    if (step.position === 'center') return false;
-    const element = document.querySelector(`[data-tour-target="${step.targetSelector}"]`);
-    if (!element) return false;
-    return !!element.closest('[data-sidebar="sidebar"]');
-  }, [step.targetSelector, step.position]);
+  // ANI-100-A: Known sidebar step selectors — used to bypass DOM-based
+  // isTargetInSidebar() which suffers from timing issues with Sheet portals.
+  const SIDEBAR_STEP_SELECTORS = ['sidebar-navigation', 'chat-nette'];
 
   // Calculate and update position using smart positioning
   const updatePosition = useCallback(() => {
@@ -284,15 +281,24 @@ export function TourTooltip({
     const padding = step.highlightPadding || 8;
     const isMobileViewport = window.innerWidth < 768;
 
-    // On mobile, when target is inside sidebar, force bottom-anchored positioning
-    // The sidebar takes up most of the screen width, so right/left positions fail
-    // and the Next button becomes inaccessible
-    if (isMobileViewport && isTargetInSidebar()) {
+    // ANI-100-A: On mobile, when the step targets a sidebar element,
+    // center the tooltip so it's fully visible above the Sheet overlay.
+    // Uses a static list of sidebar selectors instead of DOM querying
+    // to avoid race conditions with the Sheet portal rendering.
+    const isSidebarStep = SIDEBAR_STEP_SELECTORS.includes(step.targetSelector);
+    if (isMobileViewport && isSidebarStep) {
       const tooltipWidth = Math.min(TOOLTIP_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+      const safeTop = Math.max(
+        VIEWPORT_MARGIN,
+        Math.min(
+          (window.innerHeight - tooltipSize.height) / 2,
+          window.innerHeight - tooltipSize.height - VIEWPORT_MARGIN
+        )
+      );
       setPosition({
-        top: window.innerHeight - tooltipSize.height - VIEWPORT_MARGIN,
+        top: safeTop,
         left: (window.innerWidth - tooltipWidth) / 2,
-        transformOrigin: 'bottom center',
+        transformOrigin: 'center center',
       });
       return;
     }
@@ -305,7 +311,7 @@ export function TourTooltip({
     );
 
     setPosition(newPosition);
-  }, [step.position, step.highlightPadding, tooltipSize, getTargetRect, isTargetInSidebar]);
+  }, [step.position, step.targetSelector, step.highlightPadding, tooltipSize, getTargetRect]);
 
   useEffect(() => {
     updatePosition();
@@ -321,7 +327,9 @@ export function TourTooltip({
 
   if (!position) return null;
 
-  return (
+  // ANI-100-A: Render via portal to document.body so the tooltip's z-[10000]
+  // wins over the Sheet portal's z-[9999] (both at the same DOM level).
+  return createPortal(
     <div
       ref={tooltipRef}
       className={cn(
@@ -440,7 +448,8 @@ export function TourTooltip({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

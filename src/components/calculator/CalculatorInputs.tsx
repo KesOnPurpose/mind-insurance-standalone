@@ -125,6 +125,7 @@ export function CalculatorInputs({ inputs, mode, onChange }: CalculatorInputsPro
                     <Input
                       id="ratePerBed"
                       type="number"
+                      min={0}
                       value={inputs.ratePerBed}
                       onChange={(e) => updateField('ratePerBed', parseNumber(e.target.value))}
                       className="pl-8"

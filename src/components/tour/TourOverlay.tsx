@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 interface TourOverlayProps {
@@ -116,8 +117,9 @@ export function TourOverlay({
   if (!isVisible) return null;
 
   // If no target rect, show full overlay (for centered dialogs)
+  // ANI-100-A: Portal to document.body so z-index layers correctly with Sheet portal
   if (!targetRect) {
-    return (
+    return createPortal(
       <div
         className={cn(
           'fixed inset-0 z-[9998]',
@@ -127,7 +129,8 @@ export function TourOverlay({
         )}
         onClick={onClick}
         aria-hidden="true"
-      />
+      />,
+      document.body
     );
   }
 
@@ -148,7 +151,8 @@ export function TourOverlay({
   // Border offset to position glow OUTSIDE the cutout
   const borderOffset = 4;
 
-  return (
+  // ANI-100-A: Portal to document.body so z-index layers correctly with Sheet portal
+  return createPortal(
     <>
       {/* Main overlay with spotlight cutout */}
       <div
@@ -181,7 +185,8 @@ export function TourOverlay({
         }}
         aria-hidden="true"
       />
-    </>
+    </>,
+    document.body
   );
 }
 

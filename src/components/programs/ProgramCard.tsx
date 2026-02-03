@@ -159,9 +159,9 @@ export const ProgramCard = ({ program, onContinue }: ProgramCardProps) => {
           {/* Instructor */}
           {program.instructor_name && (
             <div className="flex items-center gap-1.5">
-              <Avatar className="h-5 w-5">
+              <Avatar className="h-6 w-6">
                 <AvatarImage src={program.instructor_avatar_url || undefined} />
-                <AvatarFallback className="text-[10px]">
+                <AvatarFallback className="text-xs">
                   {getInstructorInitials(program.instructor_name)}
                 </AvatarFallback>
               </Avatar>
