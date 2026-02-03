@@ -225,6 +225,35 @@ export function TourController({
   }, [isActive, isMobile, openMobile, setOpenMobile, setTourHighlightingSidebar]);
 
   /**
+   * ANI-100-B: Prevent browser back navigation during the tour.
+   * On mobile, swipe-back gestures or the back button can navigate away
+   * from /dashboard, causing the user to land on /auth (appears as signout).
+   * We push a sentinel history entry and intercept popstate while the tour
+   * is active.
+   */
+  useEffect(() => {
+    if (!isActive) return;
+
+    // Push a guard entry so "back" pops this instead of leaving the page
+    window.history.pushState({ tourGuard: true }, '');
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push the guard to keep the user on the current page
+      window.history.pushState({ tourGuard: true }, '');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // Clean up the guard entry when tour ends
+      if (window.history.state?.tourGuard) {
+        window.history.back();
+      }
+    };
+  }, [isActive]);
+
+  /**
    * Calculate roadmap when needed
    */
   const generateRoadmap = useCallback(() => {
@@ -258,10 +287,27 @@ export function TourController({
     previousStep();
   }, [previousStep, stopAudio]);
 
-  const handleSkip = useCallback(() => {
+  const handleSkip = useCallback(async () => {
     stopAudio();
     skipTour();
-  }, [skipTour, stopAudio]);
+
+    // ANI-100-C: Persist skip to database so tour doesn't restart on next visit
+    if (userId) {
+      try {
+        await supabase.from('user_onboarding').upsert(
+          {
+            user_id: userId,
+            gh_tour_completed: true,
+            gh_tour_skipped: true,
+            gh_tour_completed_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+      } catch (error) {
+        console.error('[TourController] Error persisting tour skip:', error);
+      }
+    }
+  }, [skipTour, stopAudio, userId]);
 
   /**
    * Handle proactive message consent

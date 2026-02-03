@@ -105,7 +105,9 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
             sheetVariants({ side }),
             // When tour is highlighting sidebar elements, raise z-index above
             // the tour overlay (z-[9998]) but below the tooltip (z-[10000])
-            isTourHighlightingSidebar && "!z-[9999]",
+            // ANI-100-A: Also disable pointer events so clicks reach the tooltip
+            // (portal stacking contexts can intercept events despite lower z-index)
+            isTourHighlightingSidebar && "!z-[9999] pointer-events-none",
             className,
           )}
           {...props}
