@@ -97,8 +97,8 @@ export function VoiceTabContent({
         </p>
       </div>
 
-      {/* Vapi Call Button - px-8 provides space for the extended waveform visualization */}
-      <div className="flex justify-center items-center py-8 px-8 mx-auto">
+      {/* Vapi Call Button - px-4 mobile, px-8 desktop for waveform visualization */}
+      <div className="flex justify-center items-center py-8 px-4 sm:px-8 mx-auto">
         <VapiCallButton
           userId={userId}
           size="lg"
