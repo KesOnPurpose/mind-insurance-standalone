@@ -339,9 +339,11 @@ export function getAllAssistants(): { claude: VapiAssistant; gpt4: VapiAssistant
  * Maps incorrect spellings to regex patterns for replacement
  */
 const NAME_VARIATIONS: Record<string, string[]> = {
-  'Keston': ['Kaston', 'Keiston', 'Keaston', 'Caston', 'Kestin', 'Kesten'],
-  'Kes': ['Kev', 'Kez', 'Kess', 'Kas', 'Kis', 'Kev', 'Kevin', 'Keb', 'Kef', 'Kest'],
-  'Nette': ['Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette']
+  'Keston': ['Kaston', 'Keiston', 'Keaston', 'Caston', 'Kestin', 'Kesten', 'Kiston', 'Caston', 'Kisstin', 'Kisston'],
+  'Kes': ['Kev', 'Kez', 'Kess', 'Kas', 'Kis', 'Kevin', 'Keb', 'Kef', 'Kest',
+          'Cass', 'Cas', 'Caz', 'Kiss', 'Kish', 'Cash', 'Kass', 'Kiss', 'Cis', 'Cus', 'Cos',
+          'Cess', 'Koss', 'Kuss', 'Coss', 'Cuss', 'Gus', 'Gus', 'Gess', 'Guess'],
+  'Nette': ['Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette', 'Annette', 'Lynette', 'Nate']
 };
 
 /**
@@ -382,18 +384,34 @@ export function correctTranscriptNames(text: string, actualUserName?: string): s
 
   // Correct user name if provided
   if (actualUserName) {
-    // Find variations for this name if we have them
-    const userVariations = NAME_VARIATIONS[actualUserName] || [];
+    // Collect variations for the given name AND any related names
+    // e.g., if userName is "Kes", also check "Keston" variations
+    const relatedNames = Object.keys(NAME_VARIATIONS).filter(
+      n => n.toLowerCase().startsWith(actualUserName.toLowerCase()) ||
+           actualUserName.toLowerCase().startsWith(n.toLowerCase())
+    );
+    // Always include the exact name
+    if (!relatedNames.includes(actualUserName)) relatedNames.push(actualUserName);
 
-    // Also create phonetic variations dynamically
-    const dynamicVariations = generatePhoneticVariations(actualUserName);
-    const allVariations = [...new Set([...userVariations, ...dynamicVariations])];
+    const allVariations = new Set<string>();
+    for (const relName of relatedNames) {
+      const hardcoded = NAME_VARIATIONS[relName] || [];
+      const dynamic = generatePhoneticVariations(relName);
+      for (const v of hardcoded) allVariations.add(v);
+      for (const v of dynamic) allVariations.add(v);
+    }
 
-    for (const variation of allVariations) {
-      if (variation.toLowerCase() !== actualUserName.toLowerCase()) {
-        const regex = new RegExp(`\\b${variation}\\b`, 'gi');
-        corrected = corrected.replace(regex, actualUserName);
-      }
+    // Sort by length descending so longer matches replace first (e.g., "Kisstin" before "Kiss")
+    const sorted = Array.from(allVariations)
+      .filter(v => v.toLowerCase() !== actualUserName.toLowerCase())
+      .sort((a, b) => b.length - a.length);
+
+    for (const variation of sorted) {
+      // Escape any regex special chars in the variation
+      const escaped = variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Match the variation with optional possessive 's
+      const regex = new RegExp(`\\b${escaped}(?='s\\b|\\b)`, 'gi');
+      corrected = corrected.replace(regex, actualUserName);
     }
   }
 
@@ -401,32 +419,32 @@ export function correctTranscriptNames(text: string, actualUserName?: string): s
 }
 
 /**
- * Generate phonetic variations of a name that TTS might mishear
+ * Generate phonetic variations of a name that STT might mishear.
+ * Produces single substitutions, combined substitutions (vowel+consonant),
+ * and doubled-consonant variants for comprehensive coverage.
  */
 function generatePhoneticVariations(name: string): string[] {
-  const variations: string[] = [];
+  const variationSet = new Set<string>();
   const lower = name.toLowerCase();
 
-  // Common vowel substitutions
   const vowelSubs: Record<string, string[]> = {
-    'e': ['a', 'i'],
-    'a': ['e', 'o'],
-    'i': ['e', 'y'],
+    'e': ['a', 'i', 'u'],
+    'a': ['e', 'o', 'u'],
+    'i': ['e', 'y', 'ee'],
     'o': ['a', 'u'],
-    'u': ['o']
+    'u': ['o', 'a']
   };
 
-  // Common consonant substitutions (sounds that STT often confuses)
   const consonantSubs: Record<string, string[]> = {
-    's': ['z', 'v', 'th', 'sh'],
-    'z': ['s'],
+    's': ['z', 'v', 'th', 'sh', 'ss'],
+    'z': ['s', 'ss'],
     'v': ['b', 'f', 's'],
     'b': ['v', 'p', 'd'],
     'f': ['v', 'th'],
-    'th': ['s', 'f', 'd'],
     'd': ['t', 'b'],
     't': ['d', 'k'],
-    'k': ['c', 'g', 't'],
+    'k': ['c', 'g', 't', 'ch'],
+    'c': ['k', 's', 'g'],
     'g': ['k', 'j'],
     'n': ['m'],
     'm': ['n'],
@@ -434,29 +452,74 @@ function generatePhoneticVariations(name: string): string[] {
     'r': ['l']
   };
 
-  // Generate single-vowel substitutions
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // Helper: apply a single substitution at position i
+  const applySub = (base: string, i: number, sub: string): string => {
+    return base.slice(0, i) + sub + base.slice(i + 1);
+  };
+
+  // 1. Single-vowel substitutions
   for (let i = 0; i < lower.length; i++) {
-    const char = lower[i];
-    if (vowelSubs[char]) {
-      for (const sub of vowelSubs[char]) {
-        const variant = lower.slice(0, i) + sub + lower.slice(i + 1);
-        variations.push(variant.charAt(0).toUpperCase() + variant.slice(1));
+    const ch = lower[i];
+    if (vowelSubs[ch]) {
+      for (const sub of vowelSubs[ch]) {
+        variationSet.add(capitalize(applySub(lower, i, sub)));
       }
     }
   }
 
-  // Generate single-consonant substitutions (especially for end-of-word)
+  // 2. Single-consonant substitutions
   for (let i = 0; i < lower.length; i++) {
-    const char = lower[i];
-    if (consonantSubs[char]) {
-      for (const sub of consonantSubs[char]) {
-        const variant = lower.slice(0, i) + sub + lower.slice(i + 1);
-        variations.push(variant.charAt(0).toUpperCase() + variant.slice(1));
+    const ch = lower[i];
+    if (consonantSubs[ch]) {
+      for (const sub of consonantSubs[ch]) {
+        variationSet.add(capitalize(applySub(lower, i, sub)));
       }
     }
   }
 
-  return variations;
+  // 3. Doubled final consonant (STT frequently doubles ending consonants)
+  const lastChar = lower[lower.length - 1];
+  if (lastChar && !'aeiou'.includes(lastChar)) {
+    variationSet.add(capitalize(lower + lastChar));
+  }
+
+  // 4. Combined substitutions (consonant + vowel together) for short names (≤5 chars)
+  //    This catches "Cass" from "Kes" (K→C + e→a + s→ss)
+  if (lower.length <= 5) {
+    for (let i = 0; i < lower.length; i++) {
+      const ch1 = lower[i];
+      const subs1 = consonantSubs[ch1] || vowelSubs[ch1];
+      if (!subs1) continue;
+
+      for (const sub1 of subs1) {
+        const base1 = applySub(lower, i, sub1);
+        // Apply a second substitution at a different position
+        for (let j = 0; j < base1.length; j++) {
+          if (j === i) continue; // skip same position
+          const ch2 = base1[j];
+          const subs2 = consonantSubs[ch2] || vowelSubs[ch2];
+          if (!subs2) continue;
+          for (const sub2 of subs2) {
+            const combo = base1.slice(0, j) + sub2 + base1.slice(j + 1);
+            variationSet.add(capitalize(combo));
+          }
+        }
+        // Also try doubled final consonant on the single-sub result
+        const lastCh = base1[base1.length - 1];
+        if (lastCh && !'aeiou'.includes(lastCh)) {
+          variationSet.add(capitalize(base1 + lastCh));
+        }
+      }
+    }
+  }
+
+  // Remove the original name from variations
+  variationSet.delete(capitalize(lower));
+  variationSet.delete(name);
+
+  return Array.from(variationSet);
 }
 
 /**
