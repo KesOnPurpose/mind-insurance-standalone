@@ -45,7 +45,7 @@ export const VoiceVisualization = ({
 
   return (
     <motion.div
-      className={cn('relative flex items-center justify-center', className)}
+      className={cn('relative flex items-center justify-center overflow-visible', className)}
       initial={{ scale: 1 }}
       animate={{ scale: isActive ? 1.02 : 1 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}

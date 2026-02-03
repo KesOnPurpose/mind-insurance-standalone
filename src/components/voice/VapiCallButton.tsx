@@ -19,6 +19,7 @@ import {
   logCallStart,
   logCallEnd,
   formatCallStatus,
+  correctTranscriptNames,
   type VapiCallStatus,
   type VapiCallSession,
   type TranscriptEntry
@@ -182,17 +183,39 @@ export const VapiCallButton = ({
     });
 
     vapi.on('message', (message: unknown) => {
-      const msg = message as { type: string; role?: string; transcript?: string };
+      const msg = message as { type: string; role?: string; transcript?: string; transcriptType?: string };
       if (msg.type === 'transcript' && msg.transcript) {
-        const newEntry: TranscriptEntry = {
-          role: (msg.role as 'user' | 'assistant') || 'assistant',
-          text: msg.transcript!,
-          timestamp: new Date()
-        };
+        const role = (msg.role as 'user' | 'assistant') || 'assistant';
+        const isFinal = msg.transcriptType === 'final';
+
         setTranscript(prev => {
-          const updated = [...prev, newEntry];
-          transcriptRef.current = updated; // Keep ref in sync for call-end handler
-          return updated;
+          if (isFinal) {
+            // Final transcript: replace the last partial from the same role, then append as final
+            const withoutLastPartial = [...prev];
+            // Walk backwards to find and remove the last partial from the same role
+            for (let i = withoutLastPartial.length - 1; i >= 0; i--) {
+              if (withoutLastPartial[i].role === role) {
+                withoutLastPartial.splice(i, 1);
+                break;
+              }
+            }
+            const updated = [...withoutLastPartial, { role, text: msg.transcript!, timestamp: new Date() }];
+            transcriptRef.current = updated;
+            return updated;
+          } else {
+            // Partial transcript: replace the last entry from the same role (if it exists)
+            const lastSameRoleIdx = prev.findLastIndex(e => e.role === role);
+            if (lastSameRoleIdx >= 0) {
+              const updated = [...prev];
+              updated[lastSameRoleIdx] = { role, text: msg.transcript!, timestamp: new Date() };
+              transcriptRef.current = updated;
+              return updated;
+            }
+            // No previous entry for this role - add new entry
+            const updated = [...prev, { role, text: msg.transcript!, timestamp: new Date() }];
+            transcriptRef.current = updated;
+            return updated;
+          }
         });
       }
     });
@@ -654,7 +677,7 @@ export const VapiCallButton = ({
               <span className="font-medium">
                 {entry.role === 'user' ? 'You: ' : 'Nette: '}
               </span>
-              {entry.text}
+              {correctTranscriptNames(entry.text, userName)}
             </p>
           ))}
         </div>

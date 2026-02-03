@@ -97,10 +97,11 @@ export function VoiceTabContent({
         </p>
       </div>
 
-      {/* Vapi Call Button - px-4 mobile, px-8 desktop for waveform visualization */}
-      <div className="flex justify-center items-center py-8 px-4 sm:px-8 mx-auto">
+      {/* Vapi Call Button - generous padding for waveform/glow overflow */}
+      <div className="flex justify-center items-center py-8 px-10 sm:px-12 mx-auto overflow-visible">
         <VapiCallButton
           userId={userId}
+          userName={userName || undefined}
           size="lg"
           onCallStart={(session) => {
             console.log('[VoiceTabContent] Vapi call started:', session.callId);

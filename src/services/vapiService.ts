@@ -340,6 +340,7 @@ export function getAllAssistants(): { claude: VapiAssistant; gpt4: VapiAssistant
  */
 const NAME_VARIATIONS: Record<string, string[]> = {
   'Keston': ['Kaston', 'Keiston', 'Keaston', 'Caston', 'Kestin', 'Kesten'],
+  'Kes': ['Kev', 'Kez', 'Kess', 'Kas', 'Kis', 'Kev', 'Kevin', 'Keb', 'Kef', 'Kest'],
   'Nette': ['Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette']
 };
 
@@ -415,13 +416,41 @@ function generatePhoneticVariations(name: string): string[] {
     'u': ['o']
   };
 
+  // Common consonant substitutions (sounds that STT often confuses)
+  const consonantSubs: Record<string, string[]> = {
+    's': ['z', 'v', 'th', 'sh'],
+    'z': ['s'],
+    'v': ['b', 'f', 's'],
+    'b': ['v', 'p', 'd'],
+    'f': ['v', 'th'],
+    'th': ['s', 'f', 'd'],
+    'd': ['t', 'b'],
+    't': ['d', 'k'],
+    'k': ['c', 'g', 't'],
+    'g': ['k', 'j'],
+    'n': ['m'],
+    'm': ['n'],
+    'l': ['r'],
+    'r': ['l']
+  };
+
   // Generate single-vowel substitutions
   for (let i = 0; i < lower.length; i++) {
     const char = lower[i];
     if (vowelSubs[char]) {
       for (const sub of vowelSubs[char]) {
         const variant = lower.slice(0, i) + sub + lower.slice(i + 1);
-        // Capitalize first letter
+        variations.push(variant.charAt(0).toUpperCase() + variant.slice(1));
+      }
+    }
+  }
+
+  // Generate single-consonant substitutions (especially for end-of-word)
+  for (let i = 0; i < lower.length; i++) {
+    const char = lower[i];
+    if (consonantSubs[char]) {
+      for (const sub of consonantSubs[char]) {
+        const variant = lower.slice(0, i) + sub + lower.slice(i + 1);
         variations.push(variant.charAt(0).toUpperCase() + variant.slice(1));
       }
     }
