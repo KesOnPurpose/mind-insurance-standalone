@@ -59,6 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
 
+        // PASSWORD_RECOVERY: redirect to /reset-password no matter where user landed
+        // This catches the case where Supabase redirects to the Site URL (root)
+        // instead of /reset-password when the redirect URL isn't in the allowed list
+        if (event === 'PASSWORD_RECOVERY' && session) {
+          console.log('[AuthContext] PASSWORD_RECOVERY event — redirecting to /reset-password');
+          if (window.location.pathname !== '/reset-password') {
+            window.location.replace('/reset-password');
+            return;
+          }
+        }
+
         // Link external assessments when user signs in (SIGNED_IN event)
         // This covers both login and signup scenarios
         if (
@@ -188,8 +199,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
+      // Use the canonical production domain for the redirect URL so it always
+      // matches the Supabase Dashboard "Redirect URLs" allowlist.
+      // On localhost, keep using window.location.origin for dev convenience.
+      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const resetRedirectOrigin = isLocalDev
+        ? window.location.origin
+        : 'https://grouphome4newbies.com';
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${resetRedirectOrigin}/reset-password`,
       });
 
       if (error) throw error;

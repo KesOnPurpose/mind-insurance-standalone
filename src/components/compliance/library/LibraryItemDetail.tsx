@@ -140,7 +140,7 @@ export function LibraryItemDetail({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`max-w-3xl h-[85vh] flex flex-col overflow-hidden ${className}`}>
+      <DialogContent className={`max-w-3xl max-h-[85dvh] flex flex-col overflow-y-auto ${className}`}>
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-start gap-4">
             <div className="flex-1 min-w-0">

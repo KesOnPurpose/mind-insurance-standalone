@@ -22,6 +22,9 @@ import AuthCallback from "./pages/AuthCallback";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
+// FEAT-GHCF: Contract-to-Portal automation pages
+import CreateAccountPage from "./pages/CreateAccountPage";
+import SubscriptionExpiredPage from "./pages/SubscriptionExpiredPage";
 
 // Grouphome pages
 import LandingPage from "./pages/LandingPage";
@@ -85,10 +88,46 @@ import BroadcastsPage from "./pages/admin/BroadcastsPage";
 // FEAT-GH-TOUR: Tour Test Page
 import TourTestPage from "./pages/TourTestPage";
 
+// GHCF Post-Purchase pages
+import SubscriptionExpiredPage from "./pages/SubscriptionExpiredPage";
+
 // Other
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// ============================================================================
+// GLOBAL PKCE CODE INTERCEPTOR
+// ============================================================================
+// Catches ?code= query params on any page and redirects to /auth/callback.
+// When Supabase server uses PKCE flow, the reset-password email link lands on
+// the Site URL (root /) with ?code=XXX. The client is configured for implicit
+// flow, so detectSessionInUrl ignores ?code= params (it only reads #hash).
+// Without this interceptor, React Router's <Navigate to="/dashboard"> strips
+// the ?code= param, the code is never exchanged, and the user ends up on /auth
+// with no session and no way to reset their password.
+const handleGlobalPKCECode = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    // Only intercept if there's a code AND we're NOT on a page that already
+    // handles code exchange (/auth/callback and /reset-password both do).
+    if (
+      code &&
+      window.location.pathname !== '/auth/callback' &&
+      window.location.pathname !== '/reset-password'
+    ) {
+      // Redirect to /auth/callback which already has full code-exchange logic.
+      // AuthContext's PASSWORD_RECOVERY handler will then redirect to /reset-password.
+      window.location.replace(`/auth/callback?code=${encodeURIComponent(code)}`);
+      return true; // Signal redirect in progress
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+};
 
 // ============================================================================
 // AUTO CACHE CLEAR ON VERSION CHANGE + MOBILE CACHE BUST
@@ -177,7 +216,9 @@ const checkVersionAndClearCache = () => {
 
 // Run URL cache bust check FIRST (for mobile users with old cached JS)
 // Then run version check (for users who got the new JS)
-const isReloading = checkUrlCacheBust() || checkVersionAndClearCache();
+// Run PKCE interceptor FIRST (catches ?code= before Router strips it),
+// then URL cache bust, then version check.
+const isReloading = handleGlobalPKCECode() || checkUrlCacheBust() || checkVersionAndClearCache();
 
 const App = () => {
   // If we're reloading due to version change, show nothing
@@ -212,6 +253,12 @@ const App = () => {
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<EmailVerificationPage />} />
+                      {/* FEAT-GHCF: Contract-to-Portal automation (public routes) */}
+                      <Route path="/create-account" element={<CreateAccountPage />} />
+                      <Route path="/subscription-expired" element={<SubscriptionExpiredPage />} />
+
+                      {/* GHCF Post-Purchase: Subscription expired page (public, no auth) */}
+                      <Route path="/subscription-expired" element={<SubscriptionExpiredPage />} />
 
                       {/* Public share link route - no auth required */}
                       <Route path="/compliance/binder/share/:token" element={<SharedBinderPage />} />

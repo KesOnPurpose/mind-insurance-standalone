@@ -502,7 +502,7 @@ export function EventEditModal({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="sm:max-w-[440px] max-h-[85dvh] overflow-y-auto flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-2 flex-shrink-0">
             <DialogTitle>{isNewEvent ? 'Create Time Block' : 'Edit Time Block'}</DialogTitle>
             <DialogDescription>

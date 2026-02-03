@@ -4,7 +4,7 @@
 // Single property view with tabs: Profile, Calculator, Financials, Timeline
 // ============================================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Slider } from '@/components/ui/slider';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -56,6 +57,7 @@ const PropertyDetailPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('profile');
+  const [occupancyOverride, setOccupancyOverride] = useState<number | null>(null);
 
   // Property data
   const {
@@ -102,6 +104,16 @@ const PropertyDetailPage = () => {
   } = usePropertyFinancials(propertyId || '');
 
   const isLoading = isLoadingProperty || isLoadingRooms || isLoadingFinancials;
+
+  // Sync occupancy override with property data
+  useEffect(() => {
+    if (property && occupancyOverride === null) {
+      setOccupancyOverride(property.target_occupancy_percent ?? 90);
+    }
+  }, [property, occupancyOverride]);
+
+  // Current effective occupancy percentage
+  const effectiveOccupancy = occupancyOverride ?? property?.target_occupancy_percent ?? 90;
 
   // Handle property update
   const handleUpdateProperty = async (data: Parameters<typeof updatePropertyMutation>[0]) => {
@@ -183,15 +195,15 @@ const PropertyDetailPage = () => {
   // Helper: Calculate projected monthly revenue from property data
   const calculateProjectedRevenue = (): number => {
     if (!property) return 0;
-    const beds = property.configured_beds || 6;
-    const rate = property.default_rate_per_bed || 907;
-    const occupancy = (property.target_occupancy_percent || 90) / 100;
+    const beds = rooms.length;
+    const rate = property.default_rate_per_bed || 0;
+    const occupancy = effectiveOccupancy / 100;
     return Math.round(beds * rate * occupancy);
   };
 
   // Helper: Get projected expenses from property or default values
   const getProjectedExpenses = () => ({
-    rent: property?.monthly_rent_or_mortgage || 2000,
+    rent: property?.monthly_rent_or_mortgage ?? 0,
     utilities: 400,
     insurance: 200,
     food: 600,
@@ -380,7 +392,7 @@ const PropertyDetailPage = () => {
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <BedDouble className="h-4 w-4" />
-                  {property.configured_beds || 0} beds
+                  {rooms.length} beds
                 </span>
                 <span className="flex items-center gap-1">
                   <Building2 className="h-4 w-4" />
@@ -390,13 +402,13 @@ const PropertyDetailPage = () => {
             </div>
           </div>
 
-          <DropdownMenu>
+          <DropdownMenu modal={true}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" sideOffset={4}>
               <DropdownMenuItem onClick={() => setActiveTab('profile')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Property
@@ -491,6 +503,29 @@ const PropertyDetailPage = () => {
 
           {/* Financials Tab */}
           <TabsContent value="financials">
+            {/* Revenue Assumptions Control */}
+            {property && (
+              <div className="mb-4 p-4 bg-muted/30 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Revenue Projection</span>
+                  <span className="text-xs text-muted-foreground">
+                    {rooms.length} beds × ${property.default_rate_per_bed || 0}/bed × {effectiveOccupancy}% occupancy
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Occupancy</span>
+                  <Slider
+                    value={[effectiveOccupancy]}
+                    onValueChange={(val) => setOccupancyOverride(val[0])}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-semibold w-12 text-right">{effectiveOccupancy}%</span>
+                </div>
+              </div>
+            )}
             <FinancialTracker
               propertyId={property.id}
               financials={financials}

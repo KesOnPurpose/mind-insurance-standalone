@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrograms } from '@/hooks/usePrograms';
@@ -63,10 +64,9 @@ const ProgramsPage = () => {
     navigate(`/programs/${programId}`);
   };
 
-  // Handle browse programs (would go to catalog/marketplace)
+  // Handle browse programs — catalog not yet available
   const handleBrowsePrograms = () => {
-    // TODO: Navigate to program catalog when available
-    console.log('Browse programs - catalog not yet implemented');
+    toast.info('Contact your administrator to get enrolled in a program.');
   };
 
   return (

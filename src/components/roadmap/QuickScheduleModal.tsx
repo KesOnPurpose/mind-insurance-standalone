@@ -372,7 +372,7 @@ export function QuickScheduleModal({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[420px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="sm:max-w-[420px] max-h-[85dvh] overflow-y-auto flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-3 border-b bg-muted/30 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">

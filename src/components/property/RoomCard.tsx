@@ -256,10 +256,18 @@ export function RoomCard({
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={room.is_occupied ? 'default' : 'secondary'}
-                      className={
-                        room.is_occupied
-                          ? 'bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300'
-                          : ''
+                      className={`
+                        ${room.is_occupied
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
+                          : 'hover:bg-muted/80'}
+                        ${!isReadOnly && onToggleOccupancy ? 'cursor-pointer active:scale-95 transition-all' : ''}
+                      `}
+                      onClick={!isReadOnly && onToggleOccupancy ? handleToggleOccupancy : undefined}
+                      role={!isReadOnly && onToggleOccupancy ? 'button' : undefined}
+                      tabIndex={!isReadOnly && onToggleOccupancy ? 0 : undefined}
+                      aria-label={!isReadOnly && onToggleOccupancy
+                        ? `Toggle ${room.room_name} to ${room.is_occupied ? 'vacant' : 'occupied'}`
+                        : undefined
                       }
                     >
                       {room.is_occupied ? (
@@ -271,13 +279,13 @@ export function RoomCard({
                     </Badge>
 
                     {!isReadOnly && (
-                      <DropdownMenu>
+                      <DropdownMenu modal={true}>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-10 w-10 min-h-[44px] min-w-[44px]">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" sideOffset={4}>
                           {onToggleOccupancy && (
                             <DropdownMenuItem onClick={handleToggleOccupancy}>
                               {room.is_occupied ? (
