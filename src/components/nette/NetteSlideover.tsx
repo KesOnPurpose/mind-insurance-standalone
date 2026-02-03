@@ -60,8 +60,27 @@ export const NetteSlideover = ({
   // Track the current tactic ID to detect changes
   const currentTacticIdRef = useRef<string | null>(null);
 
-  // Track if we've sent the initial message for this specific tactic
-  const [sentInitialMessageFor, setSentInitialMessageFor] = useState<string | null>(null);
+  // ANI-200-C: Track sent initial messages in sessionStorage so they persist
+  // across unmount/remount cycles within the same browser session.
+  const SENT_KEY = 'nette_sent_initial_for';
+  const [sentInitialMessageFor, _setSentInitialMessageFor] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem(SENT_KEY);
+    } catch {
+      return null;
+    }
+  });
+  // Wrapper that syncs state + sessionStorage
+  const setSentInitialMessageFor = useCallback((value: string | null) => {
+    _setSentInitialMessageFor(value);
+    try {
+      if (value) {
+        sessionStorage.setItem(SENT_KEY, value);
+      } else {
+        sessionStorage.removeItem(SENT_KEY);
+      }
+    } catch { /* sessionStorage unavailable */ }
+  }, []);
 
   // Messages state - managed locally for this slide-over
   const [messages, setMessages] = useState<NetteMessage[]>([]);

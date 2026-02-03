@@ -39,6 +39,20 @@ export function removeTacticCodes(text: string): string {
 }
 
 /**
+ * ANI-200-A: Convert markdown headers to bold text for chat display.
+ * Headers (###, ##, #) look oversized in chat bubbles and appear as
+ * literal text in the GlossaryTooltip path (which doesn't use ReactMarkdown).
+ * Convert them to **bold** which renders well in both paths.
+ */
+export function convertMarkdownHeaders(text: string): string {
+  if (!text) return text;
+
+  // Convert ### Header, ## Header, # Header to **Header**
+  // Handles 1-6 hash marks at the start of a line
+  return text.replace(/^#{1,6}\s+(.+)$/gm, '**$1**');
+}
+
+/**
  * Sanitize AI response content for display to users.
  * Applies all necessary cleaning transformations.
  */
@@ -50,10 +64,8 @@ export function sanitizeAIResponse(content: string): string {
   // Remove tactic codes
   sanitized = removeTacticCodes(sanitized);
 
-  // Future: Add more sanitization rules here as needed
-  // - Remove [Source X] references
-  // - Remove internal metadata markers
-  // - Clean up formatting artifacts
+  // ANI-200-A: Convert markdown headers to bold (chat-friendly)
+  sanitized = convertMarkdownHeaders(sanitized);
 
   return sanitized;
 }

@@ -82,20 +82,32 @@ function detectCoachType(content: string, isAi: boolean): CoachType {
 /**
  * Transform agent_conversations records to ChatHistoryMessage format
  * Creates TWO messages per record (user + assistant)
+ *
+ * ANI-200-B: Deduplicates messages that share the same user_message content
+ * within a short window. This prevents duplicates when the backend writes
+ * a preliminary record (user message only) and then a complete record
+ * (user message + agent response) for the same exchange.
  */
 function transformAgentConversations(data: AgentConversation[], agent: CoachType): ChatHistoryMessage[] {
   const messages: ChatHistoryMessage[] = [];
+  const seenUserMessages = new Set<string>();
 
   for (const record of data) {
-    // Add user message
+    // ANI-200-B: Build a dedup key from role + trimmed content
+    const userKey = record.user_message?.trim().toLowerCase();
+
+    // Add user message (skip if we've already seen identical content)
     if (record.user_message && record.user_message.trim()) {
-      messages.push({
-        id: `${record.id}-user`,
-        role: 'user',
-        content: record.user_message,
-        timestamp: new Date(record.created_at),
-        coachType: (record.agent_type as CoachType) || agent
-      });
+      if (!seenUserMessages.has(userKey!)) {
+        seenUserMessages.add(userKey!);
+        messages.push({
+          id: `${record.id}-user`,
+          role: 'user',
+          content: record.user_message,
+          timestamp: new Date(record.created_at),
+          coachType: (record.agent_type as CoachType) || agent
+        });
+      }
     }
 
     // Add assistant response

@@ -279,8 +279,17 @@ function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
         const history = await fetchConversationById(user.id, activeConversationId);
 
         if (history.length > 0) {
-          console.log('[ChatHistory] Loaded', history.length, 'messages');
-          setMessages(history);
+          // ANI-200-B: Deduplicate history to prevent transcript doubling.
+          // Build a set of "role:content" keys and keep the first occurrence.
+          const seen = new Set<string>();
+          const deduped = history.filter((msg) => {
+            const key = `${msg.role}:${msg.content.trim().substring(0, 200).toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          console.log('[ChatHistory] Loaded', history.length, 'messages, deduped to', deduped.length);
+          setMessages(deduped);
         } else {
           console.log('[ChatHistory] No history found for conversation');
           if (pendingMessagesRef.current.length > 0) {
