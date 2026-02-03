@@ -25,6 +25,7 @@ import { validatePassword, getPasswordStrengthColor, getPasswordStrengthWidth } 
 import { isMindInsuranceDomain } from '@/services/domainDetectionService';
 import { SmsOptIn } from '@/components/settings/SmsOptIn';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
+import { SubscriptionSection } from '@/components/subscription/SubscriptionSection';
 
 export function SettingsPage() {
   const { user, updatePassword } = useAuth();
@@ -220,6 +221,9 @@ export function SettingsPage() {
             </p>
           </Card>
         )}
+
+        {/* Subscription Management - MI Theme */}
+        <SubscriptionSection isMI={true} />
 
         {/* Timezone Settings - MI Theme */}
         <Card className="bg-mi-navy-light border-mi-cyan/20">
@@ -469,6 +473,9 @@ export function SettingsPage() {
           </p>
         </Card>
       )}
+
+      {/* Subscription Management - Light Theme */}
+      <SubscriptionSection isMI={false} />
 
       {/* Account Security - Light Theme */}
       <Card>
