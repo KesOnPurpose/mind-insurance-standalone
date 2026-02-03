@@ -335,16 +335,137 @@ export function getAllAssistants(): { claude: VapiAssistant; gpt4: VapiAssistant
 // ============================================================================
 
 /**
- * Common TTS misheard variations of names
- * Maps incorrect spellings to regex patterns for replacement
+ * Assistant name variations (only for the AI assistant "Nette")
+ * User names are handled dynamically via fuzzy matching — no hardcoding needed.
  */
-const NAME_VARIATIONS: Record<string, string[]> = {
-  'Keston': ['Kaston', 'Keiston', 'Keaston', 'Caston', 'Kestin', 'Kesten', 'Kiston', 'Caston', 'Kisstin', 'Kisston'],
-  'Kes': ['Kev', 'Kez', 'Kess', 'Kas', 'Kis', 'Kevin', 'Keb', 'Kef', 'Kest',
-          'Cass', 'Cas', 'Caz', 'Kiss', 'Kish', 'Cash', 'Kass', 'Kiss', 'Cis', 'Cus', 'Cos',
-          'Cess', 'Koss', 'Kuss', 'Coss', 'Cuss', 'Gus', 'Gus', 'Gess', 'Guess'],
-  'Nette': ['Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette', 'Annette', 'Lynette', 'Nate']
-};
+const ASSISTANT_NAME_VARIATIONS: string[] = [
+  'Nick', 'Net', 'Nat', 'Ned', 'Nett', 'Nanette', 'Annette', 'Lynette', 'Nate'
+];
+
+// ============================================================================
+// UNIVERSAL FUZZY NAME MATCHING
+// Works for ANY user name from the database — no hardcoded lists needed.
+// Uses Levenshtein edit distance + phonetic first-letter matching to catch
+// STT misheard names (e.g., "Kes" → "Cass", "Kiss", "Cash", etc.)
+// ============================================================================
+
+/**
+ * Compute Levenshtein edit distance between two strings (case-insensitive)
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const la = a.toLowerCase();
+  const lb = b.toLowerCase();
+  const m = la.length;
+  const n = lb.length;
+
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = la[i - 1] === lb[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
+
+/**
+ * Phonetic equivalence groups — letters that STT commonly swaps.
+ * If two letters share a group, they're considered "phonetically similar".
+ */
+const PHONETIC_GROUPS: string[][] = [
+  ['k', 'c', 'g', 'q'],     // hard consonants
+  ['s', 'z', 'c', 'ss'],    // sibilants
+  ['v', 'b', 'f', 'w'],     // labial consonants
+  ['d', 't'],                // dental stops
+  ['n', 'm'],                // nasals
+  ['l', 'r'],                // liquids
+  ['j', 'g', 'y'],          // palatal
+  ['e', 'a', 'i'],          // front vowels (STT frequently swaps)
+  ['o', 'u', 'a'],          // back vowels
+];
+
+/**
+ * Check if two characters are phonetically similar (commonly confused by STT)
+ */
+function arePhoneticallySimilar(a: string, b: string): boolean {
+  const la = a.toLowerCase();
+  const lb = b.toLowerCase();
+  if (la === lb) return true;
+  return PHONETIC_GROUPS.some(group => group.includes(la) && group.includes(lb));
+}
+
+/**
+ * Common English words to NEVER replace, even if they're within edit distance.
+ * This prevents false positives for short names.
+ */
+const COMMON_WORDS_BLOCKLIST = new Set([
+  'the', 'this', 'that', 'then', 'them', 'they', 'than', 'thus',
+  'was', 'has', 'his', 'her', 'she', 'and', 'are', 'but', 'not',
+  'for', 'you', 'all', 'can', 'had', 'one', 'our', 'out', 'day',
+  'get', 'has', 'him', 'how', 'its', 'may', 'new', 'now', 'old',
+  'see', 'way', 'who', 'did', 'let', 'say', 'too', 'use', 'yes',
+  'yet', 'also', 'just', 'been', 'more', 'some', 'time', 'very',
+  'when', 'come', 'make', 'like', 'long', 'look', 'many', 'over',
+  'such', 'take', 'into', 'year', 'back', 'give', 'most', 'only',
+  'tell', 'well', 'here', 'know', 'will', 'with', 'what', 'from',
+  'have', 'been', 'keep', 'help', 'went', 'need', 'kind', 'mind',
+  'feel', 'life', 'work', 'good', 'your', 'were', 'much', 'each',
+  'said', 'does', 'done', 'it', 'is', 'as', 'at', 'be', 'by',
+  'do', 'if', 'in', 'me', 'my', 'no', 'of', 'on', 'or', 'so',
+  'to', 'up', 'us', 'we', 'an', 'he', 'go', 'am', 'ok', 'hi',
+  'about', 'would', 'could', 'should', 'their', 'there', 'these',
+  'those', 'which', 'while', 'being', 'other', 'still', 'think',
+  'start', 'first', 'great', 'right', 'thing', 'going', 'after',
+  'never', 'every', 'world', 'today', 'might', 'where', 'again',
+]);
+
+/**
+ * Determine the maximum allowed edit distance for fuzzy matching
+ * based on the length of the target name.
+ * Shorter names get tighter thresholds to avoid false positives.
+ */
+function getMaxEditDistance(nameLength: number): number {
+  if (nameLength <= 2) return 1;
+  if (nameLength <= 4) return 2;
+  if (nameLength <= 6) return 2;
+  return 3;
+}
+
+/**
+ * Check if a word from transcript text is likely a misheard version of the user's name.
+ * Uses multiple signals: edit distance, phonetic first-letter similarity, length similarity.
+ * Returns true only when confident this is a name mishearing, not a common word.
+ */
+function isFuzzyNameMatch(word: string, targetName: string): boolean {
+  const w = word.toLowerCase();
+  const t = targetName.toLowerCase();
+
+  // Exact match — not a "mishearing", just correct
+  if (w === t) return false;
+
+  // Never replace common English words
+  if (COMMON_WORDS_BLOCKLIST.has(w)) return false;
+
+  // Length must be within reasonable range (STT doesn't wildly change word length)
+  const lengthDiff = Math.abs(w.length - t.length);
+  if (lengthDiff > 2) return false;
+
+  // First letter must be phonetically similar (STT preserves initial sound most of the time)
+  if (!arePhoneticallySimilar(w[0], t[0])) return false;
+
+  // Compute edit distance
+  const distance = levenshteinDistance(w, t);
+  const maxDistance = getMaxEditDistance(t.length);
+
+  return distance <= maxDistance;
+}
 
 /**
  * Phrase replacements for AI references in summaries
@@ -360,166 +481,52 @@ const AI_PHRASE_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = 
 ];
 
 /**
- * Correct common TTS transcription errors in transcript text
- * Uses the actual user name from context and fixes assistant name to "Nette"
- * Also replaces generic "AI" references with "Nette"
+ * Correct TTS transcription errors in transcript text using UNIVERSAL fuzzy matching.
+ * Works for ANY user name from the database — no hardcoded name lists needed.
+ *
+ * Strategy:
+ * 1. Fix "AI"/"assistant" references → "Nette"
+ * 2. Fix assistant name mishearings → "Nette" (small hardcoded list, always the same AI)
+ * 3. Fix user name mishearings → actual user name (via Levenshtein fuzzy matching)
+ *
  * @param text - The transcript text to correct
- * @param actualUserName - The user's actual name from database
+ * @param actualUserName - The user's actual name from their database profile
  */
 export function correctTranscriptNames(text: string, actualUserName?: string): string {
   let corrected = text;
 
-  // First, replace AI phrase references (e.g., "The AI noted" -> "Nette noted")
+  // 1. Replace AI phrase references (e.g., "The AI noted" → "Nette noted")
   for (const { pattern, replacement } of AI_PHRASE_REPLACEMENTS) {
     corrected = corrected.replace(pattern, replacement);
   }
 
-  // Then correct assistant name variations to "Nette"
-  const netteVariations = NAME_VARIATIONS['Nette'] || [];
-  for (const variation of netteVariations) {
-    // Use word boundary to avoid replacing parts of other words
+  // 2. Correct assistant name variations to "Nette"
+  for (const variation of ASSISTANT_NAME_VARIATIONS) {
     const regex = new RegExp(`\\b${variation}\\b`, 'gi');
     corrected = corrected.replace(regex, 'Nette');
   }
 
-  // Correct user name if provided
-  if (actualUserName) {
-    // Collect variations for the given name AND any related names
-    // e.g., if userName is "Kes", also check "Keston" variations
-    const relatedNames = Object.keys(NAME_VARIATIONS).filter(
-      n => n.toLowerCase().startsWith(actualUserName.toLowerCase()) ||
-           actualUserName.toLowerCase().startsWith(n.toLowerCase())
-    );
-    // Always include the exact name
-    if (!relatedNames.includes(actualUserName)) relatedNames.push(actualUserName);
+  // 3. Correct user name using universal fuzzy matching
+  if (actualUserName && actualUserName.length >= 2) {
+    // Split text into words, check each against the user's name
+    // Replace words that fuzzy-match the user's name
+    corrected = corrected.replace(/\b[A-Za-z]+(?:'s)?\b/g, (match) => {
+      // Handle possessives: "Kiss's" → check "Kiss", replace as "Kes's"
+      const isPossessive = match.endsWith("'s");
+      const baseWord = isPossessive ? match.slice(0, -2) : match;
 
-    const allVariations = new Set<string>();
-    for (const relName of relatedNames) {
-      const hardcoded = NAME_VARIATIONS[relName] || [];
-      const dynamic = generatePhoneticVariations(relName);
-      for (const v of hardcoded) allVariations.add(v);
-      for (const v of dynamic) allVariations.add(v);
-    }
-
-    // Sort by length descending so longer matches replace first (e.g., "Kisstin" before "Kiss")
-    const sorted = Array.from(allVariations)
-      .filter(v => v.toLowerCase() !== actualUserName.toLowerCase())
-      .sort((a, b) => b.length - a.length);
-
-    for (const variation of sorted) {
-      // Escape any regex special chars in the variation
-      const escaped = variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Match the variation with optional possessive 's
-      const regex = new RegExp(`\\b${escaped}(?='s\\b|\\b)`, 'gi');
-      corrected = corrected.replace(regex, actualUserName);
-    }
+      if (isFuzzyNameMatch(baseWord, actualUserName)) {
+        // Preserve the original casing style
+        const replacement = baseWord[0] === baseWord[0].toUpperCase()
+          ? actualUserName.charAt(0).toUpperCase() + actualUserName.slice(1)
+          : actualUserName.toLowerCase();
+        return isPossessive ? `${replacement}'s` : replacement;
+      }
+      return match;
+    });
   }
 
   return corrected;
-}
-
-/**
- * Generate phonetic variations of a name that STT might mishear.
- * Produces single substitutions, combined substitutions (vowel+consonant),
- * and doubled-consonant variants for comprehensive coverage.
- */
-function generatePhoneticVariations(name: string): string[] {
-  const variationSet = new Set<string>();
-  const lower = name.toLowerCase();
-
-  const vowelSubs: Record<string, string[]> = {
-    'e': ['a', 'i', 'u'],
-    'a': ['e', 'o', 'u'],
-    'i': ['e', 'y', 'ee'],
-    'o': ['a', 'u'],
-    'u': ['o', 'a']
-  };
-
-  const consonantSubs: Record<string, string[]> = {
-    's': ['z', 'v', 'th', 'sh', 'ss'],
-    'z': ['s', 'ss'],
-    'v': ['b', 'f', 's'],
-    'b': ['v', 'p', 'd'],
-    'f': ['v', 'th'],
-    'd': ['t', 'b'],
-    't': ['d', 'k'],
-    'k': ['c', 'g', 't', 'ch'],
-    'c': ['k', 's', 'g'],
-    'g': ['k', 'j'],
-    'n': ['m'],
-    'm': ['n'],
-    'l': ['r'],
-    'r': ['l']
-  };
-
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-  // Helper: apply a single substitution at position i
-  const applySub = (base: string, i: number, sub: string): string => {
-    return base.slice(0, i) + sub + base.slice(i + 1);
-  };
-
-  // 1. Single-vowel substitutions
-  for (let i = 0; i < lower.length; i++) {
-    const ch = lower[i];
-    if (vowelSubs[ch]) {
-      for (const sub of vowelSubs[ch]) {
-        variationSet.add(capitalize(applySub(lower, i, sub)));
-      }
-    }
-  }
-
-  // 2. Single-consonant substitutions
-  for (let i = 0; i < lower.length; i++) {
-    const ch = lower[i];
-    if (consonantSubs[ch]) {
-      for (const sub of consonantSubs[ch]) {
-        variationSet.add(capitalize(applySub(lower, i, sub)));
-      }
-    }
-  }
-
-  // 3. Doubled final consonant (STT frequently doubles ending consonants)
-  const lastChar = lower[lower.length - 1];
-  if (lastChar && !'aeiou'.includes(lastChar)) {
-    variationSet.add(capitalize(lower + lastChar));
-  }
-
-  // 4. Combined substitutions (consonant + vowel together) for short names (≤5 chars)
-  //    This catches "Cass" from "Kes" (K→C + e→a + s→ss)
-  if (lower.length <= 5) {
-    for (let i = 0; i < lower.length; i++) {
-      const ch1 = lower[i];
-      const subs1 = consonantSubs[ch1] || vowelSubs[ch1];
-      if (!subs1) continue;
-
-      for (const sub1 of subs1) {
-        const base1 = applySub(lower, i, sub1);
-        // Apply a second substitution at a different position
-        for (let j = 0; j < base1.length; j++) {
-          if (j === i) continue; // skip same position
-          const ch2 = base1[j];
-          const subs2 = consonantSubs[ch2] || vowelSubs[ch2];
-          if (!subs2) continue;
-          for (const sub2 of subs2) {
-            const combo = base1.slice(0, j) + sub2 + base1.slice(j + 1);
-            variationSet.add(capitalize(combo));
-          }
-        }
-        // Also try doubled final consonant on the single-sub result
-        const lastCh = base1[base1.length - 1];
-        if (lastCh && !'aeiou'.includes(lastCh)) {
-          variationSet.add(capitalize(base1 + lastCh));
-        }
-      }
-    }
-  }
-
-  // Remove the original name from variations
-  variationSet.delete(capitalize(lower));
-  variationSet.delete(name);
-
-  return Array.from(variationSet);
 }
 
 /**
