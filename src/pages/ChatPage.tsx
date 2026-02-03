@@ -631,7 +631,7 @@ function ChatPageContent({ activeMode, onModeChange }: ChatPageContentProps) {
 
         {/* Voice Tab Content */}
         {activeMode === 'voice' && (
-          <div className="flex-1 container mx-auto px-4 overflow-y-auto">
+          <div className="flex-1 container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <VoiceTabContent
                 userId={user?.id ?? ''}
