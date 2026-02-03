@@ -396,6 +396,65 @@ export async function fetchConversationById(
       }
     }
 
+    // Strategy 5: Look up by {userId}:{agent} session_id pattern, filtered by conversation time window.
+    // n8n stores ALL messages under one session_id like "{userId}:nette". The frontend creates
+    // separate conversation_metadata entries with random UUIDs. We correlate by timestamp range.
+    if (!data || data.length === 0) {
+      console.log('[ChatHistory] Trying Strategy 5: userId:agent pattern with time window from conversation_metadata');
+
+      // Get the conversation's time window from conversation_metadata
+      const { data: convMeta, error: convMetaError } = await supabase
+        .from('conversation_metadata')
+        .select('created_at, last_message_at, coach_type')
+        .eq('conversation_id', conversationId)
+        .single();
+
+      if (convMetaError) {
+        console.error('[ChatHistory] Error fetching conversation_metadata:', convMetaError);
+      }
+
+      if (convMeta && convMeta.created_at && convMeta.last_message_at) {
+        const agent = convMeta.coach_type || 'nette';
+        const sessionPattern = `${userId}:${agent}`;
+
+        // Add a small buffer (5 seconds before start, 5 seconds after end) to handle timing differences
+        const windowStart = new Date(new Date(convMeta.created_at).getTime() - 5000).toISOString();
+        const windowEnd = new Date(new Date(convMeta.last_message_at).getTime() + 5000).toISOString();
+
+        console.log('[ChatHistory] Strategy 5 params:', { sessionPattern, windowStart, windowEnd });
+
+        const timeWindowResult = await supabase
+          .from('n8n_chat_histories')
+          .select('*')
+          .eq('session_id', sessionPattern)
+          .gte('created_at', windowStart)
+          .lte('created_at', windowEnd)
+          .order('created_at', { ascending: true })
+          .limit(limit);
+
+        if (!timeWindowResult.error && timeWindowResult.data && timeWindowResult.data.length > 0) {
+          data = timeWindowResult.data;
+          console.log('[ChatHistory] Found', data.length, 'messages with Strategy 5 (userId:agent + time window)');
+        } else {
+          // If exact session_id match fails, try broader pattern match (userId:%)
+          console.log('[ChatHistory] Strategy 5 exact failed, trying broader userId:% pattern');
+          const broadResult = await supabase
+            .from('n8n_chat_histories')
+            .select('*')
+            .ilike('session_id', `${userId}:%`)
+            .gte('created_at', windowStart)
+            .lte('created_at', windowEnd)
+            .order('created_at', { ascending: true })
+            .limit(limit);
+
+          if (!broadResult.error && broadResult.data && broadResult.data.length > 0) {
+            data = broadResult.data;
+            console.log('[ChatHistory] Found', data.length, 'messages with Strategy 5 broad (userId:% + time window)');
+          }
+        }
+      }
+    }
+
     if (!data || data.length === 0) {
       console.log('[ChatHistory] No messages found for conversation after all strategies:', conversationId);
       return [];
