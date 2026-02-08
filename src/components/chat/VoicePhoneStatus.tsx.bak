@@ -1,0 +1,146 @@
+// ============================================================================
+// VoicePhoneStatus - Phone verification status badge for Voice tab
+// ============================================================================
+// Shows whether the user has a verified phone number for voice calls.
+// Displays masked phone when verified, or prompts to add phone when not.
+// ============================================================================
+
+import { motion } from 'framer-motion';
+import { CheckCircle2, Phone, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface VoicePhoneStatusProps {
+  /** User's phone number (null if not verified) */
+  phone: string | null;
+  /** Whether voice calls are enabled */
+  voiceEnabled?: boolean;
+  /** Callback when user wants to add/verify phone */
+  onAddPhone: () => void;
+  /** Additional class names */
+  className?: string;
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Masks a phone number for display (e.g., "+1 (555) ***-4567")
+ */
+function maskPhone(phone: string): string {
+  // Extract digits
+  const digits = phone.replace(/\D/g, '');
+
+  if (digits.length < 10) return phone;
+
+  // Get last 4 digits
+  const last4 = digits.slice(-4);
+  // Get area code (first 3 after country code)
+  const areaCode = digits.length > 10 ? digits.slice(1, 4) : digits.slice(0, 3);
+
+  return `+1 (${areaCode}) ***-${last4}`;
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function VoicePhoneStatus({
+  phone,
+  voiceEnabled = true,
+  onAddPhone,
+  className,
+}: VoicePhoneStatusProps) {
+  const isVerified = phone && phone.length >= 10;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className={cn(
+        'flex items-center justify-between gap-3 p-3 rounded-xl',
+        'border transition-colors',
+        isVerified
+          ? 'bg-mi-cyan/5 border-mi-cyan/20'
+          : 'bg-gray-800/30 border-gray-700/50',
+        className
+      )}
+    >
+      <div className="flex items-center gap-3">
+        {/* Status icon */}
+        <div
+          className={cn(
+            'flex items-center justify-center w-9 h-9 rounded-full',
+            isVerified ? 'bg-mi-cyan/20' : 'bg-gray-700/50'
+          )}
+        >
+          {isVerified ? (
+            <CheckCircle2 className="h-5 w-5 text-mi-cyan" />
+          ) : (
+            <Phone className="h-5 w-5 text-gray-400" />
+          )}
+        </div>
+
+        {/* Status text */}
+        <div className="flex flex-col">
+          {isVerified ? (
+            <>
+              <span className="text-sm font-medium text-white">
+                {maskPhone(phone)}
+              </span>
+              <span className="text-xs text-mi-cyan">
+                {voiceEnabled ? 'Voice calls enabled' : 'Voice calls paused'}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-medium text-gray-300">
+                No phone added
+              </span>
+              <span className="text-xs text-gray-500">
+                Add phone for voice calls
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Action button */}
+      {!isVerified && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onAddPhone}
+          className={cn(
+            'h-8 px-3 text-xs font-medium',
+            'bg-mi-cyan/10 hover:bg-mi-cyan/20 text-mi-cyan',
+            'border border-mi-cyan/30'
+          )}
+        >
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
+          Add
+        </Button>
+      )}
+
+      {/* Edit button for verified */}
+      {isVerified && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onAddPhone}
+          className="h-8 px-3 text-xs text-gray-400 hover:text-white hover:bg-white/5"
+        >
+          Edit
+        </Button>
+      )}
+    </motion.div>
+  );
+}
+
+export default VoicePhoneStatus;

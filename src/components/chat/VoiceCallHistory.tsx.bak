@@ -1,0 +1,255 @@
+// ============================================================================
+// VoiceCallHistory - Recent voice call list for Voice tab
+// ============================================================================
+// Displays a list of recent voice calls with timestamps and durations.
+// Uses VoiceCallCard subcomponent for individual call items.
+// ============================================================================
+
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Phone,
+  PhoneIncoming,
+  PhoneOutgoing,
+  PhoneMissed,
+  Clock,
+  Loader2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow, format } from 'date-fns';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface VoiceCallLog {
+  id: string;
+  user_id: string;
+  started_at: string;
+  ended_at?: string | null;
+  duration_seconds?: number | null;
+  call_status: 'completed' | 'missed' | 'failed' | 'in_progress';
+  call_direction: 'inbound' | 'outbound';
+  summary?: string | null;
+  call_type?: string | null;
+}
+
+interface VoiceCallHistoryProps {
+  /** Array of voice call logs */
+  calls: VoiceCallLog[];
+  /** Whether calls are being loaded */
+  isLoading?: boolean;
+  /** User's timezone for formatting */
+  timezone?: string;
+  /** Additional class names */
+  className?: string;
+}
+
+interface VoiceCallCardProps {
+  call: VoiceCallLog;
+  timezone?: string;
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Format call duration for display
+ */
+function formatDuration(seconds: number | null | undefined): string {
+  if (!seconds || seconds < 1) return '< 1 min';
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+
+  if (mins === 0) return `${secs}s`;
+  if (secs === 0) return `${mins} min`;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Get call status display info
+ */
+function getCallStatusInfo(call: VoiceCallLog) {
+  switch (call.call_status) {
+    case 'completed':
+      return {
+        icon: call.call_direction === 'inbound' ? PhoneIncoming : PhoneOutgoing,
+        label: call.call_direction === 'inbound' ? 'Incoming call' : 'Outgoing call',
+        color: 'text-mi-cyan',
+        bgColor: 'bg-mi-cyan/10',
+      };
+    case 'missed':
+      return {
+        icon: PhoneMissed,
+        label: 'Missed call',
+        color: 'text-orange-400',
+        bgColor: 'bg-orange-500/10',
+      };
+    case 'failed':
+      return {
+        icon: PhoneMissed,
+        label: 'Failed',
+        color: 'text-red-400',
+        bgColor: 'bg-red-500/10',
+      };
+    case 'in_progress':
+      return {
+        icon: Phone,
+        label: 'In progress',
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/10',
+      };
+    default:
+      return {
+        icon: Phone,
+        label: 'Call',
+        color: 'text-gray-400',
+        bgColor: 'bg-gray-500/10',
+      };
+  }
+}
+
+// ============================================================================
+// VOICE CALL CARD SUBCOMPONENT
+// ============================================================================
+
+function VoiceCallCard({ call, timezone }: VoiceCallCardProps) {
+  const statusInfo = getCallStatusInfo(call);
+  const Icon = statusInfo.icon;
+
+  const callDate = new Date(call.started_at);
+  const timeAgo = formatDistanceToNow(callDate, { addSuffix: true });
+  const fullDate = format(callDate, 'MMM d, yyyy h:mm a');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-xl',
+        'bg-mi-navy-light/50 border border-white/5',
+        'hover:bg-mi-navy-light/70 transition-colors'
+      )}
+    >
+      {/* Call icon */}
+      <div
+        className={cn(
+          'flex items-center justify-center w-10 h-10 rounded-full',
+          statusInfo.bgColor
+        )}
+      >
+        <Icon className={cn('h-5 w-5', statusInfo.color)} />
+      </div>
+
+      {/* Call info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white truncate">
+            {statusInfo.label}
+          </span>
+          {call.call_type && (
+            <span className="text-xs text-gray-500 truncate">
+              • {call.call_type}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <span title={fullDate}>{timeAgo}</span>
+          {call.duration_seconds && call.duration_seconds > 0 && (
+            <>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatDuration(call.duration_seconds)}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Summary preview (if available) */}
+      {call.summary && (
+        <div className="hidden sm:block max-w-[150px]">
+          <p className="text-xs text-gray-500 truncate">{call.summary}</p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// LOADING SKELETON
+// ============================================================================
+
+function VoiceCallSkeleton() {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-mi-navy-light/30 animate-pulse">
+      <div className="w-10 h-10 rounded-full bg-gray-700/50" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 w-24 bg-gray-700/50 rounded" />
+        <div className="h-3 w-16 bg-gray-700/30 rounded" />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export function VoiceCallHistory({
+  calls,
+  isLoading = false,
+  timezone,
+  className,
+}: VoiceCallHistoryProps) {
+  if (isLoading) {
+    return (
+      <div className={cn('space-y-3', className)}>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-400">Recent Voice Calls</h4>
+          <Loader2 className="h-4 w-4 text-mi-cyan animate-spin" />
+        </div>
+        <div className="space-y-2">
+          <VoiceCallSkeleton />
+          <VoiceCallSkeleton />
+          <VoiceCallSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!calls || calls.length === 0) {
+    return null; // Parent component handles empty state
+  }
+
+  return (
+    <div className={cn('space-y-3', className)}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium text-gray-400">Recent Voice Calls</h4>
+        <span className="text-xs text-gray-500">{calls.length} calls</span>
+      </div>
+
+      {/* Call list */}
+      <AnimatePresence mode="popLayout">
+        <div className="space-y-2">
+          {calls.map((call, index) => (
+            <motion.div
+              key={call.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <VoiceCallCard call={call} timezone={timezone} />
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default VoiceCallHistory;

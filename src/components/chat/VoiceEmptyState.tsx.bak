@@ -1,0 +1,82 @@
+// ============================================================================
+// VoiceEmptyState - Empty state for Voice tab when no calls exist
+// ============================================================================
+// Shown when user has no voice call history. Encourages first call by
+// pointing to the floating button at bottom-right.
+// ============================================================================
+
+import { motion } from 'framer-motion';
+import { History, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface VoiceEmptyStateProps {
+  /** Whether the user has a phone number on file */
+  hasPhone?: boolean;
+  /** Additional class names */
+  className?: string;
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function VoiceEmptyState({
+  hasPhone = false,
+  className,
+}: VoiceEmptyStateProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className={cn(
+        'flex flex-col items-center justify-center text-center py-6 px-4',
+        'rounded-xl bg-mi-navy-light/30 border border-white/5',
+        className
+      )}
+    >
+      {/* Icon */}
+      <motion.div
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.3, type: 'spring' }}
+        className="relative mb-3"
+      >
+        <div className="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center">
+          <History className="h-5 w-5 text-gray-500" />
+        </div>
+        {/* Decorative sparkle */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          className="absolute -top-1 -right-1"
+        >
+          <Sparkles className="h-4 w-4 text-mi-gold/50" />
+        </motion.div>
+      </motion.div>
+
+      {/* Text */}
+      <h4 className="text-sm font-medium text-gray-300 mb-1">
+        No voice calls yet
+      </h4>
+      <p className="text-xs text-gray-500 max-w-[220px]">
+        {hasPhone
+          ? 'Tap the floating button at the bottom right to start your first voice session with Nette.'
+          : 'Add your phone number above, then tap the floating button to start a conversation.'}
+      </p>
+
+      {/* Subtle hint */}
+      <div className="mt-3 flex items-center gap-1.5 text-xs text-mi-cyan/50">
+        <Sparkles className="h-3 w-3" />
+        <span>Calls are personalized to your journey</span>
+      </div>
+    </motion.div>
+  );
+}
+
+export default VoiceEmptyState;

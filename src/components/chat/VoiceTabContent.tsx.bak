@@ -1,0 +1,209 @@
+// ============================================================================
+// VoiceTabContent - Main container for Voice tab content
+// ============================================================================
+// Assembles the Voice tab UI with:
+// - Compact phone status at top
+// - Informative welcome section with tips (pointing to floating button)
+// - Call history prominently displayed
+//
+// NOTE: The GHL widget appears as a FLOATING BUTTON at bottom-right of screen.
+// This content area points users to that button instead of trying to embed it.
+// ============================================================================
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Phone, Shield, MessageCircle, Target, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { GHLWidgetWrapper } from './GHLWidgetWrapper';
+import { VoicePhoneStatus } from './VoicePhoneStatus';
+import { VoiceCallHistory, type VoiceCallLog } from './VoiceCallHistory';
+import { VoiceEmptyState } from './VoiceEmptyState';
+import { getVoiceCallLogs } from '@/services/voiceOptInService';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface VoiceTabContentProps {
+  /** Whether the Voice tab is currently active */
+  isActive: boolean;
+  /** User ID for fetching call history */
+  userId?: string;
+  /** User's phone number */
+  userPhone?: string | null;
+  /** Whether voice calls are enabled */
+  voiceEnabled?: boolean;
+  /** User's timezone for formatting */
+  userTimezone?: string;
+  /** Callback when user wants to add/verify phone */
+  onPhoneAction: () => void;
+  /** Additional class names */
+  className?: string;
+}
+
+// ============================================================================
+// TIPS DATA
+// ============================================================================
+
+const VOICE_TIPS = [
+  { icon: MessageCircle, text: 'Share your grouphome journey progress' },
+  { icon: Target, text: 'Ask questions about your next steps' },
+  { icon: Sparkles, text: 'Discuss challenges you\'re facing' },
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function VoiceTabContent({
+  isActive,
+  userId,
+  userPhone,
+  voiceEnabled = true,
+  userTimezone,
+  onPhoneAction,
+  className,
+}: VoiceTabContentProps) {
+  const [voiceCalls, setVoiceCalls] = useState<VoiceCallLog[]>([]);
+  const [isLoadingCalls, setIsLoadingCalls] = useState(false);
+
+  // Fetch voice call history when tab becomes active
+  useEffect(() => {
+    if (!isActive || !userId) return;
+
+    const fetchCalls = async () => {
+      setIsLoadingCalls(true);
+      try {
+        const calls = await getVoiceCallLogs(userId, 10);
+        setVoiceCalls(calls as VoiceCallLog[]);
+      } catch (error) {
+        console.error('[VoiceTabContent] Error fetching calls:', error);
+      } finally {
+        setIsLoadingCalls(false);
+      }
+    };
+
+    fetchCalls();
+  }, [isActive, userId]);
+
+  if (!isActive) {
+    return null;
+  }
+
+  const hasPhone = userPhone && userPhone.length >= 10;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      role="tabpanel"
+      id="voice-panel"
+      aria-labelledby="voice-tab"
+      className={cn(
+        'flex flex-col h-full overflow-hidden',
+        className
+      )}
+    >
+      {/* GHL Widget Script Injector (renders nothing, just loads script) */}
+      <GHLWidgetWrapper isVisible={isActive} />
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {/* Phone Status - compact at top */}
+        <VoicePhoneStatus
+          phone={userPhone ?? null}
+          voiceEnabled={voiceEnabled}
+          onAddPhone={onPhoneAction}
+        />
+
+        {/* Informative Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl border border-mi-cyan/20 bg-mi-navy-light/50 p-5"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-mi-cyan via-mi-cyan-dark to-mi-cyan flex items-center justify-center shadow-lg shadow-mi-cyan/20">
+              <Phone className="h-6 w-6 text-mi-navy" />
+            </div>
+          </div>
+
+          <h3 className="text-lg font-semibold text-white text-center mb-2">
+            Voice with Nette
+          </h3>
+
+          <p className="text-sm text-gray-400 text-center mb-4">
+            Tap the{' '}
+            <span className="font-medium text-mi-cyan">floating button</span>{' '}
+            at the bottom right of your screen to start a voice conversation.
+          </p>
+
+          {/* Tips Section */}
+          <div className="bg-mi-navy/50 rounded-xl p-4 space-y-2.5">
+            <p className="text-xs font-medium text-gray-300 uppercase tracking-wide">
+              Tips for your voice call
+            </p>
+            {VOICE_TIPS.map((tip, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+                className="flex items-center gap-2.5 text-sm text-gray-400"
+              >
+                <tip.icon className="h-4 w-4 text-mi-cyan/70 flex-shrink-0" />
+                <span>{tip.text}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Privacy note */}
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500">
+            <Shield className="h-3.5 w-3.5" />
+            <span>Voice calls are private and encrypted</span>
+          </div>
+        </motion.div>
+
+        {/* Call History Section */}
+        <div className="space-y-3">
+          {/* Section divider */}
+          <div className="flex items-center gap-3 py-2">
+            <div className="flex-1 h-px bg-white/5" />
+            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">
+              Call History
+            </span>
+            <div className="flex-1 h-px bg-white/5" />
+          </div>
+
+          {/* Call History or Empty State */}
+          {voiceCalls.length > 0 ? (
+            <VoiceCallHistory
+              calls={voiceCalls}
+              isLoading={isLoadingCalls}
+              timezone={userTimezone}
+            />
+          ) : (
+            !isLoadingCalls && (
+              <VoiceEmptyState hasPhone={Boolean(hasPhone)} />
+            )
+          )}
+
+          {/* Loading state for call history */}
+          {isLoadingCalls && voiceCalls.length === 0 && (
+            <VoiceCallHistory
+              calls={[]}
+              isLoading={true}
+              timezone={userTimezone}
+            />
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default VoiceTabContent;

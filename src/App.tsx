@@ -80,7 +80,7 @@ import AcceptPartnerInvite from "./pages/relationship-kpis/AcceptPartnerInvite";
 
 // RIE lazy-loaded pages (code-split for performance)
 const RelationshipSeasonsPage = lazy(() => import("./pages/relationship-kpis/RelationshipSeasonsPage"));
-const RelationshipLearningPage = lazy(() => import("./pages/relationship-kpis/RelationshipLearningPage"));
+const RelationshipLearningPage = lazy(() => import("./pages/relationship-kpis/LearningYourPartnerPage"));
 const RelationshipDateNightsPage = lazy(() => import("./pages/relationship-kpis/RelationshipDateNightsPage"));
 const RelationshipSafeSpacePage = lazy(() => import("./pages/relationship-kpis/RelationshipSafeSpacePage"));
 const RelationshipJournalPage = lazy(() => import("./pages/relationship-kpis/RelationshipJournalPage"));
