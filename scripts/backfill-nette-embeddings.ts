@@ -11,9 +11,9 @@
  *   OPENAI_API_KEY=xxx SUPABASE_SERVICE_KEY=xxx npx tsx scripts/backfill-nette-embeddings.ts
  */
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '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';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '$OPENAI_API_KEY';
 const SUPABASE_URL = 'https://hpyodaugrkctagkrfofj.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '$SUPABASE_SERVICE_ROLE_KEY';
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const BATCH_SIZE = 20; // Process 20 chunks at a time to avoid rate limits

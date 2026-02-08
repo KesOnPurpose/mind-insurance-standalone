@@ -24,13 +24,13 @@ This agent activates when the task mentions:
 
 ### API Access
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 N8N_URL="https://n8n-n8n.vq00fr.easypanel.host"
 ```
 
 ### Supabase (for database nodes)
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 BASE_URL="https://hpyodaugrkctagkrfofj.supabase.co"
 ```
 

@@ -29,7 +29,7 @@ Running 15-capability forensic analysis for user: **$ARGUMENTS**
 ## Step 1: Get User Profile
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== USER PROFILE ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=id,email,full_name,user_source,current_day,challenge_start_date,collision_patterns,temperament&id=eq.$ARGUMENTS" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
@@ -57,7 +57,7 @@ except Exception as e:
 ## Step 2: Check Activity Tracking (Capability 1-2: 3-Day Rule & Dropout Risk)
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== ACTIVITY TRACKING ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_user_activity_tracking?select=*&user_id=eq.$ARGUMENTS" \
@@ -101,7 +101,7 @@ except Exception as e:
 ## Step 3: Check Active Protocol (Capability 4: Week Position)
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== ACTIVE PROTOCOL ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=id,title,status,current_day,week_number,protocol_type&user_id=eq.$ARGUMENTS&status=eq.active" \
@@ -128,7 +128,7 @@ except Exception as e:
 ## Step 4: Check Recent Completions (Capability 3, 5-7: Breakthrough, Pattern Awareness, Reframe Quality)
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== RECENT COMPLETIONS (Last 14 days) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_protocol_completions?select=day_number,completed_at,was_skipped&user_id=eq.$ARGUMENTS&order=completed_at.desc&limit=14" \
@@ -165,7 +165,7 @@ except Exception as e:
 ## Step 5: Check MIO Insights Thread (Capability 11: Celebration Recognition)
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== MIO INSIGHTS THREAD ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_insights_thread?select=*&user_id=eq.$ARGUMENTS" \
@@ -191,7 +191,7 @@ except Exception as e:
 ## Step 6: Check Recent Messages (Capability 7: Reframe Quality)
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== RECENT MIO MESSAGES ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_insights_messages?select=role,section_type,reward_tier,quality_score,delivered_at&user_id=eq.$ARGUMENTS&order=delivered_at.desc&limit=10" \

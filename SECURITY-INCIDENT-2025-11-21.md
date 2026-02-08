@@ -19,7 +19,7 @@ The following credentials were found in git history (commit `a903e61498df38622c7
 
 ### 1. Supabase Service Role Key
 ```
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ
+SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_ROLE_KEY
 ```
 
 **Risk**: Full database access bypassing RLS policies
@@ -28,7 +28,7 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 ### 2. Anthropic API Key
 ```
-ANTHROPIC_API_KEY=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
+ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 ```
 
 **Risk**: Unauthorized API usage, cost exposure

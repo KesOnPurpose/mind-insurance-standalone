@@ -31,7 +31,7 @@ Running proactive system health scan for Mind Insurance users...
 Users in `gh_approved_users` without linked `user_id` - they can't access the app:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== ORPHANED ACCOUNTS (Critical - No user_id linked) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/gh_approved_users?select=email,full_name,approved_at,tier&user_id=is.null&is_active=eq.true&order=approved_at.desc" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
@@ -58,7 +58,7 @@ except Exception as e:
 Mind Insurance users with high inactivity (3+ days):
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== AT-RISK USERS (Inactive 3+ days) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_user_activity_tracking?select=user_id,inactive_days,is_at_risk,last_practice_at&inactive_days=gte.3&order=inactive_days.desc&limit=20" \
@@ -87,7 +87,7 @@ except Exception as e:
 Users in Days 15-21 (highest dropout period):
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== WEEK 3 DANGER ZONE (Days 15-21) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=id,email,current_day&user_source=eq.mi_standalone&current_day=gte.15&current_day=lte.21&order=current_day" \
@@ -115,7 +115,7 @@ except Exception as e:
 Recent workflow execution errors:
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 echo ""
 echo "=== N8N WORKFLOW FAILURES (Last 24h) ==="
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?status=error&limit=20" \
@@ -161,7 +161,7 @@ except Exception as e:
 Users with active protocols but no completions in 3+ days:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== STALLED PROTOCOLS (Active but no activity) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=id,user_id,current_day,status,updated_at&status=eq.active&order=updated_at.asc&limit=10" \
@@ -191,7 +191,7 @@ except Exception as e:
 Users with completed assessments but missing profile sync:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== ASSESSMENT SYNC GAPS ==="
 echo "Checking for users with completed assessments but missing profile data..."

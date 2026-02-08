@@ -72,7 +72,7 @@ This skill activates when your message contains:
 ## N8n Credentials
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 N8N_URL="https://n8n-n8n.vq00fr.easypanel.host"
 ```
 
@@ -136,7 +136,7 @@ N8N_URL="https://n8n-n8n.vq00fr.easypanel.host"
 
 ### List All Workflows
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows?limit=50" -H "X-N8N-API-KEY: $N8N_KEY" | python3 -c "import sys,json; wfs=json.load(sys.stdin).get('data',[]); [print(f\"{w['id']} - {w['name']} - Active: {w['active']}\") for w in wfs]"
 ```
 
@@ -227,7 +227,7 @@ curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions/EXECUTION_ID?in
 
 **Diagnostic**:
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
 ```
 
@@ -244,7 +244,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/" -H "apikey: $API_KEY
 
 **Diagnostic**:
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 
 # Check users with active protocols
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=user_id&status=eq.active&limit=10" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
@@ -259,7 +259,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?s
 After EVERY resolution, log to `support_ticket_logs`:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -X POST "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/support_ticket_logs" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \

@@ -80,7 +80,7 @@ export interface VapiCallEvent {
 // CONSTANTS
 // ============================================================================
 
-const VAPI_PUBLIC_KEY = '0cf6b672-55ae-4b2a-a249-7249068835fa'; // Public key for web SDK
+const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || '';
 
 const VAPI_ASSISTANTS = {
   claude: {

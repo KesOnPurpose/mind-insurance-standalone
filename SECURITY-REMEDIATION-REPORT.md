@@ -46,7 +46,7 @@ All CRITICAL security issues have been successfully remediated. The deployment c
 ### IMMEDIATE ACTIONS REQUIRED:
 
 1. **Rotate Compromised Keys**:
-   - Anthropic API Key: `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`
+   - Anthropic API Key: `$ANTHROPIC_API_KEY`
    - Go to https://console.anthropic.com/settings/keys
    - Revoke the exposed key
    - Generate a new key

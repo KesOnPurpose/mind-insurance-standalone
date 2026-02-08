@@ -38,7 +38,7 @@ Running diagnostic for workflow: **$ARGUMENTS**
 ## Step 1: Get Workflow Details
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/workflows/$ARGUMENTS" -H "X-N8N-API-KEY: $N8N_KEY" | python3 -c "
 import sys, json
 try:
@@ -60,7 +60,7 @@ except Exception as e:
 ## Step 2: Get Recent Executions
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?workflowId=$ARGUMENTS&limit=10" -H "X-N8N-API-KEY: $N8N_KEY" | python3 -c "
 import sys, json
 try:
@@ -79,7 +79,7 @@ except Exception as e:
 ## Step 3: Check for Errors
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?workflowId=$ARGUMENTS&status=error&limit=5" -H "X-N8N-API-KEY: $N8N_KEY" | python3 -c "
 import sys, json
 try:
@@ -102,7 +102,7 @@ If there are failed executions, get details on the most recent one:
 
 ```bash
 # Replace EXECUTION_ID with the ID from Step 3
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 # curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions/EXECUTION_ID?includeData=true" -H "X-N8N-API-KEY: $N8N_KEY"
 echo "Run with specific execution ID to see error details"
 ```
