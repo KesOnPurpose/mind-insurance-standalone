@@ -29,7 +29,7 @@ Running protocol diagnostic for user: **$ARGUMENTS**
 ## Step 1: Get User Profile
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== USER PROFILE ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=id,email,current_day,challenge_start_date,user_source&id=eq.$ARGUMENTS" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
@@ -56,7 +56,7 @@ except Exception as e:
 ## Step 2: Get Active Protocol
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== ACTIVE PROTOCOL ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=*&user_id=eq.$ARGUMENTS&status=eq.active" \
@@ -89,7 +89,7 @@ except Exception as e:
 ## Step 3: Get Protocol History
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== PROTOCOL HISTORY (Last 5) ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=id,title,status,current_day,week_number,created_at&user_id=eq.$ARGUMENTS&order=created_at.desc&limit=5" \
@@ -121,7 +121,7 @@ except Exception as e:
 ## Step 4: Get Completions for Active Protocol
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo ""
 echo "=== PROTOCOL COMPLETIONS ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_protocol_completions?select=*&user_id=eq.$ARGUMENTS&order=completed_at.desc&limit=14" \
@@ -158,7 +158,7 @@ except Exception as e:
 ## Step 5: Check Day Advancement Workflow
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 echo ""
 echo "=== DAY ADVANCEMENT WORKFLOW (niEwlbKoTiQF1sO9) ==="
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?workflowId=niEwlbKoTiQF1sO9&limit=5" \
@@ -226,7 +226,7 @@ except Exception as e:
 
 ### Fix 1: Manually Advance Day
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -X PATCH "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?id=eq.PROTOCOL_ID" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \

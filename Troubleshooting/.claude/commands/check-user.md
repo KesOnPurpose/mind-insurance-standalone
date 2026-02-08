@@ -29,7 +29,7 @@ Running complete diagnostic for Mind Insurance user: **$ARGUMENTS**
 Search for the user in Supabase authentication:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/auth/v1/admin/users?per_page=500" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
 import sys, json
 users = json.load(sys.stdin).get('users', [])
@@ -54,7 +54,7 @@ else:
 Check if user is in the MI approval list:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mi_approved_users?select=*&or=(email.ilike.*$ARGUMENTS*,full_name.ilike.*$ARGUMENTS*)" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
 import sys, json
 results = json.load(sys.stdin)
@@ -80,7 +80,7 @@ else:
 Check if user is a Mind Insurance user:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=id,full_name,email,user_source,current_day,challenge_start_date,collision_patterns,temperament&or=(email.ilike.*$ARGUMENTS*,full_name.ilike.*$ARGUMENTS*)" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | python3 -c "
 import sys, json
 results = json.load(sys.stdin)
@@ -106,7 +106,7 @@ else:
 
 ```bash
 # Note: Replace USER_ID with the actual user_id from previous steps
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "Query mio_weekly_protocols with the user_id found above"
 # Example: curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=*&user_id=eq.USER_ID&status=eq.active" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
 ```
@@ -149,7 +149,7 @@ echo "Query mio_weekly_protocols with the user_id found above"
 
 ### If NOT in mi_approved_users:
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 curl -X POST "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mi_approved_users" \
   -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \

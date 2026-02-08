@@ -47,7 +47,7 @@ Based on the description, identify which system(s) are affected:
 ### If User Access Issue:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== Checking auth.users ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/auth/v1/admin/users?per_page=500" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | grep -i "SEARCH_TERM"
 
@@ -63,7 +63,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=i
 ### If Protocol Issue:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== Checking mio_weekly_protocols ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_weekly_protocols?select=*&user_id=eq.USER_ID&order=created_at.desc&limit=3" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
 
@@ -75,7 +75,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_protocol_completio
 ### If MIO Issue:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== Checking mio_insights_thread ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_insights_thread?select=*&user_id=eq.USER_ID" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
 
@@ -87,7 +87,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mio_insights_messages?
 ### If Assessment Issue:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 echo "=== Checking mental_pillar_assessments ==="
 curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/mental_pillar_assessments?select=*&user_id=eq.USER_ID" -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY"
 
@@ -99,7 +99,7 @@ curl -s "https://hpyodaugrkctagkrfofj.supabase.co/rest/v1/user_profiles?select=i
 ### If N8n Workflow Issue:
 
 ```bash
-N8N_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M"
+N8N_KEY="$N8N_API_KEY"
 echo "=== Checking N8n recent executions ==="
 curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?limit=10" -H "X-N8N-API-KEY: $N8N_KEY"
 
@@ -115,7 +115,7 @@ curl -s "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?status=error&li
 For user-specific issues, ensure data consistency:
 
 ```bash
-API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+API_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 
 echo "=== Cross-Reference Check ==="
 echo "1. auth.users.id should match..."

@@ -245,7 +245,7 @@ Test the exact conversation flow user provided:
 
 ```bash
 # Test MIO with same conversation flow user provided
-SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+SERVICE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 
 # Test 1: Vague message (STUCK state)
 curl -X POST "https://hpyodaugrkctagkrfofj.supabase.co/functions/v1/mio-chat" \

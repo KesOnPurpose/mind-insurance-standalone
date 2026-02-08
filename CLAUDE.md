@@ -356,7 +356,7 @@ VITE_SUPABASE_ANON_KEY=your_anon_key_here
 
 **Service Role Key** (for MCP/backend only, NEVER in client code):
 ```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ
+$SUPABASE_SERVICE_ROLE_KEY
 ```
 
 ### Database Documentation
@@ -585,7 +585,7 @@ export const useMyData = (id: string) => {
 ### GHL Configuration
 
 **Location ID**: `3KJeKktlnhQab7T0zrpM` (Mind Insurance sub-account)
-**API Key**: `pit-c7f7d071-00b6-483c-870d-99cb26c803a4`
+**API Key**: `$GHL_API_KEY`
 **API Version**: `2021-07-28`
 **Base URL**: `https://services.leadconnectorhq.com`
 
@@ -1132,7 +1132,7 @@ curl -s -X GET "https://n8n-n8n.vq00fr.easypanel.host/api/v1/executions?workflow
 ### N8n API Key
 
 ```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1jZWNhNjYwYWMxNDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0MTE1NDEyfQ.JBOuUYZAsVwnhCwPzNaNnHw98-FsZJfGYn36Xfns_9M
+$N8N_API_KEY
 ```
 
 ### WhatsApp Business API Credentials (For Future Use)
@@ -1140,7 +1140,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjBhM2VkYS00OWIzLTRkOTgtYWFhNC1
 **Status**: Phone Number needs verification - currently bypassed in workflows
 
 ```
-Access Token: EAAQHcZAUohxQBQZAD9ZBCdqx4OgnlzIgNVaLXYOnA6DkAJQBjZCWOPez0BPgfSyRQLoKhUc4H5iiLaKayA0tYDXV60m2qZBALtXZAiOoy4jNLnNXzqb2u4XwdQ3GKU0lmU50wLINgoPrNnOo9ZCCcVqLfZAJZBQxs6Msm4oOflaG6qcVWxK4e8gdBzgeWYG4YPZBFrBibXWHGIQJlSbQdvUKjfaOlYCiHZCAUMZCZCh9lxwz5KbrJWhL7SlGSShFkJprWU7mtJgnJJJMUsn40C9y8r35ydiEV08w45p77mDY4LgZDZD
+Access Token: $WHATSAPP_ACCESS_TOKEN
 Phone Number ID: 934233539768975 (needs verification)
 WhatsApp Business Account ID: 1967732063787123
 Test Number: +1 555 185 4477
@@ -1225,7 +1225,7 @@ TTL: Auto
 |---------|-------|
 | Meta App ID | `1134084322002708` |
 | Instagram App ID | `26029558633329139` |
-| Instagram App Secret | `7a7ea4dbd77288b43ea6e15fa80b7c07` |
+| Instagram App Secret | `$META_APP_SECRET` |
 | Instagram Account | `kesonpurpose` (ID: `17841401031137742`) |
 
 ### Meta Developer Portal Configuration
@@ -1251,9 +1251,9 @@ https://social.purposewaze.com/api/integrations/social/instagram/callback
 Add to Postiz service in Easypanel → Environment:
 ```env
 INSTAGRAM_APP_ID=26029558633329139
-INSTAGRAM_APP_SECRET=7a7ea4dbd77288b43ea6e15fa80b7c07
+INSTAGRAM_APP_SECRET=$META_APP_SECRET
 FACEBOOK_APP_ID=1134084322002708
-FACEBOOK_APP_SECRET=7a7ea4dbd77288b43ea6e15fa80b7c07
+FACEBOOK_APP_SECRET=$META_APP_SECRET
 NEXT_PUBLIC_BACKEND_URL=https://social.purposewaze.com
 BACKEND_INTERNAL_URL=https://social.purposewaze.com
 FRONTEND_URL=https://social.purposewaze.com
@@ -1274,8 +1274,8 @@ Get API token from: Postiz → Settings → API Keys
 
 TikTok Developer credentials (saved for later):
 ```
-Client Key: awzo7l6log136t31
-Client Secret: zS3HyCmpfC9iGGDAKOsR487fV4cgXFlz
+Client Key: $TIKTOK_CLIENT_KEY
+Client Secret: $TIKTOK_CLIENT_SECRET
 ```
 Note: TikTok requires business verification and app approval. Skip for initial launch.
 

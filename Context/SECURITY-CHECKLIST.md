@@ -68,7 +68,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 **Evidence**:
 ```bash
-ANTHROPIC_API_KEY=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
+ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 ```
 
 **Impact if Not Fixed**:

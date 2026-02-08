@@ -684,7 +684,7 @@ When agents conflict, resolve based on this hierarchy:
 ## GHL INTEGRATION (ALL AGENTS)
 
 **Location ID**: `3KJeKktlnhQab7T0zrpM`
-**API Key**: `pit-c7f7d071-00b6-483c-870d-99cb26c803a4`
+**API Key**: `$GHL_API_KEY`
 
 ### Agent GHL Permissions
 

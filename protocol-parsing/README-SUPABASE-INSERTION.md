@@ -16,7 +16,7 @@
 
 ```bash
 # Supabase credentials (REQUIRED)
-export SUPABASE_SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweW9kYXVncmtjdGFna3Jmb2ZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODc4NjYyMiwiZXhwIjoyMDc0MzYyNjIyfQ.wRAsxPF9-mnl_O6nfK_9yog5IopYN42-bUd1ymLtVBQ"
+export SUPABASE_SERVICE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 ```
 
 ### 2. Python Dependencies
